@@ -1,0 +1,76 @@
+# Renova Móvil
+
+Aplicación para fomentar el reciclaje en contenedores inteligentes, integrando desarrollo móvil, web, IoT e IA.
+
+## Tecnologías utilizadas
+
+- **Desarrollo móvil:** Kotlin Compose
+- **API:** Laravel (en la parte web)
+- **Base de datos:** PostgreSQL
+
+## Características
+
+- Autenticación del usuario por parte del admin en la página web después de que el usuario ingrese los datos y esté esperando verificación
+- Integración con contenedores inteligentes para reciclaje
+- Desarrollo de una aplicación móvil para fomentar el reciclaje
+
+## Requisitos previos
+
+- Java instalado en el sistema
+- Android Studio instalado para desarrollo móvil
+- PostgreSQL instalado para base de datos
+- Kotlin Compose y dependencias necesarias para el desarrollo móvil (ver configuración del proyecto)
+
+## Instalación y configuración
+
+1. **Clonar el repositorio de GitHub:**
+
+```bash
+git clone https://github.com/[tu-usuario]/Renova-Movil.git
+```
+
+2. **Instalar dependencias:**
+
+```bash
+gradle build
+```
+(en la carpeta del proyecto)
+
+3. **Configurar variables de entorno:**
+
+```bash
+cp .env.example .env
+```
+
+y editar el archivo `.env` con tus credenciales
+
+4. **Iniciar la aplicación:**
+
+```bash
+gradle run
+```
+(en la carpeta del proyecto)
+
+## Paso a paso para la autenticación del usuario
+
+1. El usuario ingresa sus datos en la aplicación móvil
+2. La aplicación móvil envía los datos al servidor web (Laravel) para verificar la autenticación
+3. El servidor web verifica los datos y envía un token de autenticación al usuario
+4. El usuario ingresa el token de autenticación en la aplicación móvil
+5. La aplicación móvil verifica el token de autenticación con el servidor web
+6. Si el token es válido, el usuario es autenticado y puede acceder a la aplicación
+
+## Estructura clave del proyecto
+
+- `app/`: Directorio principal de la aplicación móvil
+- `build.gradle`: Archivo de configuración de Gradle para el proyecto
+- `src/`: Directorio de código fuente de la aplicación móvil
+- `main/`: Directorio de código fuente principal de la aplicación móvil
+- `java/`: Directorio de código fuente en Java de la aplicación móvil
+- `res/`: Directorio de recursos de la aplicación móvil
+
+## Comandos útiles
+
+- `gradle build`: Compilar la aplicación móvil
+- `gradle run`: Iniciar la aplicación móvil
+- `gradle clean`: Limpiar la carpeta de compilación de la aplicación móvil
