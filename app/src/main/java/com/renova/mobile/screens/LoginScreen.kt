@@ -97,7 +97,7 @@ fun LoginScreen() {
                             email = it
                             emailError = !android.util.Patterns.EMAIL_ADDRESS.matcher(it).matches()
                         },
-                        label = { Text("Correo electrónico") }, // 👈 ahora label
+                        label = { Text("Correo electrónico") },
                         leadingIcon = {
                             Icon(
                                 painter = painterResource(id = R.drawable.ic_email),
@@ -115,8 +115,8 @@ fun LoginScreen() {
                             unfocusedBorderColor = Color(0xFF00C851).copy(alpha = 0.5f),
                             errorBorderColor = Color.Red,
                             cursorColor = Color(0xFF00C851),
-                            focusedLabelColor = Color(0xFF00C851), // 👈 label verde cuando enfocado
-                            unfocusedLabelColor = Color.Gray      // 👈 label gris cuando no
+                            focusedLabelColor = Color(0xFF00C851),
+                            unfocusedLabelColor = Color.Gray
                         )
                     )
                     if (emailError) {
@@ -139,7 +139,7 @@ fun LoginScreen() {
                             password = it
                             passwordError = !validatePassword(it)
                         },
-                        label = { Text("Contraseña") }, // 👈 ahora label
+                        label = { Text("Contraseña") },
                         leadingIcon = {
                             Icon(
                                 painter = painterResource(id = R.drawable.ic_lock),
