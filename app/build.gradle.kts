@@ -2,16 +2,17 @@ plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.android)
     alias(libs.plugins.kotlin.compose)
-    id("com.android.application")
-    id("org.jetbrains.kotlin.android")
+    // id("com.android.application") //
+    // id("org.jetbrains.kotlin.android") //
     id("kotlin-parcelize")
     id("dagger.hilt.android.plugin")
-    id("kotlin-kapt")
+    // id("kotlin-kapt") //
+    kotlin("kapt")
 }
 
 android {
     namespace = "com.renova.mobile"
-    compileSdk = 35
+    compileSdk = 36
 
     defaultConfig {
         applicationId = "com.renova.mobile"
