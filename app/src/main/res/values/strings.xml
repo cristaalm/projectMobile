@@ -1,3 +1,30 @@
 <resources>
+                    <!-- English -->
+
+    <!-- LoginScreen -->
     <string name="app_name">RENOVA Mobile</string>
+    <string name="email">Email</string>
+    <string name="email_required">Email is required</string>
+    <string name="email_invalid">Invalid email</string>
+    <string name="login_password">Password</string>
+    <string name="required_password">Password is required</string>
+    <string name="password_characters">Must have at least 6 characters, letters, numbers and a symbol</string>
+    <string name="login">LOGIN</string>
+    <string name="create_account">CREATE ACCOUNT</string>
+    <string name="forgot_password">Forgot password?"</string>
+    <string name="welcome_message">Welcome!</string>
+    <string name="logged">You have successfully logged in.</string>
+    <string name="continuar">Continue</string>
+    <string name="error_access">Access error</string>
+    <string name="incorrect_information">Incorrect email or password. Please verify your information.</string>
+    <string name="retry">Retry</string>
+
+    <!-- ForgotPasswordScreen -->
+    <string name="forgot_password_title">Recover Password</string>
+    <string name="enter_email_password">Enter your email address and we\'ll send you a link to reset your password.</string>
+    <string name="send_link">SEND LINK</string>
+    <string name="return_login">Return to login</string>
+    <string name="mail_sent">Mail sent!</string>
+    <string name="recovery_link">A recovery link has been sent to your email. Check your inbox.</string>
+    <string name="entendido">OK</string>
 </resources>

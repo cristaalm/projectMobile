@@ -11,13 +11,16 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.renova.mobile.R
 
+@Preview
 @Composable
 fun ForgotPasswordScreen(
     onBackToLogin: () -> Unit = {}
@@ -90,7 +93,7 @@ fun ForgotPasswordScreen(
                 ) {
                     // TÍTULO
                     Text(
-                        text = "Recuperar Contraseña",
+                        text = stringResource(id = R.string.forgot_password_title),
                         fontSize = 24.sp,
                         fontWeight = FontWeight.Bold,
                         color = Color(0xFF1B4F5C),
@@ -100,7 +103,7 @@ fun ForgotPasswordScreen(
                     Spacer(modifier = Modifier.height(8.dp))
 
                     Text(
-                        text = "Ingresa tu correo electrónico y te enviaremos un enlace para restablecer tu contraseña.",
+                        text = stringResource(id = R.string.enter_email_password),
                         fontSize = 14.sp,
                         color = Color.Gray,
                         textAlign = TextAlign.Center,
@@ -119,7 +122,7 @@ fun ForgotPasswordScreen(
                             // Limpiar error de campo vacío si el usuario empieza a escribir
                             if (it.isNotEmpty()) emailEmptyError = false
                         },
-                        label = { Text("Correo electrónico") },
+                        label = { Text (text = stringResource(id = R.string.email)) },
                         leadingIcon = {
                             Icon(
                                 painter = painterResource(id = R.drawable.ic_email),
@@ -144,7 +147,11 @@ fun ForgotPasswordScreen(
                     // Solo mostrar error si hay texto y es inválido O si está vacío y se intentó enviar
                     if ((emailError && email.isNotEmpty()) || emailEmptyError) {
                         Text(
-                            text = if (emailEmptyError) "El correo es obligatorio" else "Correo inválido",
+                            text = if (emailEmptyError) {
+                                stringResource(id = R.string.email_required)
+                            } else {
+                                stringResource(id = R.string.email_invalid)
+                            },
                             color = Color.Red,
                             fontSize = 12.sp,
                             modifier = Modifier
@@ -179,7 +186,7 @@ fun ForgotPasswordScreen(
                         )
                     ) {
                         Text(
-                            "ENVIAR ENLACE",
+                            text = stringResource(id = R.string.send_link),
                             fontSize = 16.sp,
                             fontWeight = FontWeight.Bold,
                             color = Color.White
@@ -194,7 +201,7 @@ fun ForgotPasswordScreen(
                         modifier = Modifier.fillMaxWidth()
                     ) {
                         Text(
-                            "Volver al inicio de sesión",
+                            text = stringResource(id = R.string.return_login),
                             color = Color(0xFF00C851),
                             fontSize = 14.sp
                         )
@@ -212,14 +219,14 @@ fun ForgotPasswordScreen(
                 },
                 title = {
                     Text(
-                        text = "¡Correo enviado!",
+                        text = stringResource(id = R.string.mail_sent),
                         color = Color(0xFF00C851),
                         fontWeight = FontWeight.Bold
                     )
                 },
                 text = {
                     Text(
-                        text = "Se ha enviado un enlace de recuperación a tu correo electrónico. Revisa tu bandeja de entrada.",
+                        text = stringResource(id = R.string.recovery_link),
                         color = Color.Black,
                         textAlign = TextAlign.Center
                     )
@@ -234,7 +241,10 @@ fun ForgotPasswordScreen(
                             containerColor = Color(0xFF00C851)
                         )
                     ) {
-                        Text("Entendido", color = Color.White)
+                        Text(
+                            text = stringResource(id = R.string.entendido),
+                            color = Color.White
+                        )
                     }
                 },
                 containerColor = Color.White,

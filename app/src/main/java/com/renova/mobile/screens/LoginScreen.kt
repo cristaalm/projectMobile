@@ -12,16 +12,19 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.text.style.TextDecoration
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.renova.mobile.R
 
+@Preview
 @Composable
 fun LoginScreen(
     onForgotPassword: () -> Unit = {}
@@ -103,11 +106,13 @@ fun LoginScreen(
                         onValueChange = {
                             email = it
                             // Solo mostrar error si hay texto y es inválido
-                            emailError = it.isNotEmpty() && !android.util.Patterns.EMAIL_ADDRESS.matcher(it).matches()
+                            emailError =
+                                it.isNotEmpty() && !android.util.Patterns.EMAIL_ADDRESS.matcher(it)
+                                    .matches()
                             // Limpiar error de campo vacío si el usuario empieza a escribir
                             if (it.isNotEmpty()) emailEmptyError = false
                         },
-                        label = { Text("Correo electrónico") },
+                        label = { Text(stringResource(id = R.string.email)) },
                         leadingIcon = {
                             Icon(
                                 painter = painterResource(id = R.drawable.ic_email),
@@ -132,7 +137,11 @@ fun LoginScreen(
                     // Solo mostrar error si hay texto y es inválido O si está vacío y se intentó enviar
                     if ((emailError && email.isNotEmpty()) || emailEmptyError) {
                         Text(
-                            text = if (emailEmptyError) "El correo es obligatorio" else "Correo inválido",
+                            text = if (emailEmptyError) {
+                                stringResource(id = R.string.email_required)
+                            } else {
+                                stringResource(id = R.string.email_invalid)
+                            },
                             color = Color.Red,
                             fontSize = 12.sp,
                             modifier = Modifier
@@ -156,7 +165,7 @@ fun LoginScreen(
                                 if (it.isNotEmpty()) passwordEmptyError = false
                             }
                         },
-                        label = { Text("Contraseña") },
+                        label = { Text(text = stringResource(id = R.string.login_password)) },
                         leadingIcon = {
                             Icon(
                                 painter = painterResource(id = R.drawable.ic_lock),
@@ -195,7 +204,11 @@ fun LoginScreen(
                     // Solo mostrar error si hay texto y es inválido O si está vacío y se intentó enviar
                     if ((passwordError && password.isNotEmpty()) || passwordEmptyError) {
                         Text(
-                            text = if (passwordEmptyError) "La contraseña es obligatoria" else "Debe tener al menos 6 caracteres, letras, números y un símbolo",
+                            text = if (passwordEmptyError) {
+                                stringResource(id = R.string.required_password)
+                            } else {
+                                stringResource(id = R.string.password_characters)
+                            },
                             color = Color.Red,
                             fontSize = 12.sp,
                             modifier = Modifier
@@ -215,7 +228,8 @@ fun LoginScreen(
 
                             // Si no están vacíos, validar formato
                             if (!emailEmptyError && !passwordEmptyError) {
-                                emailError = !android.util.Patterns.EMAIL_ADDRESS.matcher(email).matches()
+                                emailError =
+                                    !android.util.Patterns.EMAIL_ADDRESS.matcher(email).matches()
                                 passwordError = !validatePassword(password)
 
                                 if (!emailError && !passwordError) {
@@ -238,7 +252,7 @@ fun LoginScreen(
                         )
                     ) {
                         Text(
-                            "INICIAR SESIÓN",
+                            text = stringResource(id = R.string.login),
                             fontSize = 16.sp,
                             fontWeight = FontWeight.Bold,
                             color = Color.White
@@ -264,7 +278,7 @@ fun LoginScreen(
                         )
                     ) {
                         Text(
-                            "CREAR CUENTA",
+                            text = stringResource(id = R.string.create_account),
                             fontSize = 16.sp,
                             fontWeight = FontWeight.Bold,
                             color = Color(0xFF00C851)
@@ -279,7 +293,7 @@ fun LoginScreen(
                         modifier = Modifier.fillMaxWidth()
                     ) {
                         Text(
-                            "¿Olvidaste tu contraseña?",
+                            text = stringResource(id = R.string.forgot_password),
                             color = Color(0xFF00C851),
                             fontSize = 14.sp,
                             textDecoration = TextDecoration.Underline
@@ -295,14 +309,14 @@ fun LoginScreen(
                 onDismissRequest = { showSuccessDialog = false },
                 title = {
                     Text(
-                        text = "¡Bienvenido!",
+                        text = stringResource(id = R.string.welcome_message),
                         color = Color(0xFF1B4F5C),
                         fontWeight = FontWeight.Bold
                     )
                 },
                 text = {
                     Text(
-                        text = "Has iniciado sesión correctamente.",
+                        text = stringResource(id = R.string.logged),
                         color = Color.Black
                     )
                 },
@@ -313,7 +327,7 @@ fun LoginScreen(
                             containerColor = Color(0xFF00C851)
                         )
                     ) {
-                        Text("Continuar", color = Color.White)
+                        Text(text = stringResource(id = R.string.continuar), color = Color.White)
                     }
                 },
                 containerColor = Color.White,
@@ -327,14 +341,14 @@ fun LoginScreen(
                 onDismissRequest = { showErrorDialog = false },
                 title = {
                     Text(
-                        text = "Error de acceso",
+                        text = stringResource(id = R.string.error_access),
                         color = Color.Red,
                         fontWeight = FontWeight.Bold
                     )
                 },
                 text = {
                     Text(
-                        text = "Correo o contraseña incorrectos. Por favor verifica tus datos.",
+                        text = stringResource(id = R.string.incorrect_information),
                         color = Color.Black
                     )
                 },
@@ -345,7 +359,7 @@ fun LoginScreen(
                             containerColor = Color.Red
                         )
                     ) {
-                        Text("Reintentar", color = Color.White)
+                        Text(stringResource(id = R.string.retry))
                     }
                 },
                 containerColor = Color.White,
