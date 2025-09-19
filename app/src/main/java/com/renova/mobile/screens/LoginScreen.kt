@@ -17,17 +17,24 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.VisualTransformation
+import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.renova.mobile.R
 
 @Composable
-fun LoginScreen() {
+fun LoginScreen(
+    onForgotPassword: () -> Unit = {}
+) {
     var email by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
     var emailError by remember { mutableStateOf(false) }
     var passwordError by remember { mutableStateOf(false) }
     var passwordVisible by remember { mutableStateOf(false) }
+    var showSuccessDialog by remember { mutableStateOf(false) }
+    var showErrorDialog by remember { mutableStateOf(false) }
+    var emailEmptyError by remember { mutableStateOf(false) }
+    var passwordEmptyError by remember { mutableStateOf(false) }
 
     // Fondo degradado
     val gradientBrush = Brush.verticalGradient(
@@ -95,7 +102,10 @@ fun LoginScreen() {
                         value = email,
                         onValueChange = {
                             email = it
-                            emailError = !android.util.Patterns.EMAIL_ADDRESS.matcher(it).matches()
+                            // Solo mostrar error si hay texto y es inválido
+                            emailError = it.isNotEmpty() && !android.util.Patterns.EMAIL_ADDRESS.matcher(it).matches()
+                            // Limpiar error de campo vacío si el usuario empieza a escribir
+                            if (it.isNotEmpty()) emailEmptyError = false
                         },
                         label = { Text("Correo electrónico") },
                         leadingIcon = {
@@ -105,7 +115,7 @@ fun LoginScreen() {
                                 tint = Color(0xFF00C851)
                             )
                         },
-                        isError = emailError,
+                        isError = emailError || emailEmptyError,
                         singleLine = true,
                         modifier = Modifier.fillMaxWidth(),
                         shape = RoundedCornerShape(12.dp),
@@ -119,9 +129,10 @@ fun LoginScreen() {
                             unfocusedLabelColor = Color.Gray
                         )
                     )
-                    if (emailError) {
+                    // Solo mostrar error si hay texto y es inválido O si está vacío y se intentó enviar
+                    if ((emailError && email.isNotEmpty()) || emailEmptyError) {
                         Text(
-                            text = "Correo inválido",
+                            text = if (emailEmptyError) "El correo es obligatorio" else "Correo inválido",
                             color = Color.Red,
                             fontSize = 12.sp,
                             modifier = Modifier
@@ -136,8 +147,14 @@ fun LoginScreen() {
                     OutlinedTextField(
                         value = password,
                         onValueChange = {
-                            password = it
-                            passwordError = !validatePassword(it)
+                            // Limitar a 14 caracteres
+                            if (it.length <= 14) {
+                                password = it
+                                // Solo mostrar error si hay texto y es inválido
+                                passwordError = it.isNotEmpty() && !validatePassword(it)
+                                // Limpiar error de campo vacío si el usuario empieza a escribir
+                                if (it.isNotEmpty()) passwordEmptyError = false
+                            }
                         },
                         label = { Text("Contraseña") },
                         leadingIcon = {
@@ -159,7 +176,7 @@ fun LoginScreen() {
                                 )
                             }
                         },
-                        isError = passwordError,
+                        isError = passwordError || passwordEmptyError,
                         visualTransformation = if (passwordVisible) VisualTransformation.None else PasswordVisualTransformation(),
                         keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password),
                         singleLine = true,
@@ -175,9 +192,10 @@ fun LoginScreen() {
                             unfocusedLabelColor = Color.Gray
                         )
                     )
-                    if (passwordError) {
+                    // Solo mostrar error si hay texto y es inválido O si está vacío y se intentó enviar
+                    if ((passwordError && password.isNotEmpty()) || passwordEmptyError) {
                         Text(
-                            text = "Debe tener al menos 6 caracteres, letras, números y un símbolo",
+                            text = if (passwordEmptyError) "La contraseña es obligatoria" else "Debe tener al menos 6 caracteres, letras, números y un símbolo",
                             color = Color.Red,
                             fontSize = 12.sp,
                             modifier = Modifier
@@ -186,16 +204,30 @@ fun LoginScreen() {
                         )
                     }
 
-                    Spacer(modifier = Modifier.height(24.dp))
+                    Spacer(modifier = Modifier.height(16.dp))
 
                     // BOTÓN INICIAR SESIÓN
                     Button(
                         onClick = {
-                            emailError = !android.util.Patterns.EMAIL_ADDRESS.matcher(email).matches()
-                            passwordError = !validatePassword(password)
-                            if (!emailError && !passwordError) {
-                                // Aquí va la lógica de login
+                            // Validar campos vacíos primero
+                            emailEmptyError = email.isEmpty()
+                            passwordEmptyError = password.isEmpty()
+
+                            // Si no están vacíos, validar formato
+                            if (!emailEmptyError && !passwordEmptyError) {
+                                emailError = !android.util.Patterns.EMAIL_ADDRESS.matcher(email).matches()
+                                passwordError = !validatePassword(password)
+
+                                if (!emailError && !passwordError) {
+                                    // Validar credenciales de simulación
+                                    if (email == "admin@gmail.com" && password == "admin123#") {
+                                        showSuccessDialog = true
+                                    } else {
+                                        showErrorDialog = true
+                                    }
+                                }
                             }
+                            // Si hay campos vacíos, no hacer nada más (solo mostrar errores)
                         },
                         modifier = Modifier
                             .fillMaxWidth()
@@ -238,14 +270,93 @@ fun LoginScreen() {
                             color = Color(0xFF00C851)
                         )
                     }
+
+                    Spacer(modifier = Modifier.height(16.dp))
+
+                    // LINK RECUPERAR CONTRASEÑA
+                    TextButton(
+                        onClick = { onForgotPassword() },
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+                        Text(
+                            "¿Olvidaste tu contraseña?",
+                            color = Color(0xFF00C851),
+                            fontSize = 14.sp,
+                            textDecoration = TextDecoration.Underline
+                        )
+                    }
                 }
             }
+        }
+
+        // Modal de éxito
+        if (showSuccessDialog) {
+            AlertDialog(
+                onDismissRequest = { showSuccessDialog = false },
+                title = {
+                    Text(
+                        text = "¡Bienvenido!",
+                        color = Color(0xFF1B4F5C),
+                        fontWeight = FontWeight.Bold
+                    )
+                },
+                text = {
+                    Text(
+                        text = "Has iniciado sesión correctamente.",
+                        color = Color.Black
+                    )
+                },
+                confirmButton = {
+                    Button(
+                        onClick = { showSuccessDialog = false },
+                        colors = ButtonDefaults.buttonColors(
+                            containerColor = Color(0xFF00C851)
+                        )
+                    ) {
+                        Text("Continuar", color = Color.White)
+                    }
+                },
+                containerColor = Color.White,
+                shape = RoundedCornerShape(16.dp)
+            )
+        }
+
+        // Modal de error de credenciales
+        if (showErrorDialog) {
+            AlertDialog(
+                onDismissRequest = { showErrorDialog = false },
+                title = {
+                    Text(
+                        text = "Error de acceso",
+                        color = Color.Red,
+                        fontWeight = FontWeight.Bold
+                    )
+                },
+                text = {
+                    Text(
+                        text = "Correo o contraseña incorrectos. Por favor verifica tus datos.",
+                        color = Color.Black
+                    )
+                },
+                confirmButton = {
+                    Button(
+                        onClick = { showErrorDialog = false },
+                        colors = ButtonDefaults.buttonColors(
+                            containerColor = Color.Red
+                        )
+                    ) {
+                        Text("Reintentar", color = Color.White)
+                    }
+                },
+                containerColor = Color.White,
+                shape = RoundedCornerShape(16.dp)
+            )
         }
     }
 }
 
 // Validación de contraseña
 fun validatePassword(password: String): Boolean {
-    val regex = Regex("^(?=.*[A-Za-z])(?=.*\\d)(?=.*[@\$!%*?&])[A-Za-z\\d@\$!%*?&]{6,}$")
+    val regex = Regex("^(?=.*[A-Za-z])(?=.*\\d)(?=.*[@\$!%*?&#])[A-Za-z\\d@\$!%*?&#]{6,}$")
     return regex.matches(password)
 }
