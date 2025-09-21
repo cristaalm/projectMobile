@@ -10,6 +10,10 @@ import androidx.compose.runtime.*
 import com.renova.mobile.ui.screens.LoginScreen
 import com.renova.mobile.ui.screens.ForgotPasswordScreen
 import com.renova.mobile.ui.theme.RENOVAMobileTheme
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.height
+import androidx.compose.ui.unit.dp
+
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -50,6 +54,11 @@ fun AuthNavigation() {
                 LoginScreen(
                     onForgotPassword = {
                         currentScreen = "forgot_password"
+                    },
+                    onLoginSuccess = {
+                        // Aquí puedes navegar a tu pantalla principal
+                        // Por ahora solo cambiaremos a una pantalla de ejemplo
+                        currentScreen = "home"
                     }
                 )
             }
@@ -59,6 +68,37 @@ fun AuthNavigation() {
                         currentScreen = "login"
                     }
                 )
+            }
+            "home" -> {
+                // Pantalla temporal después del login exitoso
+                HomeScreen(
+                    onLogout = {
+                        currentScreen = "login"
+                    }
+                )
+            }
+        }
+    }
+}
+
+@Composable
+fun HomeScreen(onLogout: () -> Unit) {
+    androidx.compose.foundation.layout.Box(
+        modifier = androidx.compose.ui.Modifier.fillMaxSize(),
+        contentAlignment = androidx.compose.ui.Alignment.Center
+    ) {
+        androidx.compose.foundation.layout.Column(
+            horizontalAlignment = androidx.compose.ui.Alignment.CenterHorizontally
+        ) {
+            androidx.compose.material3.Text(
+                "Login exitoso!",
+                style = androidx.compose.material3.MaterialTheme.typography.headlineMedium
+            )
+            androidx.compose.foundation.layout.Spacer(
+                modifier = androidx.compose.ui.Modifier.height(16.dp)
+            )
+            androidx.compose.material3.Button(onClick = onLogout) {
+                androidx.compose.material3.Text("Cerrar Sesión")
             }
         }
     }

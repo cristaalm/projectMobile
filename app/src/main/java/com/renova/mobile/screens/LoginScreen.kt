@@ -20,11 +20,16 @@ import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.viewmodel.compose.viewModel
 import com.renova.mobile.R
+import com.renova.mobile.viewmodel.LoginViewModel
+import kotlinx.coroutines.launch
 
 @Composable
 fun LoginScreen(
-    onForgotPassword: () -> Unit = {}
+    onForgotPassword: () -> Unit = {},
+    onLoginSuccess: () -> Unit = {},
+    viewModel: LoginViewModel = viewModel()
 ) {
     var email by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
@@ -36,7 +41,26 @@ fun LoginScreen(
     var emailEmptyError by remember { mutableStateOf(false) }
     var passwordEmptyError by remember { mutableStateOf(false) }
 
-    // Fondo degradado
+    val loginState by viewModel.loginState.collectAsState()
+    val scope = rememberCoroutineScope()
+
+    LaunchedEffect(loginState) {
+        when {
+            loginState.isSuccess -> {
+                showSuccessDialog = true
+                showErrorDialog = false
+            }
+            loginState.error != null -> {
+                showErrorDialog = true
+                showSuccessDialog = false
+            }
+            else -> {
+                showSuccessDialog = false
+                showErrorDialog = false
+            }
+        }
+    }
+
     val gradientBrush = Brush.verticalGradient(
         colors = listOf(
             Color(0xFF00E676),
@@ -57,7 +81,6 @@ fun LoginScreen(
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.Center
         ) {
-            // LOGO CARD
             Card(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -84,7 +107,6 @@ fun LoginScreen(
 
             Spacer(modifier = Modifier.height(16.dp))
 
-            // LOGIN CARD
             Card(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -97,14 +119,11 @@ fun LoginScreen(
                     modifier = Modifier.padding(32.dp),
                     horizontalAlignment = Alignment.CenterHorizontally
                 ) {
-                    // CORREO
                     OutlinedTextField(
                         value = email,
                         onValueChange = {
                             email = it
-                            // Solo mostrar error si hay texto y es inválido
                             emailError = it.isNotEmpty() && !android.util.Patterns.EMAIL_ADDRESS.matcher(it).matches()
-                            // Limpiar error de campo vacío si el usuario empieza a escribir
                             if (it.isNotEmpty()) emailEmptyError = false
                         },
                         label = { Text("Correo electrónico") },
@@ -129,7 +148,7 @@ fun LoginScreen(
                             unfocusedLabelColor = Color.Gray
                         )
                     )
-                    // Solo mostrar error si hay texto y es inválido O si está vacío y se intentó enviar
+
                     if ((emailError && email.isNotEmpty()) || emailEmptyError) {
                         Text(
                             text = if (emailEmptyError) "El correo es obligatorio" else "Correo inválido",
@@ -143,16 +162,12 @@ fun LoginScreen(
 
                     Spacer(modifier = Modifier.height(16.dp))
 
-                    // CONTRASEÑA
                     OutlinedTextField(
                         value = password,
                         onValueChange = {
-                            // Limitar a 14 caracteres
                             if (it.length <= 14) {
                                 password = it
-                                // Solo mostrar error si hay texto y es inválido
                                 passwordError = it.isNotEmpty() && !validatePassword(it)
-                                // Limpiar error de campo vacío si el usuario empieza a escribir
                                 if (it.isNotEmpty()) passwordEmptyError = false
                             }
                         },
@@ -192,7 +207,7 @@ fun LoginScreen(
                             unfocusedLabelColor = Color.Gray
                         )
                     )
-                    // Solo mostrar error si hay texto y es inválido O si está vacío y se intentó enviar
+
                     if ((passwordError && password.isNotEmpty()) || passwordEmptyError) {
                         Text(
                             text = if (passwordEmptyError) "La contraseña es obligatoria" else "Debe tener al menos 6 caracteres, letras, números y un símbolo",
@@ -206,29 +221,21 @@ fun LoginScreen(
 
                     Spacer(modifier = Modifier.height(16.dp))
 
-                    // BOTÓN INICIAR SESIÓN
                     Button(
                         onClick = {
-                            // Validar campos vacíos primero
                             emailEmptyError = email.isEmpty()
                             passwordEmptyError = password.isEmpty()
 
-                            // Si no están vacíos, validar formato
                             if (!emailEmptyError && !passwordEmptyError) {
                                 emailError = !android.util.Patterns.EMAIL_ADDRESS.matcher(email).matches()
                                 passwordError = !validatePassword(password)
 
                                 if (!emailError && !passwordError) {
-                                    // Validar credenciales de simulación
-                                    if (email == "admin@gmail.com" && password == "admin123#") {
-                                        showSuccessDialog = true
-                                    } else {
-                                        showErrorDialog = true
-                                    }
+                                    viewModel.login(email, password)
                                 }
                             }
-                            // Si hay campos vacíos, no hacer nada más (solo mostrar errores)
                         },
+                        enabled = !loginState.isLoading,
                         modifier = Modifier
                             .fillMaxWidth()
                             .height(50.dp),
@@ -237,20 +244,40 @@ fun LoginScreen(
                             containerColor = Color(0xFF1B4F5C)
                         )
                     ) {
-                        Text(
-                            "INICIAR SESIÓN",
-                            fontSize = 16.sp,
-                            fontWeight = FontWeight.Bold,
-                            color = Color.White
-                        )
+                        if (loginState.isLoading) {
+                            Row(
+                                horizontalArrangement = Arrangement.Center,
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                CircularProgressIndicator(
+                                    modifier = Modifier.size(16.dp),
+                                    color = Color.White,
+                                    strokeWidth = 2.dp
+                                )
+
+                                Spacer(modifier = Modifier.width(8.dp))
+                                Text(
+                                    "INICIANDO...",
+                                    fontSize = 16.sp,
+                                    fontWeight = FontWeight.Bold,
+                                    color = Color.White
+                                )
+                            }
+                        } else {
+                            Text(
+                                "INICIAR SESIÓN",
+                                fontSize = 16.sp,
+                                fontWeight = FontWeight.Bold,
+                                color = Color.White
+                            )
+                        }
                     }
 
                     Spacer(modifier = Modifier.height(12.dp))
 
-                    // BOTÓN CREAR CUENTA
                     OutlinedButton(
                         onClick = {
-                            // Aquí va la lógica para crear cuenta
+                            // Lógica para crear cuenta
                         },
                         modifier = Modifier
                             .fillMaxWidth()
@@ -273,7 +300,6 @@ fun LoginScreen(
 
                     Spacer(modifier = Modifier.height(16.dp))
 
-                    // LINK RECUPERAR CONTRASEÑA
                     TextButton(
                         onClick = { onForgotPassword() },
                         modifier = Modifier.fillMaxWidth()
@@ -289,10 +315,13 @@ fun LoginScreen(
             }
         }
 
-        // Modal de éxito
         if (showSuccessDialog) {
             AlertDialog(
-                onDismissRequest = { showSuccessDialog = false },
+                onDismissRequest = {
+                    showSuccessDialog = false
+                    viewModel.clearState()
+                    onLoginSuccess()
+                },
                 title = {
                     Text(
                         text = "¡Bienvenido!",
@@ -302,13 +331,17 @@ fun LoginScreen(
                 },
                 text = {
                     Text(
-                        text = "Has iniciado sesión correctamente.",
+                        text = loginState.message ?: "Has iniciado sesión correctamente.",
                         color = Color.Black
                     )
                 },
                 confirmButton = {
                     Button(
-                        onClick = { showSuccessDialog = false },
+                        onClick = {
+                            showSuccessDialog = false
+                            viewModel.clearState()
+                            onLoginSuccess()
+                        },
                         colors = ButtonDefaults.buttonColors(
                             containerColor = Color(0xFF00C851)
                         )
@@ -321,10 +354,12 @@ fun LoginScreen(
             )
         }
 
-        // Modal de error de credenciales
         if (showErrorDialog) {
             AlertDialog(
-                onDismissRequest = { showErrorDialog = false },
+                onDismissRequest = {
+                    showErrorDialog = false
+                    viewModel.clearState()
+                },
                 title = {
                     Text(
                         text = "Error de acceso",
@@ -334,13 +369,16 @@ fun LoginScreen(
                 },
                 text = {
                     Text(
-                        text = "Correo o contraseña incorrectos. Por favor verifica tus datos.",
+                        text = loginState.error ?: "Correo o contraseña incorrectos. Por favor verifica tus datos.",
                         color = Color.Black
                     )
                 },
                 confirmButton = {
                     Button(
-                        onClick = { showErrorDialog = false },
+                        onClick = {
+                            showErrorDialog = false
+                            viewModel.clearState()
+                        },
                         colors = ButtonDefaults.buttonColors(
                             containerColor = Color.Red
                         )
@@ -355,8 +393,7 @@ fun LoginScreen(
     }
 }
 
-// Validación de contraseña
 fun validatePassword(password: String): Boolean {
-    val regex = Regex("^(?=.*[A-Za-z])(?=.*\\d)(?=.*[@\$!%*?&#])[A-Za-z\\d@\$!%*?&#]{6,}$")
+    val regex = Regex("^(?=.*[A-Za-z])(?=.*\\d)[A-Za-z\\d]{6,}$")
     return regex.matches(password)
 }
