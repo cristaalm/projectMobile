@@ -146,7 +146,7 @@ fun CustomBottomBar(navController: NavController) {
             val isQrSelected = currentRoute == NavigationItem.QR.route
             Icon(
                 painter = painterResource(
-                    id = if (isQrSelected) R.drawable.qr else R.drawable.qr_relleno
+                    id = if (isQrSelected) R.drawable.qr_relleno else R.drawable.qr
                 ),
                 contentDescription = "QR Screen",
                 modifier = Modifier.size(32.dp),
