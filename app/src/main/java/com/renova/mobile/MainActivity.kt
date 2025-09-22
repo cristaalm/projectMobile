@@ -7,9 +7,12 @@ import androidx.activity.enableEdgeToEdge
 import androidx.compose.animation.*
 import androidx.compose.animation.core.tween
 import androidx.compose.runtime.*
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.unit.dp
 import com.renova.mobile.ui.screens.LoginScreen
 import com.renova.mobile.ui.screens.ForgotPasswordScreen
 import com.renova.mobile.ui.theme.RENOVAMobileTheme
+import com.renova.mobile.navigation.AppNavigation
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -17,7 +20,17 @@ class MainActivity : ComponentActivity() {
         enableEdgeToEdge()
         setContent {
             RENOVAMobileTheme {
-                AuthNavigation()
+                var isLoggedIn by remember { mutableStateOf(false) }
+
+                if (isLoggedIn) {
+                    // App principal con BottomBar y navegación completa
+                    AppNavigation()
+                } else {
+                    // Pantallas de autenticación
+                    AuthNavigation(
+                        onLoginSuccess = { isLoggedIn = true }
+                    )
+                }
             }
         }
     }
@@ -25,7 +38,7 @@ class MainActivity : ComponentActivity() {
 
 @OptIn(ExperimentalAnimationApi::class)
 @Composable
-fun AuthNavigation() {
+fun AuthNavigation(onLoginSuccess: () -> Unit) {
     var currentScreen by remember { mutableStateOf("login") }
 
     AnimatedContent(
@@ -50,6 +63,9 @@ fun AuthNavigation() {
                 LoginScreen(
                     onForgotPassword = {
                         currentScreen = "forgot_password"
+                    },
+                    onLoginSuccess = {
+                        onLoginSuccess() // Notifica a MainActivity que el login fue exitoso
                     }
                 )
             }
