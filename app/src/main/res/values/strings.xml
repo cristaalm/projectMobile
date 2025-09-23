@@ -7,6 +7,9 @@
     <string name="email_required">Email is required</string>
     <string name="email_invalid">Invalid email</string>
     <string name="login_password">Password</string>
+    <string name="hide_password">Hide password</string>
+    <string name="show_password">Show password</string>
+
     <string name="required_password">Password is required</string>
     <string name="password_characters">Must have at least 6 characters, letters, numbers and a symbol</string>
     <string name="iniciando">STARTING...</string>

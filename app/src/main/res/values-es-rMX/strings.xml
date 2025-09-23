@@ -8,6 +8,9 @@
     <string name="email_required">El correo es obligatorio</string>
     <string name="email_invalid">Correo inválido</string>
     <string name="login_password">Contraseña</string>
+    <string name="hide_password">Ocultar contraseña</string>
+    <string name="show_password">Mostrar contraseña</string>
+
     <string name="required_password">La contraseña es obligatoria</string>
     <string name="password_characters">Debe tener al menos 6 caracteres, letras, números y un símbolo</string>
     <string name="iniciando">INICIANDO...</string>
