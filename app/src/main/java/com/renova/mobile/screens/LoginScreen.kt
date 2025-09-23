@@ -14,14 +14,12 @@ import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.text.style.TextDecoration
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
@@ -30,7 +28,6 @@ import com.renova.mobile.R
 import com.renova.mobile.viewmodel.LoginViewModel
 import androidx.compose.animation.core.*
 
-@Preview
 @Composable
 fun LoginScreen(
     onForgotPassword: () -> Unit = {},
@@ -158,7 +155,7 @@ fun LoginScreen(
                                 emailError = it.isNotEmpty() && !android.util.Patterns.EMAIL_ADDRESS.matcher(it).matches()
                                 if (it.isNotEmpty()) emailEmptyError = false
                             },
-                            label = { Text( text = stringResource(id = R.string.email), color = textColor) },
+                            label = { Text("Correo electrónico", color = textColor) },
                             leadingIcon = {
                                 Icon(
                                     painter = painterResource(id = R.drawable.ic_email),
@@ -184,11 +181,7 @@ fun LoginScreen(
 
                         if ((emailError && email.isNotEmpty()) || emailEmptyError) {
                             Text(
-                                text = if (emailEmptyError) {
-                                    stringResource(id = R.string.email_required)
-                                } else {
-                                    stringResource(id = R.string.email_invalid)
-                                },
+                                text = if (emailEmptyError) "El correo es obligatorio" else "Correo inválido",
                                 color = Color.Red,
                                 fontSize = 12.sp,
                                 modifier = Modifier
@@ -208,7 +201,7 @@ fun LoginScreen(
                                     if (it.isNotEmpty()) passwordEmptyError = false
                                 }
                             },
-                            label = { Text(text = stringResource(id = R.string.login_password), color = textColor) },
+                            label = { Text("Contraseña", color = textColor) },
                             leadingIcon = {
                                 Icon(
                                     painter = painterResource(id = R.drawable.ic_lock),
@@ -248,11 +241,7 @@ fun LoginScreen(
 
                         if ((passwordError && password.isNotEmpty()) || passwordEmptyError) {
                             Text(
-                                text = if (passwordEmptyError) {
-                                    stringResource(id = R.string.required_password)
-                                } else {
-                                    stringResource(id = R.string.password_characters)
-                                },
+                                text = if (passwordEmptyError) "La contraseña es obligatoria" else "Debe tener al menos 6 caracteres, letras, números y un símbolo",
                                 color = Color.Red,
                                 fontSize = 12.sp,
                                 modifier = Modifier
@@ -307,14 +296,14 @@ fun LoginScreen(
                                 )
                                 Spacer(modifier = Modifier.width(8.dp))
                                 Text(
-                                    text = stringResource(id = R.string.iniciando),
+                                    "INICIANDO...",
                                     fontSize = 16.sp,
                                     fontWeight = FontWeight.Bold,
                                     color = if (isDarkTheme) Color(0xFF00C853) else Color.Black
                                 )
                             } else {
                                 Text(
-                                    text = stringResource(id = R.string.login),
+                                    "INICIAR SESIÓN",
                                     fontSize = 16.sp,
                                     fontWeight = FontWeight.Bold,
                                     color = Color.White
@@ -338,7 +327,7 @@ fun LoginScreen(
                             )
                         ) {
                             Text(
-                                text = stringResource(id = R.string.create_account),
+                                "CREAR CUENTA",
                                 fontSize = 16.sp,
                                 fontWeight = FontWeight.Bold,
                                 color = Color(0xFF00C851)
@@ -352,7 +341,7 @@ fun LoginScreen(
                             modifier = Modifier.fillMaxWidth()
                         ) {
                             Text(
-                                text = stringResource(id = R.string.forgot_password),
+                                "¿Olvidaste tu contraseña?",
                                 color = Color(0xFF00C851),
                                 fontSize = 14.sp,
                                 textDecoration = TextDecoration.Underline
@@ -373,14 +362,14 @@ fun LoginScreen(
             },
             title = {
                 Text(
-                    text = stringResource(id = R.string.welcome_message),
+                    "¡Bienvenido!",
                     color = textColor,
                     fontWeight = FontWeight.Bold
                 )
             },
             text = {
                 Text(
-                    loginState.message ?: stringResource(id = R.string.logged),
+                    loginState.message ?: "Has iniciado sesión correctamente.",
                     color = textColor
                 )
             },
@@ -392,7 +381,7 @@ fun LoginScreen(
                         onLoginSuccess()
                     },
                     colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF00C851))
-                ) { Text(text = stringResource(id = R.string.continuar), color = Color.White) }
+                ) { Text("Continuar", color = Color.White) }
             },
             containerColor = insideCardColor,
             shape = RoundedCornerShape(16.dp)
@@ -407,7 +396,7 @@ fun LoginScreen(
             },
             title = {
                 Text(
-                    text = stringResource(id = R.string.error_access),
+                    "Error de acceso",
                     color = Color.Red,
                     fontWeight = FontWeight.Bold
                 )
@@ -417,28 +406,28 @@ fun LoginScreen(
                     loginState.error?.contains("user not found", ignoreCase = true) == true ||
                             loginState.error?.contains("email not found", ignoreCase = true) == true ||
                             loginState.error?.contains("no existe", ignoreCase = true) == true ->
-                        stringResource(id = R.string.mail_not_registered)
+                        "El correo electrónico ingresado no está registrado."
 
                     loginState.error?.contains("invalid password", ignoreCase = true) == true ||
                             loginState.error?.contains("wrong password", ignoreCase = true) == true ||
                             loginState.error?.contains("contraseña", ignoreCase = true) == true ->
-                        stringResource(id = R.string.incorrect_ppassword)
+                        "La contraseña es incorrecta."
 
                     loginState.error?.contains("account blocked", ignoreCase = true) == true ||
                             loginState.error?.contains("blocked", ignoreCase = true) == true ->
-                        stringResource(id = R.string.blocked_account)
+                        "Tu cuenta ha sido bloqueada. Contacta al soporte."
 
                     loginState.error?.contains("network", ignoreCase = true) == true ||
                             loginState.error?.contains("connection", ignoreCase = true) == true ->
-                        stringResource(id = R.string.connection_internet_filed)
+                        "Error de conexión. Verifica tu internet e intenta de nuevo."
 
                     loginState.error?.contains("server", ignoreCase = true) == true ->
-                        stringResource(id = R.string.error_server)
+                        "Error del servidor. Intenta más tarde."
 
                     loginState.error?.contains("timeout", ignoreCase = true) == true ->
-                        stringResource(id = R.string.connection_timeout)
+                        "La conexión tardó demasiado. Intenta de nuevo."
 
-                    else -> loginState.error ?: stringResource(id = R.string.error_unknown)
+                    else -> loginState.error ?: "Error desconocido. Intenta de nuevo."
                 }
 
                 Text(errorMessage, color = textColor)
@@ -450,7 +439,7 @@ fun LoginScreen(
                         viewModel.clearState()
                     },
                     colors = ButtonDefaults.buttonColors(containerColor = Color.Red)
-                ) { Text(text = stringResource(id = R.string.retry), color = Color.White) }
+                ) { Text("Reintentar", color = Color.White) }
             },
             containerColor = insideCardColor,
             shape = RoundedCornerShape(16.dp)
