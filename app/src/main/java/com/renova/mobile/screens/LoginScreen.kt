@@ -28,12 +28,13 @@ import com.renova.mobile.R
 import com.renova.mobile.viewmodel.LoginViewModel
 import androidx.compose.animation.core.*
 import androidx.compose.ui.res.stringResource
+import com.renova.mobile.network.User
 
 @Composable
 fun LoginScreen(
     onForgotPassword: () -> Unit = {},
     onCreateAccount: () -> Unit = {},
-    onLoginSuccess: () -> Unit = {},
+    onLoginSuccess: (User?, String, String, String?) -> Unit = { _, _, _, _ -> },
     viewModel: LoginViewModel = viewModel()
 ) {
     val isDarkTheme = isSystemInDarkTheme()
@@ -371,13 +372,14 @@ fun LoginScreen(
             onDismissRequest = {
                 showSuccessDialog = false
                 viewModel.clearState()
-                onLoginSuccess()
-            },
-            title = {
-                Text(
-                    text = stringResource(id = R.string.welcome_message),
-                    color = textColor,
-                    fontWeight = FontWeight.Bold
+
+                // Pasar los datos de la sesión
+                val state = loginState
+                onLoginSuccess(
+                    state.user,
+                    state.token ?: "",
+                    state.tokenType ?: "Bearer",
+                    state.expiresAt
                 )
             },
             text = {
@@ -391,7 +393,10 @@ fun LoginScreen(
                     onClick = {
                         showSuccessDialog = false
                         viewModel.clearState()
-                        onLoginSuccess()
+                        onLoginSuccess(loginState.user,
+                            loginState.token ?: "",
+                            loginState.tokenType ?: "Bearer",
+                            loginState.expiresAt)
                     },
                     colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF00C851))
                 ) { Text(text = stringResource(id = R.string.continuar), color = Color.White) }

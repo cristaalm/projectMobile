@@ -9,7 +9,6 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
@@ -18,29 +17,44 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.compose.runtime.collectAsState
 import com.renova.mobile.R
-import androidx.compose.animation.core.*
-import kotlinx.coroutines.delay
-import androidx.compose.runtime.rememberCoroutineScope
-import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.tooling.preview.Preview
-import kotlinx.coroutines.launch
+import com.renova.mobile.viewmodel.ForgotPasswordViewModel
 
-@Preview
 @Composable
 fun ForgotPasswordScreen(
-    onBackToLogin: () -> Unit = {}
+    onBackToLogin: () -> Unit = {},
+    viewModel: ForgotPasswordViewModel = viewModel()
 ) {
     var email by remember { mutableStateOf("") }
     var emailError by remember { mutableStateOf(false) }
     var emailEmptyError by remember { mutableStateOf(false) }
     var showSuccessDialog by remember { mutableStateOf(false) }
-    var isLoading by remember { mutableStateOf(false) }
+    var showErrorDialog by remember { mutableStateOf(false) }
 
     val isDarkTheme = isSystemInDarkTheme()
-    val coroutineScope = rememberCoroutineScope()
+    val forgotPasswordState by viewModel.forgotPasswordState.collectAsState()
 
-    // Fondo degradado según el modo
+    LaunchedEffect(forgotPasswordState) {
+        when {
+            forgotPasswordState.isSuccess -> {
+                showSuccessDialog = true
+                showErrorDialog = false
+            }
+
+            forgotPasswordState.error != null -> {
+                showErrorDialog = true
+                showSuccessDialog = false
+            }
+
+            else -> {
+                showSuccessDialog = false
+                showErrorDialog = false
+            }
+        }
+    }
+
     val gradientBrush = if (isDarkTheme) {
         Brush.verticalGradient(
             colors = listOf(
@@ -69,7 +83,6 @@ fun ForgotPasswordScreen(
             .background(gradientBrush)
             .padding(24.dp)
     ) {
-        // Hojas estáticas con movimiento sutil
         SubtleLeavesBackground(
             modifier = Modifier.fillMaxSize(),
             leafPositions = listOf(
@@ -86,7 +99,6 @@ fun ForgotPasswordScreen(
                 horizontalAlignment = Alignment.CenterHorizontally,
                 verticalArrangement = Arrangement.Center
             ) {
-                // Logo
                 Card(
                     modifier = Modifier
                         .fillMaxWidth()
@@ -113,7 +125,6 @@ fun ForgotPasswordScreen(
 
                 Spacer(modifier = Modifier.height(16.dp))
 
-                // Formulario
                 Card(
                     modifier = Modifier
                         .fillMaxWidth()
@@ -126,9 +137,8 @@ fun ForgotPasswordScreen(
                         modifier = Modifier.padding(32.dp),
                         horizontalAlignment = Alignment.CenterHorizontally
                     ) {
-                        // Título
                         Text(
-                            text = stringResource(id = R.string.forgot_password_title),
+                            text = "Recuperar contraseña",
                             fontSize = 24.sp,
                             fontWeight = FontWeight.Bold,
                             color = textColor,
@@ -138,7 +148,7 @@ fun ForgotPasswordScreen(
                         Spacer(modifier = Modifier.height(8.dp))
 
                         Text(
-                            text = stringResource(id = R.string.enter_email_password),
+                            text = "Ingresa tu correo electrónico y te enviaremos un enlace para restablecer tu contraseña.",
                             fontSize = 14.sp,
                             color = textColor.copy(alpha = 0.7f),
                             textAlign = TextAlign.Center,
@@ -147,15 +157,17 @@ fun ForgotPasswordScreen(
 
                         Spacer(modifier = Modifier.height(24.dp))
 
-                        // Email
                         OutlinedTextField(
                             value = email,
                             onValueChange = {
                                 email = it
-                                emailError = it.isNotEmpty() && !android.util.Patterns.EMAIL_ADDRESS.matcher(it).matches()
+                                emailError =
+                                    it.isNotEmpty() && !android.util.Patterns.EMAIL_ADDRESS.matcher(
+                                        it
+                                    ).matches()
                                 if (it.isNotEmpty()) emailEmptyError = false
                             },
-                            label = { Text(text = stringResource(id = R.string.email), color = textColor) },
+                            label = { Text("Correo electrónico", color = textColor) },
                             leadingIcon = {
                                 Icon(
                                     painter = painterResource(id = R.drawable.ic_email),
@@ -181,11 +193,7 @@ fun ForgotPasswordScreen(
 
                         if ((emailError && email.isNotEmpty()) || emailEmptyError) {
                             Text(
-                                text = if (emailEmptyError) {
-                                    stringResource(id = R.string.email_required)
-                                } else {
-                                    stringResource(id = R.string.email_invalid)
-                                },
+                                text = if (emailEmptyError) "El correo es obligatorio" else "Correo inválido",
                                 color = Color.Red,
                                 fontSize = 12.sp,
                                 modifier = Modifier
@@ -196,46 +204,46 @@ fun ForgotPasswordScreen(
 
                         Spacer(modifier = Modifier.height(24.dp))
 
-                        // Botón Enviar
                         Button(
                             onClick = {
                                 emailEmptyError = email.isEmpty()
                                 if (!emailEmptyError) {
-                                    emailError = !android.util.Patterns.EMAIL_ADDRESS.matcher(email).matches()
+                                    emailError = !android.util.Patterns.EMAIL_ADDRESS.matcher(email)
+                                        .matches()
                                     if (!emailError) {
-                                        isLoading = true
-                                        // Simulamos el tiempo de envío del email
-                                        coroutineScope.launch {
-                                            delay(2000)
-                                            isLoading = false
-                                            showSuccessDialog = true
-                                        }
+                                        viewModel.forgotPassword(email)
                                     }
                                 }
                             },
-                            enabled = !isLoading,
+                            enabled = !forgotPasswordState.isLoading,
                             modifier = Modifier
                                 .fillMaxWidth()
                                 .height(50.dp),
                             shape = RoundedCornerShape(12.dp),
-                            colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF1B4F5C))
+                            colors = ButtonDefaults.buttonColors(
+                                containerColor = if (forgotPasswordState.isLoading) {
+                                    Color(0xFFFF1744)
+                                } else {
+                                    Color(0xFF1B4F5C)
+                                }
+                            )
                         ) {
-                            if (isLoading) {
+                            if (forgotPasswordState.isLoading) {
                                 CircularProgressIndicator(
                                     modifier = Modifier.size(16.dp),
-                                    color = Color.White,
+                                    color = if (isDarkTheme) Color(0xFF00C853) else Color.Black,
                                     strokeWidth = 2.dp
                                 )
                                 Spacer(modifier = Modifier.width(8.dp))
                                 Text(
-                                    text = stringResource(id = R.string.sending),
+                                    "ENVIANDO...",
                                     fontSize = 16.sp,
                                     fontWeight = FontWeight.Bold,
-                                    color = Color.White
+                                    color = if (isDarkTheme) Color(0xFF00C853) else Color.Black
                                 )
                             } else {
                                 Text(
-                                    text = stringResource(id = R.string.send_link),
+                                    "ENVIAR ENLACE",
                                     fontSize = 16.sp,
                                     fontWeight = FontWeight.Bold,
                                     color = Color.White
@@ -245,13 +253,12 @@ fun ForgotPasswordScreen(
 
                         Spacer(modifier = Modifier.height(16.dp))
 
-                        // Volver al login
                         TextButton(
                             onClick = { onBackToLogin() },
                             modifier = Modifier.fillMaxWidth()
                         ) {
                             Text(
-                                text = stringResource(id = R.string.return_login),
+                                "Volver al inicio de sesión",
                                 color = Color(0xFF00C851),
                                 fontSize = 14.sp
                             )
@@ -262,23 +269,24 @@ fun ForgotPasswordScreen(
         }
     }
 
-    // Diálogo de éxito
     if (showSuccessDialog) {
         AlertDialog(
             onDismissRequest = {
                 showSuccessDialog = false
+                viewModel.clearState()
                 onBackToLogin()
             },
             title = {
                 Text(
-                    text = stringResource(id = R.string.mail_sent),
+                    "Correo enviado",
                     color = Color(0xFF00C851),
                     fontWeight = FontWeight.Bold
                 )
             },
             text = {
                 Text(
-                    text = stringResource(id = R.string.recovery_link),
+                    forgotPasswordState.message
+                        ?: "Te hemos enviado un enlace de recuperación a tu correo electrónico.",
                     color = textColor,
                     textAlign = TextAlign.Center
                 )
@@ -287,11 +295,47 @@ fun ForgotPasswordScreen(
                 Button(
                     onClick = {
                         showSuccessDialog = false
+                        viewModel.clearState()
                         onBackToLogin()
                     },
                     colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF00C851))
                 ) {
-                    Text(text = stringResource(id = R.string.entendido), color = Color.White)
+                    Text("Entendido", color = Color.White)
+                }
+            },
+            containerColor = insideCardColor,
+            shape = RoundedCornerShape(16.dp)
+        )
+    }
+
+    if (showErrorDialog) {
+        AlertDialog(
+            onDismissRequest = {
+                showErrorDialog = false
+                viewModel.clearState()
+            },
+            title = {
+                Text(
+                    "Error",
+                    color = Color.Red,
+                    fontWeight = FontWeight.Bold
+                )
+            },
+            text = {
+                Text(
+                    forgotPasswordState.error ?: "Ha ocurrido un error. Intenta de nuevo.",
+                    color = textColor
+                )
+            },
+            confirmButton = {
+                Button(
+                    onClick = {
+                        showErrorDialog = false
+                        viewModel.clearState()
+                    },
+                    colors = ButtonDefaults.buttonColors(containerColor = Color.Red)
+                ) {
+                    Text("Reintentar", color = Color.White)
                 }
             },
             containerColor = insideCardColor,
@@ -299,4 +343,3 @@ fun ForgotPasswordScreen(
         )
     }
 }
-

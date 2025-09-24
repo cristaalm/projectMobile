@@ -7,12 +7,11 @@ import androidx.activity.enableEdgeToEdge
 import androidx.compose.animation.*
 import androidx.compose.animation.core.tween
 import androidx.compose.runtime.*
-import androidx.compose.ui.Modifier
-import androidx.compose.ui.unit.dp
 import com.renova.mobile.ui.screens.LoginScreen
 import com.renova.mobile.ui.screens.ForgotPasswordScreen
 import com.renova.mobile.ui.theme.RENOVAMobileTheme
 import com.renova.mobile.navigation.AppNavigation
+import com.renova.mobile.utils.SessionManager
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -20,14 +19,23 @@ class MainActivity : ComponentActivity() {
         enableEdgeToEdge()
         setContent {
             RENOVAMobileTheme {
-                var isLoggedIn by remember { mutableStateOf(false) }
+                val sessionManager = SessionManager(this)
+
+                // Verificar si hay sesión guardada al iniciar
+                var isLoggedIn by remember { mutableStateOf(sessionManager.isLoggedIn()) }
 
                 if (isLoggedIn) {
                     // App principal con BottomBar y navegación completa
-                    AppNavigation()
+                    AppNavigation(
+                        onLogout = {
+                            sessionManager.logout()
+                            isLoggedIn = false
+                        }
+                    )
                 } else {
                     // Pantallas de autenticación
                     AuthNavigation(
+                        sessionManager = sessionManager,
                         onLoginSuccess = { isLoggedIn = true }
                     )
                 }
@@ -38,7 +46,10 @@ class MainActivity : ComponentActivity() {
 
 @OptIn(ExperimentalAnimationApi::class)
 @Composable
-fun AuthNavigation(onLoginSuccess: () -> Unit) {
+fun AuthNavigation(
+    sessionManager: SessionManager,
+    onLoginSuccess: () -> Unit
+) {
     var currentScreen by remember { mutableStateOf("login") }
 
     AnimatedContent(
@@ -64,9 +75,17 @@ fun AuthNavigation(onLoginSuccess: () -> Unit) {
                     onForgotPassword = {
                         currentScreen = "forgot_password"
                     },
-                    onLoginSuccess = {
-                        onLoginSuccess() // Notifica a MainActivity que el login fue exitoso
+                    onLoginSuccess = { user, token, tokenType, expiresAt ->
+                        // Guardar la sesión
+                        sessionManager.saveSession(
+                            accessToken = token,
+                            tokenType = tokenType,
+                            expiresAt = expiresAt,
+                            user = user
+                        )
+                        onLoginSuccess()
                     }
+
                 )
             }
             "forgot_password" -> {

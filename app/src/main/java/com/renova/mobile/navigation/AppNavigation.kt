@@ -19,12 +19,17 @@ import androidx.compose.animation.slideInHorizontally
 import androidx.compose.animation.slideOutHorizontally
 
 @Composable
-fun AppNavigation() {
+fun AppNavigation(onLogout: () -> Unit) {
     val navController = rememberNavController()
 
     // Scaffold nos da la estructura básica de Material Design
     Scaffold(
-        bottomBar = { CustomBottomBar(navController = navController) }
+        bottomBar = {
+            CustomBottomBar(
+                navController = navController,
+                onLogout = onLogout  // Pasar la función de logout
+            )
+        }
     ) { innerPadding ->
         // NavHost donde las pantallas se muestrar
         NavHost(
@@ -32,7 +37,7 @@ fun AppNavigation() {
             startDestination = NavigationItem.Home.route, // pantalla inicial
             modifier = Modifier.padding(innerPadding) // Padding para que el contenido no quede debajo de la barra
         ) {
-            // Definimos las animaciones una sola vez para reutilizarlas
+
             val enterAnimation = slideInHorizontally(
                 initialOffsetX = { 1000 },
                 animationSpec = tween(300)
@@ -53,7 +58,7 @@ fun AppNavigation() {
                 animationSpec = tween(300)
             ) + fadeOut(animationSpec = tween(300))
 
-            // Aplicamos las animaciones a cada pantalla
+
             composable(
                 route = NavigationItem.Home.route,
                 enterTransition = { enterAnimation },

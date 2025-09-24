@@ -7,8 +7,7 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -72,9 +71,15 @@ fun NavItem(item: NavigationItem, isSelected: Boolean, onClick: () -> Unit) {
 }
 
 @Composable
-fun CustomBottomBar(navController: NavController) {
+fun CustomBottomBar(
+    navController: NavController,
+    onLogout: () -> Unit
+) {
     val navBackStackEntry by navController.currentBackStackEntryAsState()
     val currentRoute = navBackStackEntry?.destination?.route
+
+    // Estado para controlar la visibilidad del modal
+    var showLogoutModal by remember { mutableStateOf(false) }
 
     Box(
         modifier = Modifier
@@ -117,12 +122,15 @@ fun CustomBottomBar(navController: NavController) {
                 onClick = { navController.navigate(NavigationItem.Profile.route) }
             )
 
+            // Botón de logout - ahora muestra el modal
             Box(
                 modifier = Modifier
                     .size(56.dp)
                     .offset(y = -8.dp)
                     .clip(CircleShape)
-                    .clickable { /* Logout logic */ },
+                    .clickable {
+                        showLogoutModal = true  // Mostrar modal en lugar de logout directo
+                    },
                 contentAlignment = Alignment.Center
             ) {
                 Icon(
@@ -132,7 +140,8 @@ fun CustomBottomBar(navController: NavController) {
                 )
             }
         }
-//boton central qr
+
+        // Botón central QR
         Box(
             modifier = Modifier
                 .size(64.dp)
@@ -154,4 +163,14 @@ fun CustomBottomBar(navController: NavController) {
             )
         }
     }
+
+    // Modal de logout
+    LogoutModal(
+        isVisible = showLogoutModal,
+        onDismiss = { showLogoutModal = false },
+        onConfirm = {
+            showLogoutModal = false
+            onLogout()
+        }
+    )
 }
