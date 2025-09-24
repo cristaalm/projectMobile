@@ -2,7 +2,6 @@ package com.renova.mobile.ui.screens
 
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
-import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
@@ -11,7 +10,6 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.graphicsLayer
-import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.TextStyle
@@ -29,6 +27,7 @@ import com.renova.mobile.viewmodel.LoginViewModel
 import androidx.compose.animation.core.*
 import androidx.compose.ui.res.stringResource
 import com.renova.mobile.network.User
+import com.renova.mobile.ui.theme.*
 
 @Composable
 fun LoginScreen(
@@ -37,7 +36,8 @@ fun LoginScreen(
     onLoginSuccess: (User?, String, String, String?) -> Unit = { _, _, _, _ -> },
     viewModel: LoginViewModel = viewModel()
 ) {
-    val isDarkTheme = isSystemInDarkTheme()
+    // Usar los colores del tema
+    val colors = MaterialTheme.renovaColors
 
     var email by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
@@ -68,32 +68,10 @@ fun LoginScreen(
         }
     }
 
-    val gradientBrush = if (isDarkTheme) {
-        Brush.verticalGradient(
-            colors = listOf(
-                Color(0xFF004D40),
-                Color(0xFF00695C),
-                Color(0xFF00796B)
-            )
-        )
-    } else {
-        Brush.verticalGradient(
-            colors = listOf(
-                Color(0xFF00E676),
-                Color(0xFF00C853),
-                Color(0xFF00A843),
-                Color(0xFF1B5E20)
-            )
-        )
-    }
-
-    val insideCardColor = if (isDarkTheme) Color(0xFF1E1E1E) else Color.White
-    val textColor = if (isDarkTheme) Color(0xFFE0E0E0) else Color.Black
-
     Box(
         modifier = Modifier
             .fillMaxSize()
-            .background(gradientBrush)
+            .background(RenovaGradients.backgroundGradient())
             .padding(24.dp)
     ) {
         SubtleLeavesBackground(
@@ -112,12 +90,13 @@ fun LoginScreen(
                 horizontalAlignment = Alignment.CenterHorizontally,
                 verticalArrangement = Arrangement.Center
             ) {
+                // Logo Card
                 Card(
                     modifier = Modifier
                         .fillMaxWidth()
                         .padding(horizontal = 16.dp, vertical = 8.dp),
                     shape = RoundedCornerShape(16.dp),
-                    colors = CardDefaults.cardColors(containerColor = insideCardColor),
+                    colors = CardDefaults.cardColors(containerColor = colors.cardBackground),
                     elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
                 ) {
                     Box(
@@ -138,18 +117,20 @@ fun LoginScreen(
 
                 Spacer(modifier = Modifier.height(16.dp))
 
+                // Login Form Card
                 Card(
                     modifier = Modifier
                         .fillMaxWidth()
                         .padding(horizontal = 16.dp),
                     shape = RoundedCornerShape(16.dp),
-                    colors = CardDefaults.cardColors(containerColor = insideCardColor),
+                    colors = CardDefaults.cardColors(containerColor = colors.cardBackground),
                     elevation = CardDefaults.cardElevation(defaultElevation = 8.dp)
                 ) {
                     Column(
                         modifier = Modifier.padding(32.dp),
                         horizontalAlignment = Alignment.CenterHorizontally
                     ) {
+                        // Email Field
                         OutlinedTextField(
                             value = email,
                             onValueChange = {
@@ -157,28 +138,25 @@ fun LoginScreen(
                                 emailError = it.isNotEmpty() && !android.util.Patterns.EMAIL_ADDRESS.matcher(it).matches()
                                 if (it.isNotEmpty()) emailEmptyError = false
                             },
-                            label = { Text(text = stringResource(id = R.string.email), color = textColor) },
+                            label = {
+                                Text(
+                                    text = stringResource(id = R.string.email),
+                                    color = colors.textPrimary
+                                )
+                            },
                             leadingIcon = {
                                 Icon(
                                     painter = painterResource(id = R.drawable.ic_email),
                                     contentDescription = "Email",
-                                    tint = Color(0xFF00C851)
+                                    tint = colors.iconTint
                                 )
                             },
                             isError = emailError || emailEmptyError,
                             singleLine = true,
                             modifier = Modifier.fillMaxWidth(),
                             shape = RoundedCornerShape(12.dp),
-                            textStyle = TextStyle(color = textColor),
-                            colors = OutlinedTextFieldDefaults.colors(
-                                focusedBorderColor = Color(0xFF00C851),
-                                unfocusedBorderColor = Color(0xFF00C851).copy(alpha = 0.5f),
-                                errorBorderColor = Color.Red,
-                                cursorColor = Color(0xFF00C851),
-                                focusedLabelColor = Color(0xFF00C851),
-                                unfocusedLabelColor = textColor.copy(alpha = 0.5f),
-                                errorLabelColor = Color.Red
-                            )
+                            textStyle = TextStyle(color = colors.textPrimary),
+                            colors = RenovaComponentColors.textFieldColors()
                         )
 
                         if ((emailError && email.isNotEmpty()) || emailEmptyError) {
@@ -188,7 +166,7 @@ fun LoginScreen(
                                 } else {
                                     stringResource(id = R.string.email_invalid)
                                 },
-                                color = Color.Red,
+                                color = RenovaColors.Error,
                                 fontSize = 12.sp,
                                 modifier = Modifier
                                     .fillMaxWidth()
@@ -198,6 +176,7 @@ fun LoginScreen(
 
                         Spacer(modifier = Modifier.height(16.dp))
 
+                        // Password Field
                         OutlinedTextField(
                             value = password,
                             onValueChange = {
@@ -207,12 +186,17 @@ fun LoginScreen(
                                     if (it.isNotEmpty()) passwordEmptyError = false
                                 }
                             },
-                            label = { Text(text = stringResource(id = R.string.login_password), color = textColor) },
+                            label = {
+                                Text(
+                                    text = stringResource(id = R.string.login_password),
+                                    color = colors.textPrimary
+                                )
+                            },
                             leadingIcon = {
                                 Icon(
                                     painter = painterResource(id = R.drawable.ic_lock),
                                     contentDescription = "Lock",
-                                    tint = Color(0xFF00C851)
+                                    tint = colors.iconTint
                                 )
                             },
                             trailingIcon = {
@@ -227,7 +211,7 @@ fun LoginScreen(
                                         } else {
                                             stringResource(id = R.string.show_password)
                                         },
-                                        tint = Color(0xFF00C851)
+                                        tint = colors.iconTint
                                     )
                                 }
                             },
@@ -237,16 +221,8 @@ fun LoginScreen(
                             singleLine = true,
                             modifier = Modifier.fillMaxWidth(),
                             shape = RoundedCornerShape(12.dp),
-                            textStyle = TextStyle(color = textColor),
-                            colors = OutlinedTextFieldDefaults.colors(
-                                focusedBorderColor = Color(0xFF00C851),
-                                unfocusedBorderColor = Color(0xFF00C851).copy(alpha = 0.5f),
-                                errorBorderColor = Color.Red,
-                                cursorColor = Color(0xFF00C851),
-                                focusedLabelColor = Color(0xFF00C851),
-                                unfocusedLabelColor = textColor.copy(alpha = 0.5f),
-                                errorLabelColor = Color.Red
-                            )
+                            textStyle = TextStyle(color = colors.textPrimary),
+                            colors = RenovaComponentColors.textFieldColors()
                         )
 
                         if ((passwordError && password.isNotEmpty()) || passwordEmptyError) {
@@ -256,7 +232,7 @@ fun LoginScreen(
                                 } else {
                                     stringResource(id = R.string.password_characters)
                                 },
-                                color = Color.Red,
+                                color = RenovaColors.Error,
                                 fontSize = 12.sp,
                                 modifier = Modifier
                                     .fillMaxWidth()
@@ -266,14 +242,14 @@ fun LoginScreen(
 
                         Spacer(modifier = Modifier.height(16.dp))
 
-                        // Variable local para controlar el estado de loading visual
+                        // Loading state
                         var isButtonLoading by remember { mutableStateOf(false) }
 
-                        // Sincronizar con el estado del ViewModel
                         LaunchedEffect(loginState.isLoading) {
                             isButtonLoading = loginState.isLoading
                         }
 
+                        // Login Button
                         Button(
                             onClick = {
                                 emailEmptyError = email.isEmpty()
@@ -284,7 +260,7 @@ fun LoginScreen(
                                     passwordError = !validatePassword(password)
 
                                     if (!emailError && !passwordError) {
-                                        isButtonLoading = true  // Activar loading inmediatamente
+                                        isButtonLoading = true
                                         viewModel.login(email, password)
                                     }
                                 }
@@ -294,18 +270,16 @@ fun LoginScreen(
                                 .fillMaxWidth()
                                 .height(50.dp),
                             shape = RoundedCornerShape(12.dp),
-                            colors = ButtonDefaults.buttonColors(
-                                containerColor = if (isButtonLoading) {
-                                    if (isDarkTheme) Color(0xFF00C853) else Color(0xFF212121)
-                                } else {
-                                    Color(0xFF1B4F5C)
-                                }
-                            )
+                            colors = if (isButtonLoading) {
+                                RenovaComponentColors.loadingButtonColors(androidx.compose.foundation.isSystemInDarkTheme())
+                            } else {
+                                RenovaComponentColors.primaryButtonColors()
+                            }
                         ) {
                             if (isButtonLoading) {
                                 CircularProgressIndicator(
                                     modifier = Modifier.size(18.dp),
-                                    color = if (isDarkTheme) Color(0xFF00C853) else Color.Black,
+                                    color = if (androidx.compose.foundation.isSystemInDarkTheme()) RenovaColors.Primary else Color.Black,
                                     strokeWidth = 3.dp
                                 )
                                 Spacer(modifier = Modifier.width(8.dp))
@@ -313,7 +287,7 @@ fun LoginScreen(
                                     text = stringResource(id = R.string.iniciando),
                                     fontSize = 16.sp,
                                     fontWeight = FontWeight.Bold,
-                                    color = if (isDarkTheme) Color(0xFF00C853) else Color.Black
+                                    color = if (androidx.compose.foundation.isSystemInDarkTheme()) RenovaColors.Primary else Color.Black
                                 )
                             } else {
                                 Text(
@@ -327,36 +301,36 @@ fun LoginScreen(
 
                         Spacer(modifier = Modifier.height(12.dp))
 
+                        // Create Account Button
                         OutlinedButton(
                             onClick = { onCreateAccount() },
                             modifier = Modifier
                                 .fillMaxWidth()
                                 .height(50.dp),
                             shape = RoundedCornerShape(12.dp),
-                            colors = ButtonDefaults.buttonColors(containerColor = Color.Transparent),
+                            colors = RenovaComponentColors.secondaryButtonColors(),
                             border = ButtonDefaults.outlinedButtonBorder.copy(
-                                brush = Brush.horizontalGradient(
-                                    colors = listOf(Color(0xFF00C851), Color(0xFF00C851))
-                                )
+                                brush = RenovaGradients.cardBorderGradient()
                             )
                         ) {
                             Text(
                                 text = stringResource(id = R.string.create_account),
                                 fontSize = 16.sp,
                                 fontWeight = FontWeight.Bold,
-                                color = Color(0xFF00C851)
+                                color = RenovaColors.Primary
                             )
                         }
 
                         Spacer(modifier = Modifier.height(16.dp))
 
+                        // Forgot Password
                         TextButton(
                             onClick = { onForgotPassword() },
                             modifier = Modifier.fillMaxWidth()
                         ) {
                             Text(
                                 text = stringResource(id = R.string.forgot_password),
-                                color = Color(0xFF00C851),
+                                color = RenovaColors.Primary,
                                 fontSize = 14.sp,
                                 textDecoration = TextDecoration.Underline
                             )
@@ -367,13 +341,12 @@ fun LoginScreen(
         }
     }
 
+    // Success Dialog
     if (showSuccessDialog) {
         AlertDialog(
             onDismissRequest = {
                 showSuccessDialog = false
                 viewModel.clearState()
-
-                // Pasar los datos de la sesión
                 val state = loginState
                 onLoginSuccess(
                     state.user,
@@ -385,7 +358,7 @@ fun LoginScreen(
             text = {
                 Text(
                     loginState.message ?: stringResource(id = R.string.logged),
-                    color = textColor
+                    color = colors.textPrimary
                 )
             },
             confirmButton = {
@@ -398,14 +371,20 @@ fun LoginScreen(
                             loginState.tokenType ?: "Bearer",
                             loginState.expiresAt)
                     },
-                    colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF00C851))
-                ) { Text(text = stringResource(id = R.string.continuar), color = Color.White) }
+                    colors = ButtonDefaults.buttonColors(containerColor = RenovaColors.Primary)
+                ) {
+                    Text(
+                        text = stringResource(id = R.string.continuar),
+                        color = Color.White
+                    )
+                }
             },
-            containerColor = insideCardColor,
+            containerColor = colors.cardBackground,
             shape = RoundedCornerShape(16.dp)
         )
     }
 
+    // Error Dialog
     if (showErrorDialog) {
         AlertDialog(
             onDismissRequest = {
@@ -415,7 +394,7 @@ fun LoginScreen(
             title = {
                 Text(
                     text = stringResource(id = R.string.error_access),
-                    color = Color.Red,
+                    color = RenovaColors.Error,
                     fontWeight = FontWeight.Bold
                 )
             },
@@ -448,7 +427,7 @@ fun LoginScreen(
                     else -> loginState.error ?: stringResource(id = R.string.error_unknown)
                 }
 
-                Text(errorMessage, color = textColor)
+                Text(errorMessage, color = colors.textPrimary)
             },
             confirmButton = {
                 Button(
@@ -456,10 +435,15 @@ fun LoginScreen(
                         showErrorDialog = false
                         viewModel.clearState()
                     },
-                    colors = ButtonDefaults.buttonColors(containerColor = Color.Red)
-                ) { Text(text = stringResource(id = R.string.retry), color = Color.White) }
+                    colors = ButtonDefaults.buttonColors(containerColor = RenovaColors.Error)
+                ) {
+                    Text(
+                        text = stringResource(id = R.string.retry),
+                        color = Color.White
+                    )
+                }
             },
-            containerColor = insideCardColor,
+            containerColor = colors.cardBackground,
             shape = RoundedCornerShape(16.dp)
         )
     }

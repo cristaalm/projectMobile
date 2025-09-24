@@ -6,18 +6,10 @@ import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.compose.animation.*
 import androidx.compose.animation.core.tween
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Surface
 import androidx.compose.runtime.*
-import androidx.compose.ui.Modifier
-import androidx.compose.ui.platform.LocalView
-import androidx.core.view.WindowCompat
-import androidx.core.view.WindowInsetsCompat
-import androidx.core.view.WindowInsetsControllerCompat
 import com.renova.mobile.ui.screens.LoginScreen
 import com.renova.mobile.ui.screens.ForgotPasswordScreen
-import com.renova.mobile.ui.theme.RENOVAMobileTheme
+import com.renova.mobile.ui.theme.RenovaTheme
 import com.renova.mobile.navigation.AppNavigation
 import com.renova.mobile.utils.SessionManager
 
@@ -26,106 +18,81 @@ class MainActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
         setContent {
-            RENOVAMobileTheme {
-                HideSystemNavigation()
+            RenovaTheme {  // Usando el nuevo tema personalizado
+                val sessionManager = SessionManager(this)
 
-                Surface(
-                    modifier = Modifier.fillMaxSize(),
-                    color = MaterialTheme.colorScheme.background
-                ) {
-                    val sessionManager = SessionManager(this)
-                    // Verificar si hay sesión guardada al iniciar
-                    var isLoggedIn by remember { mutableStateOf(sessionManager.isLoggedIn()) }
+                // Verificar si hay sesión guardada al iniciar
+                var isLoggedIn by remember { mutableStateOf(sessionManager.isLoggedIn()) }
 
-                    if (isLoggedIn) {
-                        // App principal con BottomBar y navegación completa
-                        AppNavigation(
-                            onLogout = {
-                                sessionManager.logout()
-                                isLoggedIn = false
-                            }
-                        )
-                    } else {
-                        // Pantallas de autenticación
-                        AuthNavigation(
-                            sessionManager = sessionManager,
-                            onLoginSuccess = { isLoggedIn = true }
-                        )
-                    }
+                if (isLoggedIn) {
+                    // App principal con BottomBar y navegación completa
+                    AppNavigation(
+                        onLogout = {
+                            sessionManager.logout()
+                            isLoggedIn = false
+                        }
+                    )
+                } else {
+                    // Pantallas de autenticación
+                    AuthNavigation(
+                        sessionManager = sessionManager,
+                        onLoginSuccess = { isLoggedIn = true }
+                    )
                 }
             }
         }
     }
+}
 
-    @Composable
-    private fun HideSystemNavigation() {
-        val view = LocalView.current
+@OptIn(ExperimentalAnimationApi::class)
+@Composable
+fun AuthNavigation(
+    sessionManager: SessionManager,
+    onLoginSuccess: () -> Unit
+) {
+    var currentScreen by remember { mutableStateOf("login") }
 
-        DisposableEffect(Unit) {
-            val window =
-                (view.context as? ComponentActivity)?.window ?: return@DisposableEffect onDispose {}
-            val insetsController = WindowCompat.getInsetsController(window, view)
-            // Ocultar la barra de navegación del sistema
-            insetsController.hide(WindowInsetsCompat.Type.navigationBars())
-
-            insetsController.systemBarsBehavior =
-                WindowInsetsControllerCompat.BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE
-            onDispose {}
-        }
-    }
-
-    @OptIn(ExperimentalAnimationApi::class)
-    @Composable
-    fun AuthNavigation(
-        sessionManager: SessionManager,
-        onLoginSuccess: () -> Unit
-    ) {
-        var currentScreen by remember { mutableStateOf("login") }
-
-        AnimatedContent(
-            targetState = currentScreen,
-            transitionSpec = {
-                slideInHorizontally(
-                    initialOffsetX = { width ->
-                        if (targetState == "forgot_password") width else -width
+    AnimatedContent(
+        targetState = currentScreen,
+        transitionSpec = {
+            slideInHorizontally(
+                initialOffsetX = { width ->
+                    if (targetState == "forgot_password") width else -width
+                },
+                animationSpec = tween(300)
+            ) with slideOutHorizontally(
+                targetOffsetX = { width ->
+                    if (targetState == "forgot_password") -width else width
+                },
+                animationSpec = tween(300)
+            )
+        },
+        label = "screen_transition"
+    ) { screen ->
+        when (screen) {
+            "login" -> {
+                LoginScreen(
+                    onForgotPassword = {
+                        currentScreen = "forgot_password"
                     },
-                    animationSpec = tween(300)
-                ) with slideOutHorizontally(
-                    targetOffsetX = { width ->
-                        if (targetState == "forgot_password") -width else width
-                    },
-                    animationSpec = tween(300)
+                    onLoginSuccess = { user, token, tokenType, expiresAt ->
+                        // Guardar la sesión
+                        sessionManager.saveSession(
+                            accessToken = token,
+                            tokenType = tokenType,
+                            expiresAt = expiresAt,
+                            user = user
+                        )
+                        onLoginSuccess()
+                    }
                 )
-            },
-            label = "screen_transition"
-        ) { screen ->
-            when (screen) {
-                "login" -> {
-                    LoginScreen(
-                        onForgotPassword = {
-                            currentScreen = "forgot_password"
-                        },
-                        onLoginSuccess = { user, token, tokenType, expiresAt ->
-                            // Guardar la sesión
-                            sessionManager.saveSession(
-                                accessToken = token,
-                                tokenType = tokenType,
-                                expiresAt = expiresAt,
-                                user = user
-                            )
-                            onLoginSuccess()
-                        }
-
-                    )
-                }
-
-                "forgot_password" -> {
-                    ForgotPasswordScreen(
-                        onBackToLogin = {
-                            currentScreen = "login"
-                        }
-                    )
-                }
+            }
+            "forgot_password" -> {
+                ForgotPasswordScreen(
+                    onBackToLogin = {
+                        currentScreen = "login"
+                    }
+                )
             }
         }
     }
