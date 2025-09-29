@@ -2,7 +2,7 @@
                     <!-- English -->
 
     <!-- LoginScreen -->
-    <string name="app_name">RENOVA Mobile</string>
+    <string name="app_name">Renova</string>
     <string name="email">Email</string>
     <string name="email_required">Email is required</string>
     <string name="email_invalid">Invalid email</string>

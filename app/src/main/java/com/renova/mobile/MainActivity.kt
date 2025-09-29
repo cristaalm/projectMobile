@@ -7,6 +7,10 @@ import androidx.activity.enableEdgeToEdge
 import androidx.compose.animation.*
 import androidx.compose.animation.core.tween
 import androidx.compose.runtime.*
+import androidx.compose.ui.platform.LocalView
+import androidx.core.view.WindowCompat
+import androidx.core.view.WindowInsetsCompat
+import androidx.core.view.WindowInsetsControllerCompat
 import com.renova.mobile.ui.screens.LoginScreen
 import com.renova.mobile.ui.screens.ForgotPasswordScreen
 import com.renova.mobile.ui.theme.RenovaTheme
@@ -20,6 +24,7 @@ class MainActivity : ComponentActivity() {
         setContent {
             RenovaTheme {  // Usando el nuevo tema personalizado
                 val sessionManager = SessionManager(this)
+                HideSystemNavigation()
 
                 // Verificar si hay sesión guardada al iniciar
                 var isLoggedIn by remember { mutableStateOf(sessionManager.isLoggedIn()) }
@@ -41,6 +46,21 @@ class MainActivity : ComponentActivity() {
                 }
             }
         }
+    }
+}
+@Composable
+private fun HideSystemNavigation() {
+    val view = LocalView.current
+    DisposableEffect(Unit) {
+        val window =
+            (view.context as? ComponentActivity)?.window ?: return@DisposableEffect onDispose {}
+        val insetsController = WindowCompat.getInsetsController(window, view)
+        // Ocultar la barra de navegación del sistema
+        insetsController.hide(WindowInsetsCompat.Type.navigationBars())
+
+        insetsController.systemBarsBehavior =
+            WindowInsetsControllerCompat.BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE
+        onDispose {}
     }
 }
 
