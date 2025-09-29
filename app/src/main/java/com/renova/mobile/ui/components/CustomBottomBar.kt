@@ -21,7 +21,6 @@ import androidx.navigation.NavController
 import androidx.navigation.compose.currentBackStackEntryAsState
 import com.renova.mobile.R
 import com.renova.mobile.navigation.NavigationItem
-import com.renova.mobile.navigation.TopNavigationItem
 import androidx.compose.animation.*
 
 private val primaryColor = Color(0xFF08b662)
@@ -119,9 +118,7 @@ fun CustomBottomBar(
 
             NavItem(
                 item = NavigationItem.Profile,
-                isSelected = currentRoute == NavigationItem.Profile.route ||
-                           currentRoute == TopNavigationItem.Activity.route ||
-                           currentRoute == TopNavigationItem.Streak.route,
+                isSelected = currentRoute == NavigationItem.Profile.route,
                 onClick = { navController.navigate(NavigationItem.Profile.route) }
             )
 

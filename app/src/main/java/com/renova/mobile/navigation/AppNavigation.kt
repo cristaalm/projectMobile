@@ -11,15 +11,12 @@ import com.renova.mobile.ui.screens.HomeScreen
 import com.renova.mobile.ui.screens.ProfileScreen
 import com.renova.mobile.ui.screens.QRScreen
 import com.renova.mobile.ui.screens.StoreScreen
-import com.renova.mobile.ui.screens.ActivityScreen
-import com.renova.mobile.ui.screens.RachaScreen
 import com.renova.mobile.ui.components.CustomBottomBar
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.slideInHorizontally
 import androidx.compose.animation.slideOutHorizontally
-import com.renova.mobile.ui.components.CustomTopBar
 
 @Composable
 fun AppNavigation(onLogout: () -> Unit) {
@@ -27,11 +24,6 @@ fun AppNavigation(onLogout: () -> Unit) {
 
     // Scaffold nos da la estructura básica de Material Design
     Scaffold(
-        topBar = {
-            CustomTopBar(
-                navController = navController,
-            )
-        },
         bottomBar = {
             CustomBottomBar(
                 navController = navController,
@@ -105,27 +97,6 @@ fun AppNavigation(onLogout: () -> Unit) {
                 popExitTransition = { popExitAnimation }
             ) {
                 ProfileScreen()
-            }
-            // Pantalla de Actividad
-            composable(
-                route = TopNavigationItem.Activity.route,
-                enterTransition = { enterAnimation },
-                exitTransition = { exitAnimation },
-                popEnterTransition = { popEnterAnimation },
-                popExitTransition = { popExitAnimation }
-            ) {
-                ActivityScreen()
-            }
-
-            // Pantalla de Racha
-            composable(
-                route = TopNavigationItem.Streak.route,
-                enterTransition = { enterAnimation },
-                exitTransition = { exitAnimation },
-                popEnterTransition = { popEnterAnimation },
-                popExitTransition = { popExitAnimation }
-            ) {
-                RachaScreen()
             }
         }
     }

@@ -25,20 +25,6 @@ data class RenovaColorScheme(
     val gradientMid1: androidx.compose.ui.graphics.Color,
     val gradientMid2: androidx.compose.ui.graphics.Color? = null,
     val gradientEnd: androidx.compose.ui.graphics.Color,
-
-    // Colores específicos para ActivityScreen
-    val activityBackground: androidx.compose.ui.graphics.Color,
-    val activityPrimary: androidx.compose.ui.graphics.Color,
-    val activitySecondary: androidx.compose.ui.graphics.Color,
-    val activityCardBackground: androidx.compose.ui.graphics.Color,
-    val plasticCardBackground: androidx.compose.ui.graphics.Color,
-    val aluminumCardBackground: androidx.compose.ui.graphics.Color,
-    val aluminumIconTint: androidx.compose.ui.graphics.Color,
-    val positivePoints: androidx.compose.ui.graphics.Color,
-    val negativePoints: androidx.compose.ui.graphics.Color,
-    val buttonEnabled: androidx.compose.ui.graphics.Color,
-    val buttonDisabled: androidx.compose.ui.graphics.Color,
-    val shadowColor: androidx.compose.ui.graphics.Color,
 )
 
 val LightRenovaColors = RenovaColorScheme(
@@ -54,20 +40,6 @@ val LightRenovaColors = RenovaColorScheme(
     gradientMid1 = RenovaColors.Light.GradientMid1,
     gradientMid2 = RenovaColors.Light.GradientMid2,
     gradientEnd = RenovaColors.Light.GradientEnd,
-
-    // Colores específicos para ActivityScreen - Modo claro
-    activityBackground = RenovaColors.Light.ActivityBackground,
-    activityPrimary = RenovaColors.Light.ActivityPrimary,
-    activitySecondary = RenovaColors.Light.ActivitySecondary,
-    activityCardBackground = RenovaColors.Light.ActivityCardBackground,
-    plasticCardBackground = RenovaColors.Light.PlasticCard,
-    aluminumCardBackground = RenovaColors.Light.AluminumCard,
-    aluminumIconTint = RenovaColors.Light.AluminumCardIcon,
-    positivePoints = RenovaColors.Light.PositivePoints,
-    negativePoints = RenovaColors.Light.NegativePoints,
-    buttonEnabled = RenovaColors.Light.ButtonEnabled,
-    buttonDisabled = RenovaColors.Light.ButtonDisabled,
-    shadowColor = RenovaColors.Light.ShadowColor,
 )
 
 val DarkRenovaColors = RenovaColorScheme(
@@ -82,20 +54,6 @@ val DarkRenovaColors = RenovaColorScheme(
     gradientStart = RenovaColors.Dark.GradientStart,
     gradientMid1 = RenovaColors.Dark.GradientMid1,
     gradientEnd = RenovaColors.Dark.GradientEnd,
-
-    // Colores específicos para ActivityScreen - Modo oscuro
-    activityBackground = RenovaColors.Dark.ActivityBackground,
-    activityPrimary = RenovaColors.Dark.ActivityPrimary,
-    activitySecondary = RenovaColors.Dark.ActivitySecondary,
-    activityCardBackground = RenovaColors.Dark.ActivityCardBackground,
-    plasticCardBackground = RenovaColors.Dark.PlasticCard,
-    aluminumCardBackground = RenovaColors.Dark.AluminumCard,
-    aluminumIconTint = RenovaColors.Dark.AluminumCardIcon,
-    positivePoints = RenovaColors.Dark.PositivePoints,
-    negativePoints = RenovaColors.Dark.NegativePoints,
-    buttonEnabled = RenovaColors.Dark.ButtonEnabled,
-    buttonDisabled = RenovaColors.Dark.ButtonDisabled,
-    shadowColor = RenovaColors.Dark.ShadowColor,
 )
 
 // CompositionLocal para acceder a los colores desde cualquier composable

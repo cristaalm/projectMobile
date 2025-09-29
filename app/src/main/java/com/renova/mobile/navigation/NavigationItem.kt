@@ -8,4 +8,5 @@ sealed class NavigationItem(val route: String, val selectedIcon: Int, val unsele
     object Store : NavigationItem("store", R.drawable.tienda2, R.drawable.tienda2_relleno,"Tienda")
     object QR : NavigationItem("qr", R.drawable.qr_relleno, R.drawable.qr, "")
     object Profile : NavigationItem("profile", R.drawable.usuario_relleno, R.drawable.usuario,"Perfil")
+
 }

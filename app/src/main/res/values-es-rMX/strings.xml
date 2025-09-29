@@ -41,40 +41,5 @@
     <string name="entendido">Entendido</string>
     <string name="sending">ENVIANDO...</string>
 
-    <!-- ActivityScreen -->
-    <string name="materials_received">MATERIALES RECIBIDOS</string>
-    <string name="plastic">Plástico</string>
-    <string name="aluminum">Latas</string>
-    <string name="total_materials">Total de materiales</string>
-    <string name="history">Historial</string>
-    <string name="bottle_pet">Botella PET</string>
-    <string name="aluminum_can">Lata Aluminio</string>
-    <string name="redemption_points_oxxo">Canjeo de puntos - Oxxo recarga de saldo</string>
-    <string name="redemption_points_cinepolis">Canjeo de puntos - Cinepolis boleto</string>
-    <string name="redemption_points_walmart">Canjeo de puntos - Walmart cupón</string>
-    <string name="previous">Anterior</string>
-    <string name="next">Siguiente</string>
-    <string name="of">de</string>
-
-    <!-- Profile and Activity -->
-    <string name="profile">Perfil</string>
-    <string name="activity">Actividad</string>
-    <string name="streak">Racha</string>
-
-    <!-- ActivityScreen -->
-    <string name="recycling_materials">Materiales reciclados</string>
-    <string name="cans">Latas</string>
-    <string name="materials_total">Total de materiales</string>
-    <string name="recent">Reciente</string>
-    <string name="points">pts</string>
-    <string name="page">Página</string>
-
-    <string name="points_exchange">Canjeo de puntos</string>
-    <string name="points_earned">Puntos ganados</string>
-    <string name="plastic_bottle_recycled">Botella PET reciclada</string>
-    <string name="aluminum_can_recycled">Lata de aluminio reciclada</string>
-    <string name="oxxo_top_up">Oxxo - Recarga de saldo</string>
-    <string name="store_discount">Descuento en tienda</string>
-    <string name="local_business">Comercio Local</string>
 
 </resources>
