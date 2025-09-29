@@ -39,4 +39,41 @@
     <string name="recovery_link">A recovery link has been sent to your email. Check your inbox.</string>
     <string name="entendido">OK</string>
     <string name="sending">SENDING...</string>
+
+    <!-- Activity Screen -->
+    <string name="materials_received">MATERIALS RECEIVED</string>
+    <string name="plastic">Plastic</string>
+    <string name="aluminum">Aluminum</string>
+    <string name="total_materials">Total materials</string>
+    <string name="history">History</string>
+    <string name="bottle_pet">PET Bottle</string>
+    <string name="aluminum_can">Aluminum Can</string>
+    <string name="redemption_points_oxxo">Points redeemed - Oxxo balance top-up</string>
+    <string name="redemption_points_cinepolis">Points redeemed - Cinepolis ticket</string>
+    <string name="redemption_points_walmart">Points redeemed - Walmart coupon</string>
+    <string name="previous">Previous</string>
+    <string name="next">Next</string>
+    <string name="of">of</string>
+
+    <!-- Profile, Activity, and Streak -->
+    <string name="profile">Profile</string>
+    <string name="activity">Activity</string>
+    <string name="streak">Streak</string>
+
+    <!-- ActivityScreen -->
+    <string name="recycling_materials">Recycled Materials</string>
+    <string name="cans">Cans</string>
+    <string name="materials_total">Total materials</string>
+    <string name="recent">Recent</string>
+    <string name="points">pts</string>
+    <string name="page">Page</string>
+
+    <string name="points_exchange">Points exchange</string>
+    <string name="points_earned">Points earned</string>
+    <string name="plastic_bottle_recycled">PET bottle recycled</string>
+    <string name="aluminum_can_recycled">Aluminum can recycled</string>
+    <string name="oxxo_top_up">Oxxo - Balance top-up</string>
+    <string name="store_discount">Store discount</string>
+    <string name="local_business">Local Business</string>
+
 </resources>
