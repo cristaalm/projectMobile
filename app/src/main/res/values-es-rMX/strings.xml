@@ -41,5 +41,18 @@
     <string name="entendido">Entendido</string>
     <string name="sending">ENVIANDO...</string>
 
+    <!--Pantalla de QR-->
+    <string name="mycode">Mi código QR</string>
+    <string name="current_points">Puntos actuales disponibles</string>
+    <string name="points_unit">PTS</string>
+    <string name="share_code">Compartir código</string>
+    <string name="qr_code_placeholder">CÓDIGO QR</string>
+    <string name="instructions_title">INSTRUCCIONES:</string>
+    <string name="instruction_1">Alinea tu código QR al escanear para empezar a ingresar los materiales.</string>
+    <string name="instruction_2">Aplasta previamente los productos para facilitar el proceso.</string>
+    <string name="instruction_3">Coloca los productos recomendados para ganar más puntos.</string>
+
+
+
 
 </resources>

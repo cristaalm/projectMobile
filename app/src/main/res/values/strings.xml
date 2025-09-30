@@ -39,4 +39,16 @@
     <string name="recovery_link">A recovery link has been sent to your email. Check your inbox.</string>
     <string name="entendido">OK</string>
     <string name="sending">SENDING...</string>
+
+    <!--Screen QR-->
+    <string name="mycode">My QR Code</string>
+    <string name="current_points">Available points</string>
+    <string name="points_unit">PTS</string>
+    <string name="share_code">Share code</string>
+    <string name="qr_code_placeholder">QR Code</string>
+    <string name="instructions_title">INSTRUCTIONS:</string>
+    <string name="instruction_1">Align your QR code to scan to start entering the materials.</string>
+    <string name="instruction_2">Press and hold the products to facilitate the process.</string>
+    <string name="instruction_3">Place the recommended products to gain more points.</string>
+
 </resources>

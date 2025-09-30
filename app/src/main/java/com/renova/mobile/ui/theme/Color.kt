@@ -6,8 +6,8 @@ import androidx.compose.ui.graphics.Color
 object RenovaColors {
 
     // Verdes principales
-    val Primary = Color(0xFF00C851)
-    val PrimaryVariant = Color(0xFF00A843)
+    val Primary = Color(0xFF00D084)
+    val PrimaryVariant = Color(0xFF019c61)
     val Secondary = Color(0xFF1B4F5C)
     val SecondaryVariant = Color(0xFF004D40)
 
@@ -25,6 +25,8 @@ object RenovaColors {
         val Border = Primary.copy(alpha = 0.5f)
         val BorderFocused = Primary
         val IconTint = Primary
+
+        val ShadowColor = Primary.copy(alpha = 0.4f)
 
         // Gradientes
         val GradientStart = Color(0xFF00E676)
@@ -55,7 +57,7 @@ object RenovaColors {
     }
 
     // Colores de estado (iguales para ambos temas)
-    val Error = Color(0xFFFF5252)
+    val Error = Color(0xFFE62929)
     val Success = Primary
     val Warning = Color(0xFFFFC107)
     val Info = Color(0xFF2196F3)

@@ -115,6 +115,7 @@ fun RenovaTheme(
     androidx.compose.runtime.CompositionLocalProvider(LocalRenovaColors provides renovaColors) {
         MaterialTheme(
             colorScheme = colorScheme,
+            typography = Typography,
             content = content
         )
     }
