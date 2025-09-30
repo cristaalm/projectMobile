@@ -41,6 +41,26 @@
     <string name="entendido">Entendido</string>
     <string name="sending">ENVIANDO...</string>
 
+    <!-- StoreScreen -->
+    <string name="search_allied_stores">Comercios Aliados</string>
+    <string name="search_icon">Buscar comercios</string>
+    <string name="featured_stores">Comercios Destacados</string>
+    <string name="categories">Categorías</string>
+    <string name="discover_products">Descubre Productos</string>
+    <string name="discover_stores_description">Descubre nuestros comercios aliados y gana puntos</string>
+    <string name="contact">Contacto</string>
+
+    <!-- Categorías -->
+    <string name="restaurants">Restaurantes</string>
+    <string name="gyms">Gimnasios</string>
+    <string name="stores">Tiendas</string>
+
+    <!-- Estados de carga -->
+    <string name="loading_stores">Cargando comercios...</string>
+    <string name="error_loading_stores">Error al cargar comercios</string>
+    <string name="no_stores_available">Sin comercios disponibles</string>
+    <string name="no_stores_found">No se encontraron comercios aliados en este momento</string>
+
     <!--Pantalla de QR-->
     <string name="mycode">Mi código QR</string>
     <string name="current_points">Puntos actuales disponibles</string>
@@ -51,7 +71,6 @@
     <string name="instruction_1">Alinea tu código QR al escanear para empezar a ingresar los materiales.</string>
     <string name="instruction_2">Aplasta previamente los productos para facilitar el proceso.</string>
     <string name="instruction_3">Coloca los productos recomendados para ganar más puntos.</string>
-
 
 
 

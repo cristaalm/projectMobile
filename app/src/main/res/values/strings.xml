@@ -40,6 +40,26 @@
     <string name="entendido">OK</string>
     <string name="sending">SENDING...</string>
 
+    <!-- StoreScreen -->
+    <string name="search_allied_stores">Allied Stores</string>
+    <string name="search_icon">Search stores</string>
+    <string name="featured_stores">Featured Stores</string>
+    <string name="categories">Categories</string>
+    <string name="discover_products">Discover Products</string>
+    <string name="discover_stores_description">Discover our allied stores and earn points</string>
+    <string name="contact">Contact</string>
+
+    <!-- Categories -->
+    <string name="restaurants">Restaurants</string>
+    <string name="gyms">Gyms</string>
+    <string name="stores">Stores</string>
+
+    <!-- Loading states -->
+    <string name="loading_stores">Loading stores...</string>
+    <string name="error_loading_stores">Error loading stores</string>
+    <string name="no_stores_available">No stores available</string>
+    <string name="no_stores_found">No allied stores found at this moment</string>
+
     <!--Screen QR-->
     <string name="mycode">My QR Code</string>
     <string name="current_points">Available points</string>

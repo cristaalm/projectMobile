@@ -92,7 +92,7 @@ fun CustomBottomBar(
             contentDescription = "Bottom bar background",
             modifier = Modifier
                 .fillMaxWidth()
-                .offset(y = (-16).dp),
+                .offset(y = (-20).dp),
             contentScale = ContentScale.FillWidth
         )
 

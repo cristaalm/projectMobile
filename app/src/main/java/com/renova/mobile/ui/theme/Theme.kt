@@ -25,6 +25,8 @@ data class RenovaColorScheme(
     val gradientMid1: androidx.compose.ui.graphics.Color,
     val gradientMid2: androidx.compose.ui.graphics.Color? = null,
     val gradientEnd: androidx.compose.ui.graphics.Color,
+    val discoverGradientStart: androidx.compose.ui.graphics.Color,
+    val discoverGradientEnd: androidx.compose.ui.graphics.Color,
 )
 
 val LightRenovaColors = RenovaColorScheme(
@@ -40,7 +42,9 @@ val LightRenovaColors = RenovaColorScheme(
     gradientMid1 = RenovaColors.Light.GradientMid1,
     gradientMid2 = RenovaColors.Light.GradientMid2,
     gradientEnd = RenovaColors.Light.GradientEnd,
-)
+    discoverGradientStart = RenovaColors.Light.DiscoverGradientStart,
+    discoverGradientEnd = RenovaColors.Light.DiscoverGradientEnd,
+    )
 
 val DarkRenovaColors = RenovaColorScheme(
     surface = RenovaColors.Dark.Surface,
@@ -54,6 +58,8 @@ val DarkRenovaColors = RenovaColorScheme(
     gradientStart = RenovaColors.Dark.GradientStart,
     gradientMid1 = RenovaColors.Dark.GradientMid1,
     gradientEnd = RenovaColors.Dark.GradientEnd,
+    discoverGradientStart = RenovaColors.Dark.GradientStart,
+    discoverGradientEnd = RenovaColors.Dark.GradientEnd,
 )
 
 // CompositionLocal para acceder a los colores desde cualquier composable
