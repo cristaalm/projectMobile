@@ -43,13 +43,32 @@ import androidx.compose.ui.draw.paint
 import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.platform.LocalContext
 import com.renova.mobile.ui.theme.RenovaColors
+import com.renova.mobile.utils.SessionManager
+import com.renova.mobile.repository.LoginRepository
 
 @Composable
 fun QRScreen() {
     val currentPoints = 2450
-    val nameUser = "Brisa Medina"
-    val id = 24
+    val context = LocalContext.current
+    val sessionManager = remember { SessionManager(context) }
+    val loginRepository = remember { LoginRepository() }
+    
+    // Obtener datos del usuario logueado
+    val user = sessionManager.getUser()
+    val accessToken = sessionManager.getAccessToken()
+    
+    // Generar código único para QR
+    val qrCode = remember(user, accessToken) {
+        if (user != null && !accessToken.isNullOrBlank()) {
+            loginRepository.generateUniqueQRCode(accessToken, user.id)
+        } else {
+            "0" // Fallback al ID hardcodeado si no hay datos de sesión
+        }
+    }
+    
+    val nameUser = user?.name ?: "Usuario no identificado"
 
     Column(
         modifier = Modifier
@@ -106,7 +125,7 @@ fun QRScreen() {
                         Column {
                             Text(
                                 text = nameUser,
-                                color = Color.White,
+                                color = if (androidx.compose.foundation.isSystemInDarkTheme()) Color.Black else Color.White,
                                 style = MaterialTheme.typography.headlineSmall.copy(
                                     fontFamily = com.renova.mobile.ui.theme.PoppinsFontFamily,
                                     fontWeight = FontWeight.Bold
@@ -114,7 +133,7 @@ fun QRScreen() {
                             )
                             Text(
                                 text = "$currentPoints ${stringResource(id = R.string.points_unit)}",
-                                color = Color.White,
+                                color = if (androidx.compose.foundation.isSystemInDarkTheme()) Color.Black else Color.White,
                                 style = MaterialTheme.typography.headlineSmall.copy(
                                     fontFamily = com.renova.mobile.ui.theme.PoppinsFontFamily,
                                     fontWeight = FontWeight.ExtraBold
@@ -122,7 +141,7 @@ fun QRScreen() {
                             )
                             Text(
                                 text = stringResource(id = R.string.current_points),
-                                color = Color.White,
+                                color = if (androidx.compose.foundation.isSystemInDarkTheme()) Color.Black else Color.White,
                                 style = MaterialTheme.typography.bodySmall.copy(
                                     fontFamily = com.renova.mobile.ui.theme.PoppinsFontFamily,
                                     fontWeight = FontWeight.Medium
@@ -135,20 +154,22 @@ fun QRScreen() {
                             modifier = Modifier
                                 .size(40.dp)
                                 .background(
-                                    color = Color.White.copy(alpha = 0.2f),
+                                    color = if (androidx.compose.foundation.isSystemInDarkTheme()) Color.Black.copy(alpha = 0.2f) else Color.White.copy(alpha = 0.2f),
                                     shape = RoundedCornerShape(12.dp)
                                 )
                         ) {
                             Icon(
                                 imageVector = Icons.Default.Person,
                                 contentDescription = stringResource(id = R.string.share_code),
-                                tint = Color.White
+                                //tint = Color.White
+                                tint = if (androidx.compose.foundation.isSystemInDarkTheme()) Color.Black else Color.White
+
                             )
                         }
                     }
 
                     Divider(
-                        color = Color.White.copy(alpha = 0.5f),
+                        color = if (androidx.compose.foundation.isSystemInDarkTheme()) Color.Black.copy(alpha = 0.5f) else Color.White.copy(alpha = 0.5f),
                         thickness = 1.dp,
                         modifier = Modifier.padding(vertical = 10.dp)
                     )
@@ -161,13 +182,13 @@ fun QRScreen() {
                         contentAlignment = Alignment.Center
                     ) {
                         val qrEncoder = QRGEncoder(
-                            id.toString(),
+                            qrCode,
                             null,
                             QRGContents.Type.TEXT,
                             500
                         )
                         qrEncoder.colorBlack = RenovaColors.Primary.hashCode()
-                        qrEncoder.colorWhite = android.graphics.Color.WHITE // transparente
+                        qrEncoder.colorWhite = if (androidx.compose.foundation.isSystemInDarkTheme()) android.graphics.Color.BLACK else android.graphics.Color.WHITE // transparente
 
                         val qrBitmap: Bitmap = qrEncoder.bitmap
 
@@ -185,7 +206,7 @@ fun QRScreen() {
                             .fillMaxWidth() // ahora ocupa todo el ancho
                             .height(48.dp),
                         colors = ButtonDefaults.buttonColors(
-                            containerColor = Color.White,
+                            containerColor = if (androidx.compose.foundation.isSystemInDarkTheme()) Color.Black else Color.White,
                             contentColor = RenovaColors.Primary
                         ),
                         shape = RoundedCornerShape(25.dp),
@@ -266,11 +287,11 @@ fun QRScreen() {
                 .shadow(
                     elevation = 3.dp,
                     shape = RoundedCornerShape(16.dp),
-                    spotColor = RenovaColors.Light.ShadowColor
+                    spotColor = if (androidx.compose.foundation.isSystemInDarkTheme()) Color.Black else RenovaColors.Light.ShadowColor
                 ),
             shape = RoundedCornerShape(16.dp),
             colors = CardDefaults.cardColors(
-                containerColor = RenovaColors.Light.Surface,
+                containerColor = if (androidx.compose.foundation.isSystemInDarkTheme()) Color.Black else RenovaColors.Light.Surface,
             ),
         ) {
             Box(
@@ -312,28 +333,7 @@ fun QRScreen() {
                     // InstructionItem(text = "Última instrucción", icon = Icons.Default.Info)
                 }
 
-                // 4. Indicador de desplazamiento SUPERIOR (Fading out to the top)
-                Spacer(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(30.dp) // Altura de la sombra
-                        .align(Alignment.TopCenter) // Se coloca en la parte superior
-                        .alpha(topAlpha) // Aplicamos la opacidad animada
-                        // Degradado de la superficie al transparente (para ocultar el inicio)
-                        .background(
-                            brush = Brush.verticalGradient(
-                                colors = listOf(
-                                    RenovaColors.Light.Surface, // Color de la superficie
-                                    RenovaColors.Light.Surface.copy(alpha = 0f) // Transparente
-                                ),
-                                // Invertimos el rango para que el opaco esté en la parte superior
-                                startY = 0f,
-                                endY = 100f
-                            )
-                        )
-                )
-
-                // 5. Indicador de desplazamiento INFERIOR (Flecha animada apuntando hacia abajo)
+                // Indicador de desplazamiento INFERIOR (Flecha animada apuntando hacia abajo)
                 Box(
                     modifier = Modifier
                         .align(Alignment.BottomEnd)
@@ -372,7 +372,7 @@ fun InstructionItem(text: String, icon: androidx.compose.ui.graphics.vector.Imag
                 fontFamily = com.renova.mobile.ui.theme.PoppinsFontFamily,
                 fontWeight = FontWeight.Medium
             ),
-            color = Color.Black
+            color = if (androidx.compose.foundation.isSystemInDarkTheme()) Color.White else Color.Black
         )
     }
 }

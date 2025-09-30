@@ -8,6 +8,7 @@ import com.renova.mobile.network.ForgotPasswordResponse
 import com.google.gson.Gson
 import retrofit2.HttpException
 import java.io.IOException
+import java.security.MessageDigest
 
 class LoginRepository {
     private val apiService = ApiClient.apiService
@@ -151,5 +152,42 @@ class LoginRepository {
             else -> "Error del servidor (código: $statusCode)"
         }
         return Result.failure(Exception(message))
+    }
+
+    /**
+     * Genera un código único para el QR combinando access_token y user ID
+     * @param accessToken Token de acceso del usuario
+     * @param userId ID del usuario
+     * @return String único que identifica al usuario para el QR
+     */
+    fun generateUniqueQRCode(accessToken: String, userId: Int): String {
+        val combinedData = "${accessToken}_${userId}"
+        return try {
+            val digest = MessageDigest.getInstance("SHA-256")
+            val hashBytes = digest.digest(combinedData.toByteArray())
+            // convertir a hexadecimal y tomar los primeros 16 caracteres para un código más manejable
+            hashBytes.joinToString("") { "%02x".format(it) }.take(16).uppercase()
+        } catch (e: Exception) {
+            // fallback en caso de error con el hash
+            "${userId}_${accessToken.take(8)}"
+        }
+    }
+
+    /**
+     * Extrae los datos necesarios del LoginResponse para generar el QR
+     * @param loginResponse Respuesta exitosa del login
+     * @return String único para el QR o null si faltan datos
+     */
+    fun extractQRDataFromLogin(loginResponse: LoginResponse): String? {
+        return loginResponse.data?.let { loginData ->
+            val accessToken = loginData.access_token
+            val userId = loginData.user?.id
+            
+            if (!accessToken.isNullOrBlank() && userId != null) {
+                generateUniqueQRCode(accessToken, userId)
+            } else {
+                null
+            }
+        }
     }
 }
