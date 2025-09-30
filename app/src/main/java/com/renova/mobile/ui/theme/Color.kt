@@ -31,6 +31,10 @@ object RenovaColors {
         val GradientMid1 = Color(0xFF00C853)
         val GradientMid2 = Color(0xFF00A843)
         val GradientEnd = Color(0xFF1B5E20)
+
+        val DiscoverGradientStart = Color(0xFFAEFFD4)
+        val DiscoverGradientEnd = Color(0xFFF6FFE8)
+
     }
 
     // Colores de superficie - Modo Oscuro

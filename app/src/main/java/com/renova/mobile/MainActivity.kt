@@ -15,11 +15,13 @@ import com.renova.mobile.ui.screens.LoginScreen
 import com.renova.mobile.ui.screens.ForgotPasswordScreen
 import com.renova.mobile.ui.theme.RenovaTheme
 import com.renova.mobile.navigation.AppNavigation
+import com.renova.mobile.network.ApiClient
 import com.renova.mobile.utils.SessionManager
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        ApiClient.init(this) // Inicializar ApiClient
         enableEdgeToEdge()
         setContent {
             RenovaTheme {  // Usando el nuevo tema personalizado

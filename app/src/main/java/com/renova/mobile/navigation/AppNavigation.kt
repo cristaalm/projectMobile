@@ -12,11 +12,15 @@ import com.renova.mobile.ui.screens.ProfileScreen
 import com.renova.mobile.ui.screens.QRScreen
 import com.renova.mobile.ui.screens.StoreScreen
 import com.renova.mobile.ui.components.CustomBottomBar
+import com.renova.mobile.ui.screens.RewardScreen
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.slideInHorizontally
 import androidx.compose.animation.slideOutHorizontally
+import androidx.navigation.NavType
+import androidx.navigation.navArgument
+
 
 @Composable
 fun AppNavigation(onLogout: () -> Unit) {
@@ -76,7 +80,7 @@ fun AppNavigation(onLogout: () -> Unit) {
                 popEnterTransition = { popEnterAnimation },
                 popExitTransition = { popExitAnimation }
             ) {
-                StoreScreen()
+                StoreScreen(navController = navController )
             }
 
             composable(
@@ -98,6 +102,17 @@ fun AppNavigation(onLogout: () -> Unit) {
             ) {
                 ProfileScreen()
             }
+            composable(
+                route = "reward_screen/{allianceId}", // Ruta con un argumento dinámico
+                arguments = listOf(navArgument("allianceId") { type = NavType.IntType }),
+                enterTransition = { enterAnimation }, exitTransition = { exitAnimation },
+                popEnterTransition = { popEnterAnimation }, popExitTransition = { popExitAnimation }
+            ) { backStackEntry ->
+                // Extraemos el ID de la alianza para pasárselo a la pantalla
+                val allianceId = backStackEntry.arguments?.getInt("allianceId") ?: 0
+                RewardScreen(navController = navController, allianceId = allianceId)
+            }
+
         }
     }
 }
