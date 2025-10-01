@@ -73,5 +73,34 @@
     <string name="instruction_3">Coloca los productos recomendados para ganar más puntos.</string>
 
 
+    <!-- ActivityScreen -->
+    <string name="recycling_materials">Materiales de Reciclaje</string>
+    <string name="plastic">Plástico</string>
+    <string name="aluminum">Aluminio</string>
+    <string name="total_materials">Total de Materiales</string>
+    <string name="history">Historial</string>
+    <string name="previous">Anterior</string>
+    <string name="next">Siguiente</string>
+    <string name="of">de</string>
+    <string name="points">pts</string>
+
+    <!-- CustomTopBar -->
+    <string name="profile">Perfil</string>
+    <string name="activity">Actividad</string>
+    <string name="streak">Racha</string>
+
+    <!-- Descripciones de contenido -->
+    <string name="logo_description">Logo Renova</string>
+    <string name="bottle_description">Botella</string>
+    <string name="can_description">Lata</string>
+
+    <!-- Actividades -->
+    <string name="points_exchange">Canjeo de Puntos</string>
+    <string name="pet_bottle">Botella PET</string>
+    <string name="aluminum_can">Lata Aluminio</string>
+
+    <!-- Fechas -->
+    <string name="today">Hoy</string>
+    <string name="yesterday">Ayer</string>
 
 </resources>

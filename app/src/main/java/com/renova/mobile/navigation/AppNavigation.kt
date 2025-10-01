@@ -11,8 +11,11 @@ import com.renova.mobile.ui.screens.HomeScreen
 import com.renova.mobile.ui.screens.ProfileScreen
 import com.renova.mobile.ui.screens.QRScreen
 import com.renova.mobile.ui.screens.StoreScreen
+import com.renova.mobile.ui.screens.ActivityScreen
+import com.renova.mobile.ui.screens.StreakScreen
 import com.renova.mobile.ui.components.CustomBottomBar
 import com.renova.mobile.ui.screens.RewardScreen
+import com.renova.mobile.ui.components.CustomTopBar
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
@@ -28,6 +31,12 @@ fun AppNavigation(onLogout: () -> Unit) {
 
     // Scaffold nos da la estructura básica de Material Design
     Scaffold(
+        topBar = {
+            CustomTopBar(
+                navController = navController
+            )
+        },
+
         bottomBar = {
             CustomBottomBar(
                 navController = navController,
@@ -111,6 +120,26 @@ fun AppNavigation(onLogout: () -> Unit) {
                 // Extraemos el ID de la alianza para pasárselo a la pantalla
                 val allianceId = backStackEntry.arguments?.getInt("allianceId") ?: 0
                 RewardScreen(navController = navController, allianceId = allianceId)
+            }
+
+
+            composable(
+                route = TopNavigationItem.Activity.route,
+                enterTransition = { enterAnimation },
+                exitTransition = { exitAnimation },
+                popEnterTransition = { popEnterAnimation },
+                popExitTransition = { popExitAnimation }
+            ) {
+                ActivityScreen()
+            }
+            composable(
+                route = TopNavigationItem.Streak.route,
+                enterTransition = { enterAnimation },
+                exitTransition = { exitAnimation },
+                popEnterTransition = { popEnterAnimation },
+                popExitTransition = { popExitAnimation }
+            ) {
+                StreakScreen()
             }
 
         }

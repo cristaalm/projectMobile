@@ -28,6 +28,8 @@ import androidx.compose.animation.core.*
 import androidx.compose.ui.res.stringResource
 import com.renova.mobile.network.User
 import com.renova.mobile.ui.theme.*
+import com.renova.mobile.utils.SessionManager
+import androidx.compose.ui.platform.LocalContext
 
 @Composable
 fun LoginScreen(
@@ -38,6 +40,9 @@ fun LoginScreen(
 ) {
     // Usar los colores del tema
     val colors = MaterialTheme.renovaColors
+
+    val context = LocalContext.current
+    val sessionManager = remember { SessionManager(context) }
 
     var email by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
@@ -348,6 +353,14 @@ fun LoginScreen(
                 showSuccessDialog = false
                 viewModel.clearState()
                 val state = loginState
+
+                sessionManager.saveSession(
+                    accessToken = state.token ?: "",
+                    tokenType = state.tokenType ?: "Bearer",
+                    expiresAt = state.expiresAt,
+                    user = state.user
+                )
+
                 onLoginSuccess(
                     state.user,
                     state.token ?: "",
