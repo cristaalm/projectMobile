@@ -1,7 +1,8 @@
-package com.renova.mobile.ui.screens
+package com.renova.mobile.screens
 
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
@@ -18,8 +19,13 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.text.style.TextDecoration
+import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.buildAnnotatedString
+import androidx.compose.ui.text.withStyle
+import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.ui.draw.blur
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.compose.runtime.collectAsState
 import com.renova.mobile.R
@@ -28,6 +34,7 @@ import androidx.compose.animation.core.*
 import androidx.compose.ui.res.stringResource
 import com.renova.mobile.network.User
 import com.renova.mobile.ui.theme.*
+import com.renova.mobile.ui.screens.TermsAndConditionsDialog
 
 @Composable
 fun LoginScreen(
@@ -48,6 +55,7 @@ fun LoginScreen(
     var showErrorDialog by remember { mutableStateOf(false) }
     var emailEmptyError by remember { mutableStateOf(false) }
     var passwordEmptyError by remember { mutableStateOf(false) }
+    var showTermsDialog by remember { mutableStateOf(false) }
 
     val loginState by viewModel.loginState.collectAsState()
 
@@ -73,6 +81,9 @@ fun LoginScreen(
             .fillMaxSize()
             .background(RenovaGradients.backgroundGradient())
             .padding(24.dp)
+            .then(
+                if (showTermsDialog) Modifier.blur(8.dp) else Modifier
+            )
     ) {
         SubtleLeavesBackground(
             modifier = Modifier.fillMaxSize(),
@@ -90,32 +101,16 @@ fun LoginScreen(
                 horizontalAlignment = Alignment.CenterHorizontally,
                 verticalArrangement = Arrangement.Center
             ) {
-                // Logo Card
-                Card(
+                // Logo sin Card
+                Image(
+                    painter = painterResource(id = R.drawable.logo),
+                    contentDescription = "Logo",
                     modifier = Modifier
+                        .padding(horizontal = 16.dp)
                         .fillMaxWidth()
-                        .padding(horizontal = 16.dp, vertical = 8.dp),
-                    shape = RoundedCornerShape(16.dp),
-                    colors = CardDefaults.cardColors(containerColor = colors.cardBackground),
-                    elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
-                ) {
-                    Box(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(24.dp),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        Image(
-                            painter = painterResource(id = R.drawable.logo),
-                            contentDescription = "Logo",
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .height(120.dp)
-                        )
-                    }
-                }
-
-                Spacer(modifier = Modifier.height(16.dp))
+                        .height(150.dp)
+                        .padding(bottom = 24.dp)
+                )
 
                 // Login Form Card
                 Card(
@@ -130,19 +125,23 @@ fun LoginScreen(
                         modifier = Modifier.padding(32.dp),
                         horizontalAlignment = Alignment.CenterHorizontally
                     ) {
-                        // Email Field
+                        // Email Field con label externo
+                        Text(
+                            text = stringResource(id = R.string.email),
+                            color = colors.textPrimary,
+                            fontSize = 14.sp,
+                            fontWeight = FontWeight.Medium,
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(bottom = 4.dp)
+                        )
+
                         OutlinedTextField(
                             value = email,
                             onValueChange = {
                                 email = it
                                 emailError = it.isNotEmpty() && !android.util.Patterns.EMAIL_ADDRESS.matcher(it).matches()
                                 if (it.isNotEmpty()) emailEmptyError = false
-                            },
-                            label = {
-                                Text(
-                                    text = stringResource(id = R.string.email),
-                                    color = colors.textPrimary
-                                )
                             },
                             leadingIcon = {
                                 Icon(
@@ -176,7 +175,17 @@ fun LoginScreen(
 
                         Spacer(modifier = Modifier.height(16.dp))
 
-                        // Password Field
+                        // Password Field con label externo
+                        Text(
+                            text = stringResource(id = R.string.login_password),
+                            color = colors.textPrimary,
+                            fontSize = 14.sp,
+                            fontWeight = FontWeight.Medium,
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(bottom = 4.dp)
+                        )
+
                         OutlinedTextField(
                             value = password,
                             onValueChange = {
@@ -185,12 +194,6 @@ fun LoginScreen(
                                     passwordError = it.isNotEmpty() && !validatePassword(it)
                                     if (it.isNotEmpty()) passwordEmptyError = false
                                 }
-                            },
-                            label = {
-                                Text(
-                                    text = stringResource(id = R.string.login_password),
-                                    color = colors.textPrimary
-                                )
                             },
                             leadingIcon = {
                                 Icon(
@@ -337,9 +340,56 @@ fun LoginScreen(
                         }
                     }
                 }
+
+                Spacer(modifier = Modifier.height(16.dp))
+
+                // Términos y Condiciones
+                val annotatedText = buildAnnotatedString {
+                    withStyle(style = SpanStyle(color = RenovaColors.Primary, fontSize = 13.sp)) {
+                        append("Al continuar, aceptas nuestros ")
+                    }
+                    withStyle(
+                        style = SpanStyle(
+                            color = RenovaColors.Primary,
+                            fontSize = 13.sp,
+                            textDecoration = TextDecoration.Underline,
+                            fontWeight = FontWeight.Bold
+                        )
+                    ) {
+                        append("Términos de Servicio")
+                    }
+                    withStyle(style = SpanStyle(color = RenovaColors.Primary, fontSize = 13.sp)) {
+                        append(" y ")
+                    }
+                    withStyle(
+                        style = SpanStyle(
+                            color = RenovaColors.Primary,
+                            fontSize = 13.sp,
+                            textDecoration = TextDecoration.Underline,
+                            fontWeight = FontWeight.Bold
+                        )
+                    ) {
+                        append("Política de Privacidad")
+                    }
+                }
+
+                Text(
+                    text = annotatedText,
+                    textAlign = TextAlign.Center,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 32.dp)
+                        .clickable { showTermsDialog = true }
+                )
             }
         }
     }
+
+    // Terms and Conditions Dialog
+    TermsAndConditionsDialog(
+        showDialog = showTermsDialog,
+        onDismiss = { showTermsDialog = false }
+    )
 
     // Success Dialog
     if (showSuccessDialog) {

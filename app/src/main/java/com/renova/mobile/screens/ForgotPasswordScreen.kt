@@ -1,4 +1,4 @@
-package com.renova.mobile.ui.screens
+package com.renova.mobile.screens
 
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
@@ -78,32 +78,16 @@ fun ForgotPasswordScreen(
                 horizontalAlignment = Alignment.CenterHorizontally,
                 verticalArrangement = Arrangement.Center
             ) {
-                // Logo Card
-                Card(
+                // Logo sin Card
+                Image(
+                    painter = painterResource(id = R.drawable.logo),
+                    contentDescription = "Logo",
                     modifier = Modifier
+                        .padding(horizontal = 16.dp)
                         .fillMaxWidth()
-                        .padding(horizontal = 16.dp, vertical = 8.dp),
-                    shape = RoundedCornerShape(16.dp),
-                    colors = CardDefaults.cardColors(containerColor = colors.cardBackground),
-                    elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
-                ) {
-                    Box(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(24.dp),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        Image(
-                            painter = painterResource(id = R.drawable.logo),
-                            contentDescription = "Logo",
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .height(120.dp)
-                        )
-                    }
-                }
-
-                Spacer(modifier = Modifier.height(16.dp))
+                        .height(150.dp)
+                        .padding(bottom = 24.dp)
+                )
 
                 // Forgot Password Form Card
                 Card(
@@ -138,19 +122,23 @@ fun ForgotPasswordScreen(
 
                         Spacer(modifier = Modifier.height(24.dp))
 
-                        // Email Field
+                        // Email Field con label externo
+                        Text(
+                            text = "Correo electrónico",
+                            color = colors.textPrimary,
+                            fontSize = 14.sp,
+                            fontWeight = FontWeight.Medium,
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(bottom = 4.dp)
+                        )
+
                         OutlinedTextField(
                             value = email,
                             onValueChange = {
                                 email = it
                                 emailError = it.isNotEmpty() && !android.util.Patterns.EMAIL_ADDRESS.matcher(it).matches()
                                 if (it.isNotEmpty()) emailEmptyError = false
-                            },
-                            label = {
-                                Text(
-                                    "Correo electrónico",
-                                    color = colors.textPrimary
-                                )
                             },
                             leadingIcon = {
                                 Icon(

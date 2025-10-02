@@ -11,8 +11,8 @@ import androidx.compose.ui.platform.LocalView
 import androidx.core.view.WindowCompat
 import androidx.core.view.WindowInsetsCompat
 import androidx.core.view.WindowInsetsControllerCompat
-import com.renova.mobile.ui.screens.LoginScreen
-import com.renova.mobile.ui.screens.ForgotPasswordScreen
+import com.renova.mobile.screens.LoginScreen
+import com.renova.mobile.screens.ForgotPasswordScreen
 import com.renova.mobile.ui.theme.RenovaTheme
 import com.renova.mobile.navigation.AppNavigation
 import com.renova.mobile.network.ApiClient
