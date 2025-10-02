@@ -98,7 +98,7 @@ fun QRScreen() {
                 .shadow(
                     elevation = 6.dp,
                     shape = RoundedCornerShape(20.dp),
-                    spotColor = RenovaColors.Light.ShadowColor
+                    spotColor = RenovaColors.Light.ActivityShadowColor
                 ),
             shape = RoundedCornerShape(20.dp),
             colors = CardDefaults.cardColors(containerColor = Color.Transparent)
@@ -287,7 +287,7 @@ fun QRScreen() {
                 .shadow(
                     elevation = 3.dp,
                     shape = RoundedCornerShape(16.dp),
-                    spotColor = if (androidx.compose.foundation.isSystemInDarkTheme()) Color.Black else RenovaColors.Light.ShadowColor
+                    spotColor = if (androidx.compose.foundation.isSystemInDarkTheme()) Color.Black else RenovaColors.Light.ActivityShadowColor
                 ),
             shape = RoundedCornerShape(16.dp),
             colors = CardDefaults.cardColors(

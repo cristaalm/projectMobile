@@ -80,29 +80,14 @@ dependencies {
     implementation("com.github.androidmads:QRGenerator:1.0.5")
     // Estas son para la API
     implementation("com.squareup.retrofit2:retrofit:2.9.0")
+    implementation("com.squareup.okhttp3:logging-interceptor:4.12.0")
     implementation("com.squareup.retrofit2:converter-gson:2.9.0")
     implementation("androidx.lifecycle:lifecycle-viewmodel-compose:2.7.0")
     implementation(libs.androidx.ui.graphics)
+    implementation("com.google.accompanist:accompanist-systemuicontroller:0.32.0")
 
 }
 
 kapt {
     correctErrorTypes = true
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-

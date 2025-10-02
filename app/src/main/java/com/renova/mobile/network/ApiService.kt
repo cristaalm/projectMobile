@@ -3,6 +3,7 @@ package com.renova.mobile.network
 import android.content.Context
 import com.google.gson.annotations.SerializedName
 import okhttp3.OkHttpClient
+import okhttp3.logging.HttpLoggingInterceptor
 import retrofit2.Response
 import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
@@ -129,6 +130,101 @@ data class Reward(
     val alliance: Alianza?
 )
 
+// ========== HISTORY ==========
+data class HistoryResponse(
+    val success: Boolean,
+    val message: String,
+    val data: PaginatedData,
+    val errors: Any?,
+    val status: Int
+)
+
+data class TotalScansResponse(
+    val success: Boolean,
+    val message: String,
+    val data: TotalScansData,
+    val errors: Any?,
+    val code: Int
+)
+
+data class TotalScansData(
+    val plastic: Int,
+    val aluminum: Int
+)
+
+data class PaginatedData(
+    val data: List<ActivityItem>,
+    val current_page: Int,
+    val first_page_url: String?,
+    val from: Int?,
+    val last_page: Int,
+    val last_page_url: String?,
+    val next_page_url: String?,
+    val path: String?,
+    val per_page: Int,
+    val prev_page_url: String?,
+    val to: Int?,
+    val total: Int
+)
+
+data class ActivityItem(
+    val id: Int,
+    val user_id: Int,
+    val type_history: Int,
+    val material_type_id: Int?,
+    val points: Int,
+    val reward_id: Int,
+    val alliance_id: Int?,
+    val created_at: String,
+    val updated_at: String,
+    val alliance: Alliance?,
+    val material_type: MaterialType?,
+    val reward: HistoryReward?
+)
+
+data class Alliance(
+    val id: Int,
+    val name: String,
+    val contact_name: String?,
+    val contact_email: String?,
+    val phone: String?,
+    val address: String?,
+    val logo: Boolean,
+    val type_shop_id: Int?,
+    val ext: String?,
+    val status: Int,
+    val created_at: String?,
+    val updated_at: String?
+)
+
+data class MaterialType(
+    val id: Int,
+    val name: String,
+    val slug: String,
+    val points: Int,
+    val is_active: Boolean,
+    val description: String?,
+    val created_at: String?,
+    val updated_at: String?
+)
+
+data class HistoryReward(
+    val id: Int,
+    val alliance_id: Int,
+    val name: String,
+    val description: String,
+    val points_required: Int,
+    val image: Boolean,
+    val ext: String,
+    val stock: Int,
+    val single_use: Boolean,
+    val code: String,
+    val is_active: Boolean,
+    val expires_at: String,
+    val created_at: String,
+    val updated_at: String
+)
+
 interface ApiService {
     @POST("api/auth/login")
     suspend fun login(@Body loginRequest: LoginRequest): Response<LoginResponse>
@@ -138,7 +234,7 @@ interface ApiService {
 
     @GET("api/alianzas/getAll")
     suspend fun getAllAlianzas(
-        @Query("status") status: Int // Esto agregará "?status=1" a la URL
+        @Query("status") status: Int
     ): Response<AlianzasResponse>
 
     @GET("api/typeShop/catalog")
@@ -150,32 +246,42 @@ interface ApiService {
         @Query("is_active") isActive: Int = 1
     ): Response<RewardResponse>
 
-}
+    @GET("api/history/getAll")
+    suspend fun getHistory(
+        @Query("page") page: Int = 1,
+        @Query("per_page") perPage: Int = 10,
+        @Query("key") key: String? = null,
+        @Query("order") order: String = "desc"
+    ): Response<HistoryResponse>
 
+    @GET("api/scans/total-type-scans")
+    suspend fun getTotalScans(): Response<TotalScansResponse>
+}
 
 object ApiClient {
     private const val BASE_URL = "https://renova-3q4h.onrender.com/"
 
-
-    // instancia de SessionManager que usará el interceptor
     private var sessionManager: SessionManager? = null
+
+    private val loggingInterceptor = HttpLoggingInterceptor().apply {
+        level = HttpLoggingInterceptor.Level.BODY
+    }
 
     private val client: OkHttpClient
         get() {
-            //Validar que el ApiClient haya sido inicializado
             if (sessionManager == null) {
                 throw IllegalStateException("ApiClient no ha sido inicializado. Llama a ApiClient.init(context) en tu Application o Activity.")
             }
 
             return OkHttpClient.Builder()
+                .addInterceptor(loggingInterceptor)
                 .addInterceptor { chain ->
                     val original = chain.request()
                     val builder = original.newBuilder()
 
-                    // 4. Obtenemos el token desde SessionManager en cada petición
-                    val token = sessionManager?.getAccessToken()
+                    val token = sessionManager?.getAuthToken()
                     if (token != null) {
-                        builder.addHeader("Authorization", "Bearer $token")
+                        builder.addHeader("Authorization", token)
                     }
 
                     chain.proceed(builder.build())
@@ -183,17 +289,15 @@ object ApiClient {
                 .build()
         }
 
-
     val apiService: ApiService by lazy {
         Retrofit.Builder()
             .baseUrl(BASE_URL)
-            .client(client) // Usamos el cliente con el interceptor actualizado
+            .client(client)
             .addConverterFactory(GsonConverterFactory.create())
             .build()
             .create(ApiService::class.java)
     }
 
-    // metdo para inicializar el SessionManager
     fun init(context: Context) {
         if (sessionManager == null) {
             sessionManager = SessionManager(context.applicationContext)

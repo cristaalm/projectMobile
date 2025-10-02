@@ -71,4 +71,35 @@
     <string name="instruction_2">Press and hold the products to facilitate the process.</string>
     <string name="instruction_3">Place the recommended products to gain more points.</string>
 
+
+    <!-- ActivityScreen -->
+    <string name="recycling_materials">Recycling Materials</string>
+    <string name="plastic">Plastic</string>
+    <string name="aluminum">Aluminum</string>
+    <string name="total_materials">Total Materials</string>
+    <string name="history">History</string>
+    <string name="previous">Previous</string>
+    <string name="next">Next</string>
+    <string name="of">of</string>
+    <string name="points">pts</string>
+
+    <!-- CustomTopBar -->
+    <string name="profile">Profile</string>
+    <string name="activity">Activity</string>
+    <string name="streak">Streak</string>
+
+    <!-- Content descriptions -->
+    <string name="logo_description">Renova Logo</string>
+    <string name="bottle_description">Bottle</string>
+    <string name="can_description">Can</string>
+
+    <!-- Activities -->
+    <string name="points_exchange">Points Exchange</string>
+    <string name="pet_bottle">PET Bottle</string>
+    <string name="aluminum_can">Aluminum Can</string>
+
+    <!-- Dates -->
+    <string name="today">Today</string>
+    <string name="yesterday">Yesterday</string>
+
 </resources>
