@@ -17,8 +17,16 @@ import com.renova.mobile.ui.theme.RenovaTheme
 import com.renova.mobile.navigation.AppNavigation
 import com.renova.mobile.network.ApiClient
 import com.renova.mobile.utils.SessionManager
+import com.renova.mobile.utils.LocaleHelper
+import android.content.Context
 
 class MainActivity : ComponentActivity() {
+    override fun attachBaseContext(newBase: Context) {
+        val language = LocaleHelper.getLanguage(newBase)
+        val localizedContext = LocaleHelper.setLocale(newBase, language)
+        super.attachBaseContext(localizedContext)
+    }
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         ApiClient.init(this) // Inicializar ApiClient

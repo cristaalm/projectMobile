@@ -119,4 +119,10 @@
     <string name="code_instruction_2">Then choose to pay with Renova Points to display this code and be identified.</string>
     <string name="code_instruction_3">Present the barcode at checkout or to the scanner.</string>
 
+    <!-- Language Selector -->
+    <string name="language_spanish_label">Language: Spanish (Mexico)</string>
+    <string name="language_english_label">Language: English</string>
+    <string name="choose_spanish">Spanish</string>
+    <string name="choose_english">English</string>
+
 </resources>
