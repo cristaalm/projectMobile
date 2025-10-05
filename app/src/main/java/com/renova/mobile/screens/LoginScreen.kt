@@ -2,6 +2,7 @@ package com.renova.mobile.screens
 
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -14,6 +15,8 @@ import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.text.font.Font
+import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
@@ -25,7 +28,10 @@ import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.ui.unit.em
 import androidx.compose.ui.draw.blur
+import androidx.compose.ui.draw.drawBehind
+import androidx.compose.ui.geometry.Offset
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.compose.runtime.collectAsState
 import com.renova.mobile.R
@@ -35,6 +41,16 @@ import androidx.compose.ui.res.stringResource
 import com.renova.mobile.network.User
 import com.renova.mobile.ui.theme.*
 import com.renova.mobile.ui.screens.TermsAndConditionsDialog
+
+// Definir la fuente Poppins (asegúrate de tener los archivos en res/font/)
+val PoppinsFontFamily = FontFamily(
+    Font(R.font.poppins_regular, FontWeight.Normal),
+    Font(R.font.poppins_medium, FontWeight.Medium),
+    Font(R.font.poppins_bold, FontWeight.Bold)
+)
+
+// Color personalizado #50bd67
+val CustomGreenColor = Color(0xFF50bd67)
 
 @Composable
 fun LoginScreen(
@@ -131,6 +147,7 @@ fun LoginScreen(
                             color = colors.textPrimary,
                             fontSize = 14.sp,
                             fontWeight = FontWeight.Medium,
+                            fontFamily = PoppinsFontFamily,
                             modifier = Modifier
                                 .fillMaxWidth()
                                 .padding(bottom = 4.dp)
@@ -154,7 +171,10 @@ fun LoginScreen(
                             singleLine = true,
                             modifier = Modifier.fillMaxWidth(),
                             shape = RoundedCornerShape(12.dp),
-                            textStyle = TextStyle(color = colors.textPrimary),
+                            textStyle = TextStyle(
+                                color = colors.textPrimary,
+                                fontFamily = PoppinsFontFamily
+                            ),
                             colors = RenovaComponentColors.textFieldColors()
                         )
 
@@ -167,6 +187,8 @@ fun LoginScreen(
                                 },
                                 color = RenovaColors.Error,
                                 fontSize = 12.sp,
+                                fontFamily = PoppinsFontFamily,
+                                lineHeight = 14.sp,
                                 modifier = Modifier
                                     .fillMaxWidth()
                                     .padding(start = 16.dp, top = 4.dp)
@@ -181,6 +203,7 @@ fun LoginScreen(
                             color = colors.textPrimary,
                             fontSize = 14.sp,
                             fontWeight = FontWeight.Medium,
+                            fontFamily = PoppinsFontFamily,
                             modifier = Modifier
                                 .fillMaxWidth()
                                 .padding(bottom = 4.dp)
@@ -224,7 +247,10 @@ fun LoginScreen(
                             singleLine = true,
                             modifier = Modifier.fillMaxWidth(),
                             shape = RoundedCornerShape(12.dp),
-                            textStyle = TextStyle(color = colors.textPrimary),
+                            textStyle = TextStyle(
+                                color = colors.textPrimary,
+                                fontFamily = PoppinsFontFamily
+                            ),
                             colors = RenovaComponentColors.textFieldColors()
                         )
 
@@ -237,6 +263,8 @@ fun LoginScreen(
                                 },
                                 color = RenovaColors.Error,
                                 fontSize = 12.sp,
+                                fontFamily = PoppinsFontFamily,
+                                lineHeight = 14.sp,
                                 modifier = Modifier
                                     .fillMaxWidth()
                                     .padding(start = 16.dp, top = 4.dp)
@@ -252,7 +280,7 @@ fun LoginScreen(
                             isButtonLoading = loginState.isLoading
                         }
 
-                        // Login Button
+                        // Login Button con color #50bd67
                         Button(
                             onClick = {
                                 emailEmptyError = email.isEmpty()
@@ -273,16 +301,15 @@ fun LoginScreen(
                                 .fillMaxWidth()
                                 .height(50.dp),
                             shape = RoundedCornerShape(12.dp),
-                            colors = if (isButtonLoading) {
-                                RenovaComponentColors.loadingButtonColors(androidx.compose.foundation.isSystemInDarkTheme())
-                            } else {
-                                RenovaComponentColors.primaryButtonColors()
-                            }
+                            colors = ButtonDefaults.buttonColors(
+                                containerColor = CustomGreenColor,
+                                disabledContainerColor = CustomGreenColor.copy(alpha = 0.6f)
+                            )
                         ) {
                             if (isButtonLoading) {
                                 CircularProgressIndicator(
                                     modifier = Modifier.size(18.dp),
-                                    color = if (androidx.compose.foundation.isSystemInDarkTheme()) RenovaColors.Primary else Color.Black,
+                                    color = Color.White,
                                     strokeWidth = 3.dp
                                 )
                                 Spacer(modifier = Modifier.width(8.dp))
@@ -290,13 +317,15 @@ fun LoginScreen(
                                     text = stringResource(id = R.string.iniciando),
                                     fontSize = 16.sp,
                                     fontWeight = FontWeight.Bold,
-                                    color = if (androidx.compose.foundation.isSystemInDarkTheme()) RenovaColors.Primary else Color.Black
+                                    fontFamily = PoppinsFontFamily,
+                                    color = Color.White
                                 )
                             } else {
                                 Text(
                                     text = stringResource(id = R.string.login),
                                     fontSize = 16.sp,
                                     fontWeight = FontWeight.Bold,
+                                    fontFamily = PoppinsFontFamily,
                                     color = Color.White
                                 )
                             }
@@ -320,6 +349,7 @@ fun LoginScreen(
                                 text = stringResource(id = R.string.create_account),
                                 fontSize = 16.sp,
                                 fontWeight = FontWeight.Bold,
+                                fontFamily = PoppinsFontFamily,
                                 color = RenovaColors.Primary
                             )
                         }
@@ -335,6 +365,7 @@ fun LoginScreen(
                                 text = stringResource(id = R.string.forgot_password),
                                 color = RenovaColors.Primary,
                                 fontSize = 14.sp,
+                                fontFamily = PoppinsFontFamily,
                                 textDecoration = TextDecoration.Underline
                             )
                         }
@@ -343,28 +374,30 @@ fun LoginScreen(
 
                 Spacer(modifier = Modifier.height(16.dp))
 
-                // Términos y Condiciones
+                // Términos y Condiciones con borde de texto
                 val annotatedText = buildAnnotatedString {
-                    withStyle(style = SpanStyle(color = RenovaColors.Primary, fontSize = 13.sp)) {
+                    withStyle(style = SpanStyle(color = CustomGreenColor, fontSize = 13.sp, fontFamily = PoppinsFontFamily)) {
                         append("Al continuar, aceptas nuestros ")
                     }
                     withStyle(
                         style = SpanStyle(
-                            color = RenovaColors.Primary,
+                            color = CustomGreenColor,
                             fontSize = 13.sp,
+                            fontFamily = PoppinsFontFamily,
                             textDecoration = TextDecoration.Underline,
                             fontWeight = FontWeight.Bold
                         )
                     ) {
                         append("Términos de Servicio")
                     }
-                    withStyle(style = SpanStyle(color = RenovaColors.Primary, fontSize = 13.sp)) {
+                    withStyle(style = SpanStyle(color = CustomGreenColor, fontSize = 13.sp, fontFamily = PoppinsFontFamily)) {
                         append(" y ")
                     }
                     withStyle(
                         style = SpanStyle(
-                            color = RenovaColors.Primary,
+                            color = CustomGreenColor,
                             fontSize = 13.sp,
+                            fontFamily = PoppinsFontFamily,
                             textDecoration = TextDecoration.Underline,
                             fontWeight = FontWeight.Bold
                         )
@@ -373,14 +406,24 @@ fun LoginScreen(
                     }
                 }
 
-                Text(
-                    text = annotatedText,
-                    textAlign = TextAlign.Center,
+                Box(
                     modifier = Modifier
                         .fillMaxWidth()
                         .padding(horizontal = 32.dp)
+                        .border(
+                            width = 1.dp,
+                            color = CustomGreenColor,
+                            shape = RoundedCornerShape(8.dp)
+                        )
                         .clickable { showTermsDialog = true }
-                )
+                        .padding(vertical = 12.dp, horizontal = 16.dp)
+                ) {
+                    Text(
+                        text = annotatedText,
+                        textAlign = TextAlign.Center,
+                        modifier = Modifier.fillMaxWidth()
+                    )
+                }
             }
         }
     }
@@ -391,44 +434,43 @@ fun LoginScreen(
         onDismiss = { showTermsDialog = false }
     )
 
-    // Success Dialog
+    // Success Dialog con auto-redirect
     if (showSuccessDialog) {
+        LaunchedEffect(Unit) {
+            kotlinx.coroutines.delay(1000)
+            showSuccessDialog = false
+            viewModel.clearState()
+            onLoginSuccess(
+                loginState.user,
+                loginState.token ?: "",
+                loginState.tokenType ?: "Bearer",
+                loginState.expiresAt
+            )
+        }
+
         AlertDialog(
-            onDismissRequest = {
-                showSuccessDialog = false
-                viewModel.clearState()
-                val state = loginState
-                onLoginSuccess(
-                    state.user,
-                    state.token ?: "",
-                    state.tokenType ?: "Bearer",
-                    state.expiresAt
-                )
-            },
+            onDismissRequest = { },
             text = {
-                Text(
-                    loginState.message ?: stringResource(id = R.string.logged),
-                    color = colors.textPrimary
-                )
-            },
-            confirmButton = {
-                Button(
-                    onClick = {
-                        showSuccessDialog = false
-                        viewModel.clearState()
-                        onLoginSuccess(loginState.user,
-                            loginState.token ?: "",
-                            loginState.tokenType ?: "Bearer",
-                            loginState.expiresAt)
-                    },
-                    colors = ButtonDefaults.buttonColors(containerColor = RenovaColors.Primary)
+                Column(
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    modifier = Modifier.fillMaxWidth()
                 ) {
+                    CircularProgressIndicator(
+                        modifier = Modifier.size(48.dp),
+                        color = CustomGreenColor,
+                        strokeWidth = 4.dp
+                    )
+                    Spacer(modifier = Modifier.height(16.dp))
                     Text(
-                        text = stringResource(id = R.string.continuar),
-                        color = Color.White
+                        text = loginState.message ?: stringResource(id = R.string.logged),
+                        color = colors.textPrimary,
+                        fontFamily = PoppinsFontFamily,
+                        textAlign = TextAlign.Center,
+                        fontSize = 16.sp
                     )
                 }
             },
+            confirmButton = { },
             containerColor = colors.cardBackground,
             shape = RoundedCornerShape(16.dp)
         )
@@ -445,7 +487,8 @@ fun LoginScreen(
                 Text(
                     text = stringResource(id = R.string.error_access),
                     color = RenovaColors.Error,
-                    fontWeight = FontWeight.Bold
+                    fontWeight = FontWeight.Bold,
+                    fontFamily = PoppinsFontFamily
                 )
             },
             text = {
@@ -477,7 +520,11 @@ fun LoginScreen(
                     else -> loginState.error ?: stringResource(id = R.string.error_unknown)
                 }
 
-                Text(errorMessage, color = colors.textPrimary)
+                Text(
+                    errorMessage,
+                    color = colors.textPrimary,
+                    fontFamily = PoppinsFontFamily
+                )
             },
             confirmButton = {
                 Button(
@@ -489,7 +536,8 @@ fun LoginScreen(
                 ) {
                     Text(
                         text = stringResource(id = R.string.retry),
-                        color = Color.White
+                        color = Color.White,
+                        fontFamily = PoppinsFontFamily
                     )
                 }
             },
