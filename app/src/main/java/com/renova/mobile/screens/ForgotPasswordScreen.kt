@@ -11,6 +11,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.text.font.Font
+import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
@@ -106,6 +108,7 @@ fun ForgotPasswordScreen(
                             text = "Recuperar contraseña",
                             fontSize = 24.sp,
                             fontWeight = FontWeight.Bold,
+                            fontFamily = PoppinsFontFamily,
                             color = colors.textPrimary,
                             textAlign = TextAlign.Center
                         )
@@ -115,6 +118,7 @@ fun ForgotPasswordScreen(
                         Text(
                             text = "Ingresa tu correo electrónico y te enviaremos un enlace para restablecer tu contraseña.",
                             fontSize = 14.sp,
+                            fontFamily = PoppinsFontFamily,
                             color = colors.textSecondary,
                             textAlign = TextAlign.Center,
                             modifier = Modifier.padding(horizontal = 8.dp)
@@ -128,6 +132,7 @@ fun ForgotPasswordScreen(
                             color = colors.textPrimary,
                             fontSize = 14.sp,
                             fontWeight = FontWeight.Medium,
+                            fontFamily = PoppinsFontFamily,
                             modifier = Modifier
                                 .fillMaxWidth()
                                 .padding(bottom = 4.dp)
@@ -151,7 +156,10 @@ fun ForgotPasswordScreen(
                             singleLine = true,
                             modifier = Modifier.fillMaxWidth(),
                             shape = RoundedCornerShape(12.dp),
-                            textStyle = TextStyle(color = colors.textPrimary),
+                            textStyle = TextStyle(
+                                color = colors.textPrimary,
+                                fontFamily = PoppinsFontFamily
+                            ),
                             colors = RenovaComponentColors.textFieldColors()
                         )
 
@@ -160,6 +168,8 @@ fun ForgotPasswordScreen(
                                 text = if (emailEmptyError) "El correo es obligatorio" else "Correo inválido",
                                 color = RenovaColors.Error,
                                 fontSize = 12.sp,
+                                fontFamily = PoppinsFontFamily,
+                                lineHeight = 14.sp,
                                 modifier = Modifier
                                     .fillMaxWidth()
                                     .padding(start = 16.dp, top = 4.dp)
@@ -168,7 +178,7 @@ fun ForgotPasswordScreen(
 
                         Spacer(modifier = Modifier.height(24.dp))
 
-                        // Send Button
+                        // Send Button con color #50bd67
                         Button(
                             onClick = {
                                 emailEmptyError = email.isEmpty()
@@ -184,18 +194,15 @@ fun ForgotPasswordScreen(
                                 .fillMaxWidth()
                                 .height(50.dp),
                             shape = RoundedCornerShape(12.dp),
-                            colors = if (forgotPasswordState.isLoading) {
-                                ButtonDefaults.buttonColors(
-                                    containerColor = RenovaColors.Error
-                                )
-                            } else {
-                                RenovaComponentColors.primaryButtonColors()
-                            }
+                            colors = ButtonDefaults.buttonColors(
+                                containerColor = CustomGreenColor,
+                                disabledContainerColor = CustomGreenColor.copy(alpha = 0.6f)
+                            )
                         ) {
                             if (forgotPasswordState.isLoading) {
                                 CircularProgressIndicator(
                                     modifier = Modifier.size(16.dp),
-                                    color = if (androidx.compose.foundation.isSystemInDarkTheme()) RenovaColors.Primary else Color.Black,
+                                    color = Color.White,
                                     strokeWidth = 2.dp
                                 )
                                 Spacer(modifier = Modifier.width(8.dp))
@@ -203,13 +210,15 @@ fun ForgotPasswordScreen(
                                     "ENVIANDO...",
                                     fontSize = 16.sp,
                                     fontWeight = FontWeight.Bold,
-                                    color = if (androidx.compose.foundation.isSystemInDarkTheme()) RenovaColors.Primary else Color.Black
+                                    fontFamily = PoppinsFontFamily,
+                                    color = Color.White
                                 )
                             } else {
                                 Text(
                                     "ENVIAR ENLACE",
                                     fontSize = 16.sp,
                                     fontWeight = FontWeight.Bold,
+                                    fontFamily = PoppinsFontFamily,
                                     color = Color.White
                                 )
                             }
@@ -225,7 +234,8 @@ fun ForgotPasswordScreen(
                             Text(
                                 "Volver al inicio de sesión",
                                 color = RenovaColors.Primary,
-                                fontSize = 14.sp
+                                fontSize = 14.sp,
+                                fontFamily = PoppinsFontFamily
                             )
                         }
                     }
@@ -246,7 +256,8 @@ fun ForgotPasswordScreen(
                 Text(
                     "Correo enviado",
                     color = RenovaColors.Success,
-                    fontWeight = FontWeight.Bold
+                    fontWeight = FontWeight.Bold,
+                    fontFamily = PoppinsFontFamily
                 )
             },
             text = {
@@ -254,6 +265,7 @@ fun ForgotPasswordScreen(
                     forgotPasswordState.message
                         ?: "Te hemos enviado un enlace de recuperación a tu correo electrónico.",
                     color = colors.textPrimary,
+                    fontFamily = PoppinsFontFamily,
                     textAlign = TextAlign.Center
                 )
             },
@@ -266,7 +278,11 @@ fun ForgotPasswordScreen(
                     },
                     colors = ButtonDefaults.buttonColors(containerColor = RenovaColors.Success)
                 ) {
-                    Text("Entendido", color = Color.White)
+                    Text(
+                        "Entendido",
+                        color = Color.White,
+                        fontFamily = PoppinsFontFamily
+                    )
                 }
             },
             containerColor = colors.cardBackground,
@@ -285,13 +301,15 @@ fun ForgotPasswordScreen(
                 Text(
                     "Error",
                     color = RenovaColors.Error,
-                    fontWeight = FontWeight.Bold
+                    fontWeight = FontWeight.Bold,
+                    fontFamily = PoppinsFontFamily
                 )
             },
             text = {
                 Text(
                     forgotPasswordState.error ?: "Ha ocurrido un error. Intenta de nuevo.",
-                    color = colors.textPrimary
+                    color = colors.textPrimary,
+                    fontFamily = PoppinsFontFamily
                 )
             },
             confirmButton = {
@@ -302,7 +320,11 @@ fun ForgotPasswordScreen(
                     },
                     colors = ButtonDefaults.buttonColors(containerColor = RenovaColors.Error)
                 ) {
-                    Text("Reintentar", color = Color.White)
+                    Text(
+                        "Reintentar",
+                        color = Color.White,
+                        fontFamily = PoppinsFontFamily
+                    )
                 }
             },
             containerColor = colors.cardBackground,

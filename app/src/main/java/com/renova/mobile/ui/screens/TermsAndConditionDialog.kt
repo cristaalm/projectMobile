@@ -8,7 +8,10 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.font.Font
+import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -16,6 +19,13 @@ import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
 import com.renova.mobile.R
 import com.renova.mobile.ui.theme.*
+
+// Definir la fuente Poppins
+val PoppinsFontFamily = FontFamily(
+    Font(R.font.poppins_regular, FontWeight.Normal),
+    Font(R.font.poppins_medium, FontWeight.Medium),
+    Font(R.font.poppins_bold, FontWeight.Bold)
+)
 
 @Composable
 fun TermsAndConditionsDialog(
@@ -52,13 +62,14 @@ fun TermsAndConditionsDialog(
                             text = "Términos y Condiciones",
                             fontSize = 20.sp,
                             fontWeight = FontWeight.Bold,
+                            fontFamily = PoppinsFontFamily,
                             color = colors.textPrimary
                         )
                         IconButton(onClick = onDismiss) {
                             Icon(
                                 painter = painterResource(id = R.drawable.ic_close),
                                 contentDescription = "Cerrar",
-                                tint = colors.iconTint
+                                tint = Color.Unspecified
                             )
                         }
                     }
@@ -78,6 +89,7 @@ fun TermsAndConditionsDialog(
                             text = "Términos de Servicio",
                             fontSize = 18.sp,
                             fontWeight = FontWeight.Bold,
+                            fontFamily = PoppinsFontFamily,
                             color = RenovaColors.Primary,
                             modifier = Modifier.padding(bottom = 8.dp)
                         )
@@ -172,6 +184,7 @@ Si tienes preguntas o deseas ejercer tus derechos de privacidad, contáctanos en
 📍 Manzanillo, Colima, México
                             """.trimIndent(),
                             fontSize = 14.sp,
+                            fontFamily = PoppinsFontFamily,
                             color = colors.textPrimary,
                             lineHeight = 20.sp
                         )
@@ -182,6 +195,7 @@ Si tienes preguntas o deseas ejercer tus derechos de privacidad, contáctanos en
                             text = "Política de Privacidad",
                             fontSize = 18.sp,
                             fontWeight = FontWeight.Bold,
+                            fontFamily = PoppinsFontFamily,
                             color = RenovaColors.Primary,
                             modifier = Modifier.padding(bottom = 8.dp)
                         )
@@ -209,6 +223,7 @@ Si tienes preguntas o deseas ejercer tus derechos de privacidad, contáctanos en
                                 Usted tiene derecho a acceder, corregir o eliminar su información personal en cualquier momento.
                             """.trimIndent(),
                             fontSize = 14.sp,
+                            fontFamily = PoppinsFontFamily,
                             color = colors.textPrimary,
                             lineHeight = 20.sp
                         )
