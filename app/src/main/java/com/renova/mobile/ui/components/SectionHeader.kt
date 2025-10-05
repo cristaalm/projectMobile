@@ -18,7 +18,8 @@ import com.renova.mobile.ui.theme.RenovaColors
 fun SectionHeader(
     title: String,
     modifier: Modifier = Modifier,
-    hasNavigationIcon: Boolean = false // Nuevo parámetro
+    hasNavigationIcon: Boolean = false, // Nuevo parámetro
+    textColor: Color = Color.White
 ) {
     Box(
         modifier = modifier
@@ -33,7 +34,7 @@ fun SectionHeader(
                 top = 16.dp,
                 bottom = 16.dp
             ),
-            color = Color.White,
+            color = textColor,
             fontSize = 28.sp,
             fontWeight = FontWeight.Bold,
             fontFamily = PoppinsFontFamily

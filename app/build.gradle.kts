@@ -79,6 +79,8 @@ dependencies {
     implementation("androidx.compose.material:material-icons-extended")
     // QR Code generation
     implementation("com.github.androidmads:QRGenerator:1.0.5")
+    // Barcode generation
+    implementation("com.google.zxing:core:3.5.3")
     // Estas son para la API
     implementation("com.squareup.retrofit2:retrofit:2.9.0")
     implementation("com.squareup.okhttp3:logging-interceptor:4.12.0")
