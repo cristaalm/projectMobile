@@ -1,5 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
 <resources>
-                    <!-- English -->
+    <!-- English -->
 
     <!-- LoginScreen -->
     <string name="app_name">Renova</string>
@@ -9,13 +10,12 @@
     <string name="login_password">Password</string>
     <string name="hide_password">Hide password</string>
     <string name="show_password">Show password</string>
-
     <string name="required_password">Password is required</string>
     <string name="password_characters">Must have at least 6 characters, letters, numbers and a symbol</string>
     <string name="iniciando">STARTING...</string>
     <string name="login">LOGIN</string>
     <string name="create_account">CREATE ACCOUNT</string>
-    <string name="forgot_password">Forgot password?"</string>
+    <string name="forgot_password">Forgot password?</string>
     <string name="welcome_message">Welcome!</string>
     <string name="logged">You have successfully logged in.</string>
     <string name="continuar">Continue</string>
@@ -79,7 +79,6 @@
     <string name="instruction_2">Press and hold the products to facilitate the process.</string>
     <string name="instruction_3">Place the recommended products to gain more points.</string>
 
-
     <!-- ActivityScreen -->
     <string name="recycling_materials">Recycling Materials</string>
     <string name="plastic">Plastic</string>
@@ -124,5 +123,21 @@
     <string name="language_english_label">Language: English</string>
     <string name="choose_spanish">Spanish</string>
     <string name="choose_english">English</string>
+
+    <!-- Terms and Conditions -->
+    <string name="terms_by_continuing">By continuing, you accept our </string>
+    <string name="terms_of_service">Terms of Service</string>
+    <string name="terms_and">and</string>
+    <string name="privacy_policy">Privacy Policy</string>
+
+    <!-- Terms and Conditions Dialog -->
+    <string name="terms_dialog_title">Terms and Conditions</string>
+    <string name="terms_dialog_close">Close</string>
+    <string name="terms_section_title">Terms of Service</string>
+    <string name="privacy_section_title">Privacy Policy</string>
+
+    <string name="terms_content">RENOVA - Legal Framework and Data Protection\n\nWHO WE ARE\n\nRenova is a sustainable technology platform that promotes recycling through smart deposit machines, a mobile application, and a website. Our goal is to encourage the circular economy by rewarding users who actively participate in the proper disposal of recyclable materials.\n\nWe are committed to operating with transparency, social responsibility, and adherence to Mexican legislation regarding the protection of personal data.\n\nTERMS AND CONDITIONS OF SERVICE\n\nBy registering and using Renova (mobile application, website, or smart deposit machines), the user accepts the following terms:\n\n1. Proper use of the platform:\nThe user agrees to provide truthful information and to use the system only for authorized purposes (recycling, accumulating points, redeeming rewards).\n\n2. Account and credentials:\nThe user is responsible for the confidentiality of their access credentials. Renova is not responsible for unauthorized access caused by user negligence.\n\n3. Rewards and points:\nAccumulated points do not constitute cash, unless otherwise specified in active promotions. Renova may modify the accumulation and redemption rules with prior notice.\n\n4. Service availability:\nWhile Renova seeks to guarantee platform continuity, it is not responsible for interruptions caused by technical failures, scheduled maintenance, or external factors.\n\n5. Prohibitions:\nIt is prohibited to tamper with smart deposit machines, register false information, or engage in fraudulent activities that affect the system or other users.\n\n6. Policy acceptance:\nThe use of Renova implies full acceptance of this privacy and security policy, as well as future updates communicated to the user.\n\nPRIVACY POLICY AND DATA USE\n\nIntroduction:\nAt Renova, we protect the privacy of our users and treat their personal data responsibly. This policy explains how we collect, use, store, and share information.\n\nData we collect:\n- Identity data: copy of ID, selfie photo for validation.\n- Contact data: name, email, phone number.\n- Usage data: recycling history, accumulated points, transactions and rewards.\n- Technical data: IP address, device, app activity logs.\n- Location data: only when using a smart deposit machine.\n\nPurpose of processing:\n- Validate identity and access to services.\n- Allow use of smart deposit machines and application.\n- Manage points and rewards.\n- Issue environmental reports.\n- Improve user experience.\n- Comply with legal obligations.\n\nConsent:\nThe user gives express consent by registering and accepting this policy. Consent can be revoked at any time by request via email, which may result in service suspension.\n\nInformation security:\nRenova applies technical and organizational measures to protect data:\n- Encryption of data in transit and at rest.\n- Secure administrator authentication.\n- Periodic monitoring and audits.\n\nData transfer:\nData is not shared with third parties, except:\n- Service providers supporting operations (e.g., payments, cloud storage).\n- Legal or regulatory requirements.\n- Merger or business restructuring processes.\n\nUser rights (ARCO):\nAccording to the Federal Law on Protection of Personal Data Held by Private Parties (LFPDPPP), the user can:\n- Access their data.\n- Rectify it if incorrect.\n- Cancel it when desired.\n- Oppose its processing.\n\nRequests must be sent to: soyrenovaapp@gmail.com\n\nRetention:\nData will be retained only for the time necessary to fulfill the described purposes and in accordance with applicable legislation.\n\nPolicy changes:\nWe may update this policy at any time. Changes will be communicated in the app or to the registered email. Continued use implies acceptance of the current version.\n\nCONTACT US\n\nIf you have questions or wish to exercise your privacy rights, contact us at:\n\n📧 soyrenovaapp@gmail.com\n📍 Manzanillo, Colima, Mexico</string>
+
+    <string name="privacy_content">1. Information we collect\n\nWe collect information you provide directly to us, such as name, email, and application usage data.\n\n2. Use of information\n\nWe use the collected information to provide, maintain, and improve our services, as well as to communicate with you.\n\n3. Sharing information\n\nWe do not share your personal information with third parties without your consent, except when necessary to provide our services.\n\n4. Security\n\nWe implement security measures to protect your personal information against unauthorized access and misuse.\n\n5. Your rights\n\nYou have the right to access, correct, or delete your personal information at any time.</string>
 
 </resources>

@@ -114,7 +114,7 @@ fun LoginScreen(
                 // Logo sin Card
                 Image(
                     painter = painterResource(id = R.drawable.logo),
-                    contentDescription = "Logo",
+                    contentDescription = stringResource(id = R.string.logo_description),
                     modifier = Modifier
                         .padding(horizontal = 16.dp)
                         .fillMaxWidth()
@@ -157,7 +157,7 @@ fun LoginScreen(
                             leadingIcon = {
                                 Icon(
                                     painter = painterResource(id = R.drawable.ic_email),
-                                    contentDescription = "Email",
+                                    contentDescription = stringResource(id = R.string.email),
                                     tint = colors.iconTint
                                 )
                             },
@@ -215,7 +215,7 @@ fun LoginScreen(
                             leadingIcon = {
                                 Icon(
                                     painter = painterResource(id = R.drawable.ic_lock),
-                                    contentDescription = "Lock",
+                                    contentDescription = stringResource(id = R.string.login_password),
                                     tint = colors.iconTint
                                 )
                             },
@@ -368,56 +368,10 @@ fun LoginScreen(
 
                 Spacer(modifier = Modifier.height(16.dp))
 
-                // Términos y Condiciones con borde de texto
-                val annotatedText = buildAnnotatedString {
-                    withStyle(style = SpanStyle(color = CustomGreenColor, fontSize = 13.sp, fontFamily = PoppinsFontFamily)) {
-                        append("Al continuar, aceptas nuestros ")
-                    }
-                    withStyle(
-                        style = SpanStyle(
-                            color = CustomGreenColor,
-                            fontSize = 13.sp,
-                            fontFamily = PoppinsFontFamily,
-                            textDecoration = TextDecoration.Underline,
-                            fontWeight = FontWeight.Bold
-                        )
-                    ) {
-                        append("Términos de Servicio")
-                    }
-                    withStyle(style = SpanStyle(color = CustomGreenColor, fontSize = 13.sp, fontFamily = PoppinsFontFamily)) {
-                        append(" y ")
-                    }
-                    withStyle(
-                        style = SpanStyle(
-                            color = CustomGreenColor,
-                            fontSize = 13.sp,
-                            fontFamily = PoppinsFontFamily,
-                            textDecoration = TextDecoration.Underline,
-                            fontWeight = FontWeight.Bold
-                        )
-                    ) {
-                        append("Política de Privacidad")
-                    }
-                }
-
-                Box(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(horizontal = 32.dp)
-                        .border(
-                            width = 1.dp,
-                            color = CustomGreenColor,
-                            shape = RoundedCornerShape(8.dp)
-                        )
-                        .clickable { showTermsDialog = true }
-                        .padding(vertical = 12.dp, horizontal = 16.dp)
-                ) {
-                    Text(
-                        text = annotatedText,
-                        textAlign = TextAlign.Center,
-                        modifier = Modifier.fillMaxWidth()
-                    )
-                }
+                // Términos y Condiciones - Completamente localizado
+                TermsAndPrivacyText(
+                    onClick = { showTermsDialog = true }
+                )
             }
         }
     }
@@ -428,7 +382,7 @@ fun LoginScreen(
         onDismiss = { showTermsDialog = false }
     )
 
-    // Success Dialog con auto-redirect
+    // Success Dialog con auto-redirect - COMPLETAMENTE LOCALIZADO
     if (showSuccessDialog) {
         LaunchedEffect(Unit) {
             kotlinx.coroutines.delay(1000)
@@ -444,6 +398,16 @@ fun LoginScreen(
 
         AlertDialog(
             onDismissRequest = { },
+            title = {
+                Text(
+                    text = stringResource(id = R.string.welcome_message),
+                    color = CustomGreenColor,
+                    fontWeight = FontWeight.Bold,
+                    fontFamily = PoppinsFontFamily,
+                    textAlign = TextAlign.Center,
+                    modifier = Modifier.fillMaxWidth()
+                )
+            },
             text = {
                 Column(
                     horizontalAlignment = Alignment.CenterHorizontally,
@@ -456,7 +420,7 @@ fun LoginScreen(
                     )
                     Spacer(modifier = Modifier.height(16.dp))
                     Text(
-                        text = loginState.message ?: stringResource(id = R.string.logged),
+                        text = stringResource(id = R.string.logged),
                         color = colors.textPrimary,
                         fontFamily = PoppinsFontFamily,
                         textAlign = TextAlign.Center,
@@ -470,7 +434,7 @@ fun LoginScreen(
         )
     }
 
-    // Error Dialog
+    // Error Dialog - COMPLETAMENTE LOCALIZADO
     if (showErrorDialog) {
         AlertDialog(
             onDismissRequest = {
@@ -487,31 +451,56 @@ fun LoginScreen(
             },
             text = {
                 val errorMessage = when {
+                    // Correo no registrado (inglés y español)
                     loginState.error?.contains("user not found", ignoreCase = true) == true ||
                             loginState.error?.contains("email not found", ignoreCase = true) == true ||
-                            loginState.error?.contains("no existe", ignoreCase = true) == true ->
+                            loginState.error?.contains("no existe", ignoreCase = true) == true ||
+                            loginState.error?.contains("not found", ignoreCase = true) == true ||
+                            loginState.error?.contains("no está registrado", ignoreCase = true) == true ||
+                            loginState.error?.contains("correo electrónico ingresado no está registrado", ignoreCase = true) == true ->
                         stringResource(id = R.string.mail_not_registered)
 
+                    // Contraseña incorrecta (inglés y español)
                     loginState.error?.contains("invalid password", ignoreCase = true) == true ||
                             loginState.error?.contains("wrong password", ignoreCase = true) == true ||
-                            loginState.error?.contains("contraseña", ignoreCase = true) == true ->
+                            loginState.error?.contains("contraseña", ignoreCase = true) == true ||
+                            loginState.error?.contains("incorrecta", ignoreCase = true) == true ||
+                            loginState.error?.contains("contraseña es incorrecta", ignoreCase = true) == true ->
                         stringResource(id = R.string.incorrect_ppassword)
 
+                    // Usuario o contraseña inválidos (mensaje genérico del backend)
+                    loginState.error?.contains("usuario o contraseña", ignoreCase = true) == true ||
+                            loginState.error?.contains("invalidos", ignoreCase = true) == true ||
+                            loginState.error?.contains("inválidos", ignoreCase = true) == true ->
+                        stringResource(id = R.string.incorrect_information)
+
+                    // Cuenta bloqueada (inglés y español)
                     loginState.error?.contains("account blocked", ignoreCase = true) == true ||
-                            loginState.error?.contains("blocked", ignoreCase = true) == true ->
+                            loginState.error?.contains("blocked", ignoreCase = true) == true ||
+                            loginState.error?.contains("bloqueada", ignoreCase = true) == true ||
+                            loginState.error?.contains("cuenta ha sido bloqueada", ignoreCase = true) == true ->
                         stringResource(id = R.string.blocked_account)
 
+                    // Errores de conexión (inglés y español)
                     loginState.error?.contains("network", ignoreCase = true) == true ||
-                            loginState.error?.contains("connection", ignoreCase = true) == true ->
+                            loginState.error?.contains("connection", ignoreCase = true) == true ||
+                            loginState.error?.contains("conexión", ignoreCase = true) == true ||
+                            loginState.error?.contains("error de conexión", ignoreCase = true) == true ->
                         stringResource(id = R.string.connection_internet_filed)
 
-                    loginState.error?.contains("server", ignoreCase = true) == true ->
+                    // Errores de servidor (inglés y español)
+                    loginState.error?.contains("server", ignoreCase = true) == true ||
+                            loginState.error?.contains("servidor", ignoreCase = true) == true ||
+                            loginState.error?.contains("error del servidor", ignoreCase = true) == true ->
                         stringResource(id = R.string.error_server)
 
-                    loginState.error?.contains("timeout", ignoreCase = true) == true ->
+                    // Timeout (inglés y español)
+                    loginState.error?.contains("timeout", ignoreCase = true) == true ||
+                            loginState.error?.contains("tardó demasiado", ignoreCase = true) == true ->
                         stringResource(id = R.string.connection_timeout)
 
-                    else -> loginState.error ?: stringResource(id = R.string.error_unknown)
+                    // Fallback: si no coincide con nada, usar mensaje genérico
+                    else -> stringResource(id = R.string.incorrect_information)
                 }
 
                 Text(
@@ -537,6 +526,66 @@ fun LoginScreen(
             },
             containerColor = colors.cardBackground,
             shape = RoundedCornerShape(16.dp)
+        )
+    }
+}
+
+@Composable
+fun TermsAndPrivacyText(onClick: () -> Unit) {
+    // Obtener los strings localizados
+    val byContinuing = stringResource(id = R.string.terms_by_continuing)
+    val termsOfService = stringResource(id = R.string.terms_of_service)
+    val and = stringResource(id = R.string.terms_and)
+    val privacyPolicy = stringResource(id = R.string.privacy_policy)
+
+    // Construir el texto anotado con los strings localizados
+    val annotatedText = buildAnnotatedString {
+        withStyle(style = SpanStyle(color = CustomGreenColor, fontSize = 13.sp, fontFamily = PoppinsFontFamily)) {
+            append(byContinuing)
+        }
+        withStyle(
+            style = SpanStyle(
+                color = CustomGreenColor,
+                fontSize = 13.sp,
+                fontFamily = PoppinsFontFamily,
+                textDecoration = TextDecoration.Underline,
+                fontWeight = FontWeight.Bold
+            )
+        ) {
+            append(termsOfService)
+        }
+        withStyle(style = SpanStyle(color = CustomGreenColor, fontSize = 13.sp, fontFamily = PoppinsFontFamily)) {
+            append(" $and ")
+        }
+        withStyle(
+            style = SpanStyle(
+                color = CustomGreenColor,
+                fontSize = 13.sp,
+                fontFamily = PoppinsFontFamily,
+                textDecoration = TextDecoration.Underline,
+                fontWeight = FontWeight.Bold
+            )
+        ) {
+            append(privacyPolicy)
+        }
+    }
+
+    Box(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = 32.dp)
+            .border(
+                width = 1.dp,
+                color = CustomGreenColor,
+                shape = RoundedCornerShape(8.dp)
+            )
+            .clickable { onClick() }
+            .padding(vertical = 12.dp, horizontal = 16.dp)
+    ) {
+        Text(
+            text = annotatedText,
+            textAlign = TextAlign.Center,
+            modifier = Modifier.fillMaxWidth()
         )
     }
 }

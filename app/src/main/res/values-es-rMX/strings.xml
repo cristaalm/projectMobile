@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-                    <!-- Español -->
+    <!-- Español -->
 
     <!-- LoginScreen -->
     <string name="app_name">Renova</string>
@@ -10,7 +10,6 @@
     <string name="login_password">Contraseña</string>
     <string name="hide_password">Ocultar contraseña</string>
     <string name="show_password">Mostrar contraseña</string>
-
     <string name="required_password">La contraseña es obligatoria</string>
     <string name="password_characters">Debe tener al menos 6 caracteres, letras, números y un símbolo</string>
     <string name="iniciando">INICIANDO...</string>
@@ -80,7 +79,6 @@
     <string name="instruction_2">Aplasta previamente los productos para facilitar el proceso.</string>
     <string name="instruction_3">Coloca los productos recomendados para ganar más puntos.</string>
 
-
     <!-- ActivityScreen -->
     <string name="recycling_materials">Materiales de Reciclaje</string>
     <string name="plastic">Plástico</string>
@@ -113,6 +111,7 @@
 
     <!-- Recompensas -->
     <string name="reward_screen_subtitle">Explora y elige la recompensa que más le guste</string>
+
     <!-- Modo Código -->
     <string name="points_code_title">Puntos Renova</string>
     <string name="code_instruction_1">Selecciona primero tu recompensa.</string>
@@ -124,5 +123,21 @@
     <string name="language_english_label">Idioma: Inglés</string>
     <string name="choose_spanish">Español</string>
     <string name="choose_english">Inglés</string>
+
+    <!-- Términos y Condiciones -->
+    <string name="terms_by_continuing">Al continuar, aceptas nuestros </string>
+    <string name="terms_of_service">Términos de Servicio</string>
+    <string name="terms_and">y</string>
+    <string name="privacy_policy">Política de Privacidad</string>
+
+    <!-- Diálogo de Términos y Condiciones -->
+    <string name="terms_dialog_title">Términos y Condiciones</string>
+    <string name="terms_dialog_close">Cerrar</string>
+    <string name="terms_section_title">Términos de Servicio</string>
+    <string name="privacy_section_title">Política de Privacidad</string>
+
+    <string name="terms_content">RENOVA - Marco Legal y Protección de Datos\n\nQUIÉNES SOMOS\n\nRenova es una plataforma de tecnología sostenible que promueve el reciclaje a través de depósitos inteligentes, una aplicación móvil y un sitio web. Nuestro objetivo es incentivar la economía circular, otorgando recompensas a los usuarios que participan activamente en la correcta disposición de materiales reciclables.\n\nNos comprometemos a operar con transparencia, responsabilidad social y apego a la legislación mexicana en materia de protección de datos personales.\n\nCONDICIONES Y TÉRMINOS DE SERVICIO\n\nAl registrarse y utilizar Renova (aplicación móvil, sitio web o depósitos inteligentes), el usuario acepta los siguientes términos:\n\n1. Uso adecuado de la plataforma:\nEl usuario se compromete a proporcionar información veraz y a utilizar el sistema únicamente para los fines autorizados (reciclaje, acumulación de puntos, canje de recompensas).\n\n2. Cuenta y credenciales:\nEl usuario es responsable de la confidencialidad de sus credenciales de acceso. Renova no se hace responsable de accesos indebidos ocasionados por negligencia del usuario.\n\n3. Recompensas y puntos:\nLos puntos acumulados no constituyen dinero en efectivo, salvo que se especifique lo contrario en las promociones activas. Renova podrá modificar las reglas de acumulación y canje con previo aviso.\n\n4. Disponibilidad del servicio:\nAunque Renova busca garantizar la continuidad de la plataforma, no se responsabiliza por interrupciones causadas por fallas técnicas, mantenimientos programados o factores externos.\n\n5. Prohibiciones:\nEstá prohibido manipular los depósitos inteligentes, registrar información falsa o realizar actividades fraudulentas que afecten al sistema o a otros usuarios.\n\n6. Aceptación de políticas:\nEl uso de Renova implica la aceptación plena de la presente política de privacidad y seguridad, así como de las futuras actualizaciones que se comuniquen al usuario.\n\nPOLÍTICA DE PRIVACIDAD Y USO DE DATOS\n\nIntroducción:\nEn Renova, protegemos la privacidad de nuestros usuarios y tratamos sus datos personales con responsabilidad. Esta política explica cómo recopilamos, utilizamos, almacenamos y compartimos la información.\n\nDatos que recopilamos:\n- Datos de identidad: copia de INE, fotografía tipo selfie para validación.\n- Datos de contacto: nombre, correo electrónico, número telefónico.\n- Datos de uso: historial de reciclaje, puntos acumulados, transacciones y recompensas.\n- Datos técnicos: dirección IP, dispositivo, registros de actividad en la app.\n- Datos de ubicación: únicamente al momento de usar un depósito inteligente.\n\nFinalidad del tratamiento:\n- Validar identidad y acceso a los servicios.\n- Permitir el uso de depósitos inteligentes y aplicación.\n- Gestionar puntos y recompensas.\n- Emitir reportes ambientales.\n- Mejorar la experiencia de usuario.\n- Cumplir obligaciones legales.\n\nConsentimiento:\nEl usuario otorga su consentimiento expreso al registrarse y aceptar esta política. Puede revocar su consentimiento en cualquier momento solicitándolo por correo, lo cual puede implicar la suspensión del servicio.\n\nSeguridad de la información:\nRenova aplica medidas técnicas y organizativas para proteger los datos:\n- Cifrado de datos en tránsito y reposo.\n- Autenticación segura de administradores.\n- Monitoreo y auditorías periódicas.\n\nTransferencia de datos:\nLos datos no se comparten con terceros, salvo:\n- Proveedores de servicios que apoyan la operación (ej. pagos, almacenamiento en nube).\n- Requerimientos legales o regulatorios.\n- Procesos de fusión o reestructuración empresarial.\n\nDerechos del usuario (ARCO):\nConforme a la Ley Federal de Protección de Datos Personales en Posesión de los Particulares (LFPDPPP), el usuario puede:\n- Acceder a sus datos.\n- Rectificarlos si son incorrectos.\n- Cancelarlos cuando lo desee.\n- Oponerse a su tratamiento.\n\nLas solicitudes deben enviarse a: soyrenovaapp@gmail.com\n\nConservación:\nLos datos se conservarán únicamente el tiempo necesario para cumplir con los fines descritos y de acuerdo con la legislación aplicable.\n\nCambios en la política:\nPodemos actualizar esta política en cualquier momento. Los cambios se comunicarán en la app o al correo registrado. El uso continuado implica aceptación de la versión vigente.\n\nCONTÁCTANOS\n\nSi tienes preguntas o deseas ejercer tus derechos de privacidad, contáctanos en:\n\n📧 soyrenovaapp@gmail.com\n📍 Manzanillo, Colima, México</string>
+
+    <string name="privacy_content">1. Información que recopilamos\n\nRecopilamos información que usted nos proporciona directamente, como nombre, correo electrónico y datos de uso de la aplicación.\n\n2. Uso de la información\n\nUtilizamos la información recopilada para proporcionar, mantener y mejorar nuestros servicios, así como para comunicarnos con usted.\n\n3. Compartir información\n\nNo compartimos su información personal con terceros sin su consentimiento, excepto cuando sea necesario para proporcionar nuestros servicios.\n\n4. Seguridad\n\nImplementamos medidas de seguridad para proteger su información personal contra acceso no autorizado y uso indebido.\n\n5. Sus derechos\n\nUsted tiene derecho a acceder, corregir o eliminar su información personal en cualquier momento.</string>
 
 </resources>
