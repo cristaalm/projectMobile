@@ -41,13 +41,7 @@ import androidx.compose.ui.res.stringResource
 import com.renova.mobile.network.User
 import com.renova.mobile.ui.theme.*
 import com.renova.mobile.ui.screens.TermsAndConditionsDialog
-
-// Definir la fuente Poppins (asegúrate de tener los archivos en res/font/)
-val PoppinsFontFamily = FontFamily(
-    Font(R.font.poppins_regular, FontWeight.Normal),
-    Font(R.font.poppins_medium, FontWeight.Medium),
-    Font(R.font.poppins_bold, FontWeight.Bold)
-)
+import com.renova.mobile.ui.theme.PoppinsFontFamily
 
 // Color personalizado #50bd67
 val CustomGreenColor = Color(0xFF50bd67)
