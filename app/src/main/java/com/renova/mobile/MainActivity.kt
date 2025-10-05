@@ -11,8 +11,7 @@ import androidx.compose.ui.platform.LocalView
 import androidx.core.view.WindowCompat
 import androidx.core.view.WindowInsetsCompat
 import androidx.core.view.WindowInsetsControllerCompat
-import com.renova.mobile.screens.LoginScreen
-import com.renova.mobile.screens.ForgotPasswordScreen
+import com.renova.mobile.screens.*
 import com.renova.mobile.ui.theme.RenovaTheme
 import com.renova.mobile.navigation.AppNavigation
 import com.renova.mobile.network.ApiClient
@@ -21,18 +20,16 @@ import com.renova.mobile.utils.SessionManager
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        ApiClient.init(this) // Inicializar ApiClient
+        ApiClient.init(this)
         enableEdgeToEdge()
         setContent {
-            RenovaTheme {  // Usando el nuevo tema personalizado
+            RenovaTheme {
                 val sessionManager = SessionManager(this)
                 HideSystemNavigation()
 
-                // Verificar si hay sesión guardada al iniciar
                 var isLoggedIn by remember { mutableStateOf(sessionManager.isLoggedIn()) }
 
                 if (isLoggedIn) {
-                    // App principal con BottomBar y navegación completa
                     AppNavigation(
                         onLogout = {
                             sessionManager.logout()
@@ -40,7 +37,6 @@ class MainActivity : ComponentActivity() {
                         }
                     )
                 } else {
-                    // Pantallas de autenticación
                     AuthNavigation(
                         sessionManager = sessionManager,
                         onLoginSuccess = { isLoggedIn = true }
@@ -50,6 +46,7 @@ class MainActivity : ComponentActivity() {
         }
     }
 }
+
 @Composable
 private fun HideSystemNavigation() {
     val view = LocalView.current
@@ -57,9 +54,7 @@ private fun HideSystemNavigation() {
         val window =
             (view.context as? ComponentActivity)?.window ?: return@DisposableEffect onDispose {}
         val insetsController = WindowCompat.getInsetsController(window, view)
-        // Ocultar la barra de navegación del sistema
         insetsController.hide(WindowInsetsCompat.Type.navigationBars())
-
         insetsController.systemBarsBehavior =
             WindowInsetsControllerCompat.BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE
         onDispose {}
@@ -73,18 +68,40 @@ fun AuthNavigation(
     onLoginSuccess: () -> Unit
 ) {
     var currentScreen by remember { mutableStateOf("login") }
+    var registerData by remember { mutableStateOf<RegisterData?>(null) }
+    var documentsData by remember { mutableStateOf<DocumentsData?>(null) }
 
     AnimatedContent(
         targetState = currentScreen,
         transitionSpec = {
             slideInHorizontally(
                 initialOffsetX = { width ->
-                    if (targetState == "forgot_password") width else -width
+                    when {
+                        targetState == "register" && initialState == "login" -> width
+                        targetState == "login" && initialState == "register" -> -width
+                        targetState == "forgot_password" -> width
+                        targetState == "login" && initialState == "forgot_password" -> -width
+                        targetState == "register_documents" -> width
+                        targetState == "register" && initialState == "register_documents" -> -width
+                        targetState == "register_verification" -> width
+                        targetState == "register_documents" && initialState == "register_verification" -> -width
+                        else -> width
+                    }
                 },
                 animationSpec = tween(300)
             ) with slideOutHorizontally(
                 targetOffsetX = { width ->
-                    if (targetState == "forgot_password") -width else width
+                    when {
+                        targetState == "register" && initialState == "login" -> -width
+                        targetState == "login" && initialState == "register" -> width
+                        targetState == "forgot_password" -> -width
+                        targetState == "login" && initialState == "forgot_password" -> width
+                        targetState == "register_documents" -> -width
+                        targetState == "register" && initialState == "register_documents" -> width
+                        targetState == "register_verification" -> -width
+                        targetState == "register_documents" && initialState == "register_verification" -> width
+                        else -> -width
+                    }
                 },
                 animationSpec = tween(300)
             )
@@ -97,8 +114,10 @@ fun AuthNavigation(
                     onForgotPassword = {
                         currentScreen = "forgot_password"
                     },
+                    onCreateAccount = {
+                        currentScreen = "register"
+                    },
                     onLoginSuccess = { user, token, tokenType, expiresAt ->
-                        // Guardar la sesión
                         sessionManager.saveSession(
                             accessToken = token,
                             tokenType = tokenType,
@@ -112,6 +131,43 @@ fun AuthNavigation(
             "forgot_password" -> {
                 ForgotPasswordScreen(
                     onBackToLogin = {
+                        currentScreen = "login"
+                    }
+                )
+            }
+            "register" -> {
+                RegisterScreen(
+                    onBackToLogin = {
+                        currentScreen = "login"
+                    },
+                    onContinueToDocuments = { data ->
+                        registerData = data
+                        currentScreen = "register_documents"
+                    }
+                )
+            }
+            "register_documents" -> {
+                DocumentsScreen(
+                    registerData = registerData!!,
+                    onBackToRegister = {
+                        currentScreen = "register"
+                    },
+                    onContinueToVerification = { data ->
+                        documentsData = data
+                        currentScreen = "register_verification"
+                    }
+                )
+            }
+            "register_verification" -> {
+                VerificationScreen(
+                    registerData = registerData!!,
+                    documentsData = documentsData!!,
+                    onBackToDocuments = {
+                        currentScreen = "register_documents"
+                    },
+                    onComplete = {
+                        // Aquí irá el registro final al backend
+                        // Por ahora regresa al login
                         currentScreen = "login"
                     }
                 )

@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<paths xmlns:android="http://schemas.android.com/apk/res/android">
+    <!-- Cache directory para fotos temporales -->
+    <cache-path name="cache" path="." />
+
+    <!-- Files directory (opcional, por si quieres guardar permanentemente) -->
+    <files-path name="files" path="." />
+
+    <!-- External cache (opcional) -->
+    <external-cache-path name="external_cache" path="." />
+</paths>

@@ -576,7 +576,19 @@ fun SubtleLeavesBackground(modifier: Modifier = Modifier, leafPositions: List<Le
                 painter = painterResource(id = leaf.drawableId),
                 contentDescription = null,
                 modifier = Modifier
-                    .size(100.dp)
+                    .size(250.dp)
+                    .offset(
+                        x = when (leaf.alignment) {
+                            Alignment.TopEnd, Alignment.CenterEnd, Alignment.BottomEnd -> 60.dp
+                            Alignment.TopStart, Alignment.CenterStart, Alignment.BottomStart -> (-60).dp
+                            else -> 0.dp
+                        },
+                        y = when (leaf.alignment) {
+                            Alignment.TopStart, Alignment.TopCenter, Alignment.TopEnd -> (-60).dp
+                            Alignment.BottomStart, Alignment.BottomCenter, Alignment.BottomEnd -> 60.dp
+                            else -> 0.dp
+                        }
+                    )
                     .graphicsLayer {
                         translationX = animX
                     }
