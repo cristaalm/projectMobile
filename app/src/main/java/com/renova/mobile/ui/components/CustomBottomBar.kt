@@ -3,6 +3,8 @@ package com.renova.mobile.ui.components
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.foundation.interaction.collectIsPressedAsState
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material3.Icon
@@ -22,50 +24,73 @@ import androidx.navigation.compose.currentBackStackEntryAsState
 import com.renova.mobile.R
 import com.renova.mobile.navigation.NavigationItem
 import androidx.compose.animation.*
+import androidx.compose.ui.graphics.ColorFilter
 
 private val primaryColor = Color(0xFF08b662)
 private val qrBackgroundColor = Color(0xFF05D16E).copy(alpha = 0.5f)
 
 @Composable
 fun NavItem(item: NavigationItem, isSelected: Boolean, onClick: () -> Unit) {
-    Column(
-        modifier = Modifier
-            .width(72.dp)
-            .heightIn(min = 64.dp)
-            .clip(CircleShape)
-            .offset(y = 8.dp)
-            .clickable(onClick = onClick),
-        horizontalAlignment = Alignment.CenterHorizontally
+    val interactionSource = remember { MutableInteractionSource() }
+    val isPressed by interactionSource.collectIsPressedAsState()
 
+    Box(
+        modifier = Modifier
+            .size(72.dp)
+            .padding(4.dp),
+        contentAlignment = Alignment.Center
     ) {
-        AnimatedContent(
-            targetState = isSelected,
-            transitionSpec = {
-                (slideInVertically { it } + fadeIn() togetherWith
-                        slideOutVertically { it } + fadeOut())
-                    .using(SizeTransform(clip = false))
-            },
-            label = "IconAnimation"
-        ) { selected ->
-            Icon(
-                painter = painterResource(id = if (selected) item.selectedIcon else item.unselectedIcon),
-                contentDescription = item.route,
-                tint = Color.Unspecified,
-                modifier = Modifier.size(28.dp)
+        // Círculo de fondo cuando está presionado
+        if (isPressed) {
+            Box(
+                modifier = Modifier
+                    .size(64.dp)
+                    .clip(CircleShape)
+                    .background(primaryColor.copy(alpha = 0.15f))
             )
         }
 
-        AnimatedVisibility(
-            visible = isSelected && item.title.isNotEmpty(),
-            enter = slideInVertically { it } + fadeIn(),
-            exit = slideOutVertically { it } + fadeOut()
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .clip(CircleShape)
+                .clickable(
+                    interactionSource = interactionSource,
+                    indication = null,
+                    onClick = onClick
+                ),
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.Center
         ) {
-            Text(
-                text = item.title,
-                color = primaryColor,
-                fontSize = 12.sp,
-                fontWeight = FontWeight.Bold
-            )
+            AnimatedContent(
+                targetState = isSelected,
+                transitionSpec = {
+                    (slideInVertically { it } + fadeIn() togetherWith
+                            slideOutVertically { it } + fadeOut())
+                        .using(SizeTransform(clip = false))
+                },
+                label = "IconAnimation"
+            ) { selected ->
+                Icon(
+                    painter = painterResource(id = if (selected) item.selectedIcon else item.unselectedIcon),
+                    contentDescription = item.route,
+                    tint = Color.Unspecified,
+                    modifier = Modifier.size(28.dp)
+                )
+            }
+
+            AnimatedVisibility(
+                visible = isSelected && item.title.isNotEmpty(),
+                enter = slideInVertically { it } + fadeIn(),
+                exit = slideOutVertically { it } + fadeOut()
+            ) {
+                Text(
+                    text = item.title,
+                    color = primaryColor,
+                    fontSize = 12.sp,
+                    fontWeight = FontWeight.Bold
+                )
+            }
         }
     }
 }
@@ -78,13 +103,12 @@ fun CustomBottomBar(
     val navBackStackEntry by navController.currentBackStackEntryAsState()
     val currentRoute = navBackStackEntry?.destination?.route
 
-    // Estado para controlar la visibilidad del modal
     var showLogoutModal by remember { mutableStateOf(false) }
 
     Box(
         modifier = Modifier
             .fillMaxWidth()
-            .height(80.dp),
+            .height(72.dp),
         contentAlignment = Alignment.BottomCenter
     ) {
         Image(
@@ -92,15 +116,17 @@ fun CustomBottomBar(
             contentDescription = "Bottom bar background",
             modifier = Modifier
                 .fillMaxWidth()
-                .offset(y = (-20).dp),
+                .offset(y = (-12).dp),
+            colorFilter = ColorFilter.tint(Color(0xFF44E382)) ,
             contentScale = ContentScale.FillWidth
         )
 
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(horizontal = 16.dp),
-            horizontalArrangement = Arrangement.SpaceBetween,
+                .padding(horizontal = 16.dp)
+                .offset(y = 8.dp),
+            horizontalArrangement = Arrangement.SpaceEvenly,
             verticalAlignment = Alignment.CenterVertically
         ) {
             NavItem(
@@ -114,7 +140,7 @@ fun CustomBottomBar(
                 onClick = { navController.navigate(NavigationItem.Store.route) }
             )
 
-            Spacer(modifier = Modifier.width(64.dp))
+            Spacer(modifier = Modifier.width(72.dp))
 
             NavItem(
                 item = NavigationItem.Profile,
@@ -122,22 +148,42 @@ fun CustomBottomBar(
                 onClick = { navController.navigate(NavigationItem.Profile.route) }
             )
 
-            // Botón de logout - ahora muestra el modal
+            // Botón de logout con mismo estilo
+            val interactionSource = remember { MutableInteractionSource() }
+            val isPressed by interactionSource.collectIsPressedAsState()
+
             Box(
                 modifier = Modifier
-                    .size(56.dp)
-                    .offset(y = -8.dp)
-                    .clip(CircleShape)
-                    .clickable {
-                        showLogoutModal = true  // Mostrar modal en lugar de logout directo
-                    },
+                    .size(72.dp)
+                    .padding(4.dp),
                 contentAlignment = Alignment.Center
             ) {
-                Icon(
-                    painter = painterResource(id = R.drawable.salida),
-                    contentDescription = "Logout",
-                    tint = Color.Unspecified
-                )
+                if (isPressed) {
+                    Box(
+                        modifier = Modifier
+                            .size(64.dp)
+                            .clip(CircleShape)
+                            .background(primaryColor.copy(alpha = 0.15f))
+                    )
+                }
+
+                Box(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .clip(CircleShape)
+                        .clickable(
+                            interactionSource = interactionSource,
+                            indication = null
+                        ) { showLogoutModal = true },
+                    contentAlignment = Alignment.Center
+                ) {
+                    Icon(
+                        painter = painterResource(id = R.drawable.salida),
+                        contentDescription = "Logout",
+                        tint = Color.Unspecified,
+                        modifier = Modifier.size(28.dp)
+                    )
+                }
             }
         }
 
@@ -146,7 +192,7 @@ fun CustomBottomBar(
             modifier = Modifier
                 .size(64.dp)
                 .align(Alignment.TopCenter)
-                .offset(y = (-10).dp)
+                .offset(y = (-12).dp)
                 .clip(CircleShape)
                 .background(qrBackgroundColor)
                 .clickable { navController.navigate(NavigationItem.QR.route) },
@@ -164,7 +210,6 @@ fun CustomBottomBar(
         }
     }
 
-    // Modal de logout
     LogoutModal(
         isVisible = showLogoutModal,
         onDismiss = { showLogoutModal = false },

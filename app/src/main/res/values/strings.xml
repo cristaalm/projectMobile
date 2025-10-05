@@ -44,10 +44,18 @@
     <string name="search_allied_stores">Allied Stores</string>
     <string name="search_icon">Search stores</string>
     <string name="featured_stores">Featured Stores</string>
+    <string name="store_subtitle">Choose your store to discover its rewards</string>
+    <string name="no_category">No category</string>
+    <string name="all_categories">All</string>
     <string name="categories">Categories</string>
-    <string name="discover_products">Discover Products</string>
-    <string name="discover_stores_description">Discover our allied stores and earn points</string>
+    <string name="discover_products">Redeem and apply</string>
+    <string name="discover_stores_description">Renova appreciates your contribution and rewards you for it</string>
     <string name="contact">Contact</string>
+    <string name="store_rewards_subtitle">Choose a store to discover its rewards</string>
+    <string name="search_icon_content_description">Search icon</string>
+    <string name="category_icon_content_description">Category icon</string>
+    <string name="address_icon_content_description">Address icon</string>
+    <string name="view_details_content_description">View details</string>
 
     <!-- Categories -->
     <string name="restaurants">Restaurants</string>
@@ -101,5 +109,8 @@
     <!-- Dates -->
     <string name="today">Today</string>
     <string name="yesterday">Yesterday</string>
+
+    <!-- Recompensas -->
+    <string name="reward_screen_subtitle">Explore and choose the reward you like the most</string>
 
 </resources>

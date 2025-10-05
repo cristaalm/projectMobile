@@ -106,4 +106,41 @@ object RenovaColors {
     val Success = Primary
     val Warning = Color(0xFFFFC107)
     val Info = Color(0xFF2196F3)
+
+    // Colores para StoreScreen
+    val GifBoxGradientStart = Color(0xFFe9ff61)
+    val GifBoxGradientEnd = Color(0xFFccff3a)
+    val PrimaryColor = Color(0xFF05d16e)
+    val PrimaryHoverColor = Color(0xFF08b662)
+    val SecondaryColor = Color(0xFF024653)
+    val SecondaryHoverColor = Color(0xFF005e70)
+    val TertiaryColor = Color(0xFFcdff10)
+    val TertiaryHoverColor = Color(0xFFddff50)
+
+    val RewardCardBackgrounds = listOf(
+        Color(0xFFFFF59D), // Amarillo claro
+        Color(0xFFCCFF90), // Verde lima
+        Color(0xFF81D4FA), // Azul claro
+        Color(0xFF80CBC4), // Verde azulado
+        Color(0xFFFFCC80)  // Naranja claro
+    )
+    val RewardCardBackgroundsDark = listOf(
+        Color(0xFF3E2723), // Café oscuro
+        Color(0xFF1B5E20), // Verde oscuro
+        Color(0xFF0D47A1), // Azul oscuro
+        Color(0xFF004D40), // Verde azulado oscuro
+        Color(0xFF4E342E)  // Marrón oscuro
+    )
+
+    val AllianceLogoBackgrounds = listOf(
+        Primary,
+        Color(0xFFE1BEE7),
+        Info,
+        Warning,
+        Error
+    )
+    val CategoryCardBackgrounds = listOf(
+        Color(0xFFFF9800), Color(0xFFF44336), Color(0xFF00BCD4),
+        Color(0xFF4CAF50), Color(0xFF9C27B0), Color(0xFF3F51B5)
+    )
 }

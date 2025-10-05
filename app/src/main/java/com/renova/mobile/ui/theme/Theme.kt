@@ -27,6 +27,10 @@ data class RenovaColorScheme(
     val gradientEnd: androidx.compose.ui.graphics.Color,
     val discoverGradientStart: androidx.compose.ui.graphics.Color,
     val discoverGradientEnd: androidx.compose.ui.graphics.Color,
+    val rewardCardBackgrounds: List<androidx.compose.ui.graphics.Color>,
+    val allianceLogoBackgrounds: List<androidx.compose.ui.graphics.Color>,
+    val categoryCardBackgrounds: List<androidx.compose.ui.graphics.Color>,
+
 
     // Colores específicos para ActivityScreen
     val activityBackground: androidx.compose.ui.graphics.Color,
@@ -58,8 +62,12 @@ val LightRenovaColors = RenovaColorScheme(
     gradientEnd = RenovaColors.Light.GradientEnd,
     discoverGradientStart = RenovaColors.Light.DiscoverGradientStart,
     discoverGradientEnd = RenovaColors.Light.DiscoverGradientEnd,
+    rewardCardBackgrounds = RenovaColors.RewardCardBackgrounds,
+    allianceLogoBackgrounds = RenovaColors.AllianceLogoBackgrounds,
+    categoryCardBackgrounds = RenovaColors.CategoryCardBackgrounds,
 
-    // Colores específicos para ActivityScreen - Modo claro
+
+            // Colores específicos para ActivityScreen - Modo claro
     activityBackground = RenovaColors.Light.ActivityBackground,
     activityPrimary = RenovaColors.Light.ActivityPrimary,
     activitySecondary = RenovaColors.Light.ActivitySecondary,
@@ -88,8 +96,12 @@ val DarkRenovaColors = RenovaColorScheme(
     gradientEnd = RenovaColors.Dark.GradientEnd,
     discoverGradientStart = RenovaColors.Dark.GradientStart,
     discoverGradientEnd = RenovaColors.Dark.GradientEnd,
+    rewardCardBackgrounds = RenovaColors.RewardCardBackgrounds,
 
-    // Colores específicos para ActivityScreen - Modo oscuro
+    allianceLogoBackgrounds = RenovaColors.AllianceLogoBackgrounds,
+    categoryCardBackgrounds = RenovaColors.CategoryCardBackgrounds,
+
+            // Colores específicos para ActivityScreen - Modo oscuro
     activityBackground = RenovaColors.Dark.ActivityBackground,
     activityPrimary = RenovaColors.Dark.ActivityPrimary,
     activitySecondary = RenovaColors.Dark.ActivitySecondary,

@@ -45,10 +45,18 @@
     <string name="search_allied_stores">Comercios Aliados</string>
     <string name="search_icon">Buscar comercios</string>
     <string name="featured_stores">Comercios Destacados</string>
+    <string name="store_subtitle">Elige tu comercio para poder descubrir sus recompensas</string>
+    <string name="no_category">Sin categoría</string>
+    <string name="all_categories">Todos</string>
     <string name="categories">Categorías</string>
-    <string name="discover_products">Descubre Productos</string>
-    <string name="discover_stores_description">Descubre nuestros comercios aliados y gana puntos</string>
+    <string name="discover_products">Canjea y atribuye</string>
+    <string name="discover_stores_description">Renova agradece tu aportación y te lo regresa</string>
     <string name="contact">Contacto</string>
+    <string name="store_rewards_subtitle">Elige tu comercio para poder descubrir sus recompensas</string>
+    <string name="search_icon_content_description">Ícono de búsqueda</string>
+    <string name="category_icon_content_description">Ícono de categoría</string>
+    <string name="address_icon_content_description">Ícono de dirección</string>
+    <string name="view_details_content_description">Ver detalles</string>
 
     <!-- Categorías -->
     <string name="restaurants">Restaurantes</string>
@@ -102,5 +110,9 @@
     <!-- Fechas -->
     <string name="today">Hoy</string>
     <string name="yesterday">Ayer</string>
+
+    <!-- Recompensas -->
+    <string name="reward_screen_subtitle">Explora y elige la recompensa que más le guste</string>
+
 
 </resources>
