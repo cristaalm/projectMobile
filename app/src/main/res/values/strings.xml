@@ -113,4 +113,10 @@
     <!-- Recompensas -->
     <string name="reward_screen_subtitle">Explore and choose the reward you like the most</string>
 
+    <!-- Code Mode -->
+    <string name="points_code_title">Renova Points Code</string>
+    <string name="code_instruction_1">Select your reward first.</string>
+    <string name="code_instruction_2">Then choose to pay with Renova Points to display this code and be identified.</string>
+    <string name="code_instruction_3">Present the barcode at checkout or to the scanner.</string>
+
 </resources>

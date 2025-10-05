@@ -113,6 +113,10 @@
 
     <!-- Recompensas -->
     <string name="reward_screen_subtitle">Explora y elige la recompensa que más le guste</string>
-
+    <!-- Modo Código -->
+    <string name="points_code_title">Puntos Renova</string>
+    <string name="code_instruction_1">Selecciona primero tu recompensa.</string>
+    <string name="code_instruction_2">Después elige pagar con Puntos Renova para mostrar este código y ser identificado.</string>
+    <string name="code_instruction_3">Presenta el código de barras en caja o al escáner.</string>
 
 </resources>
