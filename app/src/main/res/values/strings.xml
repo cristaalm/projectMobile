@@ -16,7 +16,7 @@
     <string name="login">LOGIN</string>
     <string name="create_account">CREATE ACCOUNT</string>
     <string name="forgot_password">Forgot password?</string>
-    <string name="welcome_message">Welcome!</string>
+    <string name="welcome_message">Hello!</string>
     <string name="logged">You have successfully logged in.</string>
     <string name="continuar">Continue</string>
     <string name="error_access">Access error</string>

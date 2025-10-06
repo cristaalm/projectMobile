@@ -16,7 +16,7 @@
     <string name="login">INICIAR SESIÓN</string>
     <string name="create_account">CREAR CUENTA</string>
     <string name="forgot_password">¿Olvidaste tu contraseña?</string>
-    <string name="welcome_message">¡Bienvenido!</string>
+    <string name="welcome_message">¡Hola!</string>
     <string name="logged">Has iniciado sesión correctamente.</string>
     <string name="continuar">Continuar</string>
     <string name="error_access">Error de acceso</string>

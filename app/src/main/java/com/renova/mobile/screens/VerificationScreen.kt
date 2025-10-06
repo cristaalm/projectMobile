@@ -116,53 +116,44 @@ fun VerificationScreen(
                 .padding(24.dp),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            Spacer(modifier = Modifier.height(32.dp))
+            Spacer(modifier = Modifier.height(24.dp))
 
             // Header
             Text(
                 text = "VERIFICACIÓN",
                 color = Color.White,
-                fontSize = 32.sp,
+                fontSize = 28.sp,
                 fontWeight = FontWeight.Bold,
                 fontFamily = Poppins,
                 textAlign = TextAlign.Center
             )
 
             Text(
-                text = "Toma una selfie para\nconfirmar tu identidad",
+                text = "Tome una selfie para\nconfirmar su identidad",
                 color = Color.White,
-                fontSize = 16.sp,
+                fontSize = 14.sp,
                 fontFamily = Poppins,
                 textAlign = TextAlign.Center,
-                modifier = Modifier.padding(top = 8.dp)
+                modifier = Modifier.padding(top = 6.dp)
             )
 
-            Spacer(modifier = Modifier.height(12.dp))
+            Spacer(modifier = Modifier.height(10.dp))
 
-            // Barra de progreso (Paso 3 de 3)
-            Row(
-                modifier = Modifier.fillMaxWidth(0.8f),
-                horizontalArrangement = Arrangement.Center,
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Text(
-                    text = "Paso 3 de 3 - Verificación facial",
-                    color = Color.White,
-                    fontSize = 12.sp,
-                    fontFamily = Poppins,
-                    modifier = Modifier.padding(bottom = 4.dp)
-                )
-            }
-
-            LinearProgressIndicator(
-                progress = 3f / 3f,
+            //Barra de progreso (Paso 3 lleno)
+            Box(
                 modifier = Modifier
                     .fillMaxWidth(0.8f)
                     .height(10.dp)
-                    .clip(RoundedCornerShape(50.dp)),
-                color = Color.White,
-                trackColor = Color.LightGray.copy(alpha = 0.4f)
-            )
+                    .clip(RoundedCornerShape(50.dp))
+                    .background(Color.LightGray.copy(alpha = 0.4f))
+            ) {
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth(3f / 3f)
+                        .fillMaxHeight()
+                        .background(Color.White)
+                )
+            }
 
             Spacer(modifier = Modifier.height(24.dp))
 
@@ -245,30 +236,7 @@ fun VerificationScreen(
             Spacer(modifier = Modifier.height(16.dp))
 
             // Card de instrucciones
-            Card(
-                modifier = Modifier.fillMaxWidth(),
-                shape = RoundedCornerShape(16.dp),
-                colors = CardDefaults.cardColors(containerColor = colors.cardBackground),
-                elevation = CardDefaults.cardElevation(defaultElevation = 8.dp)
-            ) {
-                Column(
-                    modifier = Modifier.padding(20.dp)
-                ) {
-                    Text(
-                        text = "INSTRUCCIONES:",
-                        color = colors.textPrimary,
-                        fontSize = 16.sp,
-                        fontWeight = FontWeight.Bold,
-                        fontFamily = Poppins,
-                        modifier = Modifier.padding(bottom = 12.dp)
-                    )
-
-                    InstructionItem("Mira directamente a la cámara", colors)
-                    InstructionItem("Mantén el rostro centrado", colors)
-                    InstructionItem("Evita usar accesorios que cubran tu cara", colors)
-                    InstructionItem("Asegúrate de tener buena iluminación", colors)
-                }
-            }
+            InstructionSection()
 
             Spacer(modifier = Modifier.height(24.dp))
 
@@ -331,26 +299,121 @@ fun VerificationScreen(
 }
 
 @Composable
-fun InstructionItem(text: String, colors: RenovaColorScheme) {
+fun InstructionItem(
+    text: String,
+    icon: Int,
+    colors: RenovaColorScheme
+) {
     Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(vertical = 6.dp),
-        verticalAlignment = Alignment.Top
+        verticalAlignment = Alignment.CenterVertically,
+        modifier = Modifier.fillMaxWidth()
     ) {
-        Text(
-            text = "• ",
-            color = colors.textPrimary,
-            fontSize = 14.sp,
-            fontFamily = Poppins
+        Icon(
+            painter = painterResource(id = icon),
+            contentDescription = null,
+            tint = CustomGreenColor,
+            modifier = Modifier.size(22.dp)
         )
+        Spacer(modifier = Modifier.width(12.dp))
         Text(
             text = text,
-            color = colors.textPrimary,
-            fontSize = 14.sp,
-            fontFamily = Poppins,
-            modifier = Modifier.weight(1f)
+            style = MaterialTheme.typography.bodyMedium.copy(
+                fontFamily = Poppins,
+                fontWeight = FontWeight.Medium
+            ),
+            color = colors.textPrimary
         )
+    }
+}
+
+@Composable
+fun InstructionSection() {
+    val colors = MaterialTheme.renovaColors
+    val scrollState = rememberScrollState()
+
+    val isScrolledToEnd by remember {
+        derivedStateOf { scrollState.maxValue == 0 || scrollState.value >= scrollState.maxValue }
+    }
+
+    val bottomAlpha by animateFloatAsState(
+        targetValue = if (isScrolledToEnd) 0f else 1f,
+        label = "bottomAlpha"
+    )
+
+    val arrowOffset by animateFloatAsState(
+        targetValue = if (isScrolledToEnd) 0f else 1f,
+        animationSpec = if (isScrolledToEnd) tween(300) else infiniteRepeatable(
+            animation = tween(1000),
+            repeatMode = RepeatMode.Reverse
+        ),
+        label = "arrowOffset"
+    )
+
+    Card(
+        modifier = Modifier
+            .fillMaxWidth()
+            .heightIn(max = 300.dp),
+        shape = RoundedCornerShape(16.dp),
+        colors = CardDefaults.cardColors(
+            containerColor = colors.cardBackground
+        ),
+        elevation = CardDefaults.cardElevation(defaultElevation = 8.dp)
+    ) {
+        Box(
+            modifier = Modifier.fillMaxWidth()
+        ) {
+            Column(
+                modifier = Modifier
+                    .padding(20.dp)
+                    .verticalScroll(scrollState),
+                verticalArrangement = Arrangement.spacedBy(12.dp)
+            ) {
+                Text(
+                    text = "INSTRUCCIONES:",
+                    style = MaterialTheme.typography.titleMedium.copy(
+                        fontFamily = Poppins,
+                        fontWeight = FontWeight.ExtraBold
+                    ),
+                    color = CustomGreenColor,
+                )
+
+                InstructionItem(
+                    text = "Mire directamente a la cámara",
+                    icon = R.drawable.ic_camera,
+                    colors = colors
+                )
+                InstructionItem(
+                    text = "Mantenga el rostro centrado",
+                    icon = R.drawable.ic_info,
+                    colors = colors
+                )
+                InstructionItem(
+                    text = "Evite usar accesorios que cubran su cara",
+                    icon = R.drawable.ic_info,
+                    colors = colors
+                )
+                InstructionItem(
+                    text = "Asegúrese de tener buena iluminación",
+                    icon = R.drawable.ic_info,
+                    colors = colors
+                )
+            }
+
+            Box(
+                modifier = Modifier
+                    .align(Alignment.BottomEnd)
+                    .graphicsLayer { alpha = bottomAlpha }
+                    .padding(bottom = 8.dp, end = 16.dp)
+                    .offset(y = (arrowOffset * 5).dp)
+            ) {
+                Icon(
+                    painter = painterResource(id = R.drawable.ic_close_2),
+                    contentDescription = "Scroll hacia abajo",
+                    tint = CustomGreenColor,
+                    modifier = Modifier.size(32.dp)
+                )
+            }
+        }
     }
 }
 

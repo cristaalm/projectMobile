@@ -93,7 +93,7 @@ fun DocumentsScreen(
             )
 
             Text(
-                text = "Sube tu identificación\noficial",
+                text = "Suba su identificación oficial",
                 color = Color.White,
                 fontSize = 16.sp,
                 fontFamily = Poppins,
@@ -103,30 +103,23 @@ fun DocumentsScreen(
 
             Spacer(modifier = Modifier.height(12.dp))
 
-            // Barra de progreso (Paso 2 de 3)
-            Row(
-                modifier = Modifier.fillMaxWidth(0.8f),
-                horizontalArrangement = Arrangement.Center,
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Text(
-                    text = "Paso 2 de 3 - Verificación de identidad",
-                    color = Color.White,
-                    fontSize = 12.sp,
-                    fontFamily = Poppins,
-                    modifier = Modifier.padding(bottom = 4.dp)
-                )
-            }
-
-            LinearProgressIndicator(
-                progress = 2f / 3f,
+            //Barra de progreso (Paso 2 lleno)
+            Box(
                 modifier = Modifier
                     .fillMaxWidth(0.8f)
                     .height(10.dp)
-                    .clip(RoundedCornerShape(50.dp)),
-                color = Color.White,
-                trackColor = Color.LightGray.copy(alpha = 0.4f)
-            )
+                    .clip(RoundedCornerShape(50.dp))
+                    .background(Color.LightGray.copy(alpha = 0.4f))
+            ) {
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth(2f / 3f)
+                        .fillMaxHeight()
+                        .background(Color.White)
+                )
+            }
+
+
 
             Spacer(modifier = Modifier.height(16.dp))
 

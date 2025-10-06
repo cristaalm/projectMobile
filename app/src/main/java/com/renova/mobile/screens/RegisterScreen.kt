@@ -95,7 +95,7 @@ fun RegisterScreen(
             )
 
             Text(
-                text = "Completa tu información",
+                text = "Complete su información",
                 color = Color.White,
                 fontSize = 16.sp,
                 fontFamily = Poppins,
@@ -106,15 +106,20 @@ fun RegisterScreen(
             Spacer(modifier = Modifier.height(12.dp))
 
             //Barra de progreso (Paso 1 lleno)
-            LinearProgressIndicator(
-                progress = 1f / 3f,
+            Box(
                 modifier = Modifier
                     .fillMaxWidth(0.8f)
                     .height(10.dp)
-                    .clip(RoundedCornerShape(50.dp)),
-                color = Color.White, // barra activa
-                trackColor = Color.LightGray.copy(alpha = 0.4f) // fondo de los pasos restantes
-            )
+                    .clip(RoundedCornerShape(50.dp))
+                    .background(Color.LightGray.copy(alpha = 0.4f))
+            ) {
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth(1f / 3f)
+                        .fillMaxHeight()
+                        .background(Color.White)
+                )
+            }
 
             Spacer(modifier = Modifier.height(24.dp))
 
@@ -143,7 +148,7 @@ fun RegisterScreen(
                         value = firstName,
                         onValueChange = { firstName = it },
                         label = "Nombre (s)",
-                        leadingIcon = R.drawable.usuario,
+                        leadingIcon = R.drawable.usuario_relleno,
                         validationState = firstNameValidation,
                         onValidationChange = { firstNameValidation = it },
                         validator = { validateName(it) },
@@ -157,7 +162,7 @@ fun RegisterScreen(
                         value = lastName,
                         onValueChange = { lastName = it },
                         label = "Apellido (s)",
-                        leadingIcon = R.drawable.usuario,
+                        leadingIcon = R.drawable.usuario_relleno,
                         validationState = lastNameValidation,
                         onValidationChange = { lastNameValidation = it },
                         validator = { validateName(it) },
