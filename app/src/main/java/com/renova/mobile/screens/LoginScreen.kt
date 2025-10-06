@@ -599,16 +599,17 @@ data class LeafPosition(val drawableId: Int, val alignment: Alignment)
 
 @Composable
 fun SubtleLeavesBackground(modifier: Modifier = Modifier, leafPositions: List<LeafPosition>) {
-    val transition = rememberInfiniteTransition()
+    val transition = rememberInfiniteTransition(label = "leafAnimation")
 
     leafPositions.forEach { leaf ->
         val animX by transition.animateFloat(
-            initialValue = -10f,
-            targetValue = 10f,
+            initialValue = -20f,
+            targetValue = 20f,
             animationSpec = infiniteRepeatable(
-                animation = tween(durationMillis = 3000, easing = LinearEasing),
+                animation = tween(durationMillis = 3500, easing = FastOutSlowInEasing),
                 repeatMode = RepeatMode.Reverse
-            )
+            ),
+            label = "leafX"
         )
 
         Box(
