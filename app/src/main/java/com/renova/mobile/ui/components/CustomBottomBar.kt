@@ -25,6 +25,7 @@ import com.renova.mobile.R
 import com.renova.mobile.navigation.NavigationItem
 import androidx.compose.animation.*
 import androidx.compose.ui.graphics.ColorFilter
+import com.renova.mobile.navigation.TopNavigationItem
 
 private val primaryColor = Color(0xFF08b662)
 private val qrBackgroundColor = Color(0xFF05D16E).copy(alpha = 0.5f)
@@ -103,6 +104,7 @@ fun CustomBottomBar(
     val navBackStackEntry by navController.currentBackStackEntryAsState()
     val currentRoute = navBackStackEntry?.destination?.route
 
+    // Estado para controlar la visibilidad del modal
     var showLogoutModal by remember { mutableStateOf(false) }
 
     Box(
@@ -144,7 +146,10 @@ fun CustomBottomBar(
 
             NavItem(
                 item = NavigationItem.Profile,
-                isSelected = currentRoute == NavigationItem.Profile.route,
+                isSelected = currentRoute == NavigationItem.Profile.route ||
+                           currentRoute == TopNavigationItem.Profile.route ||
+                           currentRoute == TopNavigationItem.Activity.route ||
+                           currentRoute == TopNavigationItem.Streak.route,
                 onClick = { navController.navigate(NavigationItem.Profile.route) }
             )
 
@@ -210,6 +215,7 @@ fun CustomBottomBar(
         }
     }
 
+    // Modal de logout
     LogoutModal(
         isVisible = showLogoutModal,
         onDismiss = { showLogoutModal = false },

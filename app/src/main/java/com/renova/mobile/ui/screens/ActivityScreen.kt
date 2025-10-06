@@ -20,18 +20,19 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
-import coil.compose.AsyncImage
-import coil.request.ImageRequest
 import com.renova.mobile.R
 import com.renova.mobile.network.ActivityItem
 import com.renova.mobile.ui.theme.LocalRenovaColors
+import com.renova.mobile.ui.theme.RenovaColorScheme
 import com.renova.mobile.ui.viewmodels.ActivityViewModel
 import java.text.SimpleDateFormat
 import java.util.*
+import com.renova.mobile.ui.theme.Typography
 
 
 fun Modifier.greenShadow(
@@ -74,7 +75,6 @@ fun ActivityScreen(
     val renovaColors = LocalRenovaColors.current
     val state by viewModel.state.collectAsState()
 
-    // Cargar datos al iniciar la pantalla
     LaunchedEffect(Unit) {
         viewModel.loadHistory(1)
     }
@@ -89,11 +89,8 @@ fun ActivityScreen(
                 LoadingState(renovaColors)
             }
             state.error != null && state.activities.isEmpty() -> {
-                ErrorState(
-                    error = state.error ?: "Error desconocido",
-                    renovaColors = renovaColors,
-                    onRetry = { viewModel.retry() }
-                )
+                // Mostrar solo el diálogo, sin el ErrorState de fondo
+                Box(modifier = Modifier.fillMaxSize())
             }
             else -> {
                 ActivityContent(
@@ -105,10 +102,24 @@ fun ActivityScreen(
             }
         }
     }
+
+    // Mostrar el diálogo encima de todo
+    if (state.error != null && state.activities.isEmpty()) {
+        ErrorDialog(
+            error = state.error ?: "Error desconocido",
+            onRetry = {
+                viewModel.clearError()
+                viewModel.retry()
+            },
+            onDismiss = {
+                viewModel.clearError()
+            }
+        )
+    }
 }
 
 @Composable
-private fun LoadingState(renovaColors: com.renova.mobile.ui.theme.RenovaColorScheme) {
+private fun LoadingState(renovaColors: RenovaColorScheme) {
     Box(
         modifier = Modifier.fillMaxSize(),
         contentAlignment = Alignment.Center
@@ -118,9 +129,54 @@ private fun LoadingState(renovaColors: com.renova.mobile.ui.theme.RenovaColorSch
 }
 
 @Composable
+private fun ErrorDialog(
+    error: String,
+    onRetry: () -> Unit,
+    onDismiss: () -> Unit
+) {
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = {
+            Text(
+                text = "¡Ocurrió un error!",
+                style = MaterialTheme.typography.titleLarge,
+                color = MaterialTheme.colorScheme.error,
+                textAlign = TextAlign.Center,
+                modifier = Modifier.fillMaxWidth()
+            )
+        },
+        text = {
+            Text(
+                text = "¡Oops! Sucedió un error, por favor reinicia o vuelve a iniciar sesión",
+                style = MaterialTheme.typography.bodyLarge,
+                color = MaterialTheme.colorScheme.onSurface,
+                textAlign = TextAlign.Center,
+                modifier = Modifier.fillMaxWidth()
+            )
+        },
+        confirmButton = {
+            Button(
+                onClick = onRetry,
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = MaterialTheme.colorScheme.primary
+                )
+            ) {
+                Text("Reintentar", color = MaterialTheme.colorScheme.onPrimary)
+            }
+        },
+        dismissButton = {
+            TextButton(onClick = onDismiss) {
+                Text("Cerrar")
+            }
+        },
+        shape = RoundedCornerShape(18.dp)
+    )
+}
+
+@Composable
 private fun ErrorState(
     error: String,
-    renovaColors: com.renova.mobile.ui.theme.RenovaColorScheme,
+    renovaColors: RenovaColorScheme,
     onRetry: () -> Unit
 ) {
     Box(
@@ -143,92 +199,80 @@ private fun ErrorState(
 @Composable
 private fun ActivityContent(
     state: com.renova.mobile.ui.viewmodels.ActivityState,
-    renovaColors: com.renova.mobile.ui.theme.RenovaColorScheme,
+    renovaColors: RenovaColorScheme,
     onPreviousPage: () -> Unit,
     onNextPage: () -> Unit
 ) {
     Column(modifier = Modifier.fillMaxSize()) {
-        // Encabezado
-        Text(
-            text = stringResource(R.string.recycling_materials),
-            style = MaterialTheme.typography.titleMedium,
-            fontWeight = FontWeight.Bold,
-            color = renovaColors.activityPrimary,
+        Column(
             modifier = Modifier.padding(top = 20.dp, start = 20.dp, end = 20.dp, bottom = 8.dp)
-        )
-
-        // Cuadros de materiales
+        ) {
+            Text(
+                text = stringResource(R.string.recycling_materials),
+                style = MaterialTheme.typography.titleLarge,
+                color = renovaColors.textPrimary
+            )
+            Text(
+                text = stringResource(R.string.earn_points_recycling),
+                style = MaterialTheme.typography.bodyMedium,
+                color = renovaColors.textSecondary
+            )
+        }
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(horizontal = 24.dp, vertical = 4.dp),
-            horizontalArrangement = Arrangement.SpaceEvenly
+                .padding(horizontal = 20.dp, vertical = 8.dp),
+            horizontalArrangement = Arrangement.spacedBy(12.dp)
         ) {
             MaterialStatCard(
                 title = stringResource(R.string.plastic),
                 count = state.totalPlastic,
                 icon = R.drawable.bottle,
-                cardColor = renovaColors.plasticCardBackground,
-                iconTint = renovaColors.activityPrimary,
-                cardWidth = 120.dp,
-                cardHeight = 150.dp
+                backgroundRes = R.drawable.fondo_chico,
+                modifier = Modifier.weight(1f)
             )
-            Spacer(modifier = Modifier.width(24.dp))
             MaterialStatCard(
                 title = stringResource(R.string.aluminum),
                 count = state.totalAluminum,
                 icon = R.drawable.can,
-                cardColor = renovaColors.aluminumCardBackground,
-                iconTint = renovaColors.aluminumIconTint,
-                cardWidth = 120.dp,
-                cardHeight = 150.dp
+                backgroundRes = R.drawable.fondo_botella,
+                modifier = Modifier.weight(1f)
+            )
+            MaterialStatCard(
+                title = stringResource(R.string.total_materials),
+                count = state.totalPlastic + state.totalAluminum,
+                icon = R.drawable.bottle,
+                backgroundRes = R.drawable.fondo_comercio,
+                showIcon = false,
+                modifier = Modifier.weight(1f)
             )
         }
-
-        // Total de materiales
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(top = 12.dp, bottom = 12.dp),
-            horizontalArrangement = Arrangement.Center
+        Column(
+            modifier = Modifier.padding(start = 20.dp, top = 12.dp, bottom = 8.dp)
         ) {
             Text(
-                text = stringResource(R.string.total_materials),
-                style = MaterialTheme.typography.titleMedium,
-                fontWeight = FontWeight.Bold,
-                color = renovaColors.activityPrimary
+                text = stringResource(R.string.history),
+                style = MaterialTheme.typography.titleLarge,
+                color = renovaColors.textPrimary
             )
-            Spacer(modifier = Modifier.width(8.dp))
             Text(
-                text = "${state.totalPlastic + state.totalAluminum}",
-                style = MaterialTheme.typography.titleMedium,
-                fontWeight = FontWeight.Bold,
-                color = renovaColors.activityCardBackground,
-                modifier = Modifier
-                    .background(renovaColors.activityPrimary, shape = RoundedCornerShape(8.dp))
-                    .padding(horizontal = 16.dp, vertical = 2.dp)
+                text = stringResource(R.string.activity_record),
+                style = MaterialTheme.typography.bodyMedium,
+                color = renovaColors.textSecondary
             )
         }
 
-        // Historial
-        Text(
-            text = stringResource(R.string.history),
-            style = MaterialTheme.typography.titleMedium,
-            fontWeight = FontWeight.Bold,
-            color = renovaColors.activityPrimary,
-            modifier = Modifier.padding(start = 20.dp, top = 8.dp, bottom = 8.dp)
-        )
-
-        // Lista
         Box(modifier = Modifier.weight(1f)) {
             LazyColumn(
                 modifier = Modifier
                     .fillMaxSize()
-                    .padding(horizontal = 8.dp),
-                verticalArrangement = Arrangement.spacedBy(12.dp)
+                    .padding(horizontal = 18.dp, vertical = 0.dp)
+                    .background(Color.Transparent),
+                verticalArrangement = Arrangement.spacedBy(4.dp),
+                contentPadding = PaddingValues(vertical = 8.dp)
             ) {
                 items(state.activities.size) { index ->
-                    ActivityCard(item = state.activities[index])
+                    ActivityCard(item = state.activities[index], renovaColors = renovaColors)
                 }
             }
 
@@ -236,7 +280,7 @@ private fun ActivityContent(
                 Box(
                     modifier = Modifier
                         .fillMaxSize()
-                        .background(Color.Black.copy(alpha = 0.3f)),
+                        .background(renovaColors.activityPrimary.copy(alpha = 0.1f)),
                     contentAlignment = Alignment.Center
                 ) {
                     CircularProgressIndicator(color = renovaColors.activityPrimary)
@@ -244,7 +288,6 @@ private fun ActivityContent(
             }
         }
 
-        // Paginación
         PaginationControls(
             currentPage = state.currentPage,
             totalPages = state.totalPages,
@@ -261,14 +304,14 @@ private fun PaginationControls(
     currentPage: Int,
     totalPages: Int,
     isLoading: Boolean,
-    renovaColors: com.renova.mobile.ui.theme.RenovaColorScheme,
+    renovaColors: RenovaColorScheme,
     onPreviousPage: () -> Unit,
     onNextPage: () -> Unit
 ) {
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(16.dp),
+            .padding(horizontal = 16.dp, vertical = 8.dp),
         horizontalArrangement = Arrangement.SpaceBetween
     ) {
         Button(
@@ -278,8 +321,8 @@ private fun PaginationControls(
                 containerColor = if (currentPage > 1) renovaColors.buttonEnabled else renovaColors.buttonDisabled,
                 contentColor = renovaColors.activityCardBackground
             ),
-            shape = RoundedCornerShape(50),
-            modifier = Modifier.weight(1f)
+            shape = RoundedCornerShape(12.dp),
+            modifier = Modifier.weight(1f).height(40.dp)
         ) {
             Icon(
                 painter = painterResource(id = R.drawable.back),
@@ -293,9 +336,9 @@ private fun PaginationControls(
         Spacer(modifier = Modifier.width(12.dp))
         Text(
             text = "$currentPage ${stringResource(R.string.of)} $totalPages",
+            style = MaterialTheme.typography.titleSmall,
             modifier = Modifier.align(Alignment.CenterVertically),
-            color = renovaColors.activityPrimary,
-            fontWeight = FontWeight.Bold
+            color = renovaColors.textPrimary
         )
         Spacer(modifier = Modifier.width(12.dp))
         Button(
@@ -305,8 +348,8 @@ private fun PaginationControls(
                 containerColor = if (currentPage < totalPages) renovaColors.buttonEnabled else renovaColors.buttonDisabled,
                 contentColor = renovaColors.activityCardBackground
             ),
-            shape = RoundedCornerShape(50),
-            modifier = Modifier.weight(1f)
+            shape = RoundedCornerShape(12.dp),
+            modifier = Modifier.weight(1f).height(40.dp)
         ) {
             Text(stringResource(R.string.next), color = renovaColors.activityCardBackground)
             Spacer(modifier = Modifier.width(4.dp))
@@ -325,76 +368,61 @@ private fun MaterialStatCard(
     title: String,
     count: Int,
     icon: Int,
-    cardColor: Color,
-    iconTint: Color,
-    cardWidth: Dp = 100.dp,
-    cardHeight: Dp = 140.dp
+    backgroundRes: Int,
+    showIcon: Boolean = true,
+    modifier: Modifier = Modifier
 ) {
     val renovaColors = LocalRenovaColors.current
-    val backgroundRes = when (icon) {
-        R.drawable.bottle -> R.drawable.fondo_botella
-        R.drawable.can -> R.drawable.fondo_lata
-        else -> 0
-    }
-    val textColor = iconTint
 
     Card(
-        modifier = Modifier
-            .width(cardWidth)
-            .height(cardHeight)
-            .greenShadow(
-                color = renovaColors.shadowColor,
-                alpha = 0.2f,
-                shadowRadius = 6.dp,
-                offsetY = 3.dp
-            ),
+        modifier = modifier
+            .height(110.dp),
         shape = RoundedCornerShape(18.dp),
         colors = CardDefaults.cardColors(containerColor = Color.Transparent),
         elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
     ) {
-        Box(
-            modifier = Modifier.fillMaxSize()
-        ) {
-            if (backgroundRes != 0) {
-                Image(
-                    painter = painterResource(id = backgroundRes),
-                    contentDescription = null,
-                    contentScale = ContentScale.Crop,
-                    modifier = Modifier.matchParentSize().clip(RoundedCornerShape(18.dp))
-                )
-            } else {
-                Box(
-                    modifier = Modifier
-                        .matchParentSize()
-                        .background(cardColor, shape = RoundedCornerShape(18.dp))
-                )
-            }
+        Box(modifier = Modifier.fillMaxSize()) {
+            Image(
+                painter = painterResource(id = backgroundRes),
+                contentDescription = null,
+                contentScale = ContentScale.Crop,
+                modifier = Modifier
+                    .matchParentSize()
+                    .clip(RoundedCornerShape(18.dp))
+            )
             Column(
                 modifier = Modifier
                     .fillMaxSize()
-                    .padding(top = 18.dp, bottom = 12.dp),
+                    .padding(vertical = 16.dp, horizontal = 13.dp),
                 horizontalAlignment = Alignment.CenterHorizontally,
-                verticalArrangement = Arrangement.SpaceBetween
+                verticalArrangement = Arrangement.Center
             ) {
-                Image(
-                    painter = painterResource(id = icon),
-                    contentDescription = title,
-                    modifier = Modifier.size(48.dp),
-                    colorFilter = androidx.compose.ui.graphics.ColorFilter.tint(iconTint)
-                )
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.Center
+                ) {
+                    if (showIcon) {
+                        Image(
+                            painter = painterResource(id = icon),
+                            contentDescription = title,
+                            modifier = Modifier.size(34.dp),
+                            colorFilter = androidx.compose.ui.graphics.ColorFilter.tint(Color.White)
+                        )
+                        Spacer(modifier = Modifier.width(3.dp))
+                    }
+                    Text(
+                        text = count.toString(),
+                        style = MaterialTheme.typography.displayMedium,
+                        color = Color.White
+                    )
+                }
+                Spacer(modifier = Modifier.height(0.dp))
                 Text(
                     text = title,
-                    fontSize = 15.sp,
-                    fontWeight = FontWeight.Bold,
-                    color = textColor,
-                    modifier = Modifier.padding(top = 8.dp)
-                )
-                Text(
-                    text = count.toString(),
-                    fontSize = 28.sp,
-                    fontWeight = FontWeight.Bold,
-                    color = textColor,
-                    modifier = Modifier.padding(top = 4.dp)
+                    style = MaterialTheme.typography.labelMedium,
+                    color = Color.White,
+                    textAlign = TextAlign.Center,
+                    maxLines = 1
                 )
             }
         }
@@ -402,156 +430,113 @@ private fun MaterialStatCard(
 }
 
 @Composable
-private fun ActivityCard(item: ActivityItem) {
-    val renovaColors = LocalRenovaColors.current
+private fun ActivityCard(item: ActivityItem, renovaColors: RenovaColorScheme) {
     val context = LocalContext.current
-    val isPointRedemption = item.type_history == 1  // 1 = Canjeo, 2 = Reciclaje
+    val isPointRedemption = item.type_history == 1
 
-    Card(
+    Column(
         modifier = Modifier
             .fillMaxWidth()
-            .greenShadow(
-                color = renovaColors.shadowColor,
-                alpha = 0.15f,
-                shadowRadius = 8.dp,
-                offsetY = 4.dp
-            ),
-        shape = RoundedCornerShape(16.dp),
-        colors = CardDefaults.cardColors(containerColor = renovaColors.activityCardBackground),
-        elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
+            .background(renovaColors.activityBackground)
     ) {
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(start = 8.dp, end = 4.dp, top = 14.dp, bottom = 14.dp),
+                .padding(horizontal = 0.dp, vertical = 6.dp),
             verticalAlignment = Alignment.Top
         ) {
-            // Círculo con fondo personalizado
-            val (backgroundRes, logoRes) = when {
-                isPointRedemption -> Pair(R.drawable.fondo_comercio, null)
-                item.material_type?.slug?.contains("plastico") == true ||
-                        item.material_type?.slug?.contains("plastic") == true ->
-                    Pair(R.drawable.fondo_botella, R.drawable.bottle)
-                item.material_type?.slug?.contains("aluminio") == true ||
-                        item.material_type?.slug?.contains("aluminum") == true ->
-                    Pair(R.drawable.fondo_lata, R.drawable.can)
-                else -> Pair(R.drawable.fondo_botella, R.drawable.bottle)
-            }
-            Box(
-                modifier = Modifier.size(45.dp),
-                contentAlignment = Alignment.Center
-            ) {
-                Image(
-                    painter = painterResource(id = backgroundRes),
-                    contentDescription = null,
-                    contentScale = ContentScale.Crop,
-                    modifier = Modifier.size(50.dp).clip(RoundedCornerShape(50))
-                )
-                if (isPointRedemption && item.alliance != null) {
-                    val logoUrl = if (item.alliance.logo) {
-                        "https://renova-3q4h.onrender.com/storage/alliances/${item.alliance.id}.${item.alliance.ext}"
-                    } else {
-                        "https://renova-3q4h.onrender.com/build/assets/shop-8Hm9KsxR.jpg"
-                    }
-                    // Logo más pequeño y circular
-                    Box(
-                        modifier = Modifier
-                            .size(28.dp)
-                            .clip(RoundedCornerShape(50))
-                            .background(Color.White.copy(alpha = 0.7f)),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        AsyncImage(
-                            model = ImageRequest.Builder(context)
-                                .data(logoUrl)
-                                .crossfade(true)
-                                .build(),
-                            contentDescription = item.alliance.name,
-                            contentScale = ContentScale.Crop,
-                            modifier = Modifier.size(24.dp).clip(RoundedCornerShape(50))
-                        )
-                    }
-                } else if (logoRes != null) {
-                    // Icono del material (botella o lata) como logo principal
-                    val iconTint = when (logoRes) {
-                        R.drawable.bottle -> renovaColors.activityPrimary
-                        R.drawable.can -> renovaColors.aluminumIconTint
-                        else -> renovaColors.activityPrimary
-                    }
-                    Image(
-                        painter = painterResource(id = logoRes),
-                        contentDescription = item.material_type?.name ?: "Material",
-                        modifier = Modifier.size(25.dp),
-                        contentScale = ContentScale.Fit,
-                        colorFilter = androidx.compose.ui.graphics.ColorFilter.tint(iconTint)
-                    )
-                }
-            }
-            Spacer(modifier = Modifier.width(8.dp))
             Column(
                 modifier = Modifier.weight(1f),
-                horizontalAlignment = Alignment.Start,
-                verticalArrangement = Arrangement.spacedBy(4.dp)
+                verticalArrangement = Arrangement.spacedBy(0.dp)
             ) {
                 if (isPointRedemption) {
-                    Text(
-                        text = "Canjeo de Puntos",
-                        fontWeight = FontWeight.Bold,
-                        fontSize = 18.sp,
-                        color = renovaColors.activityPrimary,
-                        maxLines = 1,
-                        overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis
-                    )
-                    item.alliance?.let {
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.Top
+                    ) {
                         Text(
-                            text = it.name,
-                            fontSize = 16.sp,
-                            color = renovaColors.activitySecondary,
-                            lineHeight = 18.sp,
+                            text = stringResource(R.string.points_exchange),
+                            style = MaterialTheme.typography.titleMedium,
+                            color = renovaColors.textPrimary,
                             maxLines = 2,
+                            overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis,
+                            modifier = Modifier.weight(1f)
+                        )
+                        Text(
+                            text = "${item.points}",
+                            style = MaterialTheme.typography.titleMedium,
+                            color = renovaColors.negativePoints,
+                            modifier = Modifier.padding(start = 8.dp)
+                        )
+                    }
+                    if (item.alliance != null) {
+                        Text(
+                            text = item.alliance.name,
+                            style = MaterialTheme.typography.bodySmall,
+                            color = renovaColors.textSecondary,
+                            maxLines = 1,
                             overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis
                         )
                     }
-                    item.reward?.let {
+                    if (item.reward != null) {
                         Text(
-                            text = it.name,
-                            fontSize = 14.sp,
-                            color = renovaColors.activitySecondary,
-                            lineHeight = 18.sp,
-                            maxLines = 2,
+                            text = item.reward.description,
+                            style = MaterialTheme.typography.bodySmall,
+                            color = renovaColors.textSecondary,
+                            maxLines = 3,
                             overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis
                         )
                     }
                 } else {
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.Top
+                    ) {
+                        Text(
+                            text = stringResource(R.string.product_entry),
+                            style = MaterialTheme.typography.titleMedium,
+                            color = renovaColors.textPrimary,
+                            maxLines = 1,
+                            overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis,
+                            modifier = Modifier.weight(1f)
+                        )
+                        Text(
+                            text = "+${item.points}",
+                            style = MaterialTheme.typography.titleMedium,
+                            color = renovaColors.positivePoints,
+                            modifier = Modifier.padding(start = 8.dp)
+                        )
+                    }
                     Text(
-                        text = item.material_type?.name ?: "Material Desconocido",
-                        fontWeight = FontWeight.Bold,
-                        fontSize = 18.sp,
-                        color = renovaColors.activityPrimary,
+                        text = item.material_type?.name ?: stringResource(R.string.unknown_material),
+                        style = MaterialTheme.typography.bodySmall,
+                        color = renovaColors.textSecondary,
                         maxLines = 1,
                         overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis
                     )
                 }
                 Text(
                     text = formatFriendlyDate(item.created_at),
-                    fontSize = 13.sp,
-                    color = renovaColors.activitySecondary
+                    style = MaterialTheme.typography.bodySmall,
+                    color = renovaColors.textSecondary
                 )
             }
-            Text(
-                text = "${if (item.points >= 0) "+" else ""}${item.points} pts",
-                fontWeight = FontWeight.Bold,
-                color = if (item.points >= 0) renovaColors.positivePoints else renovaColors.negativePoints,
-                fontSize = 18.sp,
-                modifier = Modifier
-                    .padding(start = 6.dp)
-                    .align(Alignment.Top)
-            )
         }
+
+        Spacer(
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(2.dp)
+                .background(renovaColors.activityPrimary)
+        )
     }
 }
 
+@Composable
 private fun formatFriendlyDate(isoString: String): String {
+    val context = LocalContext.current
     val sdfInput = SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSSSSS'Z'", Locale.getDefault())
     sdfInput.timeZone = TimeZone.getTimeZone("UTC")
     val date = try { sdfInput.parse(isoString) } catch (_: Exception) { null }
@@ -560,16 +545,16 @@ private fun formatFriendlyDate(isoString: String): String {
     val calDate = Calendar.getInstance().apply { time = date }
     val today = Calendar.getInstance()
     val yesterday = Calendar.getInstance().apply { add(Calendar.DAY_OF_YEAR, -1) }
-    val locale = Locale.forLanguageTag("es-MX")
+    val locale = Locale.getDefault()
     val timeFormat = SimpleDateFormat("h:mm a", locale)
 
     return when {
         calDate.get(Calendar.YEAR) == today.get(Calendar.YEAR) &&
                 calDate.get(Calendar.DAY_OF_YEAR) == today.get(Calendar.DAY_OF_YEAR) ->
-            "Hoy, ${timeFormat.format(date).lowercase()}"
+            "${context.getString(R.string.today)}, ${timeFormat.format(date).lowercase()}"
         calDate.get(Calendar.YEAR) == yesterday.get(Calendar.YEAR) &&
                 calDate.get(Calendar.DAY_OF_YEAR) == yesterday.get(Calendar.DAY_OF_YEAR) ->
-            "Ayer, ${timeFormat.format(date).lowercase()}"
+            "${context.getString(R.string.yesterday)}, ${timeFormat.format(date).lowercase()}"
         else -> {
             val dateFormat = SimpleDateFormat("dd/MM/yyyy, h:mm a", locale)
             dateFormat.format(date).lowercase()

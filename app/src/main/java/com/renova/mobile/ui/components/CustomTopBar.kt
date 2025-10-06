@@ -12,6 +12,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import com.renova.mobile.ui.theme.LocalRenovaColors
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
@@ -23,11 +24,10 @@ import com.google.accompanist.systemuicontroller.rememberSystemUiController
 import com.renova.mobile.R
 import com.renova.mobile.navigation.NavigationItem
 import com.renova.mobile.navigation.TopNavigationItem
+import com.renova.mobile.ui.theme.Typography
 
 @Composable
-fun CustomTopBar(
-    navController: NavController
-) {
+fun CustomTopBar(navController: NavController) {
     val systemUiController = rememberSystemUiController()
     val navBackStackEntry by navController.currentBackStackEntryAsState()
     val currentRoute = navBackStackEntry?.destination?.route
@@ -35,9 +35,9 @@ fun CustomTopBar(
             currentRoute == TopNavigationItem.Activity.route ||
             currentRoute == TopNavigationItem.Streak.route
 
-    // Ocultar la barra de estado
+    // Mostrar la barra de estado
     SideEffect {
-        systemUiController.isStatusBarVisible = false
+        systemUiController.isStatusBarVisible = true
     }
 
     // Solo mostrar el topbar si estamos en la sección de perfil
@@ -45,11 +45,11 @@ fun CustomTopBar(
         return
     }
 
-    // TopBar con opciones  f
+    // TopBar con opciones - colores ahora vienen del tema
     Column(
         modifier = Modifier
             .fillMaxWidth()
-            .background(MaterialTheme.colorScheme.primary)
+            .background(LocalRenovaColors.current.topBarColor)  // Usa el color definido en Theme.kt
             .padding(start = 16.dp, end = 16.dp, top = 25.dp, bottom = 8.dp),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
@@ -120,14 +120,13 @@ private fun TopBarOption(
             Icon(
                 painter = painterResource(id = icon),
                 contentDescription = title,
-                tint = if (isSelected) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.tertiary,
+                tint = if (isSelected) MaterialTheme.colorScheme.onPrimary else LocalRenovaColors.current.topBarUnselected,
                 modifier = Modifier.size(18.dp)
             )
             Text(
                 text = title,
-                color = if (isSelected) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.tertiary,
-                fontSize = 14.sp,
-                fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal,
+                color = if (isSelected) MaterialTheme.colorScheme.onPrimary else LocalRenovaColors.current.topBarUnselected,
+                style = MaterialTheme.typography.labelLarge,
                 modifier = Modifier.padding(start = 4.dp),
                 maxLines = 1
             )
@@ -136,7 +135,7 @@ private fun TopBarOption(
             modifier = Modifier
                 .fillMaxWidth(0.85f)
                 .height(3.dp)
-                .background(if (isSelected) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.tertiary)
+                .background(if (isSelected) MaterialTheme.colorScheme.onPrimary else LocalRenovaColors.current.topBarUnselected)
         )
     }
 }

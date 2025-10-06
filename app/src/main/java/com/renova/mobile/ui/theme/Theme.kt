@@ -31,6 +31,8 @@ data class RenovaColorScheme(
     val allianceLogoBackgrounds: List<androidx.compose.ui.graphics.Color>,
     val categoryCardBackgrounds: List<androidx.compose.ui.graphics.Color>,
 
+    val topBarColor: androidx.compose.ui.graphics.Color,
+    val topBarUnselected: androidx.compose.ui.graphics.Color,
 
     // Colores específicos para ActivityScreen
     val activityBackground: androidx.compose.ui.graphics.Color,
@@ -39,6 +41,7 @@ data class RenovaColorScheme(
     val activityCardBackground: androidx.compose.ui.graphics.Color,
     val plasticCardBackground: androidx.compose.ui.graphics.Color,
     val aluminumCardBackground: androidx.compose.ui.graphics.Color,
+    val totalCardBackground: androidx.compose.ui.graphics.Color,
     val aluminumIconTint: androidx.compose.ui.graphics.Color,
     val positivePoints: androidx.compose.ui.graphics.Color,
     val negativePoints: androidx.compose.ui.graphics.Color,
@@ -66,14 +69,17 @@ val LightRenovaColors = RenovaColorScheme(
     allianceLogoBackgrounds = RenovaColors.AllianceLogoBackgrounds,
     categoryCardBackgrounds = RenovaColors.CategoryCardBackgrounds,
 
+    topBarColor = RenovaColors.TopBar,
+    topBarUnselected = RenovaColors.TopBarUnselected,
 
-            // Colores específicos para ActivityScreen - Modo claro
+    // Colores específicos para ActivityScreen - Modo claro
     activityBackground = RenovaColors.Light.ActivityBackground,
     activityPrimary = RenovaColors.Light.ActivityPrimary,
     activitySecondary = RenovaColors.Light.ActivitySecondary,
     activityCardBackground = RenovaColors.Light.ActivityCardBackground,
     plasticCardBackground = RenovaColors.Light.PlasticCard,
     aluminumCardBackground = RenovaColors.Light.AluminumCard,
+    totalCardBackground = androidx.compose.ui.graphics.Color(0xffccff0),
     aluminumIconTint = RenovaColors.Light.AluminumCardIcon,
     positivePoints = RenovaColors.Light.PositivePoints,
     negativePoints = RenovaColors.Light.NegativePoints,
@@ -100,6 +106,8 @@ val DarkRenovaColors = RenovaColorScheme(
 
     allianceLogoBackgrounds = RenovaColors.AllianceLogoBackgrounds,
     categoryCardBackgrounds = RenovaColors.CategoryCardBackgrounds,
+    topBarColor = RenovaColors.TopBarDark,
+    topBarUnselected = RenovaColors.TopBarTextDark,
 
             // Colores específicos para ActivityScreen - Modo oscuro
     activityBackground = RenovaColors.Dark.ActivityBackground,
@@ -108,6 +116,7 @@ val DarkRenovaColors = RenovaColorScheme(
     activityCardBackground = RenovaColors.Dark.ActivityCardBackground,
     plasticCardBackground = RenovaColors.Dark.PlasticCard,
     aluminumCardBackground = RenovaColors.Dark.AluminumCard,
+    totalCardBackground = androidx.compose.ui.graphics.Color(0xffccff0),
     aluminumIconTint = RenovaColors.Dark.AluminumCardIcon,
     positivePoints = RenovaColors.Dark.PositivePoints,
     negativePoints = RenovaColors.Dark.NegativePoints,

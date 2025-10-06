@@ -81,10 +81,12 @@
 
     <!-- ActivityScreen -->
     <string name="recycling_materials">Materiales de Reciclaje</string>
+    <string name="earn_points_recycling">Acumula puntos por reciclar</string>
     <string name="plastic">Plástico</string>
     <string name="aluminum">Aluminio</string>
-    <string name="total_materials">Total de Materiales</string>
+    <string name="total_materials">Total</string>
     <string name="history">Historial</string>
+    <string name="activity_record">Registro de actividades</string>
     <string name="previous">Anterior</string>
     <string name="next">Siguiente</string>
     <string name="of">de</string>
@@ -102,6 +104,8 @@
 
     <!-- Actividades -->
     <string name="points_exchange">Canjeo de Puntos</string>
+    <string name="product_entry">Ingreso de producto</string>
+    <string name="unknown_material">Material Desconocido</string>
     <string name="pet_bottle">Botella PET</string>
     <string name="aluminum_can">Lata Aluminio</string>
 
