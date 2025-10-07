@@ -15,6 +15,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.Font
 import androidx.compose.ui.text.font.FontFamily
@@ -29,7 +30,6 @@ import com.renova.mobile.R
 import com.renova.mobile.ui.theme.*
 import kotlinx.coroutines.delay
 
-//Definición completa de fuentes Poppins
 val Poppins = FontFamily(
     Font(R.font.poppins_light, FontWeight.Light),
     Font(R.font.poppins_regular, FontWeight.Normal),
@@ -54,7 +54,6 @@ fun RegisterScreen(
     var passwordVisible by remember { mutableStateOf(false) }
     var confirmPasswordVisible by remember { mutableStateOf(false) }
 
-    // Estados de validación
     var firstNameValidation by remember { mutableStateOf(ValidationState.IDLE) }
     var lastNameValidation by remember { mutableStateOf(ValidationState.IDLE) }
     var emailValidation by remember { mutableStateOf(ValidationState.IDLE) }
@@ -84,9 +83,8 @@ fun RegisterScreen(
         ) {
             Spacer(modifier = Modifier.height(32.dp))
 
-            // Header
             Text(
-                text = "REGISTRO",
+                text = stringResource(R.string.register_title),
                 color = Color.White,
                 fontSize = 32.sp,
                 fontWeight = FontWeight.Bold,
@@ -95,7 +93,7 @@ fun RegisterScreen(
             )
 
             Text(
-                text = "Complete su información",
+                text = stringResource(R.string.complete_information),
                 color = Color.White,
                 fontSize = 16.sp,
                 fontFamily = Poppins,
@@ -106,7 +104,7 @@ fun RegisterScreen(
             Spacer(modifier = Modifier.height(10.dp))
 
             Text(
-                text = "Paso 1 de 3",
+                text = stringResource(R.string.step_1_of_3),
                 color = Color.White.copy(alpha = 0.9f),
                 fontSize = 13.sp,
                 fontWeight = FontWeight.Medium,
@@ -116,7 +114,6 @@ fun RegisterScreen(
 
             Spacer(modifier = Modifier.height(8.dp))
 
-            //Barra de progreso (Paso 1 lleno)
             Box(
                 modifier = Modifier
                     .fillMaxWidth(0.8f)
@@ -134,7 +131,6 @@ fun RegisterScreen(
 
             Spacer(modifier = Modifier.height(24.dp))
 
-            //Card con formulario
             Card(
                 modifier = Modifier.fillMaxWidth(),
                 shape = RoundedCornerShape(16.dp),
@@ -146,7 +142,7 @@ fun RegisterScreen(
                     horizontalAlignment = Alignment.CenterHorizontally
                 ) {
                     Text(
-                        text = "Datos Personales",
+                        text = stringResource(R.string.personal_data),
                         color = colors.textPrimary,
                         fontSize = 18.sp,
                         fontWeight = FontWeight.Bold,
@@ -154,11 +150,10 @@ fun RegisterScreen(
                         modifier = Modifier.padding(bottom = 16.dp)
                     )
 
-                    // Campo Nombre(s)
                     ValidatedTextField(
                         value = firstName,
                         onValueChange = { firstName = it },
-                        label = "Nombre(s)",
+                        label = stringResource(R.string.first_name),
                         leadingIcon = R.drawable.usuario_relleno,
                         validationState = firstNameValidation,
                         onValidationChange = { firstNameValidation = it },
@@ -168,11 +163,10 @@ fun RegisterScreen(
 
                     Spacer(modifier = Modifier.height(16.dp))
 
-                    // Campo Apellido(s)
                     ValidatedTextField(
                         value = lastName,
                         onValueChange = { lastName = it },
-                        label = "Apellido(s)",
+                        label = stringResource(R.string.last_name),
                         leadingIcon = R.drawable.usuario_relleno,
                         validationState = lastNameValidation,
                         onValidationChange = { lastNameValidation = it },
@@ -182,11 +176,10 @@ fun RegisterScreen(
 
                     Spacer(modifier = Modifier.height(16.dp))
 
-                    // Campo Email
                     ValidatedTextField(
                         value = email,
                         onValueChange = { email = it },
-                        label = "Correo electrónico",
+                        label = stringResource(R.string.email),
                         leadingIcon = R.drawable.ic_email,
                         validationState = emailValidation,
                         onValidationChange = { emailValidation = it },
@@ -197,7 +190,6 @@ fun RegisterScreen(
 
                     Spacer(modifier = Modifier.height(16.dp))
 
-                    // Campo Teléfono
                     ValidatedTextField(
                         value = phone,
                         onValueChange = {
@@ -205,7 +197,7 @@ fun RegisterScreen(
                                 phone = it
                             }
                         },
-                        label = "Número de teléfono",
+                        label = stringResource(R.string.phone_number),
                         leadingIcon = R.drawable.phone,
                         validationState = phoneValidation,
                         onValidationChange = { phoneValidation = it },
@@ -216,13 +208,12 @@ fun RegisterScreen(
 
                     Spacer(modifier = Modifier.height(16.dp))
 
-                    // Campo Contraseña
                     ValidatedTextField(
                         value = password,
                         onValueChange = {
                             if (it.length <= 14) password = it
                         },
-                        label = "Contraseña",
+                        label = stringResource(R.string.password),
                         leadingIcon = R.drawable.ic_lock,
                         validationState = passwordValidation,
                         onValidationChange = { passwordValidation = it },
@@ -236,13 +227,12 @@ fun RegisterScreen(
 
                     Spacer(modifier = Modifier.height(16.dp))
 
-                    // Campo Confirmar Contraseña
                     ValidatedTextField(
                         value = confirmPassword,
                         onValueChange = {
                             if (it.length <= 14) confirmPassword = it
                         },
-                        label = "Confirmar Contraseña",
+                        label = stringResource(R.string.confirm_password),
                         leadingIcon = R.drawable.ic_lock,
                         validationState = confirmPasswordValidation,
                         onValidationChange = { confirmPasswordValidation = it },
@@ -256,7 +246,6 @@ fun RegisterScreen(
 
                     Spacer(modifier = Modifier.height(24.dp))
 
-                    //Botón Regresar
                     OutlinedButton(
                         onClick = { onBackToLogin() },
                         modifier = Modifier
@@ -269,7 +258,7 @@ fun RegisterScreen(
                         )
                     ) {
                         Text(
-                            text = "REGRESAR",
+                            text = stringResource(R.string.back),
                             fontSize = 16.sp,
                             fontWeight = FontWeight.Bold,
                             fontFamily = Poppins,
@@ -279,7 +268,6 @@ fun RegisterScreen(
 
                     Spacer(modifier = Modifier.height(12.dp))
 
-                    //Botón Continuar
                     Button(
                         onClick = {
                             val allValid = firstNameValidation == ValidationState.VALID &&
@@ -310,7 +298,7 @@ fun RegisterScreen(
                         )
                     ) {
                         Text(
-                            text = "CONTINUAR",
+                            text = stringResource(R.string.continue_button),
                             fontSize = 16.sp,
                             fontWeight = FontWeight.Bold,
                             fontFamily = Poppins,
@@ -401,7 +389,7 @@ fun ValidatedTextField(
                             ValidationState.VALID -> {
                                 Icon(
                                     painter = painterResource(id = R.drawable.cheque),
-                                    contentDescription = "Valid",
+                                    contentDescription = stringResource(R.string.valid),
                                     tint = CustomGreenColor,
                                     modifier = Modifier.size(24.dp)
                                 )
@@ -410,7 +398,7 @@ fun ValidatedTextField(
                             ValidationState.ERROR -> {
                                 Icon(
                                     painter = painterResource(id = R.drawable.ic_close_2),
-                                    contentDescription = "Error",
+                                    contentDescription = stringResource(R.string.error),
                                     tint = RenovaColors.Error,
                                     modifier = Modifier.size(24.dp)
                                 )
@@ -428,7 +416,10 @@ fun ValidatedTextField(
                                     id = if (passwordVisible) R.drawable.ic_visibility_off
                                     else R.drawable.ic_visibility
                                 ),
-                                contentDescription = if (passwordVisible) "Ocultar" else "Mostrar",
+                                contentDescription = if (passwordVisible)
+                                    stringResource(R.string.hide)
+                                else
+                                    stringResource(R.string.show),
                                 tint = colors.iconTint
                             )
                         }
@@ -455,7 +446,7 @@ fun ValidatedTextField(
             exit = fadeOut() + shrinkVertically()
         ) {
             Text(
-                text = getErrorMessage(label, value),
+                text = getErrorMessage(label),
                 color = RenovaColors.Error,
                 fontSize = 12.sp,
                 fontFamily = Poppins,
@@ -479,7 +470,6 @@ data class RegisterData(
     val password: String
 )
 
-//Validaciones
 fun validateName(name: String): Boolean =
     name.length >= 2 && name.all { it.isLetter() || it.isWhitespace() }
 
@@ -492,18 +482,26 @@ fun validatePhone(phone: String): Boolean =
 fun validateConfirmPassword(password: String, confirmPassword: String): Boolean =
     password == confirmPassword && password.isNotEmpty()
 
-fun getErrorMessage(label: String, value: String): String {
+@Composable
+fun getErrorMessage(label: String): String {
     return when {
-        label.contains("Nombre") || label.contains("Apellido") ->
-            "Debe contener al menos 2 letras"
-        label.contains("Email") || label.contains("Correo") ->
-            "Correo electrónico inválido"
-        label.contains("teléfono") ->
-            "Debe contener 10 dígitos"
-        label.contains("Contraseña") && !label.contains("Confirmar") ->
-            "Mínimo 6 caracteres, letras y números"
-        label.contains("Confirmar") ->
-            "Las contraseñas no coinciden"
-        else -> "Campo inválido"
+        label.contains(stringResource(R.string.first_name), ignoreCase = true) ||
+                label.contains(stringResource(R.string.last_name), ignoreCase = true) ->
+            stringResource(R.string.error_name_min_length)
+
+        label.contains(stringResource(R.string.email), ignoreCase = true) ->
+            stringResource(R.string.email_invalid)
+
+        label.contains(stringResource(R.string.phone_number), ignoreCase = true) ->
+            stringResource(R.string.error_phone_digits)
+
+        label.contains(stringResource(R.string.password), ignoreCase = true) &&
+                !label.contains(stringResource(R.string.confirm_password), ignoreCase = true) ->
+            stringResource(R.string.error_password_requirements)
+
+        label.contains(stringResource(R.string.confirm_password), ignoreCase = true) ->
+            stringResource(R.string.error_passwords_not_match)
+
+        else -> stringResource(R.string.error_invalid_field)
     }
 }

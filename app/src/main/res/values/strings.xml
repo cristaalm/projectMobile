@@ -144,4 +144,56 @@
 
     <string name="privacy_content">1. Information we collect\n\nWe collect information you provide directly to us, such as name, email, and application usage data.\n\n2. Use of information\n\nWe use the collected information to provide, maintain, and improve our services, as well as to communicate with you.\n\n3. Sharing information\n\nWe do not share your personal information with third parties without your consent, except when necessary to provide our services.\n\n4. Security\n\nWe implement security measures to protect your personal information against unauthorized access and misuse.\n\n5. Your rights\n\nYou have the right to access, correct, or delete your personal information at any time.</string>
 
+    <!-- RegisterScreen -->
+    <string name="register_title">REGISTER</string>
+    <string name="complete_information">Complete your information</string>
+    <string name="step_1_of_3">Step 1 of 3</string>
+    <string name="personal_data">Personal Information</string>
+    <string name="first_name">First Name</string>
+    <string name="last_name">Last Name</string>
+    <string name="phone_number">Phone Number</string>
+    <string name="password">Password</string>
+    <string name="confirm_password">Confirm Password</string>
+    <string name="back">BACK</string>
+    <string name="continue_button">CONTINUE</string>
+    <string name="show">Show</string>
+    <string name="hide">Hide</string>
+    <string name="valid">Valid</string>
+    <string name="error">Error</string>
+
+    <!-- Validation Errors -->
+    <string name="error_name_min_length">Must contain at least 2 letters</string>
+    <string name="error_phone_digits">Must contain 10 digits</string>
+    <string name="error_password_requirements">Minimum 6 characters, letters and numbers</string>
+    <string name="error_passwords_not_match">Passwords do not match</string>
+    <string name="error_invalid_field">Invalid field</string>
+
+    <!-- DocumentsScreen -->
+    <string name="documents_title">DOCUMENTS</string>
+    <string name="upload_official_id">Upload your official ID</string>
+    <string name="step_2_of_3">Step 2 of 3</string>
+    <string name="upload_ine_front">UPLOAD ID (Front)</string>
+    <string name="upload_ine_back">UPLOAD ID (Back)</string>
+    <string name="tap_to_select_file">Tap to select file</string>
+    <string name="file_selected">File selected</string>
+    <string name="document_curp_number">Document/ID Number</string>
+    <string name="error_invalid_curp">Invalid ID. Must have 18 characters</string>
+
+    <!-- VerificationScreen -->
+    <string name="verification_title">VERIFICATION</string>
+    <string name="take_selfie_subtitle">Take a selfie to\nconfirm your identity</string>
+    <string name="step_3_of_3">Step 3 of 3</string>
+    <string name="verification_selfie">VERIFICATION SELFIE</string>
+    <string name="take_selfie">TAKE SELFIE</string>
+    <string name="photo_captured">Photo captured</string>
+    <string name="selfie">Selfie</string>
+    <string name="instructions">INSTRUCTIONS:</string>
+    <string name="instruction_look_camera">Look directly at the camera</string>
+    <string name="instruction_center_face">Keep your face centered</string>
+    <string name="instruction_no_accessories">Avoid wearing accessories that cover your face</string>
+    <string name="instruction_good_lighting">Make sure you have good lighting</string>
+    <string name="scroll_down">Scroll down</string>
+    <string name="success">Success</string>
+    <string name="completed">Completed!</string>
+
 </resources>

@@ -144,4 +144,56 @@
 
     <string name="privacy_content">1. Información que recopilamos\n\nRecopilamos información que usted nos proporciona directamente, como nombre, correo electrónico y datos de uso de la aplicación.\n\n2. Uso de la información\n\nUtilizamos la información recopilada para proporcionar, mantener y mejorar nuestros servicios, así como para comunicarnos con usted.\n\n3. Compartir información\n\nNo compartimos su información personal con terceros sin su consentimiento, excepto cuando sea necesario para proporcionar nuestros servicios.\n\n4. Seguridad\n\nImplementamos medidas de seguridad para proteger su información personal contra acceso no autorizado y uso indebido.\n\n5. Sus derechos\n\nUsted tiene derecho a acceder, corregir o eliminar su información personal en cualquier momento.</string>
 
+    <!-- RegisterScreen -->
+    <string name="register_title">REGISTRO</string>
+    <string name="complete_information">Complete su información</string>
+    <string name="step_1_of_3">Paso 1 de 3</string>
+    <string name="personal_data">Datos Personales</string>
+    <string name="first_name">Nombre(s)</string>
+    <string name="last_name">Apellido(s)</string>
+    <string name="phone_number">Número de teléfono</string>
+    <string name="password">Contraseña</string>
+    <string name="confirm_password">Confirmar Contraseña</string>
+    <string name="back">REGRESAR</string>
+    <string name="continue_button">CONTINUAR</string>
+    <string name="show">Mostrar</string>
+    <string name="hide">Ocultar</string>
+    <string name="valid">Válido</string>
+    <string name="error">Error</string>
+
+    <!-- Validation Errors -->
+    <string name="error_name_min_length">Debe contener al menos 2 letras</string>
+    <string name="error_phone_digits">Debe contener 10 dígitos</string>
+    <string name="error_password_requirements">Mínimo 6 caracteres, letras y números</string>
+    <string name="error_passwords_not_match">Las contraseñas no coinciden</string>
+    <string name="error_invalid_field">Campo inválido</string>
+
+    <!-- DocumentsScreen -->
+    <string name="documents_title">DOCUMENTOS</string>
+    <string name="upload_official_id">Suba su identificación oficial</string>
+    <string name="step_2_of_3">Paso 2 de 3</string>
+    <string name="upload_ine_front">SUBIR INE (Frontal)</string>
+    <string name="upload_ine_back">SUBIR INE (Reverso)</string>
+    <string name="tap_to_select_file">Toca para seleccionar archivo</string>
+    <string name="file_selected">Archivo seleccionado</string>
+    <string name="document_curp_number">Número de documento/CURP</string>
+    <string name="error_invalid_curp">CURP inválido. Debe tener 18 caracteres</string>
+
+    <!-- VerificationScreen -->
+    <string name="verification_title">VERIFICACIÓN</string>
+    <string name="take_selfie_subtitle">Tome una selfie para\nconfirmar su identidad</string>
+    <string name="step_3_of_3">Paso 3 de 3</string>
+    <string name="verification_selfie">SELFIE DE VERIFICACIÓN</string>
+    <string name="take_selfie">TOMAR SELFIE</string>
+    <string name="photo_captured">Foto capturada</string>
+    <string name="selfie">Selfie</string>
+    <string name="instructions">INSTRUCCIONES:</string>
+    <string name="instruction_look_camera">Mire directamente a la cámara</string>
+    <string name="instruction_center_face">Mantenga el rostro centrado</string>
+    <string name="instruction_no_accessories">Evite usar accesorios que cubran su cara</string>
+    <string name="instruction_good_lighting">Asegúrese de tener buena iluminación</string>
+    <string name="scroll_down">Scroll hacia abajo</string>
+    <string name="success">Success</string>
+    <string name="completed">¡Completado!</string>
+
 </resources>

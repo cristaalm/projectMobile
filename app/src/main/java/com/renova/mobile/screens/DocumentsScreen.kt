@@ -19,6 +19,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
@@ -82,9 +83,8 @@ fun DocumentsScreen(
         ) {
             Spacer(modifier = Modifier.height(32.dp))
 
-            // Header
             Text(
-                text = "DOCUMENTOS",
+                text = stringResource(R.string.documents_title),
                 color = Color.White,
                 fontSize = 32.sp,
                 fontWeight = FontWeight.Bold,
@@ -93,7 +93,7 @@ fun DocumentsScreen(
             )
 
             Text(
-                text = "Suba su identificación oficial",
+                text = stringResource(R.string.upload_official_id),
                 color = Color.White,
                 fontSize = 16.sp,
                 fontFamily = Poppins,
@@ -104,7 +104,7 @@ fun DocumentsScreen(
             Spacer(modifier = Modifier.height(10.dp))
 
             Text(
-                text = "Paso 2 de 3",
+                text = stringResource(R.string.step_2_of_3),
                 color = Color.White.copy(alpha = 0.9f),
                 fontSize = 13.sp,
                 fontWeight = FontWeight.Medium,
@@ -114,7 +114,6 @@ fun DocumentsScreen(
 
             Spacer(modifier = Modifier.height(8.dp))
 
-            //Barra de progreso (Paso 2 lleno)
             Box(
                 modifier = Modifier
                     .fillMaxWidth(0.8f)
@@ -130,13 +129,9 @@ fun DocumentsScreen(
                 )
             }
 
-
-
             Spacer(modifier = Modifier.height(16.dp))
-
             Spacer(modifier = Modifier.height(24.dp))
 
-            // Card con formulario
             Card(
                 modifier = Modifier.fillMaxWidth(),
                 shape = RoundedCornerShape(16.dp),
@@ -147,10 +142,9 @@ fun DocumentsScreen(
                     modifier = Modifier.padding(24.dp),
                     horizontalAlignment = Alignment.CenterHorizontally
                 ) {
-                    // Botón Subir INE (Frontal)
                     DocumentUploadButton(
-                        label = "SUBIR INE (Frontal)",
-                        subtitle = "Toca para seleccionar archivo",
+                        label = stringResource(R.string.upload_ine_front),
+                        subtitle = stringResource(R.string.tap_to_select_file),
                         isUploaded = ineFrontUri != null,
                         onClick = { ineFrontLauncher.launch("image/*") },
                         colors = colors
@@ -158,10 +152,9 @@ fun DocumentsScreen(
 
                     Spacer(modifier = Modifier.height(16.dp))
 
-                    // Botón Subir INE (Reverso)
                     DocumentUploadButton(
-                        label = "SUBIR INE (Reverso)",
-                        subtitle = "Toca para seleccionar archivo",
+                        label = stringResource(R.string.upload_ine_back),
+                        subtitle = stringResource(R.string.tap_to_select_file),
                         isUploaded = ineBackUri != null,
                         onClick = { ineBackLauncher.launch("image/*") },
                         colors = colors
@@ -169,13 +162,12 @@ fun DocumentsScreen(
 
                     Spacer(modifier = Modifier.height(24.dp))
 
-                    // Campo CURP
                     ValidatedTextField(
                         value = curp,
                         onValueChange = {
                             if (it.length <= 18) curp = it.uppercase()
                         },
-                        label = "Número de documento/CURP",
+                        label = stringResource(R.string.document_curp_number),
                         leadingIcon = R.drawable.document,
                         validationState = curpValidation,
                         onValidationChange = { curpValidation = it },
@@ -186,7 +178,6 @@ fun DocumentsScreen(
 
                     Spacer(modifier = Modifier.height(24.dp))
 
-                    // Botón Regresar
                     OutlinedButton(
                         onClick = { onBackToRegister() },
                         modifier = Modifier
@@ -199,7 +190,7 @@ fun DocumentsScreen(
                         )
                     ) {
                         Text(
-                            text = "REGRESAR",
+                            text = stringResource(R.string.back),
                             fontSize = 16.sp,
                             fontWeight = FontWeight.Bold,
                             fontFamily = Poppins,
@@ -209,7 +200,6 @@ fun DocumentsScreen(
 
                     Spacer(modifier = Modifier.height(12.dp))
 
-                    // Botón Continuar
                     Button(
                         onClick = {
                             val allValid = ineFrontUri != null &&
@@ -235,7 +225,7 @@ fun DocumentsScreen(
                         )
                     ) {
                         Text(
-                            text = "CONTINUAR",
+                            text = stringResource(R.string.continue_button),
                             fontSize = 16.sp,
                             fontWeight = FontWeight.Bold,
                             fontFamily = Poppins,
@@ -298,7 +288,7 @@ fun DocumentUploadButton(
             )
 
             Text(
-                text = if (isUploaded) "Archivo seleccionado" else subtitle,
+                text = if (isUploaded) stringResource(R.string.file_selected) else subtitle,
                 fontSize = 12.sp,
                 fontFamily = Poppins,
                 color = if (isUploaded) CustomGreenColor else colors.textSecondary

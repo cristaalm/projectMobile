@@ -22,6 +22,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
@@ -55,7 +56,6 @@ fun VerificationScreen(
         )
     }
 
-    // Efecto para redirigir después de mostrar el modal
     LaunchedEffect(showSuccessModal) {
         if (showSuccessModal) {
             kotlinx.coroutines.delay(1500L)
@@ -63,7 +63,6 @@ fun VerificationScreen(
         }
     }
 
-    // Crear URI temporal para la foto
     fun createImageUri(ctx: Context): Uri {
         val imageFile = File(ctx.cacheDir, "selfie_${System.currentTimeMillis()}.jpg")
         return FileProvider.getUriForFile(
@@ -73,23 +72,19 @@ fun VerificationScreen(
         )
     }
 
-    // Launcher de cámara
     val cameraLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.TakePicture()
     ) { success ->
         if (success && tempImageUri != null) {
-            // La foto se guardó exitosamente
             selfieUri = tempImageUri
         }
     }
 
-    // Launcher para solicitar permiso de cámara
     val permissionLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.RequestPermission()
     ) { isGranted ->
         hasCameraPermission = isGranted
         if (isGranted) {
-            // Si se otorgó el permiso, abrir la cámara
             val uri = createImageUri(context)
             tempImageUri = uri
             cameraLauncher.launch(uri)
@@ -118,9 +113,8 @@ fun VerificationScreen(
         ) {
             Spacer(modifier = Modifier.height(24.dp))
 
-            // Header
             Text(
-                text = "VERIFICACIÓN",
+                text = stringResource(R.string.verification_title),
                 color = Color.White,
                 fontSize = 28.sp,
                 fontWeight = FontWeight.Bold,
@@ -129,7 +123,7 @@ fun VerificationScreen(
             )
 
             Text(
-                text = "Tome una selfie para\nconfirmar su identidad",
+                text = stringResource(R.string.take_selfie_subtitle),
                 color = Color.White,
                 fontSize = 14.sp,
                 fontFamily = Poppins,
@@ -140,7 +134,7 @@ fun VerificationScreen(
             Spacer(modifier = Modifier.height(10.dp))
 
             Text(
-                text = "Paso 3 de 3",
+                text = stringResource(R.string.step_3_of_3),
                 color = Color.White.copy(alpha = 0.9f),
                 fontSize = 13.sp,
                 fontWeight = FontWeight.Medium,
@@ -150,7 +144,6 @@ fun VerificationScreen(
 
             Spacer(modifier = Modifier.height(8.dp))
 
-            //Barra de progreso (Paso 3 lleno)
             Box(
                 modifier = Modifier
                     .fillMaxWidth(0.8f)
@@ -168,7 +161,6 @@ fun VerificationScreen(
 
             Spacer(modifier = Modifier.height(24.dp))
 
-            // Card con botón de selfie
             Card(
                 modifier = Modifier.fillMaxWidth(),
                 shape = RoundedCornerShape(16.dp),
@@ -180,7 +172,7 @@ fun VerificationScreen(
                     horizontalAlignment = Alignment.CenterHorizontally
                 ) {
                     Text(
-                        text = "SELFIE DE VERIFICACIÓN",
+                        text = stringResource(R.string.verification_selfie),
                         color = colors.textPrimary,
                         fontSize = 18.sp,
                         fontWeight = FontWeight.Bold,
@@ -189,17 +181,13 @@ fun VerificationScreen(
                         modifier = Modifier.padding(bottom = 16.dp)
                     )
 
-                    // Botón tomar selfie
                     Button(
                         onClick = {
-                            // Verificar si tiene permiso de cámara
                             if (hasCameraPermission) {
-                                // Crear URI temporal y abrir cámara
                                 val uri = createImageUri(context)
                                 tempImageUri = uri
                                 cameraLauncher.launch(uri)
                             } else {
-                                // Solicitar permiso
                                 permissionLauncher.launch(Manifest.permission.CAMERA)
                             }
                         },
@@ -225,7 +213,7 @@ fun VerificationScreen(
                                 painter = painterResource(
                                     id = if (selfieUri != null) R.drawable.cheque else R.drawable.ic_camera
                                 ),
-                                contentDescription = "Selfie",
+                                contentDescription = stringResource(R.string.selfie),
                                 tint = if (selfieUri != null) CustomGreenColor else colors.iconTint,
                                 modifier = Modifier.size(48.dp)
                             )
@@ -233,7 +221,10 @@ fun VerificationScreen(
                             Spacer(modifier = Modifier.height(12.dp))
 
                             Text(
-                                text = if (selfieUri != null) "Foto capturada" else "TOMAR SELFIE",
+                                text = if (selfieUri != null)
+                                    stringResource(R.string.photo_captured)
+                                else
+                                    stringResource(R.string.take_selfie),
                                 fontSize = 16.sp,
                                 fontWeight = FontWeight.Bold,
                                 fontFamily = Poppins,
@@ -246,12 +237,10 @@ fun VerificationScreen(
 
             Spacer(modifier = Modifier.height(16.dp))
 
-            // Card de instrucciones
             InstructionSection()
 
             Spacer(modifier = Modifier.height(24.dp))
 
-            // Botón Regresar
             OutlinedButton(
                 onClick = { onBackToDocuments() },
                 modifier = Modifier
@@ -266,7 +255,7 @@ fun VerificationScreen(
                 )
             ) {
                 Text(
-                    text = "REGRESAR",
+                    text = stringResource(R.string.back),
                     fontSize = 16.sp,
                     fontWeight = FontWeight.Bold,
                     fontFamily = Poppins,
@@ -276,7 +265,6 @@ fun VerificationScreen(
 
             Spacer(modifier = Modifier.height(12.dp))
 
-            // Botón Continuar
             Button(
                 onClick = {
                     if (selfieUri != null) {
@@ -293,7 +281,7 @@ fun VerificationScreen(
                 enabled = selfieUri != null
             ) {
                 Text(
-                    text = "CONTINUAR",
+                    text = stringResource(R.string.continue_button),
                     fontSize = 16.sp,
                     fontWeight = FontWeight.Bold,
                     fontFamily = Poppins,
@@ -304,7 +292,6 @@ fun VerificationScreen(
             Spacer(modifier = Modifier.height(32.dp))
         }
 
-        // Modal de éxito
         if (showSuccessModal) {
             SuccessModal()
         }
@@ -382,7 +369,7 @@ fun InstructionSection() {
                 verticalArrangement = Arrangement.spacedBy(12.dp)
             ) {
                 Text(
-                    text = "INSTRUCCIONES:",
+                    text = stringResource(R.string.instructions),
                     style = MaterialTheme.typography.titleMedium.copy(
                         fontFamily = Poppins,
                         fontWeight = FontWeight.ExtraBold
@@ -391,22 +378,22 @@ fun InstructionSection() {
                 )
 
                 InstructionItem(
-                    text = "Mire directamente a la cámara",
+                    text = stringResource(R.string.instruction_look_camera),
                     icon = R.drawable.ic_camera_fill,
                     colors = colors
                 )
                 InstructionItem(
-                    text = "Mantenga el rostro centrado",
+                    text = stringResource(R.string.instruction_center_face),
                     icon = R.drawable.ic_info,
                     colors = colors
                 )
                 InstructionItem(
-                    text = "Evite usar accesorios que cubran su cara",
+                    text = stringResource(R.string.instruction_no_accessories),
                     icon = R.drawable.ic_info,
                     colors = colors
                 )
                 InstructionItem(
-                    text = "Asegúrese de tener buena iluminación",
+                    text = stringResource(R.string.instruction_good_lighting),
                     icon = R.drawable.ic_info,
                     colors = colors
                 )
@@ -421,7 +408,7 @@ fun InstructionSection() {
             ) {
                 Icon(
                     painter = painterResource(id = R.drawable.ic_close_2),
-                    contentDescription = "Scroll hacia abajo",
+                    contentDescription = stringResource(R.string.scroll_down),
                     tint = CustomGreenColor,
                     modifier = Modifier.size(32.dp)
                 )
@@ -435,7 +422,6 @@ fun SuccessModal() {
     var showProgress by remember { mutableStateOf(true) }
     var showCheck by remember { mutableStateOf(false) }
 
-    // Animación de entrada del modal
     val alpha by animateFloatAsState(
         targetValue = 1f,
         animationSpec = tween(300),
@@ -451,12 +437,11 @@ fun SuccessModal() {
         label = "scale"
     )
 
-    // Controlar el flujo: progress -> check -> redirect
     LaunchedEffect(Unit) {
-        kotlinx.coroutines.delay(1000L) // Mostrar progress por 1s
+        kotlinx.coroutines.delay(1000L)
         showProgress = false
         showCheck = true
-        kotlinx.coroutines.delay(500L) // Mostrar check por 0.5s
+        kotlinx.coroutines.delay(500L)
     }
 
     Box(
@@ -484,14 +469,12 @@ fun SuccessModal() {
                 contentAlignment = Alignment.Center
             ) {
                 if (showProgress) {
-                    // Circular Progress
                     CircularProgressIndicator(
                         modifier = Modifier.size(80.dp),
                         color = CustomGreenColor,
                         strokeWidth = 6.dp
                     )
                 } else {
-                    // Check animado
                     Column(
                         horizontalAlignment = Alignment.CenterHorizontally,
                         verticalArrangement = Arrangement.Center
@@ -505,7 +488,7 @@ fun SuccessModal() {
                         ) {
                             Icon(
                                 painter = painterResource(id = R.drawable.cheque),
-                                contentDescription = "Success",
+                                contentDescription = stringResource(R.string.success),
                                 tint = CustomGreenColor,
                                 modifier = Modifier.size(60.dp)
                             )
@@ -514,7 +497,7 @@ fun SuccessModal() {
                         Spacer(modifier = Modifier.height(16.dp))
 
                         Text(
-                            text = "¡Completado!",
+                            text = stringResource(R.string.completed),
                             fontSize = 18.sp,
                             fontWeight = FontWeight.SemiBold,
                             fontFamily = Poppins,
