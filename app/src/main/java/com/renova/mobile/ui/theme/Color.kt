@@ -10,8 +10,6 @@ object RenovaColors {
     val PrimaryVariant = Color(0xFF00A843)
     val Secondary = Color(0xFF1B4F5C)
     val SecondaryVariant = Color(0xFF004D40)
-    val TopBar = Color(0xFF82E8B6)
-    val TopBarUnselected = Color(0xFF6FD6A4)
     
     // Colores específicos para ActivityScreen
     val TealPrimary = Color(0xFF009688)
@@ -25,8 +23,6 @@ object RenovaColors {
     val PlasticBackground = Color(0xFF05D16E)
     val AluminumBackground = Color(0xFF005E70)
     val TotalBackground = Color(0xFFCCFF00)
-    val TopBarDark = Primary
-    val TopBarTextDark = PrimaryVariant
 
     // Colores de superficie - Modo Claro
     object Light {
@@ -52,7 +48,6 @@ object RenovaColors {
         val GradientEnd = Color(0xFF1B5E20)
 
         // Colores específicos para ActivityScreen en modo claro
-        val ActivityBackground = BackgroundMint
         val ActivityPrimary = Color(0xFF05D16E)
         val ActivitySecondary = Color.Gray
         val ActivityCardBackground = Color.White
@@ -104,8 +99,6 @@ object RenovaColors {
         val ButtonEnabled = Color(0xFF26A69A)
         val ButtonDisabled = Color(0xFF4A5F5A)
         val ShadowColor = Color(0xFF2E7D32)
-        val TopBarDark = Primary
-        val TopBarTextDark = PrimaryVariant
     }
 
     // Colores de estado (iguales para ambos temas)

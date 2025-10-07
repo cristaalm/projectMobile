@@ -38,4 +38,15 @@ class ActivityRepository {
             throw Exception("Error ${response.code()}: ${response.message()}. Body: $errorBody")
         }
     }
+
+    suspend fun getUserPoints(): Int {
+        val response = ApiClient.apiService.identifyUser()
+
+        return if (response.isSuccessful) {
+            response.body()?.data?.total_points ?: 0
+        } else {
+            val errorBody = response.errorBody()?.string()
+            throw Exception("Error ${response.code()}: ${response.message()}. Body: $errorBody")
+        }
+    }
 }

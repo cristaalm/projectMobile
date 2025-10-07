@@ -31,11 +31,7 @@ data class RenovaColorScheme(
     val allianceLogoBackgrounds: List<androidx.compose.ui.graphics.Color>,
     val categoryCardBackgrounds: List<androidx.compose.ui.graphics.Color>,
 
-    val topBarColor: androidx.compose.ui.graphics.Color,
-    val topBarUnselected: androidx.compose.ui.graphics.Color,
-
     // Colores específicos para ActivityScreen
-    val activityBackground: androidx.compose.ui.graphics.Color,
     val activityPrimary: androidx.compose.ui.graphics.Color,
     val activitySecondary: androidx.compose.ui.graphics.Color,
     val activityCardBackground: androidx.compose.ui.graphics.Color,
@@ -48,6 +44,8 @@ data class RenovaColorScheme(
     val buttonEnabled: androidx.compose.ui.graphics.Color,
     val buttonDisabled: androidx.compose.ui.graphics.Color,
     val shadowColor: androidx.compose.ui.graphics.Color,
+    val primaryColor: androidx.compose.ui.graphics.Color,
+    val primaryHoverColor: androidx.compose.ui.graphics.Color,
 )
 
 val LightRenovaColors = RenovaColorScheme(
@@ -69,11 +67,7 @@ val LightRenovaColors = RenovaColorScheme(
     allianceLogoBackgrounds = RenovaColors.AllianceLogoBackgrounds,
     categoryCardBackgrounds = RenovaColors.CategoryCardBackgrounds,
 
-    topBarColor = RenovaColors.TopBar,
-    topBarUnselected = RenovaColors.TopBarUnselected,
-
     // Colores específicos para ActivityScreen - Modo claro
-    activityBackground = RenovaColors.Light.ActivityBackground,
     activityPrimary = RenovaColors.Light.ActivityPrimary,
     activitySecondary = RenovaColors.Light.ActivitySecondary,
     activityCardBackground = RenovaColors.Light.ActivityCardBackground,
@@ -86,6 +80,8 @@ val LightRenovaColors = RenovaColorScheme(
     buttonEnabled = RenovaColors.Light.ButtonEnabled,
     buttonDisabled = RenovaColors.Light.ButtonDisabled,
     shadowColor = RenovaColors.Light.ShadowColor,
+    primaryColor = RenovaColors.Primary,
+    primaryHoverColor = RenovaColors.PrimaryVariant,
 )
 
 val DarkRenovaColors = RenovaColorScheme(
@@ -106,11 +102,8 @@ val DarkRenovaColors = RenovaColorScheme(
 
     allianceLogoBackgrounds = RenovaColors.AllianceLogoBackgrounds,
     categoryCardBackgrounds = RenovaColors.CategoryCardBackgrounds,
-    topBarColor = RenovaColors.TopBarDark,
-    topBarUnselected = RenovaColors.TopBarTextDark,
 
             // Colores específicos para ActivityScreen - Modo oscuro
-    activityBackground = RenovaColors.Dark.ActivityBackground,
     activityPrimary = RenovaColors.Dark.ActivityPrimary,
     activitySecondary = RenovaColors.Dark.ActivitySecondary,
     activityCardBackground = RenovaColors.Dark.ActivityCardBackground,
@@ -123,6 +116,8 @@ val DarkRenovaColors = RenovaColorScheme(
     buttonEnabled = RenovaColors.Dark.ButtonEnabled,
     buttonDisabled = RenovaColors.Dark.ButtonDisabled,
     shadowColor = RenovaColors.Dark.ShadowColor,
+    primaryColor = RenovaColors.Primary,
+    primaryHoverColor = RenovaColors.PrimaryVariant,
 )
 
 // CompositionLocal para acceder a los colores desde cualquier composable

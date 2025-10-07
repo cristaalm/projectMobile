@@ -17,6 +17,7 @@ data class ActivityState(
     val totalPages: Int = 1,
     val totalPlastic: Int = 0,
     val totalAluminum: Int = 0,
+    val totalPoints: Int = 0,
     val isLoading: Boolean = false,
     val error: String? = null
 )
@@ -53,6 +54,7 @@ class ActivityViewModel(
                     if (_state.value.totalPlastic == 0 && _state.value.totalAluminum == 0) {
                         loadTotals()
                     }
+                    loadUserPoints()
                 } else {
                     _state.update {
                         it.copy(
@@ -70,6 +72,17 @@ class ActivityViewModel(
                     )
                 }
             }
+        }
+    }
+
+    private suspend fun loadUserPoints() {
+        try {
+            val points = repository.getUserPoints()
+            _state.update {
+                it.copy(totalPoints = points)
+            }
+        } catch (e: Exception) {
+            Log.e("ActivityViewModel", "Error loading user points", e)
         }
     }
 

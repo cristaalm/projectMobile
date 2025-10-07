@@ -35,21 +35,17 @@ fun CustomTopBar(navController: NavController) {
             currentRoute == TopNavigationItem.Activity.route ||
             currentRoute == TopNavigationItem.Streak.route
 
-    // Mostrar la barra de estado
-    SideEffect {
-        systemUiController.isStatusBarVisible = true
-    }
 
     // Solo mostrar el topbar si estamos en la sección de perfil
     if (!isProfileSection) {
         return
     }
 
-    // TopBar con opciones - colores ahora vienen del tema
+    // TopBar con opciones
     Column(
         modifier = Modifier
             .fillMaxWidth()
-            .background(LocalRenovaColors.current.topBarColor)  // Usa el color definido en Theme.kt
+            .background(LocalRenovaColors.current.primaryColor)
             .padding(start = 16.dp, end = 16.dp, top = 25.dp, bottom = 8.dp),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
@@ -63,7 +59,7 @@ fun CustomTopBar(navController: NavController) {
         ) {
             // Opción 1: Perfil
             TopBarOption(
-                icon = if (currentRoute == TopNavigationItem.Profile.route) R.drawable.user_full else R.drawable.user,
+                icon = R.drawable.user_full,
                 title = stringResource(R.string.profile),
                 isSelected = currentRoute == TopNavigationItem.Profile.route,
                 onClick = { navController.navigate(TopNavigationItem.Profile.route) },
@@ -74,7 +70,7 @@ fun CustomTopBar(navController: NavController) {
 
             // Opción 2: Actividad
             TopBarOption(
-                icon = if (currentRoute == TopNavigationItem.Activity.route) R.drawable.history else R.drawable.history_w,
+                icon = R.drawable.history,
                 title = stringResource(R.string.activity),
                 isSelected = currentRoute == TopNavigationItem.Activity.route,
                 onClick = { navController.navigate(TopNavigationItem.Activity.route) },
@@ -85,7 +81,7 @@ fun CustomTopBar(navController: NavController) {
 
             // Opción 3: Racha
             TopBarOption(
-                icon = if (currentRoute == TopNavigationItem.Streak.route) R.drawable.flame_full else R.drawable.flame,
+                icon = R.drawable.flame_full,
                 title = stringResource(R.string.streak),
                 isSelected = currentRoute == TopNavigationItem.Streak.route,
                 onClick = { navController.navigate(TopNavigationItem.Streak.route) },
@@ -117,17 +113,23 @@ private fun TopBarOption(
                 .fillMaxWidth()
                 .padding(bottom = 2.dp)
         ) {
-            Icon(
-                painter = painterResource(id = icon),
-                contentDescription = title,
-                tint = if (isSelected) MaterialTheme.colorScheme.onPrimary else LocalRenovaColors.current.topBarUnselected,
-                modifier = Modifier.size(18.dp)
-            )
+            // Mostrar icono solo si no está seleccionado
+            if (!isSelected) {
+                Icon(
+                    painter = painterResource(id = icon),
+                    contentDescription = title,
+                    tint = LocalRenovaColors.current.primaryHoverColor,
+                    modifier = Modifier.size(18.dp)
+                )
+            }
+
             Text(
                 text = title,
-                color = if (isSelected) MaterialTheme.colorScheme.onPrimary else LocalRenovaColors.current.topBarUnselected,
+                color = if (isSelected) MaterialTheme.colorScheme.onPrimary else LocalRenovaColors.current.primaryHoverColor,
                 style = MaterialTheme.typography.labelLarge,
-                modifier = Modifier.padding(start = 4.dp),
+                fontSize = if (isSelected) 16.sp else 14.sp, // Texto más grande cuando está seleccionado
+                fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal,
+                modifier = Modifier.padding(start = if (!isSelected) 4.dp else 0.dp),
                 maxLines = 1
             )
         }
@@ -135,7 +137,7 @@ private fun TopBarOption(
             modifier = Modifier
                 .fillMaxWidth(0.85f)
                 .height(3.dp)
-                .background(if (isSelected) MaterialTheme.colorScheme.onPrimary else LocalRenovaColors.current.topBarUnselected)
+                .background(if (isSelected) MaterialTheme.colorScheme.onPrimary else LocalRenovaColors.current.primaryHoverColor)
         )
     }
 }

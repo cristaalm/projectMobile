@@ -121,6 +121,15 @@
     <string name="today">Hoy</string>
     <string name="yesterday">Ayer</string>
 
+<<<<<<< Updated upstream
+=======
+    <!-- Puntos -->
+    <string name="total_points">Puntos Totales</string>
+    <string name="accumulated_points">Pts acumulados</string>
+
+    <!-- Recompensas -->
+    <string name="reward_screen_subtitle">Explora y elige la recompensa que más le guste</string>
+>>>>>>> Stashed changes
 
     <!-- Modo Código -->
     <string name="points_code_title">Puntos Renova</string>

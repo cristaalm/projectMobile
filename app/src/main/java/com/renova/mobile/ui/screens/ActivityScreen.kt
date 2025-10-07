@@ -82,7 +82,6 @@ fun ActivityScreen(
     Column(
         modifier = Modifier
             .fillMaxSize()
-            .background(renovaColors.activityBackground)
     ) {
         when {
             state.isLoading && state.activities.isEmpty() -> {
@@ -203,99 +202,196 @@ private fun ActivityContent(
     onPreviousPage: () -> Unit,
     onNextPage: () -> Unit
 ) {
-    Column(modifier = Modifier.fillMaxSize()) {
-        Column(
-            modifier = Modifier.padding(top = 20.dp, start = 20.dp, end = 20.dp, bottom = 8.dp)
-        ) {
-            Text(
-                text = stringResource(R.string.recycling_materials),
-                style = MaterialTheme.typography.titleLarge,
-                color = renovaColors.textPrimary
-            )
-            Text(
-                text = stringResource(R.string.earn_points_recycling),
-                style = MaterialTheme.typography.bodyMedium,
-                color = renovaColors.textSecondary
-            )
-        }
-        Row(
+    Box(modifier = Modifier.fillMaxSize()) {
+        LazyColumn(
             modifier = Modifier
-                .fillMaxWidth()
-                .padding(horizontal = 20.dp, vertical = 8.dp),
-            horizontalArrangement = Arrangement.spacedBy(12.dp)
+                .fillMaxSize()
+                .background(Color.Transparent),
+            contentPadding = PaddingValues(bottom = 50.dp)
         ) {
-            MaterialStatCard(
-                title = stringResource(R.string.plastic),
-                count = state.totalPlastic,
-                icon = R.drawable.bottle,
-                backgroundRes = R.drawable.fondo_chico,
-                modifier = Modifier.weight(1f)
-            )
-            MaterialStatCard(
-                title = stringResource(R.string.aluminum),
-                count = state.totalAluminum,
-                icon = R.drawable.can,
-                backgroundRes = R.drawable.fondo_botella,
-                modifier = Modifier.weight(1f)
-            )
-            MaterialStatCard(
-                title = stringResource(R.string.total_materials),
-                count = state.totalPlastic + state.totalAluminum,
-                icon = R.drawable.bottle,
-                backgroundRes = R.drawable.fondo_comercio,
-                showIcon = false,
-                modifier = Modifier.weight(1f)
-            )
-        }
-        Column(
-            modifier = Modifier.padding(start = 20.dp, top = 12.dp, bottom = 8.dp)
-        ) {
-            Text(
-                text = stringResource(R.string.history),
-                style = MaterialTheme.typography.titleLarge,
-                color = renovaColors.textPrimary
-            )
-            Text(
-                text = stringResource(R.string.activity_record),
-                style = MaterialTheme.typography.bodyMedium,
-                color = renovaColors.textSecondary
-            )
+            // Tarjeta de Puntos Totales
+            item {
+                Card(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(top = 16.dp, start = 18.dp, end = 20.dp, bottom = 10.dp)
+                        .height(140.dp),
+                    shape = RoundedCornerShape(24.dp),
+                    colors = CardDefaults.cardColors(containerColor = Color.Transparent),
+                    elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
+                ) {
+                    Box(modifier = Modifier.fillMaxSize()) {
+                        Image(
+                            painter = painterResource(id = R.drawable.fondo),
+                            contentDescription = null,
+                            contentScale = ContentScale.Crop,
+                            colorFilter = androidx.compose.ui.graphics.ColorFilter.tint(
+                                Color(0xFF05D16E),
+                                blendMode = androidx.compose.ui.graphics.BlendMode.Modulate
+                            ),
+                            modifier = Modifier
+                                .matchParentSize()
+                                .clip(RoundedCornerShape(24.dp))
+                        )
+
+                        Row(
+                            modifier = Modifier
+                                .fillMaxSize()
+                                .padding(24.dp),
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Column(
+                                modifier = Modifier.weight(1f),
+                                verticalArrangement = Arrangement.Center
+                            ) {
+                                Text(
+                                    text = stringResource(R.string.total_points),
+                                    style = MaterialTheme.typography.titleMedium,
+                                    color = Color.White,
+                                    fontWeight = FontWeight.SemiBold,
+                                    fontSize = 16.sp
+                                )
+                                Spacer(modifier = Modifier.height(0.dp))
+                                Text(
+                                    text = "${state.totalPoints} pts",
+                                    style = MaterialTheme.typography.displayLarge,
+                                    color = Color.White,
+                                    fontSize = 52.sp,
+                                    fontWeight = FontWeight.Bold,
+                                    lineHeight = 52.sp
+                                )
+                            }
+
+                            Box(
+                                modifier = Modifier
+                                    .size(110.dp)
+                                    .background(
+                                        Color.White.copy(alpha = 0.15f),
+                                        shape = RoundedCornerShape(20.dp)
+                                    ),
+                                contentAlignment = Alignment.Center
+                            ) {
+                                Image(
+                                    painter = painterResource(id = R.drawable.leaf),
+                                    contentDescription = null,
+                                    modifier = Modifier.size(60.dp),
+                                    colorFilter = androidx.compose.ui.graphics.ColorFilter.tint(Color.White.copy(alpha = 0.9f))
+                                )
+                            }
+                        }
+                    }
+                }
+            }
+
+            // Header Materiales reciclados
+            item {
+                Column(
+                    modifier = Modifier.padding(top = 0.dp, start = 20.dp, end = 20.dp, bottom = 8.dp)
+                ) {
+                    Text(
+                        text = stringResource(R.string.recycling_materials),
+                        style = MaterialTheme.typography.titleLarge,
+                        color = renovaColors.textPrimary
+                    )
+                    Text(
+                        text = stringResource(R.string.earn_points_recycling),
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = renovaColors.textSecondary
+                    )
+                }
+            }
+
+            // Material Stats Cards
+            item {
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 20.dp, vertical = 8.dp),
+                    horizontalArrangement = Arrangement.spacedBy(12.dp)
+                ) {
+                    MaterialStatCard(
+                        title = stringResource(R.string.plastic),
+                        count = state.totalPlastic,
+                        icon = R.drawable.bottle,
+                        backgroundRes = R.drawable.fondo_chico,
+                        modifier = Modifier.weight(1f)
+                    )
+                    MaterialStatCard(
+                        title = stringResource(R.string.aluminum),
+                        count = state.totalAluminum,
+                        icon = R.drawable.can,
+                        backgroundRes = R.drawable.fondo_botella,
+                        modifier = Modifier.weight(1f)
+                    )
+                    MaterialStatCard(
+                        title = stringResource(R.string.total_materials),
+                        count = state.totalPlastic + state.totalAluminum,
+                        icon = R.drawable.bottle,
+                        backgroundRes = R.drawable.fondo_comercio,
+                        showIcon = false,
+                        modifier = Modifier.weight(1f)
+                    )
+                }
+            }
+
+            // History Header
+            item {
+                Column(
+                    modifier = Modifier.padding(start = 20.dp, top = 12.dp, bottom = 8.dp)
+                ) {
+                    Text(
+                        text = stringResource(R.string.history),
+                        style = MaterialTheme.typography.titleLarge,
+                        color = renovaColors.textPrimary
+                    )
+                    Text(
+                        text = stringResource(R.string.activity_record),
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = renovaColors.textSecondary
+                    )
+                }
+            }
+
+            // Activity Cards
+            items(state.activities.size) { index ->
+                Box(modifier = Modifier.padding(horizontal = 18.dp)) {
+                    ActivityCard(
+                        item = state.activities[index],
+                        renovaColors = renovaColors
+                    )
+                }
+            }
         }
 
-        Box(modifier = Modifier.weight(1f)) {
-            LazyColumn(
+        // Loading overlay
+        if (state.isLoading) {
+            Box(
                 modifier = Modifier
                     .fillMaxSize()
-                    .padding(horizontal = 18.dp, vertical = 0.dp)
-                    .background(Color.Transparent),
-                verticalArrangement = Arrangement.spacedBy(4.dp),
-                contentPadding = PaddingValues(vertical = 8.dp)
+                    .background(renovaColors.primaryColor.copy(alpha = 0.1f)),
+                contentAlignment = Alignment.Center
             ) {
-                items(state.activities.size) { index ->
-                    ActivityCard(item = state.activities[index], renovaColors = renovaColors)
-                }
-            }
-
-            if (state.isLoading) {
-                Box(
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .background(renovaColors.activityPrimary.copy(alpha = 0.1f)),
-                    contentAlignment = Alignment.Center
-                ) {
-                    CircularProgressIndicator(color = renovaColors.activityPrimary)
-                }
+                CircularProgressIndicator(color = renovaColors.activityPrimary)
             }
         }
 
-        PaginationControls(
-            currentPage = state.currentPage,
-            totalPages = state.totalPages,
-            isLoading = state.isLoading,
-            renovaColors = renovaColors,
-            onPreviousPage = onPreviousPage,
-            onNextPage = onNextPage
-        )
+        // Pagination Controls
+        Surface(
+            modifier = Modifier
+                .align(Alignment.BottomCenter)
+                .fillMaxWidth(),
+            shadowElevation = 0.dp
+        ) {
+            PaginationControls(
+                currentPage = state.currentPage,
+                totalPages = state.totalPages,
+                isLoading = state.isLoading,
+                renovaColors = renovaColors,
+                onPreviousPage = onPreviousPage,
+                onNextPage = onNextPage
+            )
+        }
     }
 }
 
@@ -437,7 +533,6 @@ private fun ActivityCard(item: ActivityItem, renovaColors: RenovaColorScheme) {
     Column(
         modifier = Modifier
             .fillMaxWidth()
-            .background(renovaColors.activityBackground)
     ) {
         Row(
             modifier = Modifier
@@ -509,8 +604,16 @@ private fun ActivityCard(item: ActivityItem, renovaColors: RenovaColorScheme) {
                             modifier = Modifier.padding(start = 8.dp)
                         )
                     }
+                    val materialName = item.material_type?.name ?: stringResource(R.string.unknown_material)
+                    val isCrushed = item.scan?.is_crushed == true
+                    val displayText = if (isCrushed) {
+                        "$materialName - Aplastada"
+                    } else {
+                        materialName
+                    }
+
                     Text(
-                        text = item.material_type?.name ?: stringResource(R.string.unknown_material),
+                        text = displayText,
                         style = MaterialTheme.typography.bodySmall,
                         color = renovaColors.textSecondary,
                         maxLines = 1,

@@ -179,7 +179,8 @@ data class ActivityItem(
     val updated_at: String,
     val alliance: Alliance?,
     val material_type: MaterialType?,
-    val reward: HistoryReward?
+    val reward: HistoryReward?,
+    val scan: Scan?
 )
 
 data class Alliance(
@@ -225,6 +226,46 @@ data class HistoryReward(
     val updated_at: String
 )
 
+data class Scan(
+    val id: Int,
+    val user_id: Int,
+    val container_id: Int?,
+    val material_type_id: Int,
+    val image: String?,
+    val is_valid: Boolean,
+    val points_awarded: Int,
+    val scan_status: Int,
+    val description: String?,
+    val scanned_at: String?,
+    val created_at: String,
+    val updated_at: String,
+    val is_crushed: Boolean
+)
+
+// ========== Datos del usuario ==========
+data class IdentifyUserResponse(
+    val success: Boolean,
+    val message: String,
+    val data: UserData?,
+    val errors: Any?,
+    val status: Int
+)
+
+data class UserData(
+    val id: Int,
+    val name: String,
+    val last_name: String?,
+    val email: String,
+    val phone: String?,
+    val status: Int,
+    val verification_status: Int,
+    val two_factor_status: Boolean,
+    val total_points: Int,
+    val role_id: Int,
+    val updated_at: String,
+    val created_at: String
+)
+
 interface ApiService {
     @POST("api/auth/login")
     suspend fun login(@Body loginRequest: LoginRequest): Response<LoginResponse>
@@ -256,6 +297,9 @@ interface ApiService {
 
     @GET("api/scans/total-type-scans")
     suspend fun getTotalScans(): Response<TotalScansResponse>
+
+    @POST("api/users/identifyUser")
+    suspend fun identifyUser(): Response<IdentifyUserResponse>
 }
 
 object ApiClient {

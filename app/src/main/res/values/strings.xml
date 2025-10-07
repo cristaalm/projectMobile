@@ -121,6 +121,16 @@
     <string name="today">Today</string>
     <string name="yesterday">Yesterday</string>
 
+<<<<<<< Updated upstream
+=======
+    <!-- Points -->
+    <string name="total_points">Total Points</string>
+    <string name="accumulated_points">Pts accumulated</string>
+
+    <!-- Recompensas -->
+    <string name="reward_screen_subtitle">Explore and choose the reward you like the most</string>
+
+>>>>>>> Stashed changes
     <!-- Code Mode -->
     <string name="points_code_title">Renova Points Code</string>
     <string name="code_instruction_1">Select your reward first.</string>
