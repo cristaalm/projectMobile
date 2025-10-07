@@ -207,7 +207,7 @@ private fun ActivityContent(
             modifier = Modifier
                 .fillMaxSize()
                 .background(Color.Transparent),
-            contentPadding = PaddingValues(bottom = 50.dp)
+            contentPadding = PaddingValues(bottom = 16.dp)
         ) {
             // Tarjeta de Puntos Totales
             item {
@@ -362,6 +362,17 @@ private fun ActivityContent(
                     )
                 }
             }
+            // Pagination Controls
+            item {
+                PaginationControls(
+                    currentPage = state.currentPage,
+                    totalPages = state.totalPages,
+                    isLoading = state.isLoading,
+                    renovaColors = renovaColors,
+                    onPreviousPage = onPreviousPage,
+                    onNextPage = onNextPage
+                )
+            }
         }
 
         // Loading overlay
@@ -374,23 +385,6 @@ private fun ActivityContent(
             ) {
                 CircularProgressIndicator(color = renovaColors.activityPrimary)
             }
-        }
-
-        // Pagination Controls
-        Surface(
-            modifier = Modifier
-                .align(Alignment.BottomCenter)
-                .fillMaxWidth(),
-            shadowElevation = 0.dp
-        ) {
-            PaginationControls(
-                currentPage = state.currentPage,
-                totalPages = state.totalPages,
-                isLoading = state.isLoading,
-                renovaColors = renovaColors,
-                onPreviousPage = onPreviousPage,
-                onNextPage = onNextPage
-            )
         }
     }
 }
@@ -407,7 +401,7 @@ private fun PaginationControls(
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(horizontal = 16.dp, vertical = 8.dp),
+            .padding(horizontal = 16.dp, vertical = 16.dp),
         horizontalArrangement = Arrangement.SpaceBetween
     ) {
         Button(
