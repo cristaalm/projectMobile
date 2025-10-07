@@ -10,9 +10,8 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.TextStyle
-import androidx.compose.ui.text.font.Font
-import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
@@ -28,7 +27,6 @@ fun ForgotPasswordScreen(
     onBackToLogin: () -> Unit = {},
     viewModel: ForgotPasswordViewModel = viewModel()
 ) {
-    // Usar los colores del tema
     val colors = MaterialTheme.renovaColors
 
     var email by remember { mutableStateOf("") }
@@ -46,7 +44,7 @@ fun ForgotPasswordScreen(
                 showErrorDialog = false
             }
 
-            forgotPasswordState.error != null -> {
+            forgotPasswordState.errorResId != null -> {
                 showErrorDialog = true
                 showSuccessDialog = false
             }
@@ -80,10 +78,9 @@ fun ForgotPasswordScreen(
                 horizontalAlignment = Alignment.CenterHorizontally,
                 verticalArrangement = Arrangement.Center
             ) {
-                // Logo sin Card
                 Image(
                     painter = painterResource(id = R.drawable.logo),
-                    contentDescription = "Logo",
+                    contentDescription = stringResource(R.string.logo_description),
                     modifier = Modifier
                         .padding(horizontal = 16.dp)
                         .fillMaxWidth()
@@ -91,7 +88,6 @@ fun ForgotPasswordScreen(
                         .padding(bottom = 24.dp)
                 )
 
-                // Forgot Password Form Card
                 Card(
                     modifier = Modifier
                         .fillMaxWidth()
@@ -105,7 +101,7 @@ fun ForgotPasswordScreen(
                         horizontalAlignment = Alignment.CenterHorizontally
                     ) {
                         Text(
-                            text = "Recuperar contraseña",
+                            text = stringResource(R.string.forgot_password_title),
                             fontSize = 24.sp,
                             fontWeight = FontWeight.Bold,
                             fontFamily = PoppinsFontFamily,
@@ -116,7 +112,7 @@ fun ForgotPasswordScreen(
                         Spacer(modifier = Modifier.height(8.dp))
 
                         Text(
-                            text = "Ingresa tu correo electrónico y te enviaremos un enlace para restablecer tu contraseña.",
+                            text = stringResource(R.string.enter_email_password),
                             fontSize = 14.sp,
                             fontFamily = PoppinsFontFamily,
                             color = colors.textSecondary,
@@ -126,9 +122,8 @@ fun ForgotPasswordScreen(
 
                         Spacer(modifier = Modifier.height(24.dp))
 
-                        // Email Field con label externo
                         Text(
-                            text = "Correo electrónico",
+                            text = stringResource(R.string.email),
                             color = colors.textPrimary,
                             fontSize = 14.sp,
                             fontWeight = FontWeight.Medium,
@@ -148,7 +143,7 @@ fun ForgotPasswordScreen(
                             leadingIcon = {
                                 Icon(
                                     painter = painterResource(id = R.drawable.ic_email),
-                                    contentDescription = "Email",
+                                    contentDescription = stringResource(R.string.email),
                                     tint = colors.iconTint
                                 )
                             },
@@ -165,7 +160,10 @@ fun ForgotPasswordScreen(
 
                         if ((emailError && email.isNotEmpty()) || emailEmptyError) {
                             Text(
-                                text = if (emailEmptyError) "El correo es obligatorio" else "Correo inválido",
+                                text = if (emailEmptyError)
+                                    stringResource(R.string.email_required)
+                                else
+                                    stringResource(R.string.email_invalid),
                                 color = RenovaColors.Error,
                                 fontSize = 12.sp,
                                 fontFamily = PoppinsFontFamily,
@@ -178,7 +176,6 @@ fun ForgotPasswordScreen(
 
                         Spacer(modifier = Modifier.height(24.dp))
 
-                        // Send Button con color #50bd67
                         Button(
                             onClick = {
                                 emailEmptyError = email.isEmpty()
@@ -207,7 +204,7 @@ fun ForgotPasswordScreen(
                                 )
                                 Spacer(modifier = Modifier.width(8.dp))
                                 Text(
-                                    "ENVIANDO...",
+                                    stringResource(R.string.sending),
                                     fontSize = 16.sp,
                                     fontWeight = FontWeight.Bold,
                                     fontFamily = PoppinsFontFamily,
@@ -215,7 +212,7 @@ fun ForgotPasswordScreen(
                                 )
                             } else {
                                 Text(
-                                    "ENVIAR ENLACE",
+                                    stringResource(R.string.send_link),
                                     fontSize = 16.sp,
                                     fontWeight = FontWeight.Bold,
                                     fontFamily = PoppinsFontFamily,
@@ -226,13 +223,12 @@ fun ForgotPasswordScreen(
 
                         Spacer(modifier = Modifier.height(16.dp))
 
-                        // Back to Login Button
                         TextButton(
                             onClick = { onBackToLogin() },
                             modifier = Modifier.fillMaxWidth()
                         ) {
                             Text(
-                                "Volver al inicio de sesión",
+                                stringResource(R.string.return_login),
                                 color = RenovaColors.Primary,
                                 fontSize = 14.sp,
                                 fontFamily = PoppinsFontFamily
@@ -244,7 +240,6 @@ fun ForgotPasswordScreen(
         }
     }
 
-    // Success Dialog
     if (showSuccessDialog) {
         AlertDialog(
             onDismissRequest = {
@@ -254,7 +249,7 @@ fun ForgotPasswordScreen(
             },
             title = {
                 Text(
-                    "Correo enviado",
+                    stringResource(R.string.mail_sent),
                     color = RenovaColors.Success,
                     fontWeight = FontWeight.Bold,
                     fontFamily = PoppinsFontFamily
@@ -262,8 +257,7 @@ fun ForgotPasswordScreen(
             },
             text = {
                 Text(
-                    forgotPasswordState.message
-                        ?: "Te hemos enviado un enlace de recuperación a tu correo electrónico.",
+                    text = stringResource(forgotPasswordState.messageResId ?: R.string.recovery_link),
                     color = colors.textPrimary,
                     fontFamily = PoppinsFontFamily,
                     textAlign = TextAlign.Center
@@ -279,7 +273,7 @@ fun ForgotPasswordScreen(
                     colors = ButtonDefaults.buttonColors(containerColor = RenovaColors.Success)
                 ) {
                     Text(
-                        "Entendido",
+                        stringResource(R.string.entendido),
                         color = Color.White,
                         fontFamily = PoppinsFontFamily
                     )
@@ -290,7 +284,6 @@ fun ForgotPasswordScreen(
         )
     }
 
-    // Error Dialog
     if (showErrorDialog) {
         AlertDialog(
             onDismissRequest = {
@@ -299,7 +292,7 @@ fun ForgotPasswordScreen(
             },
             title = {
                 Text(
-                    "Error",
+                    stringResource(R.string.error_access),
                     color = RenovaColors.Error,
                     fontWeight = FontWeight.Bold,
                     fontFamily = PoppinsFontFamily
@@ -307,7 +300,7 @@ fun ForgotPasswordScreen(
             },
             text = {
                 Text(
-                    forgotPasswordState.error ?: "Ha ocurrido un error. Intenta de nuevo.",
+                    text = stringResource(forgotPasswordState.errorResId ?: R.string.error_unknown),
                     color = colors.textPrimary,
                     fontFamily = PoppinsFontFamily
                 )
@@ -321,7 +314,7 @@ fun ForgotPasswordScreen(
                     colors = ButtonDefaults.buttonColors(containerColor = RenovaColors.Error)
                 ) {
                     Text(
-                        "Reintentar",
+                        stringResource(R.string.retry),
                         color = Color.White,
                         fontFamily = PoppinsFontFamily
                     )

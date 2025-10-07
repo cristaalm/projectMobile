@@ -22,7 +22,6 @@ class LoginRepository {
                     Result.success(body)
                 } ?: Result.failure(Exception("Respuesta vacía del servidor"))
             } else {
-                // Manejar respuestas de error
                 handleLoginError(response.code(), response.errorBody()?.string())
             }
         } catch (e: HttpException) {
@@ -40,10 +39,8 @@ class LoginRepository {
                 val gson = Gson()
                 val errorResponse = gson.fromJson(errorBody, LoginResponse::class.java)
 
-                // Usar el mensaje específico de la API
                 val message = when {
                     statusCode == 422 -> {
-                        // Error de validación - mostrar el mensaje real de la API
                         if (errorResponse.errors is Map<*, *>) {
                             val errorsMap = errorResponse.errors as? Map<String, List<String>>
                             errorsMap?.get("email")?.firstOrNull() ?: errorResponse.message
@@ -51,10 +48,9 @@ class LoginRepository {
                             errorResponse.message
                         }
                     }
-                    statusCode == 401 -> errorResponse.message // "Correo electrónico o contraseña incorrectos"
-                    statusCode == 403 -> errorResponse.message // "Tu cuenta ha sido desactivada"
+                    statusCode == 401 -> errorResponse.message
+                    statusCode == 403 -> errorResponse.message
                     statusCode == 500 -> {
-                        // Para errores 500, errors puede ser String
                         if (errorResponse.errors is String) {
                             errorResponse.errors as String
                         } else {
@@ -67,11 +63,9 @@ class LoginRepository {
                 Result.failure(Exception(message ?: "Error del servidor"))
 
             } catch (e: Exception) {
-                // Si falla el parseo JSON, usar mensajes por defecto
                 getDefaultErrorMessage(statusCode)
             }
         } else {
-            // Sin errorBody, usar mensajes por defecto
             getDefaultErrorMessage(statusCode)
         }
     }
@@ -94,16 +88,16 @@ class LoginRepository {
             if (response.isSuccessful) {
                 response.body()?.let { body ->
                     Result.success(body)
-                } ?: Result.failure(Exception("Respuesta vacía del servidor"))
+                } ?: Result.failure(ForgotPasswordException("Respuesta vacía del servidor", 500))
             } else {
                 handleForgotPasswordError(response.code(), response.errorBody()?.string())
             }
         } catch (e: HttpException) {
             handleForgotPasswordError(e.code(), null)
         } catch (e: IOException) {
-            Result.failure(Exception("Error de conexión de red"))
+            Result.failure(ForgotPasswordException("Error de conexión de red", -1))
         } catch (e: Exception) {
-            Result.failure(Exception("Error inesperado: ${e.message}"))
+            Result.failure(ForgotPasswordException("Error inesperado: ${e.message}", -1))
         }
     }
 
@@ -115,7 +109,6 @@ class LoginRepository {
 
                 val message = when {
                     statusCode == 422 -> {
-                        // Error de validación
                         if (errorResponse.errors is Map<*, *>) {
                             val errorsMap = errorResponse.errors as? Map<String, List<String>>
                             errorsMap?.get("email")?.firstOrNull() ?: errorResponse.message
@@ -123,7 +116,7 @@ class LoginRepository {
                             errorResponse.message
                         }
                     }
-                    statusCode == 404 -> errorResponse.message // "El correo electrónico no está registrado"
+                    statusCode == 404 -> errorResponse.message
                     statusCode == 500 -> {
                         if (errorResponse.errors is String) {
                             errorResponse.errors as String
@@ -134,7 +127,7 @@ class LoginRepository {
                     else -> errorResponse.message
                 }
 
-                Result.failure(Exception(message ?: "Error del servidor"))
+                Result.failure(ForgotPasswordException(message ?: "Error del servidor", statusCode))
 
             } catch (e: Exception) {
                 getForgotPasswordDefaultError(statusCode)
@@ -151,38 +144,25 @@ class LoginRepository {
             500 -> "Error interno del servidor"
             else -> "Error del servidor (código: $statusCode)"
         }
-        return Result.failure(Exception(message))
+        return Result.failure(ForgotPasswordException(message, statusCode))
     }
 
-    /**
-     * Genera un código único para el QR combinando access_token y user ID
-     * @param accessToken Token de acceso del usuario
-     * @param userId ID del usuario
-     * @return String único que identifica al usuario para el QR
-     */
     fun generateUniqueQRCode(accessToken: String, userId: Int): String {
         val combinedData = "${accessToken}_${userId}"
         return try {
             val digest = MessageDigest.getInstance("SHA-256")
             val hashBytes = digest.digest(combinedData.toByteArray())
-            // convertir a hexadecimal y tomar los primeros 16 caracteres para un código más manejable
             hashBytes.joinToString("") { "%02x".format(it) }.take(16).uppercase()
         } catch (e: Exception) {
-            // fallback en caso de error con el hash
             "${userId}_${accessToken.take(8)}"
         }
     }
 
-    /**
-     * Extrae los datos necesarios del LoginResponse para generar el QR
-     * @param loginResponse Respuesta exitosa del login
-     * @return String único para el QR o null si faltan datos
-     */
     fun extractQRDataFromLogin(loginResponse: LoginResponse): String? {
         return loginResponse.data?.let { loginData ->
             val accessToken = loginData.access_token
             val userId = loginData.user?.id
-            
+
             if (!accessToken.isNullOrBlank() && userId != null) {
                 generateUniqueQRCode(accessToken, userId)
             } else {
@@ -191,3 +171,9 @@ class LoginRepository {
         }
     }
 }
+
+// Custom Exception para incluir el status code
+class ForgotPasswordException(
+    message: String,
+    val statusCode: Int
+) : Exception(message)
