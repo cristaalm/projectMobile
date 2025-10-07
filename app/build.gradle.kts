@@ -81,6 +81,8 @@ dependencies {
     implementation("com.github.androidmads:QRGenerator:1.0.5")
     // Barcode generation
     implementation("com.google.zxing:core:3.5.3")
+    // Barcode/QR scanning (ZXing embedded)
+    implementation("com.journeyapps:zxing-android-embedded:4.3.0")
     // Estas son para la API
     implementation("com.squareup.retrofit2:retrofit:2.9.0")
     implementation("com.squareup.okhttp3:logging-interceptor:4.12.0")

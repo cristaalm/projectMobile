@@ -40,6 +40,7 @@ class ActivityRepository {
     }
 
     suspend fun getUserPoints(): Int {
+        // Usa la versión sin parámetros: el interceptor añadirá el Authorization de la sesión actual
         val response = ApiClient.apiService.identifyUser()
 
         return if (response.isSuccessful) {

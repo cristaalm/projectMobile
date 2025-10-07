@@ -40,6 +40,7 @@ data class User(
     val status: Int?,
     val verification_status: Int?,
     val total_points: Int?,
+    val code_identity: String?,
     val role: Role?,
     val created_at: String?,
     val updated_at: String?
@@ -261,9 +262,22 @@ data class UserData(
     val verification_status: Int,
     val two_factor_status: Boolean,
     val total_points: Int,
+    val code_identity: String?,
     val role_id: Int,
     val updated_at: String,
     val created_at: String
+)
+
+data class ValidateTokenRequest(
+    val token: String
+)
+
+data class ValidateTokenResponse(
+    val success: Boolean,
+    val message: String,
+    val data: User?,
+    val errors: Any?,
+    val status: Int
 )
 
 interface ApiService {
@@ -272,6 +286,9 @@ interface ApiService {
 
     @POST("api/auth/forgot-password")
     suspend fun forgotPassword(@Body request: ForgotPasswordRequest): Response<ForgotPasswordResponse>
+
+    @POST("api/auth/validateToken")
+    suspend fun validateToken(@Body request: ValidateTokenRequest): Response<ValidateTokenResponse>
 
     @GET("api/alianzas/getAll")
     suspend fun getAllAlianzas(
@@ -298,8 +315,10 @@ interface ApiService {
     @GET("api/scans/total-type-scans")
     suspend fun getTotalScans(): Response<TotalScansResponse>
 
-    @POST("api/users/identifyUser")
-    suspend fun identifyUser(): Response<IdentifyUserResponse>
+    @POST("api/users/identityUser")
+    suspend fun identifyUser(@Header("Authorization") authorization: String): Response<IdentifyUserResponse>
+    //@POST("api/users/identityUser")
+    //suspend fun identifyUser(): Response<IdentifyUserResponse>
 }
 
 object ApiClient {
@@ -323,8 +342,9 @@ object ApiClient {
                     val original = chain.request()
                     val builder = original.newBuilder()
 
+                    val alreadyHasAuth = original.header("Authorization") != null
                     val token = sessionManager?.getAuthToken()
-                    if (token != null) {
+                    if (token != null && !alreadyHasAuth) {
                         builder.addHeader("Authorization", token)
                     }
 

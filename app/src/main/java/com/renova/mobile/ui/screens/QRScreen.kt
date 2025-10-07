@@ -23,6 +23,7 @@ import androidx.compose.ui.draw.paint
 import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.asImageBitmap
+import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
@@ -45,21 +46,22 @@ import androidx.compose.ui.text.style.TextAlign
 import com.google.zxing.BarcodeFormat
 import com.google.zxing.MultiFormatWriter
 import com.google.zxing.common.BitMatrix
+import com.google.zxing.EncodeHintType
+import androidx.compose.ui.platform.LocalConfiguration
+import androidx.compose.ui.platform.LocalDensity
 
 @Composable
 fun QRScreen() {
     val context = LocalContext.current
     val sessionManager = remember { SessionManager(context) }
-    val loginRepository = remember { LoginRepository() }
+    // val loginRepository = remember { LoginRepository() }
 
     val currentPoints = 2450
     val user = sessionManager.getUser()
     val accessToken = sessionManager.getAccessToken()
 
-    val qrCode = remember(user, accessToken) {
-        if (user != null && !accessToken.isNullOrBlank()) {
-            loginRepository.generateUniqueQRCode(accessToken, user.id)
-        } else "0"
+    val qrCode = remember(accessToken) {
+        if (!accessToken.isNullOrBlank()) accessToken else "0"
     }
 
     val nameUser = user?.name ?: "Usuario no identificado"
@@ -73,7 +75,7 @@ fun QRScreen() {
             .background(MaterialTheme.colorScheme.background)
             .verticalScroll(rememberScrollState())
     ) {
-        SectionHeader(title = stringResource(id = if (showQr) R.string.mycode else R.string.points_code_title), textColor = if (isDark) Color.Black else Color.White)
+        SectionHeader(title = stringResource(id = if (showQr) R.string.mycode else R.string.points_code_title), textColor = Color.White)
         Spacer(modifier = Modifier.height(20.dp))
 
         // ===== CARD PRINCIPAL =====
@@ -132,7 +134,7 @@ fun QRScreen() {
                             Column {
                                 Text(
                                     text = nameUser,
-                                    color = if (isDark) Color.Black else Color.White,
+                                    color = Color.White,
                                     style = MaterialTheme.typography.headlineSmall.copy(
                                         fontFamily = com.renova.mobile.ui.theme.PoppinsFontFamily,
                                         fontWeight = FontWeight.Bold
@@ -140,7 +142,7 @@ fun QRScreen() {
                                 )
                                 Text(
                                     text = "$currentPoints ${stringResource(id = R.string.points_unit)}",
-                                    color = if (isDark) Color.Black else Color.White,
+                                    color = Color.White,
                                     style = MaterialTheme.typography.headlineSmall.copy(
                                         fontFamily = com.renova.mobile.ui.theme.PoppinsFontFamily,
                                         fontWeight = FontWeight.ExtraBold
@@ -148,7 +150,7 @@ fun QRScreen() {
                                 )
                                 Text(
                                     text = stringResource(id = R.string.current_points),
-                                    color = if (isDark) Color.Black else Color.White,
+                                    color = Color.White,
                                     style = MaterialTheme.typography.bodySmall.copy(
                                         fontFamily = com.renova.mobile.ui.theme.PoppinsFontFamily,
                                         fontWeight = FontWeight.Medium
@@ -188,28 +190,45 @@ fun QRScreen() {
                                 .padding(vertical = 12.dp)
                                 .height(200.dp)
                                 .clip(RoundedCornerShape(12.dp))
-                                .background(RenovaColors.Primary),
+                                .background(Color.White), // fondo blanco mejora lectura
                             contentAlignment = Alignment.Center
                         ) {
-                            val numericCode = "000000" + (user?.id?.toString() ?: "0")
-                            val targetWidth = 900
-                            val targetHeight = 280
-                            val bitMatrix: BitMatrix? = try {
-                                MultiFormatWriter().encode(
-                                    numericCode,
-                                    BarcodeFormat.CODE_128,
-                                    targetWidth,
-                                    targetHeight
-                                )
-                            } catch (e: Exception) { null }
+                            // Datos del código de barras: validar que el código tenga exactamente 13 dígitos
+                            val codeDigits = user?.code_identity ?: ""
+                            val barcodeData: String? = if (codeDigits.length == 13) codeDigits else null
 
-                            // Colores según tema: barras negras si es oscuro, blancas si es claro; fondo Primary
-                            val primaryAndroid = android.graphics.Color.rgb(
-                                (RenovaColors.Primary.red * 255).toInt(),
-                                (RenovaColors.Primary.green * 255).toInt(),
-                                (RenovaColors.Primary.blue * 255).toInt()
+                            // Ajustar tamaño objetivo según ancho de pantalla
+                            val configuration = LocalConfiguration.current
+                            val density = LocalDensity.current
+                            val screenWidthDp = configuration.screenWidthDp
+                            val targetWidth = with(density) { (screenWidthDp * 0.9f).dp.toPx().toInt() }
+                            val targetHeight = (targetWidth * 0.25f).toInt()
+
+                            // Hints para mejorar la calidad del código de barras
+                            val hints = mapOf(
+                                EncodeHintType.MARGIN to 10, // zona tranquila alrededor
+                                EncodeHintType.CHARACTER_SET to "UTF-8" // codificación estándar de texto
                             )
-                            val barColor = if (isDark) android.graphics.Color.BLACK else android.graphics.Color.WHITE
+
+                            // Generar código EAN-13 sólo si el código es válido (13 dígitos)
+                            val bitMatrix: BitMatrix? = if (barcodeData != null) {
+                                try {
+                                    MultiFormatWriter().encode(
+                                        barcodeData,
+                                        BarcodeFormat.EAN_13,
+                                        targetWidth,
+                                        targetHeight,
+                                        hints
+                                    )
+                                } catch (e: Exception) {
+                                    null
+                                }
+                            } else null
+
+                            // Colores estándar: barras negras sobre fondo blanco
+                            val backgroundAndroid = android.graphics.Color.WHITE
+                            val barColorCompose = RenovaColors.Primary
+                            val barColorInt = barColorCompose.toArgb()
 
                             if (bitMatrix != null) {
                                 val width = bitMatrix.width
@@ -220,7 +239,7 @@ fun QRScreen() {
                                         barcodeBitmap.setPixel(
                                             x,
                                             y,
-                                            if (bitMatrix[x, y]) barColor else primaryAndroid
+                                            if (bitMatrix[x, y]) barColorInt else backgroundAndroid
                                         )
                                     }
                                 }
@@ -229,17 +248,17 @@ fun QRScreen() {
                                     bitmap = barcodeBitmap.asImageBitmap(),
                                     contentDescription = "Código de barras",
                                     modifier = Modifier
-                                        .fillMaxWidth(0.85f)
+                                        .fillMaxWidth(0.9f)
                                         .aspectRatio(ratio)
                                 )
                             } else {
                                 Text(
-                                    text = numericCode,
+                                    text = "Código no encontrado",
                                     style = MaterialTheme.typography.headlineMedium.copy(
                                         fontFamily = com.renova.mobile.ui.theme.PoppinsFontFamily,
                                         fontWeight = FontWeight.Bold
                                     ),
-                                    color = if (isDark) Color.Black else Color.White,
+                                    color = barColorCompose,
                                     textAlign = TextAlign.Center
                                 )
                             }
@@ -320,9 +339,13 @@ fun QRScreen() {
                             val qrEncoder = QRGEncoder(
                                 qrCode, null, QRGContents.Type.TEXT, 500
                             ).apply {
-                                colorBlack = RenovaColors.Primary.hashCode()
-                                colorWhite = if (androidx.compose.foundation.isSystemInDarkTheme())
-                                    android.graphics.Color.BLACK else android.graphics.Color.WHITE
+                                val primaryAndroidQR = android.graphics.Color.rgb(
+                                    (RenovaColors.Primary.red * 255).toInt(),
+                                    (RenovaColors.Primary.green * 255).toInt(),
+                                    (RenovaColors.Primary.blue * 255).toInt()
+                                )
+                                colorBlack = android.graphics.Color.WHITE
+                                colorWhite = primaryAndroidQR
                             }
 
                             val qrBitmap: Bitmap = qrEncoder.bitmap

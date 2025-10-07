@@ -15,19 +15,28 @@ import com.renova.mobile.ui.screens.StoreScreen
 import com.renova.mobile.ui.screens.ActivityScreen
 import com.renova.mobile.ui.screens.StreakScreen
 import com.renova.mobile.ui.components.CustomBottomBar
+import com.renova.mobile.ui.components.CustomBottomBarBusiness
 import com.renova.mobile.ui.screens.RewardScreen
 import com.renova.mobile.ui.components.CustomTopBar
+import com.renova.mobile.ui.screens.business.BusinessHomeScreen
+import com.renova.mobile.ui.screens.business.BusinessStoreScreen
+import com.renova.mobile.ui.screens.business.BusinessQRScreen
+import com.renova.mobile.navigation.NavigationItemBusiness
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.slideInHorizontally
 import androidx.compose.animation.slideOutHorizontally
+import androidx.compose.runtime.remember
+import androidx.compose.ui.platform.LocalContext
 import androidx.navigation.NavGraph.Companion.findStartDestination
 import androidx.navigation.NavType
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.navArgument
 import androidx.navigation.navigation
-
+import com.renova.mobile.utils.SessionManager
+import androidx.lifecycle.viewmodel.compose.viewModel
+import com.renova.mobile.viewmodel.BusinessSaleViewModel
 // <<< PASO 1: OBJETO PARA ORGANIZAR LAS RUTAS DEL GRAFO DE TIENDA >>>
 object StoreGraph {
     const val ROUTE = "store_graph"
@@ -38,27 +47,67 @@ object StoreGraph {
 @Composable
 fun AppNavigation(onLogout: () -> Unit) {
     val navController = rememberNavController()
+    val businessSaleVM: BusinessSaleViewModel = viewModel()
+
+    val context = LocalContext.current
+    val sessionManager = remember(context) { SessionManager(context) }
+    val user = sessionManager.getUser()
+    val isBusiness = (user?.role?.id ?: 0) == 4
 
     Scaffold(
         topBar = {
             CustomTopBar(navController = navController)
         },
         bottomBar = {
-            CustomBottomBar(
-                navController = navController,
-                onLogout = onLogout
-            )
+            if (isBusiness) {
+                CustomBottomBarBusiness(
+                    navController = navController,
+                    onLogout = onLogout
+                )
+            } else {
+                CustomBottomBar(
+                    navController = navController,
+                    onLogout = onLogout
+                )
+            }
         }
+
+
     ) { innerPadding ->
         NavHost(
             navController = navController,
-            startDestination = NavigationItem.Home.route,
-            modifier = Modifier.padding(innerPadding)
+            startDestination = if (isBusiness) NavigationItemBusiness.Home.route else NavigationItem.Home.route, // pantalla inicial según rol
+            modifier = Modifier.padding(innerPadding) // Padding para que el contenido no quede debajo de la barra
         ) {
             val enterAnimation = slideInHorizontally(initialOffsetX = { 1000 }, animationSpec = tween(300)) + fadeIn(animationSpec = tween(300))
             val exitAnimation = slideOutHorizontally(targetOffsetX = { -1000 }, animationSpec = tween(300)) + fadeOut(animationSpec = tween(300))
             val popEnterAnimation = slideInHorizontally(initialOffsetX = { -1000 }, animationSpec = tween(300)) + fadeIn(animationSpec = tween(300))
             val popExitAnimation = slideOutHorizontally(targetOffsetX = { 1000 }, animationSpec = tween(300)) + fadeOut(animationSpec = tween(300))
+
+            // Rutas de negocio (rol: comerciante)
+            composable(
+                route = NavigationItemBusiness.Home.route,
+                enterTransition = { enterAnimation }, exitTransition = { exitAnimation },
+                popEnterTransition = { popEnterAnimation }, popExitTransition = { popExitAnimation }
+            ) {
+                BusinessHomeScreen(onLogout = onLogout)
+            }
+
+            composable(
+                route = NavigationItemBusiness.Store.route,
+                enterTransition = { enterAnimation }, exitTransition = { exitAnimation },
+                popEnterTransition = { popEnterAnimation }, popExitTransition = { popExitAnimation }
+            ) {
+                BusinessStoreScreen(onLogout = onLogout, vm = businessSaleVM)
+            }
+
+            composable(
+                route = NavigationItemBusiness.QR.route,
+                enterTransition = { enterAnimation }, exitTransition = { exitAnimation },
+                popEnterTransition = { popEnterAnimation }, popExitTransition = { popExitAnimation }
+            ) {
+                BusinessQRScreen(onLogout = onLogout, vm = businessSaleVM)
+            }
 
             composable(
                 route = NavigationItem.Home.route,
@@ -125,6 +174,7 @@ fun AppNavigation(onLogout: () -> Unit) {
             ) {
                 StreakScreen()
             }
+
         }
     }
 }

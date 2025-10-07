@@ -24,7 +24,7 @@ class SessionManager(context: Context) {
         accessToken: String,
         tokenType: String?,
         expiresAt: String?,
-        user: User?
+        user: User?,
     ) {
         sharedPreferences.edit().apply {
             putString(KEY_ACCESS_TOKEN, accessToken)

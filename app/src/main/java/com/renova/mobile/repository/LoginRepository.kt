@@ -158,18 +158,18 @@ class LoginRepository {
         }
     }
 
-    fun extractQRDataFromLogin(loginResponse: LoginResponse): String? {
-        return loginResponse.data?.let { loginData ->
-            val accessToken = loginData.access_token
-            val userId = loginData.user?.id
+    // fun extractQRDataFromLogin(loginResponse: LoginResponse): String? {
+    //     return loginResponse.data?.let { loginData ->
+    //         val accessToken = loginData.access_token
+    //         val userId = loginData.user?.id
 
-            if (!accessToken.isNullOrBlank() && userId != null) {
-                generateUniqueQRCode(accessToken, userId)
-            } else {
-                null
-            }
-        }
-    }
+    //         if (!accessToken.isNullOrBlank() && userId != null) {
+    //             generateUniqueQRCode(accessToken, userId)
+    //         } else {
+    //             null
+    //         }
+    //     }
+    // }
 }
 
 // Custom Exception para incluir el status code
