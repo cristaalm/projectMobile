@@ -139,6 +139,17 @@ fun VerificationScreen(
 
             Spacer(modifier = Modifier.height(10.dp))
 
+            Text(
+                text = "Paso 3 de 3",
+                color = Color.White.copy(alpha = 0.9f),
+                fontSize = 13.sp,
+                fontWeight = FontWeight.Medium,
+                fontFamily = Poppins,
+                textAlign = TextAlign.Center
+            )
+
+            Spacer(modifier = Modifier.height(8.dp))
+
             //Barra de progreso (Paso 3 lleno)
             Box(
                 modifier = Modifier
@@ -247,7 +258,9 @@ fun VerificationScreen(
                     .fillMaxWidth()
                     .height(50.dp),
                 shape = RoundedCornerShape(12.dp),
-                colors = RenovaComponentColors.secondaryButtonColors(),
+                colors = ButtonDefaults.outlinedButtonColors(
+                    containerColor = colors.cardBackground
+                ),
                 border = ButtonDefaults.outlinedButtonBorder.copy(
                     brush = RenovaGradients.cardBorderGradient()
                 )
@@ -379,7 +392,7 @@ fun InstructionSection() {
 
                 InstructionItem(
                     text = "Mire directamente a la cámara",
-                    icon = R.drawable.ic_camera,
+                    icon = R.drawable.ic_camera_fill,
                     colors = colors
                 )
                 InstructionItem(

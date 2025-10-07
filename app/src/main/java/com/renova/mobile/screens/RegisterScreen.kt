@@ -103,7 +103,18 @@ fun RegisterScreen(
                 modifier = Modifier.padding(top = 8.dp)
             )
 
-            Spacer(modifier = Modifier.height(12.dp))
+            Spacer(modifier = Modifier.height(10.dp))
+
+            Text(
+                text = "Paso 1 de 3",
+                color = Color.White.copy(alpha = 0.9f),
+                fontSize = 13.sp,
+                fontWeight = FontWeight.Medium,
+                fontFamily = Poppins,
+                textAlign = TextAlign.Center
+            )
+
+            Spacer(modifier = Modifier.height(8.dp))
 
             //Barra de progreso (Paso 1 lleno)
             Box(
@@ -147,7 +158,7 @@ fun RegisterScreen(
                     ValidatedTextField(
                         value = firstName,
                         onValueChange = { firstName = it },
-                        label = "Nombre (s)",
+                        label = "Nombre(s)",
                         leadingIcon = R.drawable.usuario_relleno,
                         validationState = firstNameValidation,
                         onValidationChange = { firstNameValidation = it },
@@ -161,7 +172,7 @@ fun RegisterScreen(
                     ValidatedTextField(
                         value = lastName,
                         onValueChange = { lastName = it },
-                        label = "Apellido (s)",
+                        label = "Apellido(s)",
                         leadingIcon = R.drawable.usuario_relleno,
                         validationState = lastNameValidation,
                         onValidationChange = { lastNameValidation = it },

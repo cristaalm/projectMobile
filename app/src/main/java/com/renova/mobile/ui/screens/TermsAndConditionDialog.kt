@@ -53,24 +53,30 @@ fun TermsAndConditionsDialog(
                         .fillMaxSize()
                         .padding(24.dp)
                 ) {
-                    // Header
+                    // Header (icono a la izquierda, título a la derecha)
                     Row(
                         modifier = Modifier.fillMaxWidth(),
                         horizontalArrangement = Arrangement.SpaceBetween,
                         verticalAlignment = Alignment.CenterVertically
                     ) {
-                        Text(
-                            text = stringResource(id = R.string.terms_dialog_title),
-                            fontSize = 20.sp,
-                            fontWeight = FontWeight.Bold,
-                            fontFamily = PoppinsFontFamily,
-                            color = colors.textPrimary
-                        )
-                        IconButton(onClick = onDismiss) {
-                            Icon(
-                                painter = painterResource(id = R.drawable.ic_close),
-                                contentDescription = stringResource(id = R.string.terms_dialog_close),
-                                tint = Color.Unspecified
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            IconButton(onClick = onDismiss) {
+                                Icon(
+                                    painter = painterResource(id = R.drawable.ic_close),
+                                    contentDescription = stringResource(id = R.string.terms_dialog_close),
+                                    tint = Color.Unspecified
+                                )
+                            }
+
+                            Text(
+                                text = stringResource(id = R.string.terms_dialog_title),
+                                fontSize = 20.sp,
+                                fontWeight = FontWeight.Bold,
+                                fontFamily = PoppinsFontFamily,
+                                color = colors.textPrimary,
+                                modifier = Modifier.padding(start = 8.dp)
                             )
                         }
                     }
@@ -80,7 +86,7 @@ fun TermsAndConditionsDialog(
                         color = colors.textSecondary.copy(alpha = 0.3f)
                     )
 
-                    // Content
+                    // Contenido
                     Column(
                         modifier = Modifier
                             .fillMaxSize()

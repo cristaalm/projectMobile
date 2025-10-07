@@ -101,7 +101,18 @@ fun DocumentsScreen(
                 modifier = Modifier.padding(top = 8.dp)
             )
 
-            Spacer(modifier = Modifier.height(12.dp))
+            Spacer(modifier = Modifier.height(10.dp))
+
+            Text(
+                text = "Paso 2 de 3",
+                color = Color.White.copy(alpha = 0.9f),
+                fontSize = 13.sp,
+                fontWeight = FontWeight.Medium,
+                fontFamily = Poppins,
+                textAlign = TextAlign.Center
+            )
+
+            Spacer(modifier = Modifier.height(8.dp))
 
             //Barra de progreso (Paso 2 lleno)
             Box(

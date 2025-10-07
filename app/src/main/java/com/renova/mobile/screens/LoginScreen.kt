@@ -37,6 +37,7 @@ import androidx.compose.runtime.collectAsState
 import com.renova.mobile.R
 import com.renova.mobile.viewmodel.LoginViewModel
 import androidx.compose.animation.core.*
+import androidx.compose.ui.graphics.nativeCanvas
 import androidx.compose.ui.res.stringResource
 import com.renova.mobile.network.User
 import com.renova.mobile.ui.theme.*
@@ -532,42 +533,51 @@ fun LoginScreen(
 
 @Composable
 fun TermsAndPrivacyText(onClick: () -> Unit) {
-    // Obtener los strings localizados
     val byContinuing = stringResource(id = R.string.terms_by_continuing)
     val termsOfService = stringResource(id = R.string.terms_of_service)
     val and = stringResource(id = R.string.terms_and)
     val privacyPolicy = stringResource(id = R.string.privacy_policy)
 
-    // Construir el texto anotado con los strings localizados
+    // Texto base (mismo color blanco para todo)
+    val baseColor = Color.White
+    val strokeColor = Color.White
+
     val annotatedText = buildAnnotatedString {
-        withStyle(style = SpanStyle(color = CustomGreenColor, fontSize = 13.sp, fontFamily = PoppinsFontFamily)) {
-            append(byContinuing)
-        }
         withStyle(
             style = SpanStyle(
-                color = CustomGreenColor,
+                color = baseColor,
+                fontSize = 13.sp,
+                fontFamily = PoppinsFontFamily
+            )
+        ) { append(byContinuing + " ") }
+
+        withStyle(
+            style = SpanStyle(
+                color = baseColor,
                 fontSize = 13.sp,
                 fontFamily = PoppinsFontFamily,
                 textDecoration = TextDecoration.Underline,
                 fontWeight = FontWeight.Bold
             )
-        ) {
-            append(termsOfService)
-        }
-        withStyle(style = SpanStyle(color = CustomGreenColor, fontSize = 13.sp, fontFamily = PoppinsFontFamily)) {
-            append(" $and ")
-        }
+        ) { append(termsOfService) }
+
         withStyle(
             style = SpanStyle(
-                color = CustomGreenColor,
+                color = baseColor,
+                fontSize = 13.sp,
+                fontFamily = PoppinsFontFamily
+            )
+        ) { append(" $and ") }
+
+        withStyle(
+            style = SpanStyle(
+                color = baseColor,
                 fontSize = 13.sp,
                 fontFamily = PoppinsFontFamily,
                 textDecoration = TextDecoration.Underline,
                 fontWeight = FontWeight.Bold
             )
-        ) {
-            append(privacyPolicy)
-        }
+        ) { append(privacyPolicy) }
     }
 
     Box(
@@ -576,19 +586,44 @@ fun TermsAndPrivacyText(onClick: () -> Unit) {
             .padding(horizontal = 32.dp)
             .border(
                 width = 1.dp,
-                color = CustomGreenColor,
+                color = Color.White, // ✅ borde blanco
                 shape = RoundedCornerShape(8.dp)
             )
             .clickable { onClick() }
-            .padding(vertical = 12.dp, horizontal = 16.dp)
+            .padding(vertical = 12.dp, horizontal = 16.dp),
+        contentAlignment = Alignment.Center
     ) {
+        // Dibujo del texto con contorno
         Text(
             text = annotatedText,
             textAlign = TextAlign.Center,
-            modifier = Modifier.fillMaxWidth()
+            modifier = Modifier
+                .fillMaxWidth()
+                .drawBehind {
+                    // Dibujar contorno blanco alrededor del texto
+                    drawContext.canvas.nativeCanvas.apply {
+                        val strokeWidth = 2f
+                        val paint = android.graphics.Paint().apply {
+                            style = android.graphics.Paint.Style.STROKE
+                            this.strokeWidth = strokeWidth
+                            color = android.graphics.Color.WHITE
+                            textSize = 40f
+                            textAlign = android.graphics.Paint.Align.LEFT
+                            isAntiAlias = true
+                        }
+
+                    }
+                },
+            style = TextStyle(
+                color = Color.White,
+                fontSize = 13.sp,
+                fontFamily = PoppinsFontFamily
+            )
         )
+
     }
 }
+
 
 fun validatePassword(password: String): Boolean {
     val regex = Regex("^(?=.*[A-Za-z])(?=.*\\d)[A-Za-z\\d]{6,}$")
