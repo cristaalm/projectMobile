@@ -41,6 +41,7 @@
     <string name="sending">ENVIANDO...</string>
 
     <!-- StoreScreen -->
+    <string name="store_screen_title">Tienda</string>
     <string name="search_allied_stores">Comercios Aliados</string>
     <string name="search_icon">Buscar comercios</string>
     <string name="featured_stores">Comercios Destacados</string>
@@ -58,9 +59,16 @@
     <string name="view_details_content_description">Ver detalles</string>
 
     <!-- Categorías -->
-    <string name="restaurants">Restaurantes</string>
-    <string name="gyms">Gimnasios</string>
-    <string name="stores">Tiendas</string>
+    <string name="category_restaurant">Restaurante</string>
+    <string name="category_supermarket">Supermercado</string>
+    <string name="category_pharmacy">Farmacia</string>
+    <string name="category_clothing">Ropa</string>
+    <string name="category_gas_station">Gasolinera</string>
+    <string name="category_cellar">Bodega</string>
+    <string name="category_electronics">Electrónica</string>
+    <string name="category_bookstore">Librería</string>
+    <string name="category_toys">Juguetes</string>
+    <string name="category_store">Tienda</string>
 
     <!-- Estados de carga -->
     <string name="loading_stores">Cargando comercios...</string>
@@ -113,8 +121,6 @@
     <string name="today">Hoy</string>
     <string name="yesterday">Ayer</string>
 
-    <!-- Recompensas -->
-    <string name="reward_screen_subtitle">Explora y elige la recompensa que más le guste</string>
 
     <!-- Modo Código -->
     <string name="points_code_title">Puntos Renova</string>
@@ -196,4 +202,23 @@
     <string name="success">Success</string>
     <string name="completed">¡Completado!</string>
 
+    <!-- Recompensas -->
+    <!-- Recompensas -->
+    <string name="reward_screen_title">Recompensas</string>
+    <string name="reward_screen_subtitle">Explora y elige la recompensa que más te guste</string>
+    <string name="content_description_back">Volver</string>
+    <string name="error_prefix">Error:\u0020</string>
+    <string name="no_rewards_available">Este comercio no tiene recompensas disponibles.</string>
+    <string name="pointsR">puntos</string>
+    <string name="reward_confirmation_dialog_title">Confirmar Recompensa</string>
+    <string name="reward_confirmation_dialog_message">¿Deseas canjear \'%1$s\' por %2$d puntos?</string>
+    <string name="action_confirm">Confirmar</string>
+    <string name="action_cancel">Cancelar</string>
+    <string name="reward_detail_title">Detalles de la Recompensa</string>
+
+
+    <string name="bottom_nav_home">Inicio</string>
+    <string name="bottom_nav_store">Tienda</string>
+    <string name="bottom_nav_qr">Escaner</string>
+    <string name="bottom_nav_profile">Perfil</string>
 </resources>

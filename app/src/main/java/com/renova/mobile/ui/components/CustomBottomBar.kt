@@ -1,31 +1,56 @@
 package com.renova.mobile.ui.components
 
+import androidx.compose.animation.AnimatedContent
+import androidx.compose.animation.SizeTransform
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.slideInVertically
+import androidx.compose.animation.slideOutVertically
+import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.interaction.collectIsPressedAsState
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.offset
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
-import androidx.compose.runtime.*
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
+import androidx.navigation.NavDestination.Companion.hierarchy
+import androidx.navigation.NavGraph.Companion.findStartDestination
 import androidx.navigation.compose.currentBackStackEntryAsState
 import com.renova.mobile.R
 import com.renova.mobile.navigation.NavigationItem
-import androidx.compose.animation.*
-import androidx.compose.ui.graphics.ColorFilter
-import com.renova.mobile.navigation.TopNavigationItem
+import com.renova.mobile.navigation.StoreGraph
+import com.renova.mobile.ui.screens.PoppinsFontFamily
 
 private val primaryColor = Color(0xFF08b662)
 private val qrBackgroundColor = Color(0xFF05D16E).copy(alpha = 0.5f)
@@ -41,7 +66,6 @@ fun NavItem(item: NavigationItem, isSelected: Boolean, onClick: () -> Unit) {
             .padding(4.dp),
         contentAlignment = Alignment.Center
     ) {
-        // Círculo de fondo cuando está presionado
         if (isPressed) {
             Box(
                 modifier = Modifier
@@ -66,35 +90,42 @@ fun NavItem(item: NavigationItem, isSelected: Boolean, onClick: () -> Unit) {
             AnimatedContent(
                 targetState = isSelected,
                 transitionSpec = {
-                    (slideInVertically { it } + fadeIn() togetherWith
-                            slideOutVertically { it } + fadeOut())
+                    (slideInVertically { height -> height } + fadeIn() togetherWith
+                            slideOutVertically { height -> -height } + fadeOut())
                         .using(SizeTransform(clip = false))
                 },
-                label = "IconAnimation"
+                label = "NavItemAnimation"
             ) { selected ->
-                Icon(
-                    painter = painterResource(id = if (selected) item.selectedIcon else item.unselectedIcon),
-                    contentDescription = item.route,
-                    tint = Color.Unspecified,
-                    modifier = Modifier.size(28.dp)
-                )
-            }
+                val titleResId = when (item) {
+                    is NavigationItem.Home -> R.string.bottom_nav_home
+                    is NavigationItem.Store -> R.string.bottom_nav_store
+                    is NavigationItem.Profile -> R.string.bottom_nav_profile
+                    is NavigationItem.QR -> R.string.bottom_nav_qr
+                    else -> 0
+                }
+                val titleText = if (titleResId != 0) stringResource(id = titleResId) else ""
 
-            AnimatedVisibility(
-                visible = isSelected && item.title.isNotEmpty(),
-                enter = slideInVertically { it } + fadeIn(),
-                exit = slideOutVertically { it } + fadeOut()
-            ) {
-                Text(
-                    text = item.title,
-                    color = primaryColor,
-                    fontSize = 12.sp,
-                    fontWeight = FontWeight.Bold
-                )
+                if (selected && titleText.isNotEmpty()) {
+                    Text(
+                        text = titleText,
+                        color = primaryColor,
+                        fontSize = 14.sp,
+                        fontWeight = FontWeight.Bold,
+                        fontFamily = PoppinsFontFamily
+                    )
+                } else {
+                    Icon(
+                        painter = painterResource(id = item.unselectedIcon),
+                        contentDescription = titleText,
+                        tint = Color.Unspecified,
+                        modifier = Modifier.size(28.dp)
+                    )
+                }
             }
         }
     }
 }
+
 
 @Composable
 fun CustomBottomBar(
@@ -102,9 +133,7 @@ fun CustomBottomBar(
     onLogout: () -> Unit
 ) {
     val navBackStackEntry by navController.currentBackStackEntryAsState()
-    val currentRoute = navBackStackEntry?.destination?.route
-
-    // Estado para controlar la visibilidad del modal
+    val currentDestination = navBackStackEntry?.destination
     var showLogoutModal by remember { mutableStateOf(false) }
 
     Box(
@@ -131,32 +160,60 @@ fun CustomBottomBar(
             horizontalArrangement = Arrangement.SpaceEvenly,
             verticalAlignment = Alignment.CenterVertically
         ) {
+            // --- INICIO ---
             NavItem(
                 item = NavigationItem.Home,
-                isSelected = currentRoute == NavigationItem.Home.route,
-                onClick = { navController.navigate(NavigationItem.Home.route) }
+                isSelected = currentDestination?.route == NavigationItem.Home.route,
+                onClick = {
+                    navController.navigate(NavigationItem.Home.route) {
+                        popUpTo(navController.graph.findStartDestination().id) {
+                            saveState = true
+                        }
+                        launchSingleTop = true
+                        restoreState = true
+                    }
+                }
             )
+
+            // --- TIENDA ---
+            val isStoreSelected = currentDestination?.hierarchy?.any {
+                it.route == StoreGraph.ROUTE || it.route == StoreGraph.STORE_LIST
+            } == true
+
             NavItem(
                 item = NavigationItem.Store,
-                isSelected = currentRoute == NavigationItem.Store.route,
-                onClick = { navController.navigate(NavigationItem.Store.route) }
+                isSelected = isStoreSelected,
+                onClick = {
+                    navController.navigate(StoreGraph.ROUTE) {
+                        popUpTo(navController.graph.findStartDestination().id) {
+                            saveState = true
+                        }
+                        launchSingleTop = true
+                        restoreState = true
+                    }
+                }
             )
 
             Spacer(modifier = Modifier.width(72.dp))
 
+            // --- PERFIL ---
             NavItem(
                 item = NavigationItem.Profile,
-                isSelected = currentRoute == NavigationItem.Profile.route ||
-                           currentRoute == TopNavigationItem.Profile.route ||
-                           currentRoute == TopNavigationItem.Activity.route ||
-                           currentRoute == TopNavigationItem.Streak.route,
-                onClick = { navController.navigate(NavigationItem.Profile.route) }
+                isSelected = currentDestination?.route == NavigationItem.Profile.route,
+                onClick = {
+                    navController.navigate(NavigationItem.Profile.route) {
+                        popUpTo(navController.graph.findStartDestination().id) {
+                            saveState = true
+                        }
+                        launchSingleTop = true
+                        restoreState = true
+                    }
+                }
             )
 
-            // Botón de logout con mismo estilo
+            // --- LOGOUT ---
             val interactionSource = remember { MutableInteractionSource() }
             val isPressed by interactionSource.collectIsPressedAsState()
-
             Box(
                 modifier = Modifier
                     .size(72.dp)
@@ -171,7 +228,6 @@ fun CustomBottomBar(
                             .background(primaryColor.copy(alpha = 0.15f))
                     )
                 }
-
                 Box(
                     modifier = Modifier
                         .fillMaxSize()
@@ -192,30 +248,54 @@ fun CustomBottomBar(
             }
         }
 
-        // Botón central QR
+        val isQrSelected = currentDestination?.route == NavigationItem.QR.route
         Box(
             modifier = Modifier
                 .size(64.dp)
                 .align(Alignment.TopCenter)
                 .offset(y = (-12).dp)
                 .clip(CircleShape)
-                .background(qrBackgroundColor)
-                .clickable { navController.navigate(NavigationItem.QR.route) },
+                .background(if (isQrSelected) Color.White else qrBackgroundColor)
+                .clickable {
+                    navController.navigate(NavigationItem.QR.route) {
+                        popUpTo(navController.graph.findStartDestination().id) {
+                            saveState = true
+                        }
+                        launchSingleTop = true
+                        restoreState = true
+                    }
+                },
             contentAlignment = Alignment.Center
         ) {
-            val isQrSelected = currentRoute == NavigationItem.QR.route
-            Icon(
-                painter = painterResource(
-                    id = if (isQrSelected) R.drawable.qr_relleno else R.drawable.qr
-                ),
-                contentDescription = "QR Screen",
-                modifier = Modifier.size(32.dp),
-                tint = Color.Unspecified
-            )
+            AnimatedContent(
+                targetState = isQrSelected,
+                transitionSpec = {
+                    (slideInVertically { height -> height } + fadeIn() togetherWith
+                            slideOutVertically { height -> -height } + fadeOut())
+                        .using(SizeTransform(clip = false))
+                },
+                label = "QrButtonAnimation"
+            ) { selected ->
+                if (selected) {
+                    Text(
+                        text = stringResource(R.string.bottom_nav_qr),
+                        color = primaryColor,
+                        fontSize = 12.sp,
+                        fontWeight = FontWeight.Bold,
+                        fontFamily = PoppinsFontFamily
+                    )
+                } else {
+                    Icon(
+                        painter = painterResource(id = R.drawable.qr_relleno),
+                        contentDescription = stringResource(id = R.string.bottom_nav_qr),
+                        modifier = Modifier.size(32.dp),
+                        tint = Color.Unspecified
+                    )
+                }
+            }
         }
     }
 
-    // Modal de logout
     LogoutModal(
         isVisible = showLogoutModal,
         onDismiss = { showLogoutModal = false },

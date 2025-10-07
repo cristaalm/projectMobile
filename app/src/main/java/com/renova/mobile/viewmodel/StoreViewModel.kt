@@ -10,6 +10,16 @@ import com.renova.mobile.network.TypeShop
 import com.renova.mobile.repository.AlianzasRepository
 import kotlinx.coroutines.launch
 
+// propiedades para la paginación
+data class StoreUiState(
+    val isLoading: Boolean = false,
+    val alianzas: List<Alianza> = emptyList(),
+    val categories: List<TypeShop> = emptyList(),
+    val error: String? = null,
+    val currentPage: Int = 1,
+    val itemsPerPage: Int = 5 // mostrar 5 alianzas por página
+)
+
 class StoreViewModel : ViewModel() {
 
     private val repository = AlianzasRepository()
@@ -24,28 +34,22 @@ class StoreViewModel : ViewModel() {
     fun loadStoreData() {
         viewModelScope.launch {
             uiState = uiState.copy(isLoading = true, error = null)
-
-            // Obtenemos alianzas y categorías
             val alianzasResult = repository.getAllAlianzas()
             val categoriesResult = repository.getTypeShops()
 
-            // Verificamos si ambos resultados fueron exitosos
             if (alianzasResult.isSuccess && categoriesResult.isSuccess) {
                 uiState = uiState.copy(
                     isLoading = false,
                     alianzas = alianzasResult.getOrThrow(),
-                    categories = categoriesResult.getOrThrow(), // <-- CAMBIO
-                    error = null
+                    categories = categoriesResult.getOrThrow(),
+                    error = null,
+                    currentPage = 1
                 )
             } else {
-                // Si alguno falla, mostramos el primer error que encontremos
                 val errorMsg = alianzasResult.exceptionOrNull()?.message ?:
                 categoriesResult.exceptionOrNull()?.message ?:
                 "Error desconocido"
-                uiState = uiState.copy(
-                    isLoading = false,
-                    error = errorMsg
-                )
+                uiState = uiState.copy(isLoading = false, error = errorMsg)
             }
         }
     }
@@ -53,11 +57,18 @@ class StoreViewModel : ViewModel() {
     fun retryLoading() {
         loadStoreData()
     }
-}
 
-data class StoreUiState(
-    val isLoading: Boolean = false,
-    val alianzas: List<Alianza> = emptyList(),
-    val categories: List<TypeShop> = emptyList(),
-    val error: String? = null
-)
+    // funciones para controlar la paginación
+    fun nextPage() {
+        val totalPages = (uiState.alianzas.size + uiState.itemsPerPage - 1) / uiState.itemsPerPage
+        if (uiState.currentPage < totalPages) {
+            uiState = uiState.copy(currentPage = uiState.currentPage + 1)
+        }
+    }
+
+    fun previousPage() {
+        if (uiState.currentPage > 1) {
+            uiState = uiState.copy(currentPage = uiState.currentPage - 1)
+        }
+    }
+}

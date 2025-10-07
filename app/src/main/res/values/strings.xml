@@ -41,6 +41,7 @@
     <string name="sending">SENDING...</string>
 
     <!-- StoreScreen -->
+    <string name="store_screen_title">Store</string>
     <string name="search_allied_stores">Allied Stores</string>
     <string name="search_icon">Search stores</string>
     <string name="featured_stores">Featured Stores</string>
@@ -58,9 +59,16 @@
     <string name="view_details_content_description">View details</string>
 
     <!-- Categories -->
-    <string name="restaurants">Restaurants</string>
-    <string name="gyms">Gyms</string>
-    <string name="stores">Stores</string>
+    <string name="category_restaurant">Restaurant</string>
+    <string name="category_supermarket">Supermarket</string>
+    <string name="category_pharmacy">Pharmacy</string>
+    <string name="category_clothing">Clothing</string>
+    <string name="category_gas_station">Gas Station</string>
+    <string name="category_cellar">Cellar</string>
+    <string name="category_electronics">Electronics</string>
+    <string name="category_bookstore">Bookstore</string>
+    <string name="category_toys">Toys</string>
+    <string name="category_store">Store</string>
 
     <!-- Loading states -->
     <string name="loading_stores">Loading stores...</string>
@@ -112,9 +120,6 @@
     <!-- Dates -->
     <string name="today">Today</string>
     <string name="yesterday">Yesterday</string>
-
-    <!-- Recompensas -->
-    <string name="reward_screen_subtitle">Explore and choose the reward you like the most</string>
 
     <!-- Code Mode -->
     <string name="points_code_title">Renova Points Code</string>
@@ -195,5 +200,23 @@
     <string name="scroll_down">Scroll down</string>
     <string name="success">Success</string>
     <string name="completed">Completed!</string>
+
+    <!-- Recompensas -->
+    <string name="reward_screen_title">Rewards</string>
+    <string name="reward_screen_subtitle">Explore and choose the reward you like the most</string>
+    <string name="content_description_back">Back</string>
+    <string name="error_prefix">Error:\u0020</string>
+    <string name="no_rewards_available">This merchant has no available rewards.</string>
+    <string name="pointsR">points</string>
+    <string name="reward_confirmation_dialog_title">Confirm Reward</string>
+    <string name="reward_confirmation_dialog_message">Do you want to redeem \'%1$s\' for %2$d points?</string>
+    <string name="action_confirm">Confirm</string>
+    <string name="action_cancel">Cancel</string>
+    <string name="reward_detail_title">Reward Details</string>
+
+    <string name="bottom_nav_home">Home</string>
+    <string name="bottom_nav_store">Store</string>
+    <string name="bottom_nav_qr">Scan</string>
+    <string name="bottom_nav_profile">Profile</string>
 
 </resources>

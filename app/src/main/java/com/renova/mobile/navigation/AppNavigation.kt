@@ -3,6 +3,7 @@ package com.renova.mobile.navigation
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
@@ -21,127 +22,109 @@ import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.slideInHorizontally
 import androidx.compose.animation.slideOutHorizontally
+import androidx.navigation.NavGraph.Companion.findStartDestination
 import androidx.navigation.NavType
+import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.navArgument
+import androidx.navigation.navigation
 
+// <<< PASO 1: OBJETO PARA ORGANIZAR LAS RUTAS DEL GRAFO DE TIENDA >>>
+object StoreGraph {
+    const val ROUTE = "store_graph"
+    const val STORE_LIST = "store_list"
+    const val REWARDS = "reward_screen/{allianceId}"
+}
 
 @Composable
 fun AppNavigation(onLogout: () -> Unit) {
     val navController = rememberNavController()
 
-    // Scaffold nos da la estructura básica de Material Design
     Scaffold(
         topBar = {
-            CustomTopBar(
-                navController = navController
-            )
+            CustomTopBar(navController = navController)
         },
-
         bottomBar = {
             CustomBottomBar(
                 navController = navController,
-                onLogout = onLogout  // Pasar la función de logout
+                onLogout = onLogout
             )
         }
     ) { innerPadding ->
-        // NavHost donde las pantallas se muestrar
         NavHost(
             navController = navController,
-            startDestination = NavigationItem.Home.route, // pantalla inicial
-            modifier = Modifier.padding(innerPadding) // Padding para que el contenido no quede debajo de la barra
+            startDestination = NavigationItem.Home.route,
+            modifier = Modifier.padding(innerPadding)
         ) {
-
-            val enterAnimation = slideInHorizontally(
-                initialOffsetX = { 1000 },
-                animationSpec = tween(300)
-            ) + fadeIn(animationSpec = tween(300))
-
-            val exitAnimation = slideOutHorizontally(
-                targetOffsetX = { -1000 },
-                animationSpec = tween(300)
-            ) + fadeOut(animationSpec = tween(300))
-
-            val popEnterAnimation = slideInHorizontally(
-                initialOffsetX = { -1000 },
-                animationSpec = tween(300)
-            ) + fadeIn(animationSpec = tween(300))
-
-            val popExitAnimation = slideOutHorizontally(
-                targetOffsetX = { 1000 },
-                animationSpec = tween(300)
-            ) + fadeOut(animationSpec = tween(300))
-
+            val enterAnimation = slideInHorizontally(initialOffsetX = { 1000 }, animationSpec = tween(300)) + fadeIn(animationSpec = tween(300))
+            val exitAnimation = slideOutHorizontally(targetOffsetX = { -1000 }, animationSpec = tween(300)) + fadeOut(animationSpec = tween(300))
+            val popEnterAnimation = slideInHorizontally(initialOffsetX = { -1000 }, animationSpec = tween(300)) + fadeIn(animationSpec = tween(300))
+            val popExitAnimation = slideOutHorizontally(targetOffsetX = { 1000 }, animationSpec = tween(300)) + fadeOut(animationSpec = tween(300))
 
             composable(
                 route = NavigationItem.Home.route,
-                enterTransition = { enterAnimation },
-                exitTransition = { exitAnimation },
-                popEnterTransition = { popEnterAnimation },
-                popExitTransition = { popExitAnimation }
+                enterTransition = { enterAnimation }, exitTransition = { exitAnimation },
+                popEnterTransition = { popEnterAnimation }, popExitTransition = { popExitAnimation }
             ) {
                 HomeScreen()
             }
 
-            composable(
-                route = NavigationItem.Store.route,
-                enterTransition = { enterAnimation },
-                exitTransition = { exitAnimation },
-                popEnterTransition = { popEnterAnimation },
-                popExitTransition = { popExitAnimation }
+            // <<< PASO 2: SE REEMPLAZA EL COMPOSABLE DE "STORE" POR UN GRAFO ANIDADO >>>
+            navigation(
+                startDestination = StoreGraph.STORE_LIST,
+                route = StoreGraph.ROUTE
             ) {
-                StoreScreen(navController = navController )
+                // Pantalla de la lista de tiendas (dentro del grafo)
+                composable(
+                    route = StoreGraph.STORE_LIST,
+                    enterTransition = { enterAnimation }, exitTransition = { exitAnimation },
+                    popEnterTransition = { popEnterAnimation }, popExitTransition = { popExitAnimation }
+                ) {
+                    StoreScreen(navController = navController)
+                }
+
+                // Pantalla de recompensas (dentro del grafo)
+                composable(
+                    route = StoreGraph.REWARDS,
+                    arguments = listOf(navArgument("allianceId") { type = NavType.IntType }),
+                    enterTransition = { enterAnimation }, exitTransition = { exitAnimation },
+                    popEnterTransition = { popEnterAnimation }, popExitTransition = { popExitAnimation }
+                ) { backStackEntry ->
+                    val allianceId = backStackEntry.arguments?.getInt("allianceId") ?: 0
+                    RewardScreen(navController = navController, allianceId = allianceId)
+                }
             }
 
             composable(
                 route = NavigationItem.QR.route,
-                enterTransition = { enterAnimation },
-                exitTransition = { exitAnimation },
-                popEnterTransition = { popEnterAnimation },
-                popExitTransition = { popExitAnimation }
+                enterTransition = { enterAnimation }, exitTransition = { exitAnimation },
+                popEnterTransition = { popEnterAnimation }, popExitTransition = { popExitAnimation }
             ) {
                 QRScreen()
             }
 
             composable(
                 route = NavigationItem.Profile.route,
-                enterTransition = { enterAnimation },
-                exitTransition = { exitAnimation },
-                popEnterTransition = { popEnterAnimation },
-                popExitTransition = { popExitAnimation }
+                enterTransition = { enterAnimation }, exitTransition = { exitAnimation },
+                popEnterTransition = { popEnterAnimation }, popExitTransition = { popExitAnimation }
             ) {
                 ProfileScreen()
             }
-            composable(
-                route = "reward_screen/{allianceId}", // Ruta con un argumento dinámico
-                arguments = listOf(navArgument("allianceId") { type = NavType.IntType }),
-                enterTransition = { enterAnimation }, exitTransition = { exitAnimation },
-                popEnterTransition = { popEnterAnimation }, popExitTransition = { popExitAnimation }
-            ) { backStackEntry ->
-                // Extraemos el ID de la alianza para pasárselo a la pantalla
-                val allianceId = backStackEntry.arguments?.getInt("allianceId") ?: 0
-                RewardScreen(navController = navController, allianceId = allianceId)
-            }
-
 
             composable(
                 route = TopNavigationItem.Activity.route,
-                enterTransition = { enterAnimation },
-                exitTransition = { exitAnimation },
-                popEnterTransition = { popEnterAnimation },
-                popExitTransition = { popExitAnimation }
+                enterTransition = { enterAnimation }, exitTransition = { exitAnimation },
+                popEnterTransition = { popEnterAnimation }, popExitTransition = { popExitAnimation }
             ) {
                 ActivityScreen()
             }
+
             composable(
                 route = TopNavigationItem.Streak.route,
-                enterTransition = { enterAnimation },
-                exitTransition = { exitAnimation },
-                popEnterTransition = { popEnterAnimation },
-                popExitTransition = { popExitAnimation }
+                enterTransition = { enterAnimation }, exitTransition = { exitAnimation },
+                popEnterTransition = { popEnterAnimation }, popExitTransition = { popExitAnimation }
             ) {
                 StreakScreen()
             }
-
         }
     }
 }

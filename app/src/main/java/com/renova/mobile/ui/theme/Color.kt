@@ -121,7 +121,7 @@ object RenovaColors {
     val PrimaryHoverColor = Color(0xFF08b662)
     val SecondaryColor = Color(0xFF024653)
     val SecondaryHoverColor = Color(0xFF005e70)
-    val TertiaryColor = Color(0xFFcdff10)
+    val TertiaryColor = Color(0xFFccff00)
     val TertiaryHoverColor = Color(0xFFddff50)
 
     val RewardCardBackgrounds = listOf(
@@ -147,7 +147,9 @@ object RenovaColors {
         Error
     )
     val CategoryCardBackgrounds = listOf(
-        Color(0xFFFF9800), Color(0xFFF44336), Color(0xFF00BCD4),
-        Color(0xFF4CAF50), Color(0xFF9C27B0), Color(0xFF3F51B5)
+        PrimaryColor,
+        SecondaryColor,
+        TertiaryColor,
+
     )
 }

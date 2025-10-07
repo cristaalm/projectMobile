@@ -25,6 +25,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.foundation.border
+import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
@@ -40,18 +41,22 @@ import coil.decode.GifDecoder
 import coil.decode.ImageDecoderDecoder
 import coil.request.ImageRequest
 import com.renova.mobile.R
+import com.renova.mobile.navigation.StoreGraph
 import com.renova.mobile.network.Alianza
 import com.renova.mobile.network.TypeShop
+import com.renova.mobile.ui.components.AlianzaCard
+import com.renova.mobile.ui.components.CategoryCard
 import com.renova.mobile.ui.components.SectionHeader
 import com.renova.mobile.ui.screens.viewmodel.StoreViewModel
 import com.renova.mobile.ui.theme.*
+import kotlin.math.min
+
 
 @Composable
 fun StoreScreen(
     navController: NavController,
     viewModel: StoreViewModel = viewModel()
 ) {
-    // ... (el código de remember, val activeCategories, etc., se mantiene igual)
     val colors = LocalRenovaColors.current
     var searchQuery by remember { mutableStateOf("") }
     val uiState = viewModel.uiState
@@ -77,15 +82,30 @@ fun StoreScreen(
             }
         }
     }
+
+    val totalPages = (filteredAlianzas.size + uiState.itemsPerPage - 1) / uiState.itemsPerPage
+    val currentPage = uiState.currentPage.coerceIn(1, if (totalPages > 0) totalPages else 1)
+
+    val startIndex = (currentPage - 1) * uiState.itemsPerPage
+    val endIndex = min(startIndex + uiState.itemsPerPage, filteredAlianzas.size)
+
+    val paginatedAlianzas = if (filteredAlianzas.isNotEmpty()) {
+        filteredAlianzas.subList(startIndex, endIndex)
+    } else {
+        emptyList()
+    }
+
     Column(
         modifier = Modifier
             .fillMaxSize()
             .background(MaterialTheme.colorScheme.background)
     ) {
-        SectionHeader(title = "Tienda")
+        SectionHeader(title = stringResource(id = R.string.store_screen_title))
 
         LazyColumn(
-            modifier = Modifier.padding(horizontal = 16.dp),
+            modifier = Modifier
+                .padding(horizontal = 16.dp)
+                .imePadding(),
             verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
             item { Spacer(modifier = Modifier.height(8.dp)) }
@@ -97,7 +117,6 @@ fun StoreScreen(
                     colors = colors
                 )
             }
-            // ... (el resto del contenido de la LazyColumn se mantiene igual)
             item { DiscoverSection(colors = colors) }
 
             if (activeCategories.isNotEmpty()) {
@@ -176,7 +195,7 @@ fun StoreScreen(
                 uiState.error != null -> item { ErrorSection(message = uiState.error, onRetry = { viewModel.retryLoading() }, colors = colors) }
                 filteredAlianzas.isEmpty() -> item { EmptySection(colors = colors) }
                 else -> {
-                    itemsIndexed(filteredAlianzas, key = { _, alianza -> alianza.id }) { index, alianza ->
+                    itemsIndexed(paginatedAlianzas, key = { _, alianza -> alianza.id }) { index, alianza ->
                         val logoColor = colors.allianceLogoBackgrounds[alianza.id % colors.allianceLogoBackgrounds.size]
                         Column {
                             AlianzaCard(
@@ -187,7 +206,8 @@ fun StoreScreen(
                                 onClick = { navController.navigate("reward_screen/${alianza.id}") }
                             )
 
-                            if (index < filteredAlianzas.size - 1) {
+                            // El divisor ahora se basa en el tamaño de la lista paginada
+                            if (index < paginatedAlianzas.size - 1) {
                                 Divider(
                                     color = RenovaColors.PrimaryColor,
                                     thickness = 1.dp,
@@ -196,25 +216,114 @@ fun StoreScreen(
                             }
                         }
                     }
+
+                    // ✨ CAMBIO 3: Se añaden los controles de paginación al final de la lista ✨
+                    if (totalPages > 1) {
+                        item {
+                            PaginationControls(
+                                currentPage = currentPage,
+                                totalPages = totalPages,
+                                isLoading = uiState.isLoading, // Se añade el estado de carga
+                                onPreviousPage = { viewModel.previousPage() },
+                                onNextPage = { viewModel.nextPage() }
+                            )
+                        }
+                    }
                 }
             }
             item { Spacer(modifier = Modifier.height(80.dp)) }
         }
     }
 }
+
+@Composable
+private fun PaginationControls(
+    currentPage: Int,
+    totalPages: Int,
+    isLoading: Boolean,
+    onPreviousPage: () -> Unit,
+    onNextPage: () -> Unit
+) {
+    val renovaColors = LocalRenovaColors.current
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = 16.dp, vertical = 8.dp), // Padding consistente
+        horizontalArrangement = Arrangement.SpaceBetween, // Alineación consistente
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        // Botón Anterior
+        Button(
+            onClick = onPreviousPage,
+            enabled = currentPage > 1 && !isLoading,
+            colors = ButtonDefaults.buttonColors(
+                containerColor = if (currentPage > 1) renovaColors.buttonEnabled else renovaColors.buttonDisabled,
+                contentColor = Color.White // Color de contenido explícito
+            ),
+            shape = RoundedCornerShape(12.dp),
+            modifier = Modifier
+                .weight(1f)
+                .height(40.dp) // Altura y peso consistentes
+        ) {
+            Icon(
+                painter = painterResource(id = R.drawable.back),
+                contentDescription = stringResource(R.string.previous),
+                tint = Color.White,
+                modifier = Modifier.size(20.dp)
+            )
+            Spacer(modifier = Modifier.width(4.dp))
+            Text(stringResource(R.string.previous), color = Color.White)
+        }
+
+        Spacer(modifier = Modifier.width(12.dp))
+
+        // Indicador de página
+        Text(
+            text = "$currentPage ${stringResource(R.string.of)} $totalPages", // Texto consistente
+            style = MaterialTheme.typography.titleSmall,
+            modifier = Modifier.align(Alignment.CenterVertically),
+            color = renovaColors.textPrimary
+        )
+
+        Spacer(modifier = Modifier.width(12.dp))
+
+        // Botón Siguiente
+        Button(
+            onClick = onNextPage,
+            enabled = currentPage < totalPages && !isLoading,
+            colors = ButtonDefaults.buttonColors(
+                containerColor = if (currentPage < totalPages) renovaColors.buttonEnabled else renovaColors.buttonDisabled,
+                contentColor = Color.White
+            ),
+            shape = RoundedCornerShape(12.dp),
+            modifier = Modifier
+                .weight(1f)
+                .height(40.dp)
+        ) {
+            Text(stringResource(R.string.next), color = Color.White)
+            Spacer(modifier = Modifier.width(4.dp))
+            Icon(
+                painter = painterResource(id = R.drawable.next),
+                contentDescription = stringResource(R.string.next),
+                tint = Color.White,
+                modifier = Modifier.size(20.dp)
+            )
+        }
+    }
+}
+
+
 @Composable
 private fun SearchBar(query: String, onQueryChange: (String) -> Unit, colors: RenovaColorScheme) {
     OutlinedTextField(
         value = query,
         onValueChange = onQueryChange,
-        // << CAMBIO 1: Añadimos un Modifier.border >>
-        // Este dibujará nuestro nuevo borde más grueso por fuera.
         modifier = Modifier
             .fillMaxWidth()
             .border(
-                width = 2.dp, // Aquí puedes ajustar el grosor que quieras
+                width = 2.dp, // grosor de borde search
                 color = Color(0xFF07B460),
-                shape = RoundedCornerShape(24.dp)
+                shape = RoundedCornerShape(16.dp)
             ),
         placeholder = {
             Text(
@@ -233,16 +342,11 @@ private fun SearchBar(query: String, onQueryChange: (String) -> Unit, colors: Re
         singleLine = true,
         shape = RoundedCornerShape(24.dp),
         colors = OutlinedTextFieldDefaults.colors(
-            // << CAMBIO 2: Ocultamos el borde original del componente >>
-            // Al hacerlo transparente, solo se verá el borde que dibujamos con el Modifier.
             focusedBorderColor = Color.Transparent,
             unfocusedBorderColor = Color.Transparent,
-
-            // Mantenemos el resto de los colores
             focusedTextColor = colors.textPrimary,
             unfocusedTextColor = colors.textPrimary,
             cursorColor = RenovaColors.PrimaryColor,
-            // Hacemos el fondo transparente para que no haya colores extraños
             unfocusedContainerColor = Color.Transparent,
             focusedContainerColor = Color.Transparent
         )
@@ -254,9 +358,15 @@ private fun SearchBar(query: String, onQueryChange: (String) -> Unit, colors: Re
 private fun DiscoverSection(colors: RenovaColorScheme) {
     val textColor = Color.Black
     Card(
-        modifier = Modifier.fillMaxWidth(),
+        modifier = Modifier
+            .fillMaxWidth()
+            .shadow(
+                elevation = 6.dp,
+                shape = RoundedCornerShape(24.dp),
+                spotColor = RenovaColors.Light.ActivityShadowColor
+            ),
         shape = RoundedCornerShape(24.dp),
-        elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
+        colors = CardDefaults.cardColors(containerColor = Color.Transparent)
     ) {
         Box(
             modifier = Modifier
@@ -275,7 +385,7 @@ private fun DiscoverSection(colors: RenovaColorScheme) {
             ) {
                 Column(
                     modifier = Modifier
-                        .weight(1.6f)
+                        .weight(1.8f)
                         .padding(horizontal = 24.dp, vertical = 20.dp),
                     verticalArrangement = Arrangement.Center
                 ) {
@@ -291,14 +401,13 @@ private fun DiscoverSection(colors: RenovaColorScheme) {
                         text = stringResource(R.string.discover_stores_description),
                         fontSize = 16.sp,
                         lineHeight = 22.sp,
-                        fontFamily = PoppinsFontFamily,
+                        fontFamily = com.renova.mobile.ui.theme.PoppinsFontFamily,
                         textAlign = TextAlign.Justify,
-                        color = textColor.copy(alpha = 0.9f)
                     )
                 }
                 Box(
                     modifier = Modifier
-                        .weight(1.4f)
+                        .weight(1.2f)
                         .fillMaxHeight()
                         .clip(RoundedCornerShape(topEnd = 24.dp, bottomEnd = 24.dp)),
                     contentAlignment = Alignment.Center
@@ -307,170 +416,6 @@ private fun DiscoverSection(colors: RenovaColorScheme) {
                 }
             }
         }
-    }
-}
-
-@Composable
-private fun AlianzaCard(
-    alianza: Alianza,
-    categories: List<TypeShop>,
-    colors: RenovaColorScheme,
-    logoColor: Color,
-    onClick: () -> Unit
-) {
-    val category = categories.find { it.id == alianza.type_shop_id }
-    val categoryName = category?.name ?: stringResource(R.string.no_category)
-    val categoryIcon = if (category != null) getIconForCategory(category.name) else R.drawable.ic_tienda
-
-    Card(
-        modifier = Modifier
-            .fillMaxWidth()
-            .clickable(onClick = onClick),
-        shape = RoundedCornerShape(12.dp),
-        colors = CardDefaults.cardColors(containerColor = colors.cardBackground),
-    ) {
-        Row(
-            modifier = Modifier.padding(16.dp),
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            Box(
-                modifier = Modifier
-                    .size(48.dp)
-                    .background(logoColor, RoundedCornerShape(8.dp)),
-                contentAlignment = Alignment.Center
-            ) {
-                Text(
-                    text = alianza.name.firstOrNull()?.uppercase() ?: "R",
-                    color = Color.White,
-                    fontSize = 18.sp,
-                    fontWeight = FontWeight.Bold,
-                    fontFamily = PoppinsFontFamily
-                )
-            }
-            Spacer(modifier = Modifier.width(16.dp))
-            Column(
-                modifier = Modifier.weight(1f),
-                verticalArrangement = Arrangement.spacedBy(2.dp)
-            ) {
-                Text(
-                    text = alianza.name,
-                    fontSize = 16.sp,
-                    fontWeight = FontWeight.Bold,
-                    fontFamily = PoppinsFontFamily,
-                    color = colors.textPrimary,
-                    maxLines = 1,
-                    overflow = TextOverflow.Ellipsis
-                )
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    Icon(
-                        painter = painterResource(id = categoryIcon),
-                        contentDescription = stringResource(R.string.category_icon_content_description),
-                        tint = colors.textSecondary,
-                        modifier = Modifier.size(14.dp)
-                    )
-                    Spacer(modifier = Modifier.width(4.dp))
-                    Text(
-                        text = categoryName,
-                        fontSize = 13.sp,
-                        fontFamily = PoppinsFontFamily,
-                        color = colors.textSecondary,
-                        maxLines = 1,
-                        overflow = TextOverflow.Ellipsis
-                    )
-                }
-                if (!alianza.address.isNullOrBlank()) {
-                    // << CAMBIO PRINCIPAL AQUÍ >>
-                    Row(verticalAlignment = Alignment.CenterVertically) {
-                        Icon(
-                            painter = painterResource(id = R.drawable.ic_location),
-                            contentDescription = stringResource(R.string.address_icon_content_description),
-                            tint = RenovaColors.PrimaryColor,
-                            modifier = Modifier.size(14.dp)
-                        )
-                        Spacer(modifier = Modifier.width(4.dp))
-                        Text(
-                            text = alianza.address,
-                            fontSize = 12.sp,
-                            fontFamily = PoppinsFontFamily,
-                            color = RenovaColors.PrimaryColor,
-                            fontWeight = FontWeight.Medium
-                        )
-                    }
-                }
-            }
-            Icon(
-                painter = painterResource(id = R.drawable.next1),
-                contentDescription = stringResource(R.string.view_details_content_description),
-                tint = Color.Unspecified,
-                modifier = Modifier.size(24.dp)
-            )
-        }
-    }
-}
-@Composable
-private fun CategoryCard(
-    category: TypeShop,
-    isSelected: Boolean,
-    onClick: () -> Unit,
-    cardColor: Color
-) {
-    val scale by animateFloatAsState(targetValue = if (isSelected) 1.05f else 1f, label = "cardScale")
-    Card(
-        modifier = Modifier
-            .aspectRatio(1f)
-            .scale(scale)
-            .alpha(if (isSelected) 1f else 0.6f)
-            .clickable(onClick = onClick),
-        shape = RoundedCornerShape(12.dp),
-        colors = CardDefaults.cardColors(containerColor = cardColor)
-    ) {
-        val iconResId = if (category.id == -1) R.drawable.ic_all else getIconForCategory(category.name)
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(8.dp),
-            horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.Center
-        ) {
-            Icon(
-                painter = painterResource(id = iconResId),
-                contentDescription = category.name,
-                tint = Color.White,
-                modifier = Modifier.size(24.dp)
-            )
-            Spacer(modifier = Modifier.height(4.dp))
-            Text(
-                text = category.name,
-                color = Color.White,
-                fontSize = 11.sp,
-                fontWeight = FontWeight.Bold,
-                fontFamily = PoppinsFontFamily,
-                textAlign = TextAlign.Center,
-                maxLines = 2,
-                overflow = TextOverflow.Ellipsis,
-                lineHeight = 10.sp
-            )
-        }
-    }
-}
-
-
-// ... (GifPlayer, getIconForCategory, LoadingSection, ErrorSection, EmptySection se mantienen igual)
-@Composable
-private fun getIconForCategory(categoryName: String): Int {
-    return when {
-        categoryName.contains("restaurante", ignoreCase = true) -> R.drawable.ic_restaurant
-        categoryName.contains("supermercado", ignoreCase = true) -> R.drawable.ic_supermercado
-        categoryName.contains("farmacia", ignoreCase = true) -> R.drawable.ic_farmacia
-        categoryName.contains("ropa", ignoreCase = true) -> R.drawable.ic_ropa
-        categoryName.contains("restaurant", ignoreCase = true) -> R.drawable.ic_restaurant
-        categoryName.contains("gasolinera", ignoreCase = true) -> R.drawable.ic_gasolinera
-        categoryName.contains("bodega", ignoreCase = true) -> R.drawable.ic_bodega
-        categoryName.contains("electrónica", ignoreCase = true) -> R.drawable.ic_electronica
-        categoryName.contains("tienda de libros", ignoreCase = true) -> R.drawable.ic_libro
-        categoryName.contains("juguetes", ignoreCase = true) -> R.drawable.ic_juguetes
-        categoryName.contains("tienda", ignoreCase = true) -> R.drawable.ic_tienda
-        else -> R.drawable.ic_tienda
     }
 }
 
