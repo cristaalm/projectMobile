@@ -75,10 +75,6 @@ fun ActivityScreen(
     val renovaColors = LocalRenovaColors.current
     val state by viewModel.state.collectAsState()
 
-    LaunchedEffect(Unit) {
-        viewModel.loadHistory(1)
-    }
-
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -88,7 +84,6 @@ fun ActivityScreen(
                 LoadingState(renovaColors)
             }
             state.error != null && state.activities.isEmpty() -> {
-                // Mostrar solo el diálogo, sin el ErrorState de fondo
                 Box(modifier = Modifier.fillMaxSize())
             }
             else -> {
@@ -102,7 +97,7 @@ fun ActivityScreen(
         }
     }
 
-    // Mostrar el diálogo encima de todo
+    // Mostrar el diálogo
     if (state.error != null && state.activities.isEmpty()) {
         ErrorDialog(
             error = state.error ?: "Error desconocido",
@@ -380,7 +375,7 @@ private fun ActivityContent(
             Box(
                 modifier = Modifier
                     .fillMaxSize()
-                    .background(renovaColors.primaryColor.copy(alpha = 0.1f)),
+                    .background(Color.White),
                 contentAlignment = Alignment.Center
             ) {
                 CircularProgressIndicator(color = renovaColors.activityPrimary)

@@ -1,6 +1,5 @@
 package com.renova.mobile.ui.viewmodels
 
-import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.renova.mobile.network.ActivityItem
@@ -28,6 +27,11 @@ class ActivityViewModel(
 
     private val _state = MutableStateFlow(ActivityState())
     val state: StateFlow<ActivityState> = _state.asStateFlow()
+
+    // Agregar init para cargar datos una sola vez
+    init {
+        loadHistory(1)
+    }
 
     fun loadHistory(page: Int = 1) {
         viewModelScope.launch {
@@ -63,8 +67,7 @@ class ActivityViewModel(
                         )
                     }
                 }
-            } catch (e: Exception) {
-                Log.e("ActivityViewModel", "Error loading history", e)
+            } catch (e: Exception){
                 _state.update {
                     it.copy(
                         error = "Error: ${e.message}",
@@ -82,7 +85,6 @@ class ActivityViewModel(
                 it.copy(totalPoints = points)
             }
         } catch (e: Exception) {
-            Log.e("ActivityViewModel", "Error loading user points", e)
         }
     }
 
@@ -98,8 +100,6 @@ class ActivityViewModel(
                 }
             }
         } catch (e: Exception) {
-            Log.e("ActivityViewModel", "Error loading totals", e)
-            // Si falla, dejar los totales en 0
         }
     }
 
