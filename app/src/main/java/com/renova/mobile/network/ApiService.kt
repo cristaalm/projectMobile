@@ -316,9 +316,7 @@ interface ApiService {
     suspend fun getTotalScans(): Response<TotalScansResponse>
 
     @POST("api/users/identityUser")
-    suspend fun identifyUser(@Header("Authorization") authorization: String): Response<IdentifyUserResponse>
-    //@POST("api/users/identityUser")
-    //suspend fun identifyUser(): Response<IdentifyUserResponse>
+    suspend fun identifyUser(): Response<IdentifyUserResponse>
 }
 
 object ApiClient {

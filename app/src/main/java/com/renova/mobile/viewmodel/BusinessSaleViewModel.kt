@@ -39,7 +39,7 @@ class BusinessSaleViewModel : ViewModel() {
                     return@launch
                 }
 
-                val response = ApiClient.apiService.identifyUser(token)
+                val response = ApiClient.apiService.identifyUser()
                 if (response.isSuccessful) {
                     val body = response.body()
                     if (body?.success == true && body.data != null) {
