@@ -24,7 +24,6 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.lifecycle.viewmodel.compose.viewModel
 import com.renova.mobile.R
 import com.renova.mobile.network.ActivityItem
 import com.renova.mobile.ui.theme.LocalRenovaColors
@@ -32,7 +31,6 @@ import com.renova.mobile.ui.theme.RenovaColorScheme
 import com.renova.mobile.ui.viewmodels.ActivityViewModel
 import java.text.SimpleDateFormat
 import java.util.*
-import com.renova.mobile.ui.theme.Typography
 
 
 fun Modifier.greenShadow(
@@ -70,10 +68,14 @@ fun Modifier.greenShadow(
 
 @Composable
 fun ActivityScreen(
-    viewModel: ActivityViewModel = viewModel()
+    viewModel: ActivityViewModel = androidx.lifecycle.viewmodel.compose.viewModel()
 ) {
     val renovaColors = LocalRenovaColors.current
     val state by viewModel.state.collectAsState()
+
+    LaunchedEffect(Unit) {
+        viewModel.loadHistory(1)
+    }
 
     Column(
         modifier = Modifier
@@ -248,14 +250,29 @@ private fun ActivityContent(
                                     fontSize = 16.sp
                                 )
                                 Spacer(modifier = Modifier.height(0.dp))
-                                Text(
-                                    text = "${state.totalPoints} pts",
-                                    style = MaterialTheme.typography.displayLarge,
-                                    color = Color.White,
-                                    fontSize = 52.sp,
-                                    fontWeight = FontWeight.Bold,
-                                    lineHeight = 52.sp
-                                )
+                                Row {
+                                    Text(
+                                        text = "${state.totalPoints}",
+                                        style = MaterialTheme.typography.displayLarge,
+                                        color = Color.White,
+                                        fontSize = 52.sp,
+                                        fontWeight = FontWeight.Bold,
+                                        lineHeight = 52.sp
+                                    )
+
+                                    Spacer(modifier = Modifier.width(2.dp))
+
+                                    Text(
+                                        modifier = Modifier.padding(top = 20.dp),
+                                        text = stringResource(R.string.points_unit),
+                                        style = MaterialTheme.typography.displayLarge,
+                                        color = Color.White,
+                                        fontSize = 30.sp,
+                                        fontWeight = FontWeight.Bold,
+                                        lineHeight = 30.sp
+                                    )
+
+                                }
                             }
 
                             Box(

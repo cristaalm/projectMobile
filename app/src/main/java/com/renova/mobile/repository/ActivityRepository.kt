@@ -3,6 +3,7 @@ package com.renova.mobile.repository
 import com.renova.mobile.network.ApiClient
 import com.renova.mobile.network.HistoryResponse
 import com.renova.mobile.network.TotalScansResponse
+import com.renova.mobile.utils.SessionManager
 
 class ActivityRepository {
     suspend fun getHistory(
@@ -39,9 +40,9 @@ class ActivityRepository {
         }
     }
 
-    suspend fun getUserPoints(): Int {
-        // Usa la versión sin parámetros: el interceptor añadirá el Authorization de la sesión actual
-        val response = ApiClient.apiService.identifyUser()
+    suspend fun getUserPoints(sessionManager: SessionManager): Int {
+        val token = sessionManager.getAuthToken() ?: throw Exception("No token available")
+        val response = ApiClient.apiService.identifyUser(token)  // <- Cambio aquí
 
         return if (response.isSuccessful) {
             response.body()?.data?.total_points ?: 0

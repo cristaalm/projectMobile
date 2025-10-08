@@ -317,6 +317,7 @@ interface ApiService {
 
     @POST("api/users/identityUser")
     suspend fun identifyUser(): Response<IdentifyUserResponse>
+    suspend fun identifyUser(@Header("Authorization") authorization: String): Response<IdentifyUserResponse>
 }
 
 object ApiClient {

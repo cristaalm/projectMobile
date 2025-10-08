@@ -1,9 +1,12 @@
 package com.renova.mobile.ui.viewmodels
 
-import androidx.lifecycle.ViewModel
+import android.util.Log
+import android.app.Application
+import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import com.renova.mobile.network.ActivityItem
 import com.renova.mobile.repository.ActivityRepository
+import com.renova.mobile.utils.SessionManager
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -22,13 +25,15 @@ data class ActivityState(
 )
 
 class ActivityViewModel(
-    private val repository: ActivityRepository = ActivityRepository()
-) : ViewModel() {
+    application: Application
+) : AndroidViewModel(application) {
+
+    private val repository = ActivityRepository()
+    private val sessionManager = SessionManager(application)
 
     private val _state = MutableStateFlow(ActivityState())
     val state: StateFlow<ActivityState> = _state.asStateFlow()
 
-    // Agregar init para cargar datos una sola vez
     init {
         loadHistory(1)
     }
@@ -38,7 +43,6 @@ class ActivityViewModel(
             _state.update { it.copy(isLoading = true, error = null) }
 
             try {
-                // Cargar historial
                 val response = repository.getHistory(
                     page = page,
                     perPage = 10
@@ -54,7 +58,6 @@ class ActivityViewModel(
                         )
                     }
 
-                    // Cargar totales solo si aún no se han cargado
                     if (_state.value.totalPlastic == 0 && _state.value.totalAluminum == 0) {
                         loadTotals()
                     }
@@ -80,7 +83,7 @@ class ActivityViewModel(
 
     private suspend fun loadUserPoints() {
         try {
-            val points = repository.getUserPoints()
+            val points = repository.getUserPoints(sessionManager)
             _state.update {
                 it.copy(totalPoints = points)
             }
@@ -100,6 +103,7 @@ class ActivityViewModel(
                 }
             }
         } catch (e: Exception) {
+            // Silenciosamente fallar
         }
     }
 

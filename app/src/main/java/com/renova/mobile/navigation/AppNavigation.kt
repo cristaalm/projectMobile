@@ -37,7 +37,19 @@ import androidx.navigation.navigation
 import com.renova.mobile.utils.SessionManager
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.renova.mobile.viewmodel.BusinessSaleViewModel
-// <<< PASO 1: OBJETO PARA ORGANIZAR LAS RUTAS DEL GRAFO DE TIENDA >>>
+import com.renova.mobile.ui.viewmodels.LanguageViewModel
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.background
+import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.ui.Alignment
+import kotlinx.coroutines.delay
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.setValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.animation.AnimatedVisibility
+
 object StoreGraph {
     const val ROUTE = "store_graph"
     const val STORE_LIST = "store_list"
@@ -45,7 +57,11 @@ object StoreGraph {
 }
 
 @Composable
-fun AppNavigation(onLogout: () -> Unit) {
+fun AppNavigation(
+    onLogout: () -> Unit,
+    languageViewModel: LanguageViewModel,
+    isUpdatingLanguage: Boolean
+) {
     val navController = rememberNavController()
     val businessSaleVM: BusinessSaleViewModel = viewModel()
 
@@ -54,127 +70,203 @@ fun AppNavigation(onLogout: () -> Unit) {
     val user = sessionManager.getUser()
     val isBusiness = (user?.role?.id ?: 0) == 4
 
-    Scaffold(
-        topBar = {
-            CustomTopBar(navController = navController)
-        },
-        bottomBar = {
-            if (isBusiness) {
-                CustomBottomBarBusiness(
+    var contentVisible by remember { mutableStateOf(false) }
+
+    LaunchedEffect(Unit) {
+        kotlinx.coroutines.delay(80)
+        contentVisible = true
+    }
+
+    Box(modifier = Modifier.fillMaxSize()) {
+        Scaffold(
+            topBar = {
+                CustomTopBar(
                     navController = navController,
-                    onLogout = onLogout
+                    isLoading = isUpdatingLanguage
                 )
-            } else {
-                CustomBottomBar(
+            },
+            bottomBar = {
+                if (isBusiness) {
+                    CustomBottomBarBusiness(
+                        navController = navController,
+                        onLogout = onLogout
+                    )
+                } else {
+                    CustomBottomBar(
+                        navController = navController,
+                        onLogout = onLogout
+                    )
+                }
+            }
+        ) { innerPadding ->
+            // Usar AnimatedVisibility para un fade-in suave
+            AnimatedVisibility(
+                visible = contentVisible,
+                enter = fadeIn(animationSpec = tween(durationMillis = 400)),
+                exit = fadeOut(animationSpec = tween(durationMillis = 200))
+            ) {
+                NavHost(
                     navController = navController,
-                    onLogout = onLogout
-                )
+                    startDestination = if (isBusiness) NavigationItemBusiness.Home.route else NavigationItem.Home.route,
+                    modifier = Modifier.padding(innerPadding)
+                ) {
+                    val enterAnimation = slideInHorizontally(
+                        initialOffsetX = { 1000 },
+                        animationSpec = tween(400)
+                    ) + fadeIn(animationSpec = tween(400))
+                    val exitAnimation = slideOutHorizontally(
+                        targetOffsetX = { -1000 },
+                        animationSpec = tween(400)
+                    ) + fadeOut(animationSpec = tween(400))
+                    val popEnterAnimation = slideInHorizontally(
+                        initialOffsetX = { -1000 },
+                        animationSpec = tween(400)
+                    ) + fadeIn(animationSpec = tween(400))
+                    val popExitAnimation = slideOutHorizontally(
+                        targetOffsetX = { 1000 },
+                        animationSpec = tween(400)
+                    ) + fadeOut(animationSpec = tween(400))
+
+                    // Rutas de negocio
+                    composable(
+                        route = NavigationItemBusiness.Home.route,
+                        enterTransition = { enterAnimation },
+                        exitTransition = { exitAnimation },
+                        popEnterTransition = { popEnterAnimation },
+                        popExitTransition = { popExitAnimation }
+                    ) {
+                        BusinessHomeScreen(onLogout = onLogout)
+                    }
+
+                    composable(
+                        route = NavigationItemBusiness.Store.route,
+                        enterTransition = { enterAnimation },
+                        exitTransition = { exitAnimation },
+                        popEnterTransition = { popEnterAnimation },
+                        popExitTransition = { popExitAnimation }
+                    ) {
+                        BusinessStoreScreen(onLogout = onLogout, vm = businessSaleVM)
+                    }
+
+                    composable(
+                        route = NavigationItemBusiness.QR.route,
+                        enterTransition = { enterAnimation },
+                        exitTransition = { exitAnimation },
+                        popEnterTransition = { popEnterAnimation },
+                        popExitTransition = { popExitAnimation }
+                    ) {
+                        BusinessQRScreen(onLogout = onLogout, vm = businessSaleVM)
+                    }
+
+                    composable(
+                        route = NavigationItem.Home.route,
+                        enterTransition = { enterAnimation },
+                        exitTransition = { exitAnimation },
+                        popEnterTransition = { popEnterAnimation },
+                        popExitTransition = { popExitAnimation }
+                    ) {
+                        HomeScreen()
+                    }
+
+                    navigation(
+                        startDestination = StoreGraph.STORE_LIST,
+                        route = StoreGraph.ROUTE
+                    ) {
+                        composable(
+                            route = StoreGraph.STORE_LIST,
+                            enterTransition = { enterAnimation },
+                            exitTransition = { exitAnimation },
+                            popEnterTransition = { popEnterAnimation },
+                            popExitTransition = { popExitAnimation }
+                        ) {
+                            StoreScreen(navController = navController)
+                        }
+
+                        composable(
+                            route = StoreGraph.REWARDS,
+                            arguments = listOf(navArgument("allianceId") {
+                                type = NavType.IntType
+                            }),
+                            enterTransition = { enterAnimation },
+                            exitTransition = { exitAnimation },
+                            popEnterTransition = { popEnterAnimation },
+                            popExitTransition = { popExitAnimation }
+                        ) { backStackEntry ->
+                            val allianceId = backStackEntry.arguments?.getInt("allianceId") ?: 0
+                            RewardScreen(navController = navController, allianceId = allianceId)
+                        }
+                    }
+
+                    composable(
+                        route = NavigationItem.QR.route,
+                        enterTransition = { enterAnimation },
+                        exitTransition = { exitAnimation },
+                        popEnterTransition = { popEnterAnimation },
+                        popExitTransition = { popExitAnimation }
+                    ) {
+                        QRScreen()
+                    }
+
+                    composable(
+                        route = NavigationItem.Profile.route,
+                        enterTransition = { enterAnimation },
+                        exitTransition = { exitAnimation },
+                        popEnterTransition = { popEnterAnimation },
+                        popExitTransition = { popExitAnimation }
+                    ) {
+                        ProfileScreen(languageViewModel = languageViewModel)
+                    }
+
+                    composable(
+                        route = TopNavigationItem.Activity.route,
+                        enterTransition = { enterAnimation },
+                        exitTransition = { exitAnimation },
+                        popEnterTransition = { popEnterAnimation },
+                        popExitTransition = { popExitAnimation }
+                    ) {
+                        ActivityScreen()
+                    }
+
+                    composable(
+                        route = TopNavigationItem.Streak.route,
+                        enterTransition = { enterAnimation },
+                        exitTransition = { exitAnimation },
+                        popEnterTransition = { popEnterAnimation },
+                        popExitTransition = { popExitAnimation }
+                    ) {
+                        StreakScreen()
+                    }
+                }
+            }
+
+            // Loading inicial mientras contentVisible es false
+            if (!contentVisible) {
+                Box(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .padding(innerPadding)
+                        .background(MaterialTheme.colorScheme.background),
+                    contentAlignment = Alignment.Center
+                ) {
+                    CircularProgressIndicator(color = MaterialTheme.colorScheme.primary)
+                }
             }
         }
 
-
-    ) { innerPadding ->
-        NavHost(
-            navController = navController,
-            startDestination = if (isBusiness) NavigationItemBusiness.Home.route else NavigationItem.Home.route, // pantalla inicial según rol
-            modifier = Modifier.padding(innerPadding) // Padding para que el contenido no quede debajo de la barra
+        // Overlay de loading global para cambio de idioma
+        AnimatedVisibility(
+            visible = isUpdatingLanguage,
+            enter = fadeIn(animationSpec = tween(durationMillis = 300)),
+            exit = fadeOut(animationSpec = tween(durationMillis = 300))
         ) {
-            val enterAnimation = slideInHorizontally(initialOffsetX = { 1000 }, animationSpec = tween(300)) + fadeIn(animationSpec = tween(300))
-            val exitAnimation = slideOutHorizontally(targetOffsetX = { -1000 }, animationSpec = tween(300)) + fadeOut(animationSpec = tween(300))
-            val popEnterAnimation = slideInHorizontally(initialOffsetX = { -1000 }, animationSpec = tween(300)) + fadeIn(animationSpec = tween(300))
-            val popExitAnimation = slideOutHorizontally(targetOffsetX = { 1000 }, animationSpec = tween(300)) + fadeOut(animationSpec = tween(300))
-
-            // Rutas de negocio (rol: comerciante)
-            composable(
-                route = NavigationItemBusiness.Home.route,
-                enterTransition = { enterAnimation }, exitTransition = { exitAnimation },
-                popEnterTransition = { popEnterAnimation }, popExitTransition = { popExitAnimation }
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .background(MaterialTheme.colorScheme.background),
+                contentAlignment = Alignment.Center
             ) {
-                BusinessHomeScreen(onLogout = onLogout)
+                CircularProgressIndicator(color = MaterialTheme.colorScheme.primary)
             }
-
-            composable(
-                route = NavigationItemBusiness.Store.route,
-                enterTransition = { enterAnimation }, exitTransition = { exitAnimation },
-                popEnterTransition = { popEnterAnimation }, popExitTransition = { popExitAnimation }
-            ) {
-                BusinessStoreScreen(onLogout = onLogout, vm = businessSaleVM)
-            }
-
-            composable(
-                route = NavigationItemBusiness.QR.route,
-                enterTransition = { enterAnimation }, exitTransition = { exitAnimation },
-                popEnterTransition = { popEnterAnimation }, popExitTransition = { popExitAnimation }
-            ) {
-                BusinessQRScreen(onLogout = onLogout, vm = businessSaleVM)
-            }
-
-            composable(
-                route = NavigationItem.Home.route,
-                enterTransition = { enterAnimation }, exitTransition = { exitAnimation },
-                popEnterTransition = { popEnterAnimation }, popExitTransition = { popExitAnimation }
-            ) {
-                HomeScreen()
-            }
-
-            // <<< PASO 2: SE REEMPLAZA EL COMPOSABLE DE "STORE" POR UN GRAFO ANIDADO >>>
-            navigation(
-                startDestination = StoreGraph.STORE_LIST,
-                route = StoreGraph.ROUTE
-            ) {
-                // Pantalla de la lista de tiendas (dentro del grafo)
-                composable(
-                    route = StoreGraph.STORE_LIST,
-                    enterTransition = { enterAnimation }, exitTransition = { exitAnimation },
-                    popEnterTransition = { popEnterAnimation }, popExitTransition = { popExitAnimation }
-                ) {
-                    StoreScreen(navController = navController)
-                }
-
-                // Pantalla de recompensas (dentro del grafo)
-                composable(
-                    route = StoreGraph.REWARDS,
-                    arguments = listOf(navArgument("allianceId") { type = NavType.IntType }),
-                    enterTransition = { enterAnimation }, exitTransition = { exitAnimation },
-                    popEnterTransition = { popEnterAnimation }, popExitTransition = { popExitAnimation }
-                ) { backStackEntry ->
-                    val allianceId = backStackEntry.arguments?.getInt("allianceId") ?: 0
-                    RewardScreen(navController = navController, allianceId = allianceId)
-                }
-            }
-
-            composable(
-                route = NavigationItem.QR.route,
-                enterTransition = { enterAnimation }, exitTransition = { exitAnimation },
-                popEnterTransition = { popEnterAnimation }, popExitTransition = { popExitAnimation }
-            ) {
-                QRScreen()
-            }
-
-            composable(
-                route = NavigationItem.Profile.route,
-                enterTransition = { enterAnimation }, exitTransition = { exitAnimation },
-                popEnterTransition = { popEnterAnimation }, popExitTransition = { popExitAnimation }
-            ) {
-                ProfileScreen()
-            }
-
-            composable(
-                route = TopNavigationItem.Activity.route,
-                enterTransition = { enterAnimation }, exitTransition = { exitAnimation },
-                popEnterTransition = { popEnterAnimation }, popExitTransition = { popExitAnimation }
-            ) {
-                ActivityScreen()
-            }
-
-            composable(
-                route = TopNavigationItem.Streak.route,
-                enterTransition = { enterAnimation }, exitTransition = { exitAnimation },
-                popEnterTransition = { popEnterAnimation }, popExitTransition = { popExitAnimation }
-            ) {
-                StreakScreen()
-            }
-
         }
     }
 }

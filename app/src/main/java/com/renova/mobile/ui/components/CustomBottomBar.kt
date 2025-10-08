@@ -51,6 +51,7 @@ import com.renova.mobile.R
 import com.renova.mobile.navigation.NavigationItem
 import com.renova.mobile.navigation.StoreGraph
 import com.renova.mobile.ui.screens.PoppinsFontFamily
+import com.renova.mobile.navigation.TopNavigationItem
 
 private val primaryColor = Color(0xFF08b662)
 private val qrBackgroundColor = Color(0xFF05D16E).copy(alpha = 0.5f)
@@ -199,7 +200,9 @@ fun CustomBottomBar(
             // --- PERFIL ---
             NavItem(
                 item = NavigationItem.Profile,
-                isSelected = currentDestination?.route == NavigationItem.Profile.route,
+                isSelected = currentDestination?.route == NavigationItem.Profile.route ||
+                        currentDestination?.route == TopNavigationItem.Activity.route ||
+                        currentDestination?.route == TopNavigationItem.Streak.route,
                 onClick = {
                     navController.navigate(NavigationItem.Profile.route) {
                         popUpTo(navController.graph.findStartDestination().id) {

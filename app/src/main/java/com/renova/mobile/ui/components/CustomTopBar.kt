@@ -25,9 +25,19 @@ import com.renova.mobile.R
 import com.renova.mobile.navigation.NavigationItem
 import com.renova.mobile.navigation.TopNavigationItem
 import com.renova.mobile.ui.theme.Typography
+import androidx.compose.animation.AnimatedContent
+import androidx.compose.animation.SizeTransform
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.slideInVertically
+import androidx.compose.animation.slideOutVertically
+import androidx.compose.animation.togetherWith
 
 @Composable
-fun CustomTopBar(navController: NavController) {
+fun CustomTopBar(
+    navController: NavController,
+    isLoading: Boolean = false
+) {
     val systemUiController = rememberSystemUiController()
     val navBackStackEntry by navController.currentBackStackEntryAsState()
     val currentRoute = navBackStackEntry?.destination?.route
@@ -35,9 +45,7 @@ fun CustomTopBar(navController: NavController) {
             currentRoute == TopNavigationItem.Activity.route ||
             currentRoute == TopNavigationItem.Streak.route
 
-
-    // Solo mostrar el topbar si estamos en la sección de perfil
-    if (!isProfileSection) {
+    if (!isProfileSection || isLoading) {
         return
     }
 
@@ -77,7 +85,7 @@ fun CustomTopBar(navController: NavController) {
                 modifier = Modifier.weight(1f)
             )
 
-            Spacer(modifier = Modifier.width(8.dp))
+            /*Spacer(modifier = Modifier.width(8.dp))
 
             // Opción 3: Racha
             TopBarOption(
@@ -86,7 +94,7 @@ fun CustomTopBar(navController: NavController) {
                 isSelected = currentRoute == TopNavigationItem.Streak.route,
                 onClick = { navController.navigate(TopNavigationItem.Streak.route) },
                 modifier = Modifier.weight(1f)
-            )
+            )*/
         }
     }
 }
@@ -106,33 +114,51 @@ private fun TopBarOption(
             .clickable { onClick() }
             .padding(vertical = 1.dp, horizontal = 4.dp)
     ) {
-        Row(
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.Center,
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(bottom = 2.dp)
-        ) {
-            // Mostrar icono solo si no está seleccionado
-            if (!isSelected) {
-                Icon(
-                    painter = painterResource(id = icon),
-                    contentDescription = title,
-                    tint = LocalRenovaColors.current.primaryHoverColor,
-                    modifier = Modifier.size(18.dp)
+        AnimatedContent(
+            targetState = isSelected,
+            transitionSpec = {
+                (slideInVertically { height ->  -height } + fadeIn() togetherWith
+                        slideOutVertically { height ->  height } + fadeOut())
+                    .using(SizeTransform(clip = false))
+            },
+            label = "TopBarOptionAnimation"
+        ) {selected ->
+            if (selected) {
+                Text(
+                    text = title,
+                    color = MaterialTheme.colorScheme.onPrimary,
+                    style = MaterialTheme.typography.labelLarge,
+                    fontSize = 16.sp,
+                    fontWeight = FontWeight.Bold,
+                    maxLines = 1
                 )
+            } else {
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.Center,
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Icon(
+                        painter = painterResource(id = icon),
+                        contentDescription = title,
+                        tint = LocalRenovaColors.current.primaryHoverColor,
+                        modifier = Modifier.size(18.dp)
+                    )
+                    Text(
+                        text = title,
+                        color = LocalRenovaColors.current.primaryHoverColor,
+                        style = MaterialTheme.typography.labelLarge,
+                        fontSize = 14.sp,
+                        fontWeight = FontWeight.Normal,
+                        modifier = Modifier.padding(start = 4.dp),
+                        maxLines = 1
+                    )
+                }
             }
-
-            Text(
-                text = title,
-                color = if (isSelected) MaterialTheme.colorScheme.onPrimary else LocalRenovaColors.current.primaryHoverColor,
-                style = MaterialTheme.typography.labelLarge,
-                fontSize = if (isSelected) 16.sp else 14.sp, // Texto más grande cuando está seleccionado
-                fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal,
-                modifier = Modifier.padding(start = if (!isSelected) 4.dp else 0.dp),
-                maxLines = 1
-            )
         }
+
+        Spacer(modifier = Modifier.height(2.dp))
+
         Box(
             modifier = Modifier
                 .fillMaxWidth(0.85f)

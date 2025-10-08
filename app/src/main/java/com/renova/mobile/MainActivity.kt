@@ -18,6 +18,9 @@ import com.renova.mobile.network.ApiClient
 import com.renova.mobile.utils.SessionManager
 import com.renova.mobile.utils.LocaleHelper
 import android.content.Context
+import androidx.lifecycle.viewmodel.compose.viewModel
+import com.renova.mobile.ui.viewmodels.LanguageViewModel
+import androidx.compose.runtime.LaunchedEffect
 
 class MainActivity : ComponentActivity() {
     override fun attachBaseContext(newBase: Context) {
@@ -33,6 +36,14 @@ class MainActivity : ComponentActivity() {
         setContent {
             RenovaTheme {
                 val sessionManager = SessionManager(this)
+                val languageViewModel: LanguageViewModel = viewModel()
+
+                LaunchedEffect(Unit) {
+                    languageViewModel.resetUpdating()
+                }
+
+                val isUpdatingLanguage by languageViewModel.isUpdating.collectAsState()
+
                 HideSystemNavigation()
 
                 var isLoggedIn by remember { mutableStateOf(sessionManager.isLoggedIn()) }
@@ -42,7 +53,9 @@ class MainActivity : ComponentActivity() {
                         onLogout = {
                             sessionManager.logout()
                             isLoggedIn = false
-                        }
+                        },
+                        languageViewModel = languageViewModel,
+                        isUpdatingLanguage = isUpdatingLanguage
                     )
                 } else {
                     AuthNavigation(
@@ -174,8 +187,6 @@ fun AuthNavigation(
                         currentScreen = "register_documents"
                     },
                     onComplete = {
-                        // Aquí irá el registro final al backend
-                        // Por ahora regresa al login
                         currentScreen = "login"
                     }
                 )
