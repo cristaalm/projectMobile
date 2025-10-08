@@ -258,7 +258,7 @@ fun CustomBottomBar(
                 .align(Alignment.TopCenter)
                 .offset(y = (-12).dp)
                 .clip(CircleShape)
-                .background(if (isQrSelected) Color.White else qrBackgroundColor)
+                .background(if (isQrSelected) Color.Transparent else qrBackgroundColor)
                 .clickable {
                     navController.navigate(NavigationItem.QR.route) {
                         popUpTo(navController.graph.findStartDestination().id) {

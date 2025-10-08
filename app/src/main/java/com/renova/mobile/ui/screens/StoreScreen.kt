@@ -68,17 +68,27 @@ fun StoreScreen(
         }
     }
 
-    val filteredAlianzas = remember(selectedCategoryId, searchQuery, uiState.alianzas) {
+    val filteredAlianzas = remember(selectedCategoryId, searchQuery, uiState.alianzas, uiState.categories) {
         val categoryFiltered = if (selectedCategoryId == null) {
             uiState.alianzas
         } else {
             uiState.alianzas.filter { it.type_shop_id == selectedCategoryId }
         }
+
         if (searchQuery.isBlank()) {
             categoryFiltered
         } else {
             categoryFiltered.filter { alianza ->
-                alianza.name.contains(searchQuery, ignoreCase = true)
+                // Buscamos el nombre de la categoría correspondiente a la alianza
+                val categoryName = uiState.categories
+                    .find { it.id == alianza.type_shop_id }?.name ?: ""
+
+                // Comprobamos si el texto de búsqueda está en el nombre, la categoría o la dirección
+                val nameMatches = alianza.name.contains(searchQuery, ignoreCase = true)
+                val categoryMatches = categoryName.contains(searchQuery, ignoreCase = true)
+                val addressMatches = alianza.address?.contains(searchQuery, ignoreCase = true) ?: false
+
+                nameMatches || categoryMatches || addressMatches
             }
         }
     }
@@ -248,8 +258,9 @@ private fun PaginationControls(
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(horizontal = 16.dp, vertical = 8.dp), // Padding consistente
-        horizontalArrangement = Arrangement.SpaceBetween, // Alineación consistente
+            // CAMBIO 1: Padding vertical aumentado a 16.dp para coincidir con ActivityScreen
+            .padding(horizontal = 16.dp, vertical = 16.dp),
+        horizontalArrangement = Arrangement.SpaceBetween,
         verticalAlignment = Alignment.CenterVertically
     ) {
         // Botón Anterior
@@ -258,28 +269,30 @@ private fun PaginationControls(
             enabled = currentPage > 1 && !isLoading,
             colors = ButtonDefaults.buttonColors(
                 containerColor = if (currentPage > 1) renovaColors.buttonEnabled else renovaColors.buttonDisabled,
-                contentColor = Color.White // Color de contenido explícito
+                // CAMBIO 2: Se usa el color de ActivityScreen en lugar de Color.White
+                contentColor = renovaColors.activityCardBackground
             ),
             shape = RoundedCornerShape(12.dp),
             modifier = Modifier
                 .weight(1f)
-                .height(40.dp) // Altura y peso consistentes
+                .height(40.dp)
         ) {
             Icon(
                 painter = painterResource(id = R.drawable.back),
                 contentDescription = stringResource(R.string.previous),
-                tint = Color.White,
+                // CAMBIO 3: Se usa el color de ActivityScreen
+                tint = renovaColors.activityCardBackground,
                 modifier = Modifier.size(20.dp)
             )
             Spacer(modifier = Modifier.width(4.dp))
-            Text(stringResource(R.string.previous), color = Color.White)
+            Text(stringResource(R.string.previous), color = renovaColors.activityCardBackground)
         }
 
         Spacer(modifier = Modifier.width(12.dp))
 
         // Indicador de página
         Text(
-            text = "$currentPage ${stringResource(R.string.of)} $totalPages", // Texto consistente
+            text = "$currentPage ${stringResource(R.string.of)} $totalPages",
             style = MaterialTheme.typography.titleSmall,
             modifier = Modifier.align(Alignment.CenterVertically),
             color = renovaColors.textPrimary
@@ -293,25 +306,26 @@ private fun PaginationControls(
             enabled = currentPage < totalPages && !isLoading,
             colors = ButtonDefaults.buttonColors(
                 containerColor = if (currentPage < totalPages) renovaColors.buttonEnabled else renovaColors.buttonDisabled,
-                contentColor = Color.White
+                // CAMBIO 4: Se usa el color de ActivityScreen
+                contentColor = renovaColors.activityCardBackground
             ),
             shape = RoundedCornerShape(12.dp),
             modifier = Modifier
                 .weight(1f)
                 .height(40.dp)
         ) {
-            Text(stringResource(R.string.next), color = Color.White)
+            Text(stringResource(R.string.next), color = renovaColors.activityCardBackground)
             Spacer(modifier = Modifier.width(4.dp))
             Icon(
                 painter = painterResource(id = R.drawable.next),
                 contentDescription = stringResource(R.string.next),
-                tint = Color.White,
+                // CAMBIO 5: Se usa el color de ActivityScreen
+                tint = renovaColors.activityCardBackground,
                 modifier = Modifier.size(20.dp)
             )
         }
     }
 }
-
 
 @Composable
 private fun SearchBar(query: String, onQueryChange: (String) -> Unit, colors: RenovaColorScheme) {
@@ -403,6 +417,7 @@ private fun DiscoverSection(colors: RenovaColorScheme) {
                         lineHeight = 22.sp,
                         fontFamily = com.renova.mobile.ui.theme.PoppinsFontFamily,
                         textAlign = TextAlign.Justify,
+                        color = textColor
                     )
                 }
                 Box(

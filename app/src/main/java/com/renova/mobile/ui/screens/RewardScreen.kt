@@ -99,6 +99,7 @@ fun RewardScreen(navController: NavController, allianceId: Int) {
                     Text(
                         text = stringResource(id = R.string.no_rewards_available),
                         modifier = Modifier.align(Alignment.Center),
+                        textAlign = TextAlign.Center,
                         fontFamily = PoppinsFontFamily,
                         color = colors.textPrimary
                     )
@@ -142,7 +143,6 @@ fun RewardScreen(navController: NavController, allianceId: Int) {
             containerColor = colors.cardBackground,
             shape = RoundedCornerShape(topStart = 24.dp, topEnd = 24.dp)
         ) {
-            // La llamada ahora es más simple, sin los lambdas de acción
             RewardDetailSheet(reward = selectedReward!!)
         }
     }

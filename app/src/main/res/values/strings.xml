@@ -50,8 +50,7 @@
     <string name="all_categories">All</string>
     <string name="categories">Categories</string>
     <string name="discover_products">Redeem and apply</string>
-    <string name="discover_stores_description">Renova appreciates your contribution and rewards you for it</string>
-    <string name="contact">Contact</string>
+    <string name="discover_stores_description">We appreciate your contribution and reward you for it</string>    <string name="contact">Contact</string>
     <string name="store_rewards_subtitle">Choose a store to discover its rewards</string>
     <string name="search_icon_content_description">Search icon</string>
     <string name="category_icon_content_description">Category icon</string>
