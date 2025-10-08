@@ -81,7 +81,7 @@ fun RewardScreen(navController: NavController, allianceId: Int) {
                         CircularProgressIndicator(color = RenovaColors.Primary)
                         Spacer(modifier = Modifier.height(8.dp))
                         Text(
-                            text = stringResource(id = R.string.loading_stores),
+                            text = stringResource(id = R.string.loading_rewards),
                             fontFamily = PoppinsFontFamily,
                             color = colors.textSecondary
                         )

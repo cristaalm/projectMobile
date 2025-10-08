@@ -206,7 +206,7 @@
     <string name="completed">¡Completado!</string>
 
     <!-- Recompensas -->
-    <!-- Recompensas -->
+    <string name="loading_rewards">Cargando recompensas...</string>
     <string name="reward_screen_title">Recompensas</string>
     <string name="reward_screen_subtitle">Explora y elige la recompensa que más te guste</string>
     <string name="content_description_back">Volver</string>
