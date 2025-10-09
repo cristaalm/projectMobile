@@ -19,17 +19,26 @@ class LoginRepository {
 
             if (response.isSuccessful) {
                 response.body()?.let { body ->
-                    Result.success(body)
-                } ?: Result.failure(Exception("Respuesta vacía del servidor"))
+                    // Verificar que success sea true
+                    if (body.success) {
+                        Result.success(body)
+                    } else {
+                        // El backend retornó success=false
+                        Result.failure(LoginException(
+                            message = body.message ?: "Error desconocido",
+                            statusCode = body.status ?: 500
+                        ))
+                    }
+                } ?: Result.failure(LoginException("Respuesta vacía del servidor", 500))
             } else {
                 handleLoginError(response.code(), response.errorBody()?.string())
             }
         } catch (e: HttpException) {
             handleLoginError(e.code(), null)
         } catch (e: IOException) {
-            Result.failure(Exception("Error de conexión de red"))
+            Result.failure(LoginException("Error de conexión de red", -1))
         } catch (e: Exception) {
-            Result.failure(Exception("Error inesperado: ${e.message}"))
+            Result.failure(LoginException("Error inesperado: ${e.message}", -1))
         }
     }
 
@@ -39,46 +48,50 @@ class LoginRepository {
                 val gson = Gson()
                 val errorResponse = gson.fromJson(errorBody, LoginResponse::class.java)
 
-                val message = when {
-                    statusCode == 422 -> {
+                // Usar directamente el mensaje del backend
+                val message = when (statusCode) {
+                    401, 403 -> errorResponse.message ?: getDefaultErrorMessage(statusCode)
+                    422 -> {
+                        // Si hay errores de validación específicos, usar esos
                         if (errorResponse.errors is Map<*, *>) {
                             val errorsMap = errorResponse.errors as? Map<String, List<String>>
-                            errorsMap?.get("email")?.firstOrNull() ?: errorResponse.message
+                            errorsMap?.get("email")?.firstOrNull()
+                                ?: errorResponse.message
+                                ?: getDefaultErrorMessage(statusCode)
                         } else {
-                            errorResponse.message
+                            errorResponse.message ?: getDefaultErrorMessage(statusCode)
                         }
                     }
-                    statusCode == 401 -> errorResponse.message
-                    statusCode == 403 -> errorResponse.message
-                    statusCode == 500 -> {
+                    500 -> {
+                        // Para errores 500, priorizar el mensaje de "errors" si existe
                         if (errorResponse.errors is String) {
                             errorResponse.errors as String
                         } else {
-                            errorResponse.message
+                            errorResponse.message ?: getDefaultErrorMessage(statusCode)
                         }
                     }
-                    else -> errorResponse.message
+                    else -> errorResponse.message ?: getDefaultErrorMessage(statusCode)
                 }
 
-                Result.failure(Exception(message ?: "Error del servidor"))
+                Result.failure(LoginException(message, statusCode))
 
             } catch (e: Exception) {
-                getDefaultErrorMessage(statusCode)
+                Result.failure(LoginException(getDefaultErrorMessage(statusCode), statusCode))
             }
         } else {
-            getDefaultErrorMessage(statusCode)
+            Result.failure(LoginException(getDefaultErrorMessage(statusCode), statusCode))
         }
     }
 
-    private fun getDefaultErrorMessage(statusCode: Int): Result<LoginResponse> {
-        val message = when (statusCode) {
+    private fun getDefaultErrorMessage(statusCode: Int): String {
+        return when (statusCode) {
             401 -> "Credenciales incorrectas"
             403 -> "Cuenta desactivada"
             422 -> "Datos de entrada inválidos"
             500 -> "Error interno del servidor"
+            -1 -> "Error de conexión de red"
             else -> "Error del servidor (código: $statusCode)"
         }
-        return Result.failure(Exception(message))
     }
 
     suspend fun forgotPassword(email: String): Result<ForgotPasswordResponse> {
@@ -107,8 +120,8 @@ class LoginRepository {
                 val gson = Gson()
                 val errorResponse = gson.fromJson(errorBody, ForgotPasswordResponse::class.java)
 
-                val message = when {
-                    statusCode == 422 -> {
+                val message = when (statusCode) {
+                    422 -> {
                         if (errorResponse.errors is Map<*, *>) {
                             val errorsMap = errorResponse.errors as? Map<String, List<String>>
                             errorsMap?.get("email")?.firstOrNull() ?: errorResponse.message
@@ -116,8 +129,8 @@ class LoginRepository {
                             errorResponse.message
                         }
                     }
-                    statusCode == 404 -> errorResponse.message
-                    statusCode == 500 -> {
+                    404 -> errorResponse.message
+                    500 -> {
                         if (errorResponse.errors is String) {
                             errorResponse.errors as String
                         } else {
@@ -157,22 +170,15 @@ class LoginRepository {
             "${userId}_${accessToken.take(8)}"
         }
     }
-
-    // fun extractQRDataFromLogin(loginResponse: LoginResponse): String? {
-    //     return loginResponse.data?.let { loginData ->
-    //         val accessToken = loginData.access_token
-    //         val userId = loginData.user?.id
-
-    //         if (!accessToken.isNullOrBlank() && userId != null) {
-    //             generateUniqueQRCode(accessToken, userId)
-    //         } else {
-    //             null
-    //         }
-    //     }
-    // }
 }
 
-// Custom Exception para incluir el status code
+// Custom Exception para Login con status code
+class LoginException(
+    message: String,
+    val statusCode: Int
+) : Exception(message)
+
+// Custom Exception para Forgot Password
 class ForgotPasswordException(
     message: String,
     val statusCode: Int

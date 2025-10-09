@@ -13,8 +13,6 @@ import retrofit2.http.*
 
 // para register
 
-
-
 // REQUEST para registro
 data class RegisterRequest(
     val name: String,
@@ -92,8 +90,6 @@ data class UploadSelfieResponse(
     val status: Int
 )
 
-
-
 // para login
 data class LoginRequest(
     val email: String,
@@ -113,7 +109,7 @@ data class LoginData(
     val access_token: String?,
     val token_type: String?,
     val expires_at: String?,
-    val user: User?
+    val user: User?  // ⬅️ REVERTIDO: Es un objeto, no un array
 )
 
 data class User(
@@ -334,11 +330,11 @@ data class IdentifyUserResponse(
     val message: String,
     val data: IdentifyUserData?,
     val errors: Any?,
-    val code: Int  // Swagger muestra "code" no "status"
+    val code: Int
 )
 
 data class IdentifyUserData(
-    val user: UserData  // La respuesta tiene un objeto "user" dentro de "data"
+    val user: UserData
 )
 
 data class UserData(
@@ -365,7 +361,6 @@ data class RoleData(
     val is_active: Boolean
 )
 
-// Nuevo: Request para identifyUser con token en body
 data class IdentifyUserRequest(
     val token: String
 )
@@ -436,7 +431,6 @@ interface ApiService {
     @GET("api/scans/total-type-scans")
     suspend fun getTotalScans(): Response<TotalScansResponse>
 
-    // Ahora requiere el token en el body JSON
     @POST("api/users/identityUser")
     suspend fun identifyUser(@Body request: IdentifyUserRequest): Response<IdentifyUserResponse>
 }

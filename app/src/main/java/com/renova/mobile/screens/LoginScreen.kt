@@ -369,7 +369,7 @@ fun LoginScreen(
 
                 Spacer(modifier = Modifier.height(16.dp))
 
-                // Términos y Condiciones - Completamente localizado
+                // Términos y Condiciones
                 TermsAndPrivacyText(
                     onClick = { showTermsDialog = true }
                 )
@@ -383,7 +383,7 @@ fun LoginScreen(
         onDismiss = { showTermsDialog = false }
     )
 
-    // Success Dialog con auto-redirect - COMPLETAMENTE LOCALIZADO
+    // Success Dialog con auto-redirect
     if (showSuccessDialog) {
         LaunchedEffect(Unit) {
             kotlinx.coroutines.delay(1000)
@@ -435,7 +435,7 @@ fun LoginScreen(
         )
     }
 
-    // Error Dialog - COMPLETAMENTE LOCALIZADO
+    // Error Dialog - MOSTRAR MENSAJE EXACTO DE LA API
     if (showErrorDialog) {
         AlertDialog(
             onDismissRequest = {
@@ -451,61 +451,9 @@ fun LoginScreen(
                 )
             },
             text = {
-                val errorMessage = when {
-                    // Correo no registrado (inglés y español)
-                    loginState.error?.contains("user not found", ignoreCase = true) == true ||
-                            loginState.error?.contains("email not found", ignoreCase = true) == true ||
-                            loginState.error?.contains("no existe", ignoreCase = true) == true ||
-                            loginState.error?.contains("not found", ignoreCase = true) == true ||
-                            loginState.error?.contains("no está registrado", ignoreCase = true) == true ||
-                            loginState.error?.contains("correo electrónico ingresado no está registrado", ignoreCase = true) == true ->
-                        stringResource(id = R.string.mail_not_registered)
-
-                    // Contraseña incorrecta (inglés y español)
-                    loginState.error?.contains("invalid password", ignoreCase = true) == true ||
-                            loginState.error?.contains("wrong password", ignoreCase = true) == true ||
-                            loginState.error?.contains("contraseña", ignoreCase = true) == true ||
-                            loginState.error?.contains("incorrecta", ignoreCase = true) == true ||
-                            loginState.error?.contains("contraseña es incorrecta", ignoreCase = true) == true ->
-                        stringResource(id = R.string.incorrect_ppassword)
-
-                    // Usuario o contraseña inválidos (mensaje genérico del backend)
-                    loginState.error?.contains("usuario o contraseña", ignoreCase = true) == true ||
-                            loginState.error?.contains("invalidos", ignoreCase = true) == true ||
-                            loginState.error?.contains("inválidos", ignoreCase = true) == true ->
-                        stringResource(id = R.string.incorrect_information)
-
-                    // Cuenta bloqueada (inglés y español)
-                    loginState.error?.contains("account blocked", ignoreCase = true) == true ||
-                            loginState.error?.contains("blocked", ignoreCase = true) == true ||
-                            loginState.error?.contains("bloqueada", ignoreCase = true) == true ||
-                            loginState.error?.contains("cuenta ha sido bloqueada", ignoreCase = true) == true ->
-                        stringResource(id = R.string.blocked_account)
-
-                    // Errores de conexión (inglés y español)
-                    loginState.error?.contains("network", ignoreCase = true) == true ||
-                            loginState.error?.contains("connection", ignoreCase = true) == true ||
-                            loginState.error?.contains("conexión", ignoreCase = true) == true ||
-                            loginState.error?.contains("error de conexión", ignoreCase = true) == true ->
-                        stringResource(id = R.string.connection_internet_filed)
-
-                    // Errores de servidor (inglés y español)
-                    loginState.error?.contains("server", ignoreCase = true) == true ||
-                            loginState.error?.contains("servidor", ignoreCase = true) == true ||
-                            loginState.error?.contains("error del servidor", ignoreCase = true) == true ->
-                        stringResource(id = R.string.error_server)
-
-                    // Timeout (inglés y español)
-                    loginState.error?.contains("timeout", ignoreCase = true) == true ||
-                            loginState.error?.contains("tardó demasiado", ignoreCase = true) == true ->
-                        stringResource(id = R.string.connection_timeout)
-
-                    // Fallback: si no coincide con nada, usar mensaje genérico
-                    else -> stringResource(id = R.string.incorrect_information)
-                }
-
+                // Mostrar el mensaje exacto que devuelve la API
                 Text(
-                    errorMessage,
+                    text = loginState.error ?: "Error inesperado",
                     color = colors.textPrimary,
                     fontFamily = PoppinsFontFamily
                 )
@@ -538,7 +486,6 @@ fun TermsAndPrivacyText(onClick: () -> Unit) {
     val and = stringResource(id = R.string.terms_and)
     val privacyPolicy = stringResource(id = R.string.privacy_policy)
 
-    // Texto base (mismo color blanco para todo)
     val baseColor = Color.White
     val strokeColor = Color.White
 
@@ -586,21 +533,19 @@ fun TermsAndPrivacyText(onClick: () -> Unit) {
             .padding(horizontal = 32.dp)
             .border(
                 width = 1.dp,
-                color = Color.White, // ✅ borde blanco
+                color = Color.White,
                 shape = RoundedCornerShape(8.dp)
             )
             .clickable { onClick() }
             .padding(vertical = 12.dp, horizontal = 16.dp),
         contentAlignment = Alignment.Center
     ) {
-        // Dibujo del texto con contorno
         Text(
             text = annotatedText,
             textAlign = TextAlign.Center,
             modifier = Modifier
                 .fillMaxWidth()
                 .drawBehind {
-                    // Dibujar contorno blanco alrededor del texto
                     drawContext.canvas.nativeCanvas.apply {
                         val strokeWidth = 2f
                         val paint = android.graphics.Paint().apply {
@@ -611,7 +556,6 @@ fun TermsAndPrivacyText(onClick: () -> Unit) {
                             textAlign = android.graphics.Paint.Align.LEFT
                             isAntiAlias = true
                         }
-
                     }
                 },
             style = TextStyle(
@@ -620,10 +564,8 @@ fun TermsAndPrivacyText(onClick: () -> Unit) {
                 fontFamily = PoppinsFontFamily
             )
         )
-
     }
 }
-
 
 fun validatePassword(password: String): Boolean {
     val regex = Regex("^(?=.*[A-Za-z])(?=.*\\d)[A-Za-z\\d]{6,}$")
