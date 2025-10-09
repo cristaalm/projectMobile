@@ -77,32 +77,14 @@ fun Modifier.greenShadow(
 fun ActivityScreen(
     viewModel: ActivityViewModel = androidx.lifecycle.viewmodel.compose.viewModel()
 ) {
-    val context = LocalContext.current
     val renovaColors = LocalRenovaColors.current
     val state by viewModel.state.collectAsState()
     val pullToRefreshState = rememberPullToRefreshState()
 
-    val snackbarHostState = remember { SnackbarHostState() }
-    var wasLoading by remember { mutableStateOf(false) }
-    var isInitialLoad by remember { mutableStateOf(true) }  // ← NUEVO
-
     LaunchedEffect(Unit) {
         viewModel.loadHistory(1)
     }
-    LaunchedEffect(state.isLoading) {
-        if (wasLoading && !state.isLoading && state.activities.isNotEmpty() && !isInitialLoad) {
-            snackbarHostState.showSnackbar(
-                message = context.getString(R.string.refreshed_successfully),
-                duration = SnackbarDuration.Short
-            )
-        }
 
-        if (!state.isLoading && state.activities.isNotEmpty()) {
-            isInitialLoad = false
-        }
-
-        wasLoading = state.isLoading
-    }
     Box(
         modifier = Modifier.fillMaxSize()
     ) {
@@ -146,70 +128,6 @@ fun ActivityScreen(
                             onNextPage = { viewModel.nextPage() }
                         )
                     }
-                }
-            }
-        }
-
-        SnackbarHost(
-            hostState = snackbarHostState,
-            modifier = Modifier
-                .align(Alignment.TopCenter)
-                .padding(top = 20.dp)
-        ) { snackbarData ->
-            Card(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = 24.dp)
-                    .greenShadow(
-                        color = renovaColors.activityPrimary,
-                        alpha = 0.25f,
-                        shadowRadius = 12.dp,
-                        offsetY = 6.dp
-                    ),
-                shape = RoundedCornerShape(16.dp),
-                colors = CardDefaults.cardColors(
-                    containerColor = renovaColors.activityCardBackground
-                ),
-                border = androidx.compose.foundation.BorderStroke(
-                    width = 1.5.dp,
-                    color = renovaColors.activityPrimary
-                ),
-                elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
-            ) {
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(horizontal = 20.dp, vertical = 14.dp),
-                    horizontalArrangement = Arrangement.Center,
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    // Icono de check animado
-                    Box(
-                        modifier = Modifier
-                            .size(24.dp)
-                            .background(
-                                color = renovaColors.activityPrimary.copy(alpha = 0.15f),
-                                shape = androidx.compose.foundation.shape.CircleShape
-                            ),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        Icon(
-                            painter = painterResource(id = R.drawable.leaf), // o usa un icono de check
-                            contentDescription = null,
-                            tint = renovaColors.activityPrimary,
-                            modifier = Modifier.size(14.dp)
-                        )
-                    }
-
-                    Spacer(modifier = Modifier.width(12.dp))
-
-                    Text(
-                        text = snackbarData.visuals.message,
-                        color = renovaColors.activityPrimary,
-                        style = MaterialTheme.typography.bodyLarge,
-                        fontWeight = FontWeight.SemiBold,
-                        fontSize = 15.sp
-                    )
                 }
             }
         }
@@ -799,13 +717,11 @@ private fun ActivityCard(item: ActivityItem, renovaColors: RenovaColorScheme) {
                         )
                     }
                     val materialName = item.material_type?.name ?: stringResource(R.string.unknown_material)
-                    val isCrushed = item.scan?.is_crushed == true
-                    val displayText = if (isCrushed) {
+                    val displayText = if (item.scan?.is_crushed == false) {
                         "$materialName - ${stringResource(R.string.crushed)}"
                     } else {
                         materialName
                     }
-
                     Text(
                         text = displayText,
                         style = MaterialTheme.typography.bodySmall,

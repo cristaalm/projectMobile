@@ -13,6 +13,8 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.async
+import java.text.SimpleDateFormat
+import java.util.*
 
 data class ActivityState(
     val activities: List<ActivityItem> = emptyList(),
@@ -36,13 +38,11 @@ class ActivityViewModel(
     val state: StateFlow<ActivityState> = _state.asStateFlow()
 
     init {
-        //Log.d("ActivityViewModel", "Inicializando ViewModel")
         loadHistory(1)
     }
 
     fun loadHistory(page: Int = 1) {
         viewModelScope.launch {
-            //Log.d("ActivityViewModel", "loadHistory iniciado para página: $page")
             _state.update { it.copy(isLoading = true, error = null) }
 
             try {
@@ -58,12 +58,19 @@ class ActivityViewModel(
                 val totalsResponse = totalsDeferred.await()
                 val userPoints = pointsDeferred.await()
 
-                //Log.d("ActivityViewModel", "History response success: ${response.success}")
-
                 if (historyResponse.success) {
+                    // Ordenar las actividades por fecha de creación (más reciente primero)
+                    val sortedActivities = historyResponse.data.data.sortedByDescending { activity ->
+                        try {
+                            parseActivityDate(activity.created_at)
+                        } catch (e: Exception) {
+                            null
+                        }
+                    }
+
                     _state.update {
                         it.copy(
-                            activities = historyResponse.data.data,
+                            activities = sortedActivities,
                             currentPage = historyResponse.data.current_page,
                             totalPages = historyResponse.data.last_page,
                             totalPoints = userPoints,
@@ -81,7 +88,6 @@ class ActivityViewModel(
                     }
                 }
             } catch (e: Exception){
-                //Log.e("ActivityViewModel", "Error en loadHistory", e)
                 _state.update {
                     it.copy(
                         error = "Error: ${e.message}",
@@ -89,6 +95,16 @@ class ActivityViewModel(
                     )
                 }
             }
+        }
+    }
+
+    private fun parseActivityDate(dateString: String): Date? {
+        return try {
+            val sdfInput = SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSSSSS'Z'", Locale.getDefault())
+            sdfInput.timeZone = TimeZone.getTimeZone("UTC")
+            sdfInput.parse(dateString)
+        } catch (e: Exception) {
+            null
         }
     }
 
