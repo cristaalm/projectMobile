@@ -49,6 +49,7 @@ fun RegisterScreen(
     var lastName by remember { mutableStateOf("") }
     var email by remember { mutableStateOf("") }
     var phone by remember { mutableStateOf("") }
+    var curp by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
     var confirmPassword by remember { mutableStateOf("") }
     var passwordVisible by remember { mutableStateOf(false) }
@@ -58,6 +59,7 @@ fun RegisterScreen(
     var lastNameValidation by remember { mutableStateOf(ValidationState.IDLE) }
     var emailValidation by remember { mutableStateOf(ValidationState.IDLE) }
     var phoneValidation by remember { mutableStateOf(ValidationState.IDLE) }
+    var curpValidation by remember { mutableStateOf(ValidationState.IDLE) }
     var passwordValidation by remember { mutableStateOf(ValidationState.IDLE) }
     var confirmPasswordValidation by remember { mutableStateOf(ValidationState.IDLE) }
 
@@ -78,6 +80,8 @@ fun RegisterScreen(
             modifier = Modifier
                 .fillMaxSize()
                 .verticalScroll(scrollState)
+                .imePadding()
+                .navigationBarsPadding()
                 .padding(24.dp),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
@@ -209,6 +213,22 @@ fun RegisterScreen(
                     Spacer(modifier = Modifier.height(16.dp))
 
                     ValidatedTextField(
+                        value = curp,
+                        onValueChange = {
+                            if (it.length <= 18) curp = it.uppercase()
+                        },
+                        label = stringResource(R.string.document_curp_number),
+                        leadingIcon = R.drawable.document,
+                        validationState = curpValidation,
+                        onValidationChange = { curpValidation = it },
+                        validator = { validateCURP(it) },
+                        keyboardType = KeyboardType.Text,
+                        colors = colors
+                    )
+
+                    Spacer(modifier = Modifier.height(16.dp))
+
+                    ValidatedTextField(
                         value = password,
                         onValueChange = {
                             if (it.length <= 14) password = it
@@ -274,6 +294,7 @@ fun RegisterScreen(
                                     lastNameValidation == ValidationState.VALID &&
                                     emailValidation == ValidationState.VALID &&
                                     phoneValidation == ValidationState.VALID &&
+                                    curpValidation == ValidationState.VALID &&
                                     passwordValidation == ValidationState.VALID &&
                                     confirmPasswordValidation == ValidationState.VALID
 
@@ -284,6 +305,7 @@ fun RegisterScreen(
                                         lastName = lastName,
                                         email = email,
                                         phone = phone,
+                                        curp = curp,
                                         password = password
                                     )
                                 )
@@ -467,6 +489,7 @@ data class RegisterData(
     val lastName: String,
     val email: String,
     val phone: String,
+    val curp: String,
     val password: String
 )
 
@@ -478,6 +501,11 @@ fun validateEmail(email: String): Boolean =
 
 fun validatePhone(phone: String): Boolean =
     phone.length == 10 && phone.all { it.isDigit() }
+
+fun validateCURP(curp: String): Boolean {
+    val curpPattern = "^[A-Z]{4}[0-9]{6}[HM][A-Z]{5}[0-9]{2}$"
+    return curp.matches(curpPattern.toRegex())
+}
 
 fun validateConfirmPassword(password: String, confirmPassword: String): Boolean =
     password == confirmPassword && password.isNotEmpty()

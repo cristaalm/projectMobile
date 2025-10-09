@@ -41,11 +41,9 @@ fun DocumentsScreen(
 
     var ineFrontUri by remember { mutableStateOf<Uri?>(null) }
     var ineBackUri by remember { mutableStateOf<Uri?>(null) }
-    var curp by remember { mutableStateOf("") }
 
     var ineFrontValidation by remember { mutableStateOf(ValidationState.IDLE) }
     var ineBackValidation by remember { mutableStateOf(ValidationState.IDLE) }
-    var curpValidation by remember { mutableStateOf(ValidationState.IDLE) }
 
     val ineFrontLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.GetContent()
@@ -162,22 +160,6 @@ fun DocumentsScreen(
 
                     Spacer(modifier = Modifier.height(24.dp))
 
-                    ValidatedTextField(
-                        value = curp,
-                        onValueChange = {
-                            if (it.length <= 18) curp = it.uppercase()
-                        },
-                        label = stringResource(R.string.document_curp_number),
-                        leadingIcon = R.drawable.document,
-                        validationState = curpValidation,
-                        onValidationChange = { curpValidation = it },
-                        validator = { validateCURP(it) },
-                        keyboardType = KeyboardType.Text,
-                        colors = colors
-                    )
-
-                    Spacer(modifier = Modifier.height(24.dp))
-
                     OutlinedButton(
                         onClick = { onBackToRegister() },
                         modifier = Modifier
@@ -202,16 +184,13 @@ fun DocumentsScreen(
 
                     Button(
                         onClick = {
-                            val allValid = ineFrontUri != null &&
-                                    ineBackUri != null &&
-                                    curpValidation == ValidationState.VALID
+                            val allValid = ineFrontUri != null && ineBackUri != null
 
                             if (allValid) {
                                 onContinueToVerification(
                                     DocumentsData(
                                         ineFrontUri = ineFrontUri!!,
-                                        ineBackUri = ineBackUri!!,
-                                        curp = curp
+                                        ineBackUri = ineBackUri!!
                                     )
                                 )
                             }
@@ -299,11 +278,5 @@ fun DocumentUploadButton(
 
 data class DocumentsData(
     val ineFrontUri: Uri,
-    val ineBackUri: Uri,
-    val curp: String
+    val ineBackUri: Uri
 )
-
-fun validateCURP(curp: String): Boolean {
-    val curpPattern = "^[A-Z]{4}[0-9]{6}[HM][A-Z]{5}[0-9]{2}$"
-    return curp.matches(curpPattern.toRegex())
-}

@@ -225,4 +225,13 @@
     <string name="bottom_nav_qr">Scan</string>
     <string name="bottom_nav_profile">Profile</string>
 
+    <!-- Mensajes de error genéricos -->
+    <string name="error_generic">Ha ocurrido un error. Por favor, inténtalo de nuevo.</string>
+    <string name="error_connection">Error de conexión. Verifica tu internet e inténtalo de nuevo.</string>
+
+    <!-- Si no tienes estos, agrégalos también -->
+    <string name="scroll_down_2">Deslizar hacia abajo</string>
+    <string name="success_2">Éxito</string>
+    <string name="completed_2">¡Completado!</string>
+
 </resources>
