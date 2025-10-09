@@ -325,7 +325,7 @@ interface ApiService {
     suspend fun getHistory(
         @Query("page") page: Int = 1,
         @Query("per_page") perPage: Int = 10,
-        @Query("key") key: String? = null,
+        @Query("key") key: String = "created_at",
         @Query("order") order: String = "desc"
     ): Response<HistoryResponse>
 
