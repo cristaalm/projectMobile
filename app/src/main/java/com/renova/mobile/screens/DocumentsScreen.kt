@@ -18,6 +18,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.TextStyle
@@ -29,21 +30,30 @@ import androidx.compose.ui.unit.sp
 import com.renova.mobile.R
 import com.renova.mobile.ui.theme.*
 import kotlinx.coroutines.delay
+import com.renova.mobile.ui.viewmodels.RegisterState
+import com.renova.mobile.ui.viewmodels.RegisterViewModel
+import com.renova.mobile.ui.viewmodels.UploadState
 
 @Composable
 fun DocumentsScreen(
     registerData: RegisterData,
     onBackToRegister: () -> Unit = {},
-    onContinueToVerification: (DocumentsData) -> Unit = {}
+    onContinueToVerification: (DocumentsData) -> Unit = {},
+    viewModel: RegisterViewModel = androidx.lifecycle.viewmodel.compose.viewModel()
 ) {
     val colors = MaterialTheme.renovaColors
     val scrollState = rememberScrollState()
+    val context = LocalContext.current
+    val uploadState by viewModel.uploadDocumentsState.collectAsState()
 
     var ineFrontUri by remember { mutableStateOf<Uri?>(null) }
     var ineBackUri by remember { mutableStateOf<Uri?>(null) }
 
     var ineFrontValidation by remember { mutableStateOf(ValidationState.IDLE) }
     var ineBackValidation by remember { mutableStateOf(ValidationState.IDLE) }
+
+    var showErrorDialog by remember { mutableStateOf(false) }
+    var errorMessage by remember { mutableStateOf("") }
 
     val ineFrontLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.GetContent()
@@ -57,6 +67,57 @@ fun DocumentsScreen(
     ) { uri: Uri? ->
         ineBackUri = uri
         ineBackValidation = if (uri != null) ValidationState.VALID else ValidationState.IDLE
+    }
+
+    // Observar el estado de subida
+    LaunchedEffect(uploadState) {
+        when (uploadState) {
+            is UploadState.Success -> {
+                val data = DocumentsData(
+                    ineFrontUri = ineFrontUri!!,
+                    ineBackUri = ineBackUri!!
+                )
+                onContinueToVerification(data)
+            }
+            is UploadState.Error -> {
+                errorMessage = (uploadState as UploadState.Error).message
+                showErrorDialog = true
+            }
+            else -> {}
+        }
+    }
+
+    // Diálogo de error
+    if (showErrorDialog) {
+        AlertDialog(
+            onDismissRequest = { showErrorDialog = false },
+            title = {
+                Text(
+                    text = "Error",
+                    fontFamily = Poppins,
+                    fontWeight = FontWeight.Bold
+                )
+            },
+            text = {
+                Text(
+                    text = errorMessage,
+                    fontFamily = Poppins
+                )
+            },
+            confirmButton = {
+                Button(
+                    onClick = {
+                        showErrorDialog = false
+                        viewModel.resetStates()
+                    },
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = CustomGreenColor
+                    )
+                ) {
+                    Text("Aceptar", fontFamily = Poppins)
+                }
+            }
+        )
     }
 
     Box(
@@ -169,7 +230,8 @@ fun DocumentsScreen(
                         colors = RenovaComponentColors.secondaryButtonColors(),
                         border = ButtonDefaults.outlinedButtonBorder.copy(
                             brush = RenovaGradients.cardBorderGradient()
-                        )
+                        ),
+                        enabled = uploadState !is UploadState.Loading
                     ) {
                         Text(
                             text = stringResource(R.string.back),
@@ -187,12 +249,11 @@ fun DocumentsScreen(
                             val allValid = ineFrontUri != null && ineBackUri != null
 
                             if (allValid) {
-                                onContinueToVerification(
-                                    DocumentsData(
-                                        ineFrontUri = ineFrontUri!!,
-                                        ineBackUri = ineBackUri!!
-                                    )
+                                val data = DocumentsData(
+                                    ineFrontUri = ineFrontUri!!,
+                                    ineBackUri = ineBackUri!!
                                 )
+                                viewModel.uploadDocuments(context, data)
                             }
                         },
                         modifier = Modifier
@@ -201,15 +262,24 @@ fun DocumentsScreen(
                         shape = RoundedCornerShape(12.dp),
                         colors = ButtonDefaults.buttonColors(
                             containerColor = CustomGreenColor
-                        )
+                        ),
+                        enabled = uploadState !is UploadState.Loading && ineFrontUri != null && ineBackUri != null
                     ) {
-                        Text(
-                            text = stringResource(R.string.continue_button),
-                            fontSize = 16.sp,
-                            fontWeight = FontWeight.Bold,
-                            fontFamily = Poppins,
-                            color = Color.White
-                        )
+                        if (uploadState is UploadState.Loading) {
+                            CircularProgressIndicator(
+                                modifier = Modifier.size(24.dp),
+                                color = Color.White,
+                                strokeWidth = 2.dp
+                            )
+                        } else {
+                            Text(
+                                text = stringResource(R.string.continue_button),
+                                fontSize = 16.sp,
+                                fontWeight = FontWeight.Bold,
+                                fontFamily = Poppins,
+                                color = Color.White
+                            )
+                        }
                     }
                 }
             }

@@ -31,6 +31,8 @@ import androidx.core.content.ContextCompat
 import androidx.core.content.FileProvider
 import com.renova.mobile.R
 import com.renova.mobile.ui.theme.*
+import com.renova.mobile.ui.viewmodels.RegisterViewModel
+import com.renova.mobile.ui.viewmodels.UploadState
 import java.io.File
 
 @Composable
@@ -38,15 +40,20 @@ fun VerificationScreen(
     registerData: RegisterData,
     documentsData: DocumentsData,
     onBackToDocuments: () -> Unit = {},
-    onComplete: () -> Unit = {}
+    onComplete: () -> Unit = {},
+    viewModel: RegisterViewModel = androidx.lifecycle.viewmodel.compose.viewModel()
 ) {
     val colors = MaterialTheme.renovaColors
     val scrollState = rememberScrollState()
     val context = LocalContext.current
+    val uploadState by viewModel.uploadSelfieState.collectAsState()
 
     var selfieUri by remember { mutableStateOf<Uri?>(null) }
     var tempImageUri by remember { mutableStateOf<Uri?>(null) }
     var showSuccessModal by remember { mutableStateOf(false) }
+    var showErrorDialog by remember { mutableStateOf(false) }
+    var errorMessage by remember { mutableStateOf("") }
+
     var hasCameraPermission by remember {
         mutableStateOf(
             ContextCompat.checkSelfPermission(
@@ -56,9 +63,23 @@ fun VerificationScreen(
         )
     }
 
+    // Observar el estado de subida
+    LaunchedEffect(uploadState) {
+        when (uploadState) {
+            is UploadState.Success -> {
+                showSuccessModal = true
+            }
+            is UploadState.Error -> {
+                errorMessage = (uploadState as UploadState.Error).message
+                showErrorDialog = true
+            }
+            else -> {}
+        }
+    }
+
     LaunchedEffect(showSuccessModal) {
         if (showSuccessModal) {
-            kotlinx.coroutines.delay(1500L)
+            kotlinx.coroutines.delay(2500L)
             onComplete()
         }
     }
@@ -89,6 +110,39 @@ fun VerificationScreen(
             tempImageUri = uri
             cameraLauncher.launch(uri)
         }
+    }
+
+    // Diálogo de error
+    if (showErrorDialog) {
+        AlertDialog(
+            onDismissRequest = { showErrorDialog = false },
+            title = {
+                Text(
+                    text = "Error",
+                    fontFamily = Poppins,
+                    fontWeight = FontWeight.Bold
+                )
+            },
+            text = {
+                Text(
+                    text = errorMessage,
+                    fontFamily = Poppins
+                )
+            },
+            confirmButton = {
+                Button(
+                    onClick = {
+                        showErrorDialog = false
+                        viewModel.resetStates()
+                    },
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = CustomGreenColor
+                    )
+                ) {
+                    Text("Aceptar", fontFamily = Poppins)
+                }
+            }
+        )
     }
 
     Box(
@@ -203,7 +257,8 @@ fun VerificationScreen(
                         ),
                         border = if (selfieUri != null) null else ButtonDefaults.outlinedButtonBorder.copy(
                             brush = RenovaGradients.cardBorderGradient()
-                        )
+                        ),
+                        enabled = uploadState !is UploadState.Loading
                     ) {
                         Column(
                             horizontalAlignment = Alignment.CenterHorizontally,
@@ -252,7 +307,8 @@ fun VerificationScreen(
                 ),
                 border = ButtonDefaults.outlinedButtonBorder.copy(
                     brush = RenovaGradients.cardBorderGradient()
-                )
+                ),
+                enabled = uploadState !is UploadState.Loading
             ) {
                 Text(
                     text = stringResource(R.string.back),
@@ -268,7 +324,7 @@ fun VerificationScreen(
             Button(
                 onClick = {
                     if (selfieUri != null) {
-                        showSuccessModal = true
+                        viewModel.uploadSelfie(context, selfieUri!!)
                     }
                 },
                 modifier = Modifier
@@ -278,15 +334,23 @@ fun VerificationScreen(
                 colors = ButtonDefaults.buttonColors(
                     containerColor = CustomGreenColor
                 ),
-                enabled = selfieUri != null
+                enabled = selfieUri != null && uploadState !is UploadState.Loading
             ) {
-                Text(
-                    text = stringResource(R.string.continue_button),
-                    fontSize = 16.sp,
-                    fontWeight = FontWeight.Bold,
-                    fontFamily = Poppins,
-                    color = Color.White
-                )
+                if (uploadState is UploadState.Loading) {
+                    CircularProgressIndicator(
+                        modifier = Modifier.size(24.dp),
+                        color = Color.White,
+                        strokeWidth = 2.dp
+                    )
+                } else {
+                    Text(
+                        text = stringResource(R.string.continue_button),
+                        fontSize = 16.sp,
+                        fontWeight = FontWeight.Bold,
+                        fontFamily = Poppins,
+                        color = Color.White
+                    )
+                }
             }
 
             Spacer(modifier = Modifier.height(32.dp))

@@ -14,6 +14,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.TextStyle
@@ -28,6 +29,8 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.renova.mobile.R
 import com.renova.mobile.ui.theme.*
+import com.renova.mobile.ui.viewmodels.RegisterState
+import com.renova.mobile.ui.viewmodels.RegisterViewModel
 import kotlinx.coroutines.delay
 
 val Poppins = FontFamily(
@@ -40,10 +43,17 @@ val Poppins = FontFamily(
 @Composable
 fun RegisterScreen(
     onBackToLogin: () -> Unit = {},
-    onContinueToDocuments: (RegisterData) -> Unit = {}
+    onContinueToDocuments: (RegisterData) -> Unit = {},
+    viewModel: RegisterViewModel = androidx.lifecycle.viewmodel.compose.viewModel()
 ) {
     val colors = MaterialTheme.renovaColors
     val scrollState = rememberScrollState()
+    val registerState by viewModel.registerState.collectAsState()
+    val context = LocalContext.current
+
+    LaunchedEffect(Unit) {
+        viewModel.setSessionManager(context)
+    }
 
     var firstName by remember { mutableStateOf("") }
     var lastName by remember { mutableStateOf("") }
@@ -62,6 +72,64 @@ fun RegisterScreen(
     var curpValidation by remember { mutableStateOf(ValidationState.IDLE) }
     var passwordValidation by remember { mutableStateOf(ValidationState.IDLE) }
     var confirmPasswordValidation by remember { mutableStateOf(ValidationState.IDLE) }
+
+    var showErrorDialog by remember { mutableStateOf(false) }
+    var errorMessage by remember { mutableStateOf("") }
+
+    // Observar el estado del registro
+    LaunchedEffect(registerState) {
+        when (registerState) {
+            is RegisterState.Success -> {
+                val data = RegisterData(
+                    firstName = firstName,
+                    lastName = lastName,
+                    email = email,
+                    phone = phone,
+                    curp = curp,
+                    password = password
+                )
+                onContinueToDocuments(data)
+            }
+            is RegisterState.Error -> {
+                errorMessage = (registerState as RegisterState.Error).message
+                showErrorDialog = true
+            }
+            else -> {}
+        }
+    }
+
+    // Diálogo de error
+    if (showErrorDialog) {
+        AlertDialog(
+            onDismissRequest = { showErrorDialog = false },
+            title = {
+                Text(
+                    text = "Error",
+                    fontFamily = Poppins,
+                    fontWeight = FontWeight.Bold
+                )
+            },
+            text = {
+                Text(
+                    text = errorMessage,
+                    fontFamily = Poppins
+                )
+            },
+            confirmButton = {
+                Button(
+                    onClick = {
+                        showErrorDialog = false
+                        viewModel.resetStates()
+                    },
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = CustomGreenColor
+                    )
+                ) {
+                    Text("Aceptar", fontFamily = Poppins)
+                }
+            }
+        )
+    }
 
     Box(
         modifier = Modifier
@@ -275,7 +343,8 @@ fun RegisterScreen(
                         colors = RenovaComponentColors.secondaryButtonColors(),
                         border = ButtonDefaults.outlinedButtonBorder.copy(
                             brush = RenovaGradients.cardBorderGradient()
-                        )
+                        ),
+                        enabled = registerState !is RegisterState.Loading
                     ) {
                         Text(
                             text = stringResource(R.string.back),
@@ -299,16 +368,15 @@ fun RegisterScreen(
                                     confirmPasswordValidation == ValidationState.VALID
 
                             if (allValid) {
-                                onContinueToDocuments(
-                                    RegisterData(
-                                        firstName = firstName,
-                                        lastName = lastName,
-                                        email = email,
-                                        phone = phone,
-                                        curp = curp,
-                                        password = password
-                                    )
+                                val data = RegisterData(
+                                    firstName = firstName,
+                                    lastName = lastName,
+                                    email = email,
+                                    phone = phone,
+                                    curp = curp,
+                                    password = password
                                 )
+                                viewModel.registerUser(data)
                             }
                         },
                         modifier = Modifier
@@ -317,15 +385,24 @@ fun RegisterScreen(
                         shape = RoundedCornerShape(12.dp),
                         colors = ButtonDefaults.buttonColors(
                             containerColor = CustomGreenColor
-                        )
+                        ),
+                        enabled = registerState !is RegisterState.Loading
                     ) {
-                        Text(
-                            text = stringResource(R.string.continue_button),
-                            fontSize = 16.sp,
-                            fontWeight = FontWeight.Bold,
-                            fontFamily = Poppins,
-                            color = Color.White
-                        )
+                        if (registerState is RegisterState.Loading) {
+                            CircularProgressIndicator(
+                                modifier = Modifier.size(24.dp),
+                                color = Color.White,
+                                strokeWidth = 2.dp
+                            )
+                        } else {
+                            Text(
+                                text = stringResource(R.string.continue_button),
+                                fontSize = 16.sp,
+                                fontWeight = FontWeight.Bold,
+                                fontFamily = Poppins,
+                                color = Color.White
+                            )
+                        }
                     }
                 }
             }

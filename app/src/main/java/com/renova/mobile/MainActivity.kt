@@ -20,6 +20,7 @@ import com.renova.mobile.utils.LocaleHelper
 import android.content.Context
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.renova.mobile.ui.viewmodels.LanguageViewModel
+import com.renova.mobile.ui.viewmodels.RegisterViewModel
 import androidx.compose.runtime.LaunchedEffect
 
 class MainActivity : ComponentActivity() {
@@ -91,6 +92,9 @@ fun AuthNavigation(
     var currentScreen by remember { mutableStateOf("login") }
     var registerData by remember { mutableStateOf<RegisterData?>(null) }
     var documentsData by remember { mutableStateOf<DocumentsData?>(null) }
+
+    // ViewModel compartido para todo el flujo de registro
+    val registerViewModel: RegisterViewModel = viewModel()
 
     AnimatedContent(
         targetState = currentScreen,
@@ -164,7 +168,8 @@ fun AuthNavigation(
                     onContinueToDocuments = { data ->
                         registerData = data
                         currentScreen = "register_documents"
-                    }
+                    },
+                    viewModel = registerViewModel
                 )
             }
             "register_documents" -> {
@@ -176,7 +181,8 @@ fun AuthNavigation(
                     onContinueToVerification = { data ->
                         documentsData = data
                         currentScreen = "register_verification"
-                    }
+                    },
+                    viewModel = registerViewModel
                 )
             }
             "register_verification" -> {
@@ -187,8 +193,12 @@ fun AuthNavigation(
                         currentScreen = "register_documents"
                     },
                     onComplete = {
+                        // Limpiar la sesión temporal del registro
+                        registerViewModel.clearSession()
+                        registerViewModel.resetStates()
                         currentScreen = "login"
-                    }
+                    },
+                    viewModel = registerViewModel
                 )
             }
         }

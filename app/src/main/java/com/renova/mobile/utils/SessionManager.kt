@@ -99,4 +99,23 @@ class SessionManager(context: Context) {
             }
         } else false
     }
+
+    // Guardar solo el token (para registro temporal)
+    fun saveAuthToken(token: String, tokenType: String) {
+        sharedPreferences.edit().apply {
+            putString(KEY_ACCESS_TOKEN, token)
+            putString(KEY_TOKEN_TYPE, tokenType)
+            apply()
+        }
+    }
+
+    // Limpiar solo el token temporal (para cuando falla el registro o se completa)
+    fun clearAuthToken() {
+        sharedPreferences.edit().apply {
+            remove(KEY_ACCESS_TOKEN)
+            remove(KEY_TOKEN_TYPE)
+            remove(KEY_IS_LOGGED_IN)
+            apply()
+        }
+    }
 }

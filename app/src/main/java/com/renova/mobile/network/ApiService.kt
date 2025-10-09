@@ -8,8 +8,93 @@ import retrofit2.Response
 import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
 import com.renova.mobile.utils.SessionManager
+import okhttp3.MultipartBody
 import retrofit2.http.*
 
+// para register
+
+
+
+// REQUEST para registro
+data class RegisterRequest(
+    val name: String,
+    val last_name: String,
+    val email: String,
+    val phone: String,
+    val curp: String,
+    val password: String,
+    val password_confirmation: String
+)
+
+// RESPONSE del registro
+data class RegisterResponse(
+    val success: Boolean,
+    val message: String,
+    val data: RegisterResponseData?,
+    val errors: Any?,
+    val status: Int
+)
+
+data class RegisterResponseData(
+    val access_token: String,
+    val token_type: String,
+    val expires_at: String,
+    val user: RegisteredUser
+)
+
+data class RegisteredUser(
+    val id: Int,
+    val name: String,
+    val last_name: String,
+    val email: String,
+    val phone: String,
+    val curp: String,
+    val email_verified_at: String?,
+    val role_id: Int,
+    val total_points: Int,
+    val verification_status: Int,
+    val two_factor_status: Boolean,
+    val code_identity: String,
+    val status: String,
+    val created_at: String,
+    val updated_at: String
+)
+
+// RESPONSE para documentos
+data class UploadDocumentsResponse(
+    val success: Boolean,
+    val message: String,
+    val data: DocumentResponseData?,
+    val errors: Any?,
+    val status: Int
+)
+
+data class DocumentResponseData(
+    val id: Int,
+    val user_id: Int,
+    val ine_front_url: String,
+    val ine_back_url: String,
+    val selfie_url: String?,
+    val status: Int,
+    val rejection_reason: String?,
+    val verified_by: Int?,
+    val verified_at: String?,
+    val created_at: String,
+    val updated_at: String
+)
+
+// RESPONSE para selfie
+data class UploadSelfieResponse(
+    val success: Boolean,
+    val message: String,
+    val data: DocumentResponseData?,
+    val errors: Any?,
+    val status: Int
+)
+
+
+
+// para login
 data class LoginRequest(
     val email: String,
     val password: String,
@@ -298,6 +383,25 @@ data class ValidateTokenResponse(
 )
 
 interface ApiService {
+
+    @POST("api/users/register")
+    suspend fun register(@Body request: RegisterRequest): Response<RegisterResponse>
+
+    @Multipart
+    @POST("api/users/uploadDocuments")
+    suspend fun uploadDocuments(
+        @Part("user_id") userId: Int,
+        @Part document_front: MultipartBody.Part,
+        @Part document_back: MultipartBody.Part
+    ): Response<UploadDocumentsResponse>
+
+    @Multipart
+    @POST("api/users/uploadSelfie")
+    suspend fun uploadSelfie(
+        @Part("user_id") userId: Int,
+        @Part selfie: MultipartBody.Part
+    ): Response<UploadSelfieResponse>
+
     @POST("api/auth/login")
     suspend fun login(@Body loginRequest: LoginRequest): Response<LoginResponse>
 
