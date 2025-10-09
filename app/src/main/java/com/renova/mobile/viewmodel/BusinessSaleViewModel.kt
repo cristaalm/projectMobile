@@ -3,6 +3,7 @@ package com.renova.mobile.viewmodel
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.renova.mobile.network.ApiClient
+import com.renova.mobile.network.IdentifyUserRequest
 import com.renova.mobile.network.User
 import com.renova.mobile.network.UserData
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -39,11 +40,17 @@ class BusinessSaleViewModel : ViewModel() {
                     return@launch
                 }
 
-                val response = ApiClient.apiService.identifyUser()
+                // Limpiar el token si tiene el prefijo "Bearer "
+                val cleanToken = token.removePrefix("Bearer ").trim()
+
+                val response = ApiClient.apiService.identifyUser(
+                    IdentifyUserRequest(token = cleanToken)
+                )
+
                 if (response.isSuccessful) {
                     val body = response.body()
-                    if (body?.success == true && body.data != null) {
-                        _scannedUser.value = body.data
+                    if (body?.success == true && body.data?.user != null) {
+                        _scannedUser.value = body.data.user
                     } else {
                         // Si el backend indica que no encontró usuario o token inválido
                         val message = body?.message

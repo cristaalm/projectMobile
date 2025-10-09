@@ -88,23 +88,7 @@ fun ProfileScreen(
                         horizontalArrangement = Arrangement.SpaceBetween,
                         verticalAlignment = Alignment.CenterVertically
                     ) {
-                        // Texto "Es"
-                        Box(
-                            modifier = Modifier
-                                .width(48.dp)
-                                .fillMaxHeight(),
-                            contentAlignment = Alignment.Center
-                        ) {
-                            Text(
-                                text = "ES",
-                                style = MaterialTheme.typography.bodyLarge,
-                                fontSize = 18.sp,
-                                fontWeight = FontWeight.SemiBold,
-                                color = MaterialTheme.colorScheme.primary
-                            )
-                        }
-
-                        // Texto "En"
+                        // Texto "EN"
                         Box(
                             modifier = Modifier
                                 .width(48.dp)
@@ -113,6 +97,22 @@ fun ProfileScreen(
                         ) {
                             Text(
                                 text = "EN",
+                                style = MaterialTheme.typography.bodyLarge,
+                                fontSize = 18.sp,
+                                fontWeight = FontWeight.SemiBold,
+                                color = MaterialTheme.colorScheme.primary
+                            )
+                        }
+
+                        // Texto "ES"
+                        Box(
+                            modifier = Modifier
+                                .width(48.dp)
+                                .fillMaxHeight(),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Text(
+                                text = "ES",
                                 style = MaterialTheme.typography.bodyLarge,
                                 fontSize = 18.sp,
                                 fontWeight = FontWeight.SemiBold,

@@ -73,7 +73,7 @@ fun AppNavigation(
     var contentVisible by remember { mutableStateOf(false) }
 
     LaunchedEffect(Unit) {
-        kotlinx.coroutines.delay(80)
+        kotlinx.coroutines.delay(100)
         contentVisible = true
     }
 
@@ -102,8 +102,8 @@ fun AppNavigation(
             // Usar AnimatedVisibility para un fade-in suave
             AnimatedVisibility(
                 visible = contentVisible,
-                enter = fadeIn(animationSpec = tween(durationMillis = 400)),
-                exit = fadeOut(animationSpec = tween(durationMillis = 200))
+                enter = fadeIn(animationSpec = tween(durationMillis = 500)),
+                exit = fadeOut(animationSpec = tween(durationMillis = 100))
             ) {
                 NavHost(
                     navController = navController,
@@ -116,16 +116,16 @@ fun AppNavigation(
                     ) + fadeIn(animationSpec = tween(400))
                     val exitAnimation = slideOutHorizontally(
                         targetOffsetX = { -1000 },
-                        animationSpec = tween(400)
-                    ) + fadeOut(animationSpec = tween(400))
+                        animationSpec = tween(200)
+                    ) + fadeOut(animationSpec = tween(200))
                     val popEnterAnimation = slideInHorizontally(
                         initialOffsetX = { -1000 },
                         animationSpec = tween(400)
                     ) + fadeIn(animationSpec = tween(400))
                     val popExitAnimation = slideOutHorizontally(
                         targetOffsetX = { 1000 },
-                        animationSpec = tween(400)
-                    ) + fadeOut(animationSpec = tween(400))
+                        animationSpec = tween(200)
+                    ) + fadeOut(animationSpec = tween(200))
 
                     // Rutas de negocio
                     composable(

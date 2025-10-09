@@ -115,6 +115,8 @@
     <string name="unknown_material">Unknown Material</string>
     <string name="pet_bottle">PET Bottle</string>
     <string name="aluminum_can">Aluminum Can</string>
+    <string name="crushed">Crushed</string>
+    <string name="refreshed_successfully">All set! Updated successfully</string>
 
     <!-- Dates -->
     <string name="today">Today</string>

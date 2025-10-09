@@ -247,9 +247,13 @@ data class Scan(
 data class IdentifyUserResponse(
     val success: Boolean,
     val message: String,
-    val data: UserData?,
+    val data: IdentifyUserData?,
     val errors: Any?,
-    val status: Int
+    val code: Int  // Swagger muestra "code" no "status"
+)
+
+data class IdentifyUserData(
+    val user: UserData  // La respuesta tiene un objeto "user" dentro de "data"
 )
 
 data class UserData(
@@ -258,14 +262,27 @@ data class UserData(
     val last_name: String?,
     val email: String,
     val phone: String?,
-    val status: Int,
+    @SerializedName("curp") val curp: String?,
+    val total_points: Int,
     val verification_status: Int,
     val two_factor_status: Boolean,
-    val total_points: Int,
     val code_identity: String?,
-    val role_id: Int,
+    val status: Int,
+    val created_at: String,
     val updated_at: String,
-    val created_at: String
+    val role: RoleData?
+)
+
+data class RoleData(
+    val id: Int,
+    val name: String,
+    val display_name: String,
+    val is_active: Boolean
+)
+
+// Nuevo: Request para identifyUser con token en body
+data class IdentifyUserRequest(
+    val token: String
 )
 
 data class ValidateTokenRequest(
@@ -315,9 +332,9 @@ interface ApiService {
     @GET("api/scans/total-type-scans")
     suspend fun getTotalScans(): Response<TotalScansResponse>
 
+    // Ahora requiere el token en el body JSON
     @POST("api/users/identityUser")
-    suspend fun identifyUser(): Response<IdentifyUserResponse>
-    suspend fun identifyUser(@Header("Authorization") authorization: String): Response<IdentifyUserResponse>
+    suspend fun identifyUser(@Body request: IdentifyUserRequest): Response<IdentifyUserResponse>
 }
 
 object ApiClient {

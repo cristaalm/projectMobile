@@ -116,6 +116,8 @@
     <string name="unknown_material">Material Desconocido</string>
     <string name="pet_bottle">Botella PET</string>
     <string name="aluminum_can">Lata Aluminio</string>
+    <string name="crushed">Aplastada</string>
+    <string name="refreshed_successfully">¡Listo! Todo actualizado correctamente</string>
 
     <!-- Fechas -->
     <string name="today">Hoy</string>

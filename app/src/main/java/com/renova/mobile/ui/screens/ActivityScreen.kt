@@ -1,11 +1,16 @@
 package com.renova.mobile.ui.screens
 
+import androidx.compose.animation.Crossfade
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material3.*
+import androidx.compose.material3.pulltorefresh.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -14,6 +19,7 @@ import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Paint
 import androidx.compose.ui.graphics.drawscope.drawIntoCanvas
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
@@ -66,40 +72,149 @@ fun Modifier.greenShadow(
     }
 }
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ActivityScreen(
     viewModel: ActivityViewModel = androidx.lifecycle.viewmodel.compose.viewModel()
 ) {
+    val context = LocalContext.current
     val renovaColors = LocalRenovaColors.current
     val state by viewModel.state.collectAsState()
+    val pullToRefreshState = rememberPullToRefreshState()
+
+    val snackbarHostState = remember { SnackbarHostState() }
+    var wasLoading by remember { mutableStateOf(false) }
+    var isInitialLoad by remember { mutableStateOf(true) }  // ← NUEVO
 
     LaunchedEffect(Unit) {
         viewModel.loadHistory(1)
     }
+    LaunchedEffect(state.isLoading) {
+        if (wasLoading && !state.isLoading && state.activities.isNotEmpty() && !isInitialLoad) {
+            snackbarHostState.showSnackbar(
+                message = context.getString(R.string.refreshed_successfully),
+                duration = SnackbarDuration.Short
+            )
+        }
 
-    Column(
-        modifier = Modifier
-            .fillMaxSize()
+        if (!state.isLoading && state.activities.isNotEmpty()) {
+            isInitialLoad = false
+        }
+
+        wasLoading = state.isLoading
+    }
+    Box(
+        modifier = Modifier.fillMaxSize()
     ) {
         when {
             state.isLoading && state.activities.isEmpty() -> {
                 LoadingState(renovaColors)
             }
+
             state.error != null && state.activities.isEmpty() -> {
                 Box(modifier = Modifier.fillMaxSize())
             }
             else -> {
-                ActivityContent(
-                    state = state,
-                    renovaColors = renovaColors,
-                    onPreviousPage = { viewModel.previousPage() },
-                    onNextPage = { viewModel.nextPage() }
-                )
+                PullToRefreshBox(
+                    isRefreshing = state.isLoading && state.activities.isNotEmpty(),
+                    onRefresh = {
+                        viewModel.loadHistory(state.currentPage)
+                    },
+                    state = pullToRefreshState,
+                    indicator = {
+                        CustomRefreshIndicator(
+                            state = pullToRefreshState,
+                            isRefreshing = state.isLoading && state.activities.isNotEmpty(),
+                            renovaColors = renovaColors,
+                            modifier = Modifier.align(Alignment.TopCenter)
+                        )
+                    }
+                ) {
+                    androidx.compose.animation.AnimatedVisibility(
+                        visible = !state.isLoading || state.activities.isNotEmpty(),
+                        enter = androidx.compose.animation.fadeIn(
+                            animationSpec = androidx.compose.animation.core.tween(durationMillis = 500)
+                        ),
+                        exit = androidx.compose.animation.fadeOut(
+                            animationSpec = androidx.compose.animation.core.tween(durationMillis = 300)
+                        )
+                    ) {
+                        ActivityContent(
+                            state = state,
+                            renovaColors = renovaColors,
+                            onPreviousPage = { viewModel.previousPage() },
+                            onNextPage = { viewModel.nextPage() }
+                        )
+                    }
+                }
+            }
+        }
+
+        SnackbarHost(
+            hostState = snackbarHostState,
+            modifier = Modifier
+                .align(Alignment.TopCenter)
+                .padding(top = 20.dp)
+        ) { snackbarData ->
+            Card(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 24.dp)
+                    .greenShadow(
+                        color = renovaColors.activityPrimary,
+                        alpha = 0.25f,
+                        shadowRadius = 12.dp,
+                        offsetY = 6.dp
+                    ),
+                shape = RoundedCornerShape(16.dp),
+                colors = CardDefaults.cardColors(
+                    containerColor = renovaColors.activityCardBackground
+                ),
+                border = androidx.compose.foundation.BorderStroke(
+                    width = 1.5.dp,
+                    color = renovaColors.activityPrimary
+                ),
+                elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
+            ) {
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 20.dp, vertical = 14.dp),
+                    horizontalArrangement = Arrangement.Center,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    // Icono de check animado
+                    Box(
+                        modifier = Modifier
+                            .size(24.dp)
+                            .background(
+                                color = renovaColors.activityPrimary.copy(alpha = 0.15f),
+                                shape = androidx.compose.foundation.shape.CircleShape
+                            ),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Icon(
+                            painter = painterResource(id = R.drawable.leaf), // o usa un icono de check
+                            contentDescription = null,
+                            tint = renovaColors.activityPrimary,
+                            modifier = Modifier.size(14.dp)
+                        )
+                    }
+
+                    Spacer(modifier = Modifier.width(12.dp))
+
+                    Text(
+                        text = snackbarData.visuals.message,
+                        color = renovaColors.activityPrimary,
+                        style = MaterialTheme.typography.bodyLarge,
+                        fontWeight = FontWeight.SemiBold,
+                        fontSize = 15.sp
+                    )
+                }
             }
         }
     }
 
-    // Mostrar el diálogo
     if (state.error != null && state.activities.isEmpty()) {
         ErrorDialog(
             error = state.error ?: "Error desconocido",
@@ -111,6 +226,54 @@ fun ActivityScreen(
                 viewModel.clearError()
             }
         )
+    }
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun CustomRefreshIndicator(
+    state: PullToRefreshState,
+    isRefreshing: Boolean,
+    renovaColors: RenovaColorScheme,
+    modifier: Modifier = Modifier,
+) {
+    Box(
+        modifier = modifier.pullToRefreshIndicator(
+            state = state,
+            isRefreshing = isRefreshing,
+            containerColor = renovaColors.activityCardBackground,
+            threshold = PullToRefreshDefaults.PositionalThreshold
+        ),
+        contentAlignment = Alignment.Center
+    ) {
+        Crossfade(
+            targetState = isRefreshing,
+            animationSpec = tween(durationMillis = 200),
+            modifier = Modifier.align(Alignment.Center)
+        ) { refreshing ->
+            if (refreshing) {
+                CircularProgressIndicator(
+                    modifier = Modifier.size(24.dp),
+                    color = renovaColors.activityPrimary
+                )
+            } else {
+                val distanceFraction = { state.distanceFraction.coerceIn(0f, 1f) }
+                Icon(
+                    imageVector = Icons.Filled.Refresh,
+                    contentDescription = "Refresh",
+                    tint = renovaColors.activityPrimary,
+                    modifier = Modifier
+                        .size(24.dp)
+                        .graphicsLayer {
+                            val progress = distanceFraction()
+                            this.alpha = progress
+                            this.scaleX = progress
+                            this.scaleY = progress
+                            this.rotationZ = progress * 180f
+                        }
+                )
+            }
+        }
     }
 }
 
@@ -170,44 +333,28 @@ private fun ErrorDialog(
 }
 
 @Composable
-private fun ErrorState(
-    error: String,
-    renovaColors: RenovaColorScheme,
-    onRetry: () -> Unit
-) {
-    Box(
-        modifier = Modifier.fillMaxSize(),
-        contentAlignment = Alignment.Center
-    ) {
-        Column(horizontalAlignment = Alignment.CenterHorizontally) {
-            Text(
-                text = error,
-                color = renovaColors.negativePoints
-            )
-            Spacer(modifier = Modifier.height(16.dp))
-            Button(onClick = onRetry) {
-                Text("Reintentar")
-            }
-        }
-    }
-}
-
-@Composable
 private fun ActivityContent(
     state: com.renova.mobile.ui.viewmodels.ActivityState,
     renovaColors: RenovaColorScheme,
     onPreviousPage: () -> Unit,
     onNextPage: () -> Unit
 ) {
-    Box(modifier = Modifier.fillMaxSize()) {
-        LazyColumn(
-            modifier = Modifier
-                .fillMaxSize()
-                .background(Color.Transparent),
-            contentPadding = PaddingValues(bottom = 16.dp)
-        ) {
-            // Tarjeta de Puntos Totales
-            item {
+    LazyColumn(
+        modifier = Modifier
+            .fillMaxSize()
+            .background(Color.Transparent),
+        contentPadding = PaddingValues(bottom = 16.dp)
+    ) {
+        item {
+            androidx.compose.animation.AnimatedVisibility(
+                visible = true,
+                enter = androidx.compose.animation.fadeIn(
+                    animationSpec = androidx.compose.animation.core.tween(durationMillis = 600)
+                ) + androidx.compose.animation.slideInVertically(
+                    initialOffsetY = { -40 },
+                    animationSpec = androidx.compose.animation.core.tween(durationMillis = 600)
+                )
+            ) {
                 Card(
                     modifier = Modifier
                         .fillMaxWidth()
@@ -271,7 +418,6 @@ private fun ActivityContent(
                                         fontWeight = FontWeight.Bold,
                                         lineHeight = 30.sp
                                     )
-
                                 }
                             }
 
@@ -295,9 +441,18 @@ private fun ActivityContent(
                     }
                 }
             }
+        }
 
-            // Header Materiales reciclados
-            item {
+        item {
+            androidx.compose.animation.AnimatedVisibility(
+                visible = true,
+                enter = androidx.compose.animation.fadeIn(
+                    animationSpec = androidx.compose.animation.core.tween(durationMillis = 600, delayMillis = 100)
+                ) + androidx.compose.animation.slideInVertically(
+                    initialOffsetY = { -30 },
+                    animationSpec = androidx.compose.animation.core.tween(durationMillis = 600, delayMillis = 100)
+                )
+            ) {
                 Column(
                     modifier = Modifier.padding(top = 0.dp, start = 20.dp, end = 20.dp, bottom = 8.dp)
                 ) {
@@ -313,9 +468,18 @@ private fun ActivityContent(
                     )
                 }
             }
+        }
 
-            // Material Stats Cards
-            item {
+        item {
+            androidx.compose.animation.AnimatedVisibility(
+                visible = true,
+                enter = androidx.compose.animation.fadeIn(
+                    animationSpec = androidx.compose.animation.core.tween(durationMillis = 600, delayMillis = 200)
+                ) + androidx.compose.animation.slideInVertically(
+                    initialOffsetY = { -20 },
+                    animationSpec = androidx.compose.animation.core.tween(durationMillis = 600, delayMillis = 200)
+                )
+            ) {
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
@@ -346,9 +510,18 @@ private fun ActivityContent(
                     )
                 }
             }
+        }
 
-            // History Header
-            item {
+        item {
+            androidx.compose.animation.AnimatedVisibility(
+                visible = true,
+                enter = androidx.compose.animation.fadeIn(
+                    animationSpec = androidx.compose.animation.core.tween(durationMillis = 600, delayMillis = 300)
+                ) + androidx.compose.animation.slideInVertically(
+                    initialOffsetY = { -20 },
+                    animationSpec = androidx.compose.animation.core.tween(durationMillis = 600, delayMillis = 300)
+                )
+            ) {
                 Column(
                     modifier = Modifier.padding(start = 20.dp, top = 12.dp, bottom = 8.dp)
                 ) {
@@ -364,9 +537,24 @@ private fun ActivityContent(
                     )
                 }
             }
+        }
 
-            // Activity Cards
-            items(state.activities.size) { index ->
+        items(state.activities.size) { index ->
+            androidx.compose.animation.AnimatedVisibility(
+                visible = true,
+                enter = androidx.compose.animation.fadeIn(
+                    animationSpec = androidx.compose.animation.core.tween(
+                        durationMillis = 400,
+                        delayMillis = 400 + (index * 50)
+                    )
+                ) + androidx.compose.animation.slideInVertically(
+                    initialOffsetY = { 20 },
+                    animationSpec = androidx.compose.animation.core.tween(
+                        durationMillis = 400,
+                        delayMillis = 400 + (index * 50)
+                    )
+                )
+            ) {
                 Box(modifier = Modifier.padding(horizontal = 18.dp)) {
                     ActivityCard(
                         item = state.activities[index],
@@ -374,8 +562,18 @@ private fun ActivityContent(
                     )
                 }
             }
-            // Pagination Controls
-            item {
+        }
+
+        item {
+            androidx.compose.animation.AnimatedVisibility(
+                visible = true,
+                enter = androidx.compose.animation.fadeIn(
+                    animationSpec = androidx.compose.animation.core.tween(
+                        durationMillis = 600,
+                        delayMillis = 500 + (state.activities.size * 50)
+                    )
+                )
+            ) {
                 PaginationControls(
                     currentPage = state.currentPage,
                     totalPages = state.totalPages,
@@ -384,18 +582,6 @@ private fun ActivityContent(
                     onPreviousPage = onPreviousPage,
                     onNextPage = onNextPage
                 )
-            }
-        }
-
-        // Loading overlay
-        if (state.isLoading) {
-            Box(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .background(Color.White),
-                contentAlignment = Alignment.Center
-            ) {
-                CircularProgressIndicator(color = renovaColors.activityPrimary)
             }
         }
     }
@@ -424,7 +610,9 @@ private fun PaginationControls(
                 contentColor = renovaColors.activityCardBackground
             ),
             shape = RoundedCornerShape(12.dp),
-            modifier = Modifier.weight(1f).height(40.dp)
+            modifier = Modifier
+                .weight(1f)
+                .height(40.dp)
         ) {
             Icon(
                 painter = painterResource(id = R.drawable.back),
@@ -451,7 +639,9 @@ private fun PaginationControls(
                 contentColor = renovaColors.activityCardBackground
             ),
             shape = RoundedCornerShape(12.dp),
-            modifier = Modifier.weight(1f).height(40.dp)
+            modifier = Modifier
+                .weight(1f)
+                .height(40.dp)
         ) {
             Text(stringResource(R.string.next), color = renovaColors.activityCardBackground)
             Spacer(modifier = Modifier.width(4.dp))
@@ -477,8 +667,7 @@ private fun MaterialStatCard(
     val renovaColors = LocalRenovaColors.current
 
     Card(
-        modifier = modifier
-            .height(110.dp),
+        modifier = modifier.height(110.dp),
         shape = RoundedCornerShape(18.dp),
         colors = CardDefaults.cardColors(containerColor = Color.Transparent),
         elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
@@ -537,8 +726,7 @@ private fun ActivityCard(item: ActivityItem, renovaColors: RenovaColorScheme) {
     val isPointRedemption = item.type_history == 1
 
     Column(
-        modifier = Modifier
-            .fillMaxWidth()
+        modifier = Modifier.fillMaxWidth()
     ) {
         Row(
             modifier = Modifier
@@ -613,7 +801,7 @@ private fun ActivityCard(item: ActivityItem, renovaColors: RenovaColorScheme) {
                     val materialName = item.material_type?.name ?: stringResource(R.string.unknown_material)
                     val isCrushed = item.scan?.is_crushed == true
                     val displayText = if (isCrushed) {
-                        "$materialName - Aplastada"
+                        "$materialName - ${stringResource(R.string.crushed)}"
                     } else {
                         materialName
                     }

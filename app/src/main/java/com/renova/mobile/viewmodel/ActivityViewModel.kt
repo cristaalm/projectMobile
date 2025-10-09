@@ -12,6 +12,7 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.async
 
 data class ActivityState(
     val activities: List<ActivityItem> = emptyList(),
@@ -35,42 +36,52 @@ class ActivityViewModel(
     val state: StateFlow<ActivityState> = _state.asStateFlow()
 
     init {
+        //Log.d("ActivityViewModel", "Inicializando ViewModel")
         loadHistory(1)
     }
 
     fun loadHistory(page: Int = 1) {
         viewModelScope.launch {
+            //Log.d("ActivityViewModel", "loadHistory iniciado para página: $page")
             _state.update { it.copy(isLoading = true, error = null) }
 
             try {
-                val response = repository.getHistory(
-                    page = page,
-                    perPage = 10
-                )
+                val historyDeferred = async { repository.getHistory(page = page, perPage = 10) }
+                val totalsDeferred = async {
+                    if (_state.value.totalPlastic == 0 && _state.value.totalAluminum == 0) {
+                        repository.getTotalScans()
+                    } else null
+                }
+                val pointsDeferred = async { repository.getUserPoints(sessionManager) }
 
-                if (response.success) {
+                val historyResponse = historyDeferred.await()
+                val totalsResponse = totalsDeferred.await()
+                val userPoints = pointsDeferred.await()
+
+                //Log.d("ActivityViewModel", "History response success: ${response.success}")
+
+                if (historyResponse.success) {
                     _state.update {
                         it.copy(
-                            activities = response.data.data,
-                            currentPage = response.data.current_page,
-                            totalPages = response.data.last_page,
+                            activities = historyResponse.data.data,
+                            currentPage = historyResponse.data.current_page,
+                            totalPages = historyResponse.data.last_page,
+                            totalPoints = userPoints,
+                            totalPlastic = totalsResponse?.data?.plastic ?: it.totalPlastic,
+                            totalAluminum = totalsResponse?.data?.aluminum ?: it.totalAluminum,
                             isLoading = false
                         )
                     }
-
-                    if (_state.value.totalPlastic == 0 && _state.value.totalAluminum == 0) {
-                        loadTotals()
-                    }
-                    loadUserPoints()
                 } else {
                     _state.update {
                         it.copy(
-                            error = response.message,
+                            error = historyResponse.message,
                             isLoading = false
                         )
                     }
                 }
             } catch (e: Exception){
+                //Log.e("ActivityViewModel", "Error en loadHistory", e)
                 _state.update {
                     it.copy(
                         error = "Error: ${e.message}",
@@ -78,32 +89,6 @@ class ActivityViewModel(
                     )
                 }
             }
-        }
-    }
-
-    private suspend fun loadUserPoints() {
-        try {
-            val points = repository.getUserPoints(sessionManager)
-            _state.update {
-                it.copy(totalPoints = points)
-            }
-        } catch (e: Exception) {
-        }
-    }
-
-    private suspend fun loadTotals() {
-        try {
-            val totalsResponse = repository.getTotalScans()
-            if (totalsResponse.success) {
-                _state.update {
-                    it.copy(
-                        totalPlastic = totalsResponse.data.plastic,
-                        totalAluminum = totalsResponse.data.aluminum
-                    )
-                }
-            }
-        } catch (e: Exception) {
-            // Silenciosamente fallar
         }
     }
 
