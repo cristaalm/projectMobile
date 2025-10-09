@@ -410,7 +410,7 @@ private fun ActivityContent(
                                     Spacer(modifier = Modifier.width(2.dp))
 
                                     Text(
-                                        modifier = Modifier.padding(top = 20.dp),
+                                        modifier = Modifier.padding(top = 22.dp),
                                         text = stringResource(R.string.points_unit),
                                         style = MaterialTheme.typography.displayLarge,
                                         color = Color.White,
@@ -423,7 +423,7 @@ private fun ActivityContent(
 
                             Box(
                                 modifier = Modifier
-                                    .size(110.dp)
+                                    .size(90.dp)
                                     .background(
                                         Color.White.copy(alpha = 0.15f),
                                         shape = RoundedCornerShape(20.dp)
@@ -433,7 +433,7 @@ private fun ActivityContent(
                                 Image(
                                     painter = painterResource(id = R.drawable.leaf),
                                     contentDescription = null,
-                                    modifier = Modifier.size(60.dp),
+                                    modifier = Modifier.size(45.dp),
                                     colorFilter = androidx.compose.ui.graphics.ColorFilter.tint(Color.White.copy(alpha = 0.9f))
                                 )
                             }
