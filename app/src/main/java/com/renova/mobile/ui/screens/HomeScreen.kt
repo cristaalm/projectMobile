@@ -7,6 +7,7 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -15,8 +16,11 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.renova.mobile.R
 import com.renova.mobile.ui.components.SectionHeader
 import com.renova.mobile.ui.theme.PoppinsFontFamily
+import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.style.TextAlign
 
 @Composable
 fun HomeScreen() {
@@ -25,26 +29,31 @@ fun HomeScreen() {
             .fillMaxSize()
             .background(MaterialTheme.colorScheme.background)
     ) {
-        SectionHeader(title = "Inicio")
+        SectionHeader(title = stringResource(id = R.string.bottom_nav_home), textColor = MaterialTheme.colorScheme.onBackground)
+
 
         Box(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(16.dp),
-            contentAlignment = Alignment.TopStart
+            contentAlignment = Alignment.Center
         ) {
-            Column {
+            Column(
+                horizontalAlignment = Alignment.CenterHorizontally
+            ) {
                 Text(
-                    text = "Bienvenido",
+                    text = stringResource(id = R.string.welcome_message),
                     fontSize = 22.sp,
                     fontWeight = FontWeight.Bold,
                     fontFamily = PoppinsFontFamily,
                 )
                 Spacer(modifier = Modifier.height(8.dp))
                 Text(
-                    text = "Explora la tienda, escanea códigos QR y revisa tu perfil desde la barra inferior.",
+                    text = stringResource(id = R.string.reward_screen_subtitle),
                     fontSize = 14.sp,
                     fontFamily = PoppinsFontFamily,
+                    textAlign = TextAlign.Center,
+                    modifier = Modifier.fillMaxWidth()
                 )
             }
         }
