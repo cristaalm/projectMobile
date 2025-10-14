@@ -7,6 +7,7 @@ import androidx.compose.foundation.interaction.collectIsPressedAsState
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
@@ -36,10 +37,6 @@ fun BusinessHeader(
     onLogout: () -> Unit,
     modifier: Modifier = Modifier
 ) {
-    var showLogoutModal by remember { mutableStateOf(false) }
-    val interactionSource = remember { MutableInteractionSource() }
-    val isPressed by interactionSource.collectIsPressedAsState()
-
     val primaryColor = Color(0xFF08b662)
 
     Row(
@@ -65,38 +62,51 @@ fun BusinessHeader(
 
         Spacer(modifier = Modifier.weight(1f))
 
-        Box(
-            modifier = Modifier
-                .size(72.dp)
-                .padding(4.dp),
-            contentAlignment = Alignment.Center
-        ) {
-            if (isPressed) {
-                Box(
-                    modifier = Modifier
-                        .size(64.dp)
-                        .clip(CircleShape)
-                        .background(primaryColor.copy(alpha = 0.15f))
-                )
-            }
+        LogoutAction(onConfirm = onLogout)
+    }
+}
 
+@Composable
+fun LogoutAction(
+    onConfirm: () -> Unit,
+    modifier: Modifier = Modifier
+) {
+    var showLogoutModal by remember { mutableStateOf(false) }
+    val interactionSource = remember { MutableInteractionSource() }
+    val isPressed by interactionSource.collectIsPressedAsState()
+
+    val primaryColor = Color(0xFF08b662)
+
+    Box(
+        modifier = modifier
+            .size(72.dp)
+            .padding(4.dp),
+        contentAlignment = Alignment.Center
+    ) {
+        if (isPressed) {
             Box(
                 modifier = Modifier
-                    .fillMaxWidth()
+                    .size(64.dp)
                     .clip(CircleShape)
-                    .clickable(
-                        interactionSource = interactionSource,
-                        indication = null
-                    ) { showLogoutModal = true },
-                contentAlignment = Alignment.Center
-            ) {
-                Icon(
-                    painter = painterResource(id = R.drawable.salida),
-                    contentDescription = "Logout",
-                    tint = Color.Unspecified,
-                    modifier = Modifier.size(28.dp)
-                )
-            }
+                    .background(primaryColor.copy(alpha = 0.15f))
+            )
+        }
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .clip(CircleShape)
+                .clickable(
+                    interactionSource = interactionSource,
+                    indication = null
+                ) { showLogoutModal = true },
+            contentAlignment = Alignment.CenterEnd
+        ) {
+            Icon(
+                painter = painterResource(id = R.drawable.salida_blanco),
+                contentDescription = "Logout",
+                tint = Color.Unspecified,
+                modifier = Modifier.size(28.dp)
+            )
         }
     }
 
@@ -105,7 +115,7 @@ fun BusinessHeader(
         onDismiss = { showLogoutModal = false },
         onConfirm = {
             showLogoutModal = false
-            onLogout()
+            onConfirm()
         }
     )
 }

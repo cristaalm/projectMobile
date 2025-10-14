@@ -21,93 +21,178 @@ import com.journeyapps.barcodescanner.CaptureActivity
 import com.journeyapps.barcodescanner.ScanOptions
 import com.journeyapps.barcodescanner.ScanContract
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.res.stringResource
+import com.renova.mobile.R
+import androidx.navigation.NavController
+import com.renova.mobile.navigation.NavigationItemBusiness
+import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
+import androidx.compose.ui.draw.clip
+import androidx.compose.animation.core.rememberInfiniteTransition
+import androidx.compose.animation.core.animateFloat
+import androidx.compose.animation.core.infiniteRepeatable
+import androidx.compose.animation.core.tween
+import androidx.compose.animation.core.LinearEasing
+import androidx.compose.animation.core.RepeatMode
+import androidx.navigation.NavGraph.Companion.findStartDestination
+import com.renova.mobile.ui.components.BusinessSectionHeader
+
 
 @Composable
-fun BusinessQRScreen(onLogout: () -> Unit, vm: BusinessSaleViewModel = viewModel()) {
+fun BusinessQRScreen(onLogout: () -> Unit, vm: BusinessSaleViewModel = viewModel(), navController: NavController) {
     val context = LocalContext.current
 
     val scannedUser by vm.scannedUser.collectAsState()
     val isLoading by vm.isLoading.collectAsState()
     val error by vm.error.collectAsState()
 
+    // Navegar automáticamente a la pantalla de venta cuando se identifique al usuario
+    LaunchedEffect(scannedUser) {
+        if (scannedUser != null) {
+            // Navegar a la pantalla de venta cuando se identifique al usuario
+            navController.navigate(NavigationItemBusiness.Store.route)
+        }
+    }
+
     val launcher = rememberLauncherForActivityResult(ScanContract()) { result ->
         if (result.contents != null) {
-            vm.identifyUserByToken(result.contents)
+            // Si por alguna razón se detecta un QR, mostrar error y no continuar
+            if (result.formatName == "QR_CODE") {
+                vm.setError("Escanee el código de barras del cliente, no un QR. Intente de nuevo.")
+            } else {
+                vm.identifyUserByCode(result.contents)
+            }
         } else {
-            // No se obtuvo contenido del escaneo
-            // Mostrar un mensaje amigable
+            vm.setError("No se detectó ningún código. Intente nuevamente.")
         }
     }
 
     fun startScanner() {
         val options = ScanOptions().apply {
-            setDesiredBarcodeFormats(ScanOptions.QR_CODE, ScanOptions.CODE_128, ScanOptions.CODE_39, ScanOptions.EAN_13, ScanOptions.EAN_8)
-            setPrompt("Escanea el código")
+            // Restringir el escaneo a solo códigos de barras (1D)
+            setDesiredBarcodeFormats(ScanOptions.ONE_D_CODE_TYPES)
+            setPrompt("Escanee el código de barras del cliente")
             setBeepEnabled(true)
-            setOrientationLocked(false)
-            captureActivity = CaptureActivity::class.java
+            setOrientationLocked(true)
+            setCaptureActivity(com.renova.mobile.scan.PortraitCaptureActivity::class.java)
         }
         launcher.launch(options)
     }
 
+    // Animación sutil para el cuadro de escaneo (efecto "latido")
+    val infiniteTransition = rememberInfiniteTransition()
+    val glow by infiniteTransition.animateFloat(
+        initialValue = 0f,
+        targetValue = 1f,
+        animationSpec = infiniteRepeatable(
+            animation = tween(durationMillis = 1200, easing = LinearEasing),
+            repeatMode = RepeatMode.Reverse
+        )
+    )
+
     Column(modifier = Modifier.fillMaxSize()) {
-        BusinessHeader(title = "QR", onLogout = onLogout)
+        BusinessSectionHeader(
+            title = stringResource(id = R.string.bottom_nav_qr),
+            onLogout = onLogout,
+            textColor = Color.White
+        )
 
-        // Botón para iniciar el escaneo
-        Box(modifier = Modifier.fillMaxWidth(), contentAlignment = Alignment.Center) {
-            Button(onClick = { startScanner() }) {
-                Text(text = "Iniciar escaneo")
-            }
-        }
-
-        Spacer(modifier = Modifier.height(12.dp))
-
-        // Card de datos del cliente (similar estilo a InstructionSection)
-        if (isLoading) {
-            Box(modifier = Modifier.fillMaxWidth(), contentAlignment = Alignment.Center) {
-                CircularProgressIndicator(color = RenovaColors.Primary)
-            }
-        }
-
-        if (error != null) {
-            Box(modifier = Modifier.fillMaxWidth(), contentAlignment = Alignment.Center) {
-                Text(text = error ?: "", color = Color.Red)
-            }
-        }
-
-        if (scannedUser != null) {
-            Card(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = 16.dp)
-                    .heightIn(max = 180.dp),
-                shape = RoundedCornerShape(16.dp),
-                colors = CardDefaults.cardColors(
-                    containerColor = if (androidx.compose.foundation.isSystemInDarkTheme()) Color.Black else RenovaColors.Light.Surface
-                )
+        // Contenido centrado verticalmente
+        Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+            Column(
+                horizontalAlignment = Alignment.CenterHorizontally
             ) {
-                Column(
-                    modifier = Modifier.padding(20.dp),
-                    verticalArrangement = Arrangement.spacedBy(8.dp)
-                ) {
-                    Text(
-                        text = "Consumidor",
-                        style = MaterialTheme.typography.titleMedium.copy(
-                            fontFamily = PoppinsFontFamily,
-                            fontWeight = FontWeight.ExtraBold
-                        ),
-                        color = RenovaColors.Primary,
-                    )
+                // Cuadro interactivo para iniciar el escaneo
+                Box(modifier = Modifier.fillMaxWidth(), contentAlignment = Alignment.Center) {
+                    Box(
+                        modifier = Modifier
+                            .size(220.dp)
+                            .clip(RoundedCornerShape(16.dp))
+                            .border(
+                                width = 3.dp,
+                                color = RenovaColors.Primary.copy(alpha = 0.4f + 0.4f * glow),
+                                shape = RoundedCornerShape(16.dp)
+                            )
+                            .clickable { startScanner() },
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Column(
+                            horizontalAlignment = Alignment.CenterHorizontally,
+                            verticalArrangement = Arrangement.spacedBy(8.dp)
+                        ) {
+                            Text(
+                                text = "Tocar para escanear",
+                                style = MaterialTheme.typography.titleMedium.copy(
+                                    fontFamily = PoppinsFontFamily,
+                                    fontWeight = FontWeight.Bold
+                                ),
+                                color = RenovaColors.Primary,
+                                textAlign = TextAlign.Center
+                            )
+                            Text(
+                                text = "Código de barras",
+                                style = MaterialTheme.typography.bodyMedium.copy(fontFamily = PoppinsFontFamily),
+                                color = Color.Gray,
+                                textAlign = TextAlign.Center
+                            )
+                        }
+                    }
+                }
 
-                    // Nombre y puntos actuales
-                    Text(
-                        text = "Nombre: ${scannedUser!!.name} ${scannedUser!!.last_name ?: ""}",
-                        style = MaterialTheme.typography.bodyMedium.copy(fontFamily = PoppinsFontFamily)
-                    )
-                    Text(
-                        text = "Puntos disponibles: ${scannedUser!!.total_points}",
-                        style = MaterialTheme.typography.bodyMedium.copy(fontFamily = PoppinsFontFamily)
-                    )
+                Spacer(modifier = Modifier.height(12.dp))
+
+                if (isLoading) {
+                    Box(modifier = Modifier.fillMaxWidth(), contentAlignment = Alignment.Center) {
+                        CircularProgressIndicator(color = RenovaColors.Primary)
+                    }
+                }
+
+                if (error != null) {
+                    Box(modifier = Modifier.fillMaxWidth(), contentAlignment = Alignment.Center) {
+                        Text(
+                            text = error ?: "",
+                            color = Color.Red,
+                            modifier = Modifier.fillMaxWidth(),
+                            textAlign = TextAlign.Center
+                        )
+                    }
+                }
+
+                if (scannedUser != null) {
+                    Card(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(horizontal = 16.dp)
+                            .heightIn(max = 180.dp),
+                        shape = RoundedCornerShape(16.dp),
+                        colors = CardDefaults.cardColors(
+                            containerColor = if (androidx.compose.foundation.isSystemInDarkTheme()) Color.Black else RenovaColors.Light.Surface
+                        )
+                    ) {
+                        Column(
+                            modifier = Modifier.padding(20.dp),
+                            verticalArrangement = Arrangement.spacedBy(8.dp)
+                        ) {
+                            Text(
+                                text = "Consumidor",
+                                style = MaterialTheme.typography.titleMedium.copy(
+                                    fontFamily = PoppinsFontFamily,
+                                    fontWeight = FontWeight.ExtraBold
+                                ),
+                                color = RenovaColors.Primary,
+                            )
+
+                            Text(
+                                text = "Nombre: ${scannedUser!!.name} ${scannedUser!!.last_name ?: ""}",
+                                style = MaterialTheme.typography.bodyMedium.copy(fontFamily = PoppinsFontFamily)
+                            )
+                            Text(
+                                text = "Puntos disponibles: ${scannedUser!!.total_points}",
+                                style = MaterialTheme.typography.bodyMedium.copy(fontFamily = PoppinsFontFamily)
+                            )
+                        }
+                    }
                 }
             }
         }

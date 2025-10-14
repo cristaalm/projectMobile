@@ -365,6 +365,10 @@ data class IdentifyUserRequest(
     val token: String
 )
 
+data class IdentifyUserByCodeRequest(
+    val code: String
+)
+
 data class ValidateTokenRequest(
     val token: String
 )
@@ -433,6 +437,9 @@ interface ApiService {
 
     @POST("api/users/identityUser")
     suspend fun identifyUser(@Body request: IdentifyUserRequest): Response<IdentifyUserResponse>
+
+    @POST("api/users/identityUserCode")
+    suspend fun identifyUserByCode(@Body request: IdentifyUserByCodeRequest): Response<IdentifyUserResponse>
 }
 
 object ApiClient {

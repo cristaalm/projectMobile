@@ -13,6 +13,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -29,7 +30,7 @@ fun HomeScreen() {
             .fillMaxSize()
             .background(MaterialTheme.colorScheme.background)
     ) {
-        SectionHeader(title = stringResource(id = R.string.bottom_nav_home), textColor = MaterialTheme.colorScheme.onBackground)
+        SectionHeader(title = stringResource(id = R.string.bottom_nav_home), textColor = Color.White)
 
 
         Box(

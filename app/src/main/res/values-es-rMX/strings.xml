@@ -223,6 +223,7 @@
 
     <string name="bottom_nav_home">Inicio</string>
     <string name="bottom_nav_store">Tienda</string>
+    <string name="bottom_nav_sale">Venta</string>
     <string name="bottom_nav_qr">Escáner</string>
     <string name="bottom_nav_profile">Perfil</string>
 
@@ -234,4 +235,7 @@
     <string name="scroll_down_2">Deslizar hacia abajo</string>
     <string name="success_2">Éxito</string>
     <string name="completed_2">¡Completado!</string>
+    
+    <!-- Venta -->
+    <string name="sale">Venta</string>
 </resources>

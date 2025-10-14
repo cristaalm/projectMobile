@@ -57,7 +57,9 @@ fun QRScreen() {
     val sessionManager = remember { SessionManager(context) }
     // val loginRepository = remember { LoginRepository() }
 
-    val currentPoints = 2450
+    val currentPointsState = sessionManager.getUser()
+    val currentPoints = currentPointsState?.total_points ?: 0
+
     val user = sessionManager.getUser()
     val accessToken = sessionManager.getAccessToken()
 

@@ -155,7 +155,7 @@ fun AppNavigation(
                         popEnterTransition = { popEnterAnimation },
                         popExitTransition = { popExitAnimation }
                     ) {
-                        BusinessQRScreen(onLogout = onLogout, vm = businessSaleVM)
+                        BusinessQRScreen(onLogout = onLogout, vm = businessSaleVM, navController = navController)
                     }
 
                     composable(

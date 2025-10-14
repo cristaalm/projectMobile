@@ -221,16 +221,14 @@
 
     <string name="bottom_nav_home">Home</string>
     <string name="bottom_nav_store">Store</string>
+    <string name="bottom_nav_sale">Sale</string>
     <string name="bottom_nav_qr">Scan</string>
     <string name="bottom_nav_profile">Profile</string>
 
     <!-- Mensajes de error genéricos -->
-    <string name="error_generic">Ha ocurrido un error. Por favor, inténtalo de nuevo.</string>
-    <string name="error_connection">Error de conexión. Verifica tu internet e inténtalo de nuevo.</string>
+    <string name="error_generic">An error occurred. Please try again.</string>
+    <string name="error_connection">Connection error. Check your internet and try again.</string>
 
-    <!-- Si no tienes estos, agrégalos también -->
-    <string name="scroll_down_2">Deslizar hacia abajo</string>
-    <string name="success_2">Éxito</string>
-    <string name="completed_2">¡Completado!</string>
-
+    <!-- Venta -->
+    <string name="sale">Sale</string>
 </resources>
