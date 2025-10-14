@@ -135,7 +135,7 @@ fun AppNavigation(
                         popEnterTransition = { popEnterAnimation },
                         popExitTransition = { popExitAnimation }
                     ) {
-                        BusinessHomeScreen(onLogout = onLogout)
+                        BusinessHomeScreen(onLogout = onLogout, vm = businessSaleVM)
                     }
 
                     composable(
@@ -145,7 +145,7 @@ fun AppNavigation(
                         popEnterTransition = { popEnterAnimation },
                         popExitTransition = { popExitAnimation }
                     ) {
-                        BusinessStoreScreen(onLogout = onLogout, vm = businessSaleVM)
+                        BusinessStoreScreen(onLogout = onLogout, vm = businessSaleVM, navController = navController)
                     }
 
                     composable(

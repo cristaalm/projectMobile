@@ -31,15 +31,25 @@ import com.renova.mobile.ui.components.SectionHeader
 import com.renova.mobile.R
 import androidx.compose.ui.res.stringResource
 import com.renova.mobile.ui.components.BusinessSectionHeader
+import com.renova.mobile.ui.components.SaleDetailModal
+import com.renova.mobile.ui.components.SaleSummary
+import com.renova.mobile.ui.components.SaleItem
+import android.widget.Toast
+import androidx.navigation.NavController
+import com.renova.mobile.navigation.NavigationItemBusiness
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Close
+import kotlinx.coroutines.launch
 
 @Composable
-fun BusinessStoreScreen(onLogout: () -> Unit, vm: BusinessSaleViewModel = viewModel()) {
+fun BusinessStoreScreen(onLogout: () -> Unit, vm: BusinessSaleViewModel = viewModel(), navController: NavController) {
     val user by vm.scannedUser.collectAsState()
     val ticket by vm.ticket.collectAsState()
     val isRewardLoading by vm.isRewardLoading.collectAsState()
     val error by vm.error.collectAsState()
     val alliance by vm.businessAlliance.collectAsState()
     val allianceId by vm.businessAllianceId.collectAsState()
+    val lastSaleSummary by vm.lastSaleSummary.collectAsState()
 
     val scrollState = rememberScrollState()
 
@@ -80,43 +90,14 @@ fun BusinessStoreScreen(onLogout: () -> Unit, vm: BusinessSaleViewModel = viewMo
     }
 
     val context = LocalContext.current
+    val scope = rememberCoroutineScope()
+
+    var showSaleDetail by remember { mutableStateOf(false) }
 
     // Permiso de notificaciones para Android 13+
     var pendingNotify by remember { mutableStateOf(false) }
-    val notificationPermissionLauncher = rememberLauncherForActivityResult(ActivityResultContracts.RequestPermission()) { granted ->
-        if (granted && pendingNotify) {
-            pendingNotify = false
-            // Enviar notificación si estaba pendiente
-            val channelId = "venta_finalizada_channel"
-            val notificationManager = context.getSystemService(android.content.Context.NOTIFICATION_SERVICE) as android.app.NotificationManager
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-                val channel = android.app.NotificationChannel(
-                    channelId,
-                    "Ventas",
-                    android.app.NotificationManager.IMPORTANCE_HIGH
-                ).apply {
-                    enableVibration(true)
-                    setShowBadge(true)
-                    description = "Notificaciones de ventas finalizadas"
-                }
-                notificationManager.createNotificationChannel(channel)
-            }
-            val notification = NotificationCompat.Builder(context, channelId)
-                .setSmallIcon(android.R.drawable.ic_dialog_info)
-                .setContentTitle("Venta finalizada")
-                .setContentText("La venta se ha completado correctamente.")
-                .setPriority(NotificationCompat.PRIORITY_HIGH)
-                .setDefaults(NotificationCompat.DEFAULT_ALL)
-                .setAutoCancel(true)
-                .build()
-            NotificationManagerCompat.from(context).notify(1001, notification)
-            vm.finalizeSale()
-        } else if (!granted) {
-            vm.setError("Permiso de notificaciones denegado")
-        }
-    }
 
-    fun sendNotificationAndFinalize() {
+    val sendNotificationAndFinalize = {
         val channelId = "venta_finalizada_channel"
         val notificationManager = context.getSystemService(android.content.Context.NOTIFICATION_SERVICE) as android.app.NotificationManager
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
@@ -131,6 +112,25 @@ fun BusinessStoreScreen(onLogout: () -> Unit, vm: BusinessSaleViewModel = viewMo
             }
             notificationManager.createNotificationChannel(channel)
         }
+
+        // Construir resumen de venta para el modal antes de enviar push
+        val grouped = ticket.groupBy { it.code ?: it.id?.toString() ?: it.name }
+        val totalPoints = grouped.values.sumOf { group -> group.size * group.first().pointsRequired }
+        val items = grouped.map { (_, items) ->
+            val reward = items.first()
+            SaleItem(name = reward.name, quantity = items.size, pointsRequired = reward.pointsRequired)
+        }
+        val summary = SaleSummary(
+            id = System.currentTimeMillis().toString(),
+            allianceName = alliance?.name,
+            consumerName = user?.name,
+            totalPoints = totalPoints,
+            items = items
+        )
+        vm.setLastSaleSummary(summary)
+        showSaleDetail = true
+
+        // Enviar notificación push (se mantiene)
         val notification = NotificationCompat.Builder(context, channelId)
             .setSmallIcon(android.R.drawable.ic_dialog_info)
             .setContentTitle("Venta finalizada")
@@ -138,30 +138,22 @@ fun BusinessStoreScreen(onLogout: () -> Unit, vm: BusinessSaleViewModel = viewMo
             .setAutoCancel(true)
             .build()
         NotificationManagerCompat.from(context).notify(1001, notification)
-        val merchantNotification = NotificationCompat.Builder(context, channelId)
-            .setSmallIcon(android.R.drawable.ic_dialog_info)
-            .setContentTitle("Venta finalizada")
-            .setContentText("La venta se ha completado correctamente.")
-            .setPriority(NotificationCompat.PRIORITY_HIGH)
-            .setDefaults(NotificationCompat.DEFAULT_ALL)
-            .setCategory(NotificationCompat.CATEGORY_MESSAGE)
-            .setAutoCancel(true)
-            .build()
-        NotificationManagerCompat.from(context).notify(1001, merchantNotification)
-        if (user != null) {
-            val consumerNotification = NotificationCompat.Builder(context, channelId)
-                .setSmallIcon(android.R.drawable.ic_dialog_info)
-                .setContentTitle("Venta finalizada")
-                .setContentText("Gracias ${user!!.name}, tu compra fue registrada.")
-                .setPriority(NotificationCompat.PRIORITY_HIGH)
-                .setDefaults(NotificationCompat.DEFAULT_ALL)
-                .setCategory(NotificationCompat.CATEGORY_MESSAGE)
-                .setAutoCancel(true)
-                .build()
-            NotificationManagerCompat.from(context).notify(1002, consumerNotification)
-        }
-        vm.finalizeSale()
+
+        // No limpiar inmediatamente para que modal muestre datos; limpiar al cerrar modal
+        // vm.finalizeSale() // mover a onClose del modal
     }
+
+    val notificationPermissionLauncher = rememberLauncherForActivityResult(ActivityResultContracts.RequestPermission()) { granted ->
+        if (granted && pendingNotify) {
+            pendingNotify = false
+            // Enviar notificación y mostrar modal de detalle con resumen
+            sendNotificationAndFinalize()
+        } else if (!granted) {
+            vm.setError("Permiso de notificaciones denegado")
+        }
+    }
+
+    // var lastSaleSummary by remember { mutableStateOf<SaleSummary?>(null) }
 
     Column(modifier = Modifier.fillMaxSize().verticalScroll(scrollState)) {
         BusinessSectionHeader(
@@ -169,10 +161,8 @@ fun BusinessStoreScreen(onLogout: () -> Unit, vm: BusinessSaleViewModel = viewMo
             onLogout = onLogout,
             textColor = Color.White
         )
-        Spacer(modifier = Modifier.height(20.dp))
 
         // Datos del consumidor
-        if (user != null) {
             Card(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -181,41 +171,56 @@ fun BusinessStoreScreen(onLogout: () -> Unit, vm: BusinessSaleViewModel = viewMo
                 shape = RoundedCornerShape(12.dp)
             ) {
                 Column(modifier = Modifier.padding(16.dp)) {
-                    Text(
-                        text = "Consumidor",
-                        style = MaterialTheme.typography.titleMedium.copy(
-                            fontFamily = PoppinsFontFamily,
-                            fontWeight = FontWeight.ExtraBold
-                        ),
-                        color = RenovaColors.Primary
-                    )
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Text(
+                            text = "Consumidor",
+                            style = MaterialTheme.typography.titleMedium.copy(
+                                fontFamily = PoppinsFontFamily,
+                                fontWeight = FontWeight.ExtraBold
+                            ),
+                            color = RenovaColors.Primary
+                        )
+                        Spacer(modifier = Modifier.weight(1f))
+                        if (user != null && ticket.isEmpty()) {
+                            IconButton(onClick = {
+                                vm.finalizeSale()
+                                Toast.makeText(context, "Venta limpiada. Escanee un nuevo consumidor.", Toast.LENGTH_SHORT).show()
+                            }) {
+                                Icon(
+                                    imageVector = Icons.Filled.Close,
+                                    contentDescription = "Limpiar venta",
+                                    tint = RenovaColors.Primary
+                                )
+                            }
+                        }
+                    }
                     Spacer(modifier = Modifier.height(6.dp))
-                    Text(
-                        text = "Nombre: ${user!!.name} ${user!!.last_name ?: ""}",
-                        style = MaterialTheme.typography.bodyMedium.copy(
-                            fontFamily = PoppinsFontFamily,
-                            fontWeight = FontWeight.SemiBold
-                        ),
-                        color = Color.Black
-                    )
-                    Text(
-                        text = "Puntos disponibles: ${user!!.total_points}",
-                        style = MaterialTheme.typography.bodyMedium.copy(fontFamily = PoppinsFontFamily),
-                        color = Color.Black
-                    )
+                    if (user != null) {
+                        Text(
+                            text = "Nombre: ${user!!.name} ${user!!.last_name ?: ""}",
+                            style = MaterialTheme.typography.bodyMedium.copy(
+                                fontFamily = PoppinsFontFamily,
+                                fontWeight = FontWeight.SemiBold
+                            ),
+                            color = Color.Black
+                        )
+                        Text(
+                            text = "Puntos disponibles: ${user!!.total_points}",
+                            style = MaterialTheme.typography.bodyMedium.copy(fontFamily = PoppinsFontFamily),
+                            color = Color.Black
+                        )
+                    } else {
+                        Text(
+                            text = "Aún no se ha escaneado al consumidor",
+                            style = MaterialTheme.typography.bodyMedium.copy(fontFamily = PoppinsFontFamily),
+                            color = Color.DarkGray
+                        )
+                    }
                 }
             }
-        } else {
-            Box(modifier = Modifier.fillMaxWidth(), contentAlignment = Alignment.Center) {
-                Text(
-                    text = "Consumidor",
-                    style = MaterialTheme.typography.titleMedium.copy(
-                        fontFamily = PoppinsFontFamily,
-                        fontWeight = FontWeight.Bold
-                    )
-                )
-            }
-        }
 
         // Sección: Comercio identificado (sin mostrar ID)
         Card(
@@ -387,7 +392,10 @@ fun BusinessStoreScreen(onLogout: () -> Unit, vm: BusinessSaleViewModel = viewMo
                     Spacer(modifier = Modifier.height(12.dp))
 
                     Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                        OutlinedButton(onClick = { vm.clearTicket() }) { Text("Limpiar ticket") }
+                        OutlinedButton(onClick = {
+                            vm.finalizeSale()
+                            Toast.makeText(context, "Venta limpiada. Escanee un nuevo consumidor.", Toast.LENGTH_SHORT).show()
+                        }) { Text("Limpiar venta") }
                         Button(
                             onClick = {
                                 // Validaciones antes de finalizar
@@ -423,6 +431,25 @@ fun BusinessStoreScreen(onLogout: () -> Unit, vm: BusinessSaleViewModel = viewMo
                 }
             }
         }
+    }
+    if (showSaleDetail && lastSaleSummary != null) {
+        SaleDetailModal(
+            summary = lastSaleSummary!!,
+            onClose = {
+                showSaleDetail = false
+                vm.finalizeSale()
+            },
+            onPrint = {
+                scope.launch {
+                    Toast.makeText(context, "Imprimiendo...", Toast.LENGTH_SHORT).show()
+                    kotlinx.coroutines.delay(1000)
+                    Toast.makeText(context, "Ticket impreso", Toast.LENGTH_SHORT).show()
+                    showSaleDetail = false
+                    vm.finalizeSale()
+                    navController.navigate(NavigationItemBusiness.Home.route)
+                }
+            }
+        )
     }
 }
 

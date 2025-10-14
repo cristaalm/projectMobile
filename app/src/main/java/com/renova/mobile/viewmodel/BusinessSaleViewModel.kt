@@ -37,6 +37,10 @@ class BusinessSaleViewModel : ViewModel() {
     private val _businessAlliance = MutableStateFlow<com.renova.mobile.network.Alianza?>(null)
     val businessAlliance: StateFlow<com.renova.mobile.network.Alianza?> = _businessAlliance
 
+    // Última venta resumida para usar en Home y detalle
+    private val _lastSaleSummary = MutableStateFlow<com.renova.mobile.ui.components.SaleSummary?>(null)
+    val lastSaleSummary: StateFlow<com.renova.mobile.ui.components.SaleSummary?> = _lastSaleSummary
+
     fun setBusinessAllianceId(id: Int) {
         _businessAllianceId.value = id
         // Cargar recompensas del comercio
@@ -219,6 +223,31 @@ class BusinessSaleViewModel : ViewModel() {
         _error.value = null
     }
 
+    fun setLastSaleSummary(summary: com.renova.mobile.ui.components.SaleSummary) {
+        _lastSaleSummary.value = summary
+    }
+
+    fun buildLastSaleSummaryFromTicket(): com.renova.mobile.ui.components.SaleSummary? {
+        val currentTicket = _ticket.value
+        if (currentTicket.isEmpty()) return null
+
+        val grouped = currentTicket.groupBy { it.code ?: it.id?.toString() ?: it.name }
+        val totalPoints = grouped.values.sumOf { group -> group.size * group.first().pointsRequired }
+        val items = grouped.map { (_, items) ->
+            val reward = items.first()
+            com.renova.mobile.ui.components.SaleItem(name = reward.name, quantity = items.size, pointsRequired = reward.pointsRequired)
+        }
+        val summary = com.renova.mobile.ui.components.SaleSummary(
+            id = System.currentTimeMillis().toString(),
+            allianceName = _businessAlliance.value?.name,
+            consumerName = _scannedUser.value?.name,
+            totalPoints = totalPoints,
+            items = items
+        )
+        _lastSaleSummary.value = summary
+        return summary
+    }
+
     fun finalizeSale() {
         // Al finalizar, limpiar ticket, errores y datos del consumidor
         _ticket.value = emptyList()
@@ -226,5 +255,6 @@ class BusinessSaleViewModel : ViewModel() {
         _scannedUser.value = null
         // Mantener la alianza establecida para continuar vendiendo sin reconfigurar
         // No tocar _businessAllianceId ni _businessAlliance
+        // Mantener el resumen de la última venta para mostrarlo en Home
     }
 }
