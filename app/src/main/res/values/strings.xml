@@ -211,6 +211,7 @@
     <string name="reward_screen_subtitle">Explore and choose the reward you like the most</string>
     <string name="content_description_back">Back</string>
     <string name="error_prefix">Error:\u0020</string>
+    <string name="unknown_error">Unknown Error</string>
     <string name="no_rewards_available">This merchant has no available rewards.</string>
     <string name="pointsR">points</string>
     <string name="reward_confirmation_dialog_title">Confirm Reward</string>
@@ -226,8 +227,9 @@
     <string name="bottom_nav_profile">Profile</string>
 
     <!-- Mensajes de error genéricos -->
-    <string name="error_generic">An error occurred. Please try again.</string>
-    <string name="error_connection">Connection error. Check your internet and try again.</string>
+    <string name="error_title2">¡Ocurrió un error!</string>
+    <string name="error_default_message">¡Oops! Sucedió un error, por favor reinicia o vuelve a iniciar sesión</string>
+    <string name="close_button">Cerrar</string>
 
     <!-- Venta -->
     <string name="sale">Sale</string>
@@ -241,5 +243,48 @@
 
     <string name="error_title">Error</string>
     <string name="error_file_too_large">The selected file exceeds the maximum allowed size of 5MB. Please select a smaller image.</string>
+
+    <!-- Profile -->
+    <string name="profile_verified_badge">Verified</string>
+    <string name="profile_pending_badge">Pending</string>
+    <string name="profile_rejected_badge">Rejected</string>
+    <string name="profile_no_badge">No Docs.</string>
+    <string name="profile_verified_title">Verified Profile</string>
+    <string name="profile_verified_description">Your identity has been successfully verified.</string>
+    <string name="verification_pending_title">Verification in Progress</string>
+    <string name="verification_pending_description">Your documentation is currently under review.</string>
+    <string name="verification_pending_info">You can edit your email and phone while your profile is being verified.</string>
+    <string name="verification_rejected_title">Verification Rejected</string>
+    <string name="verification_rejected_description">Your documentation was rejected. Please review and resubmit.</string>
+    <string name="verification_empty_title">Empty Documentation</string>
+    <string name="verification_empty_description">You did not submit documentation. Please review and submit.</string>
+    <string name="protected_profile_title">Protected Profile</string>
+    <string name="protected_profile_description">Your profile has been verified. Your personal data is protected and cannot be modified.</string>
+    <string name="action_required_title">Action Required</string>
+    <string name="action_required_description">Your documentation was rejected. Please review the reason above and resubmit the correct photos.</string>
+    <string name="documentation_rejected">Documentation Rejected</string>
+    <string name="documentation_submitted">Documentation Submitted</string>
+    <string name="documentation_pending">Documentation Pending</string>
+    <string name="documentation_empty">Empty Documentation</string>
+    <string name="ine_front">INE Front</string>
+    <string name="ine_back">INE Back</string>
+    <string name="curp_label">CURP</string>
+    <string name="edit_field">Edit</string>
+    <string name="save_field">Save</string>
+    <string name="cancel_field">Cancel</string>
+    <string name="resubmit_documentation">Resubmit Documentation</string>
+    <string name="retry_button">Retry</string>
+
+    <string name="tap_to_upload">Tap to upload</string>
+    <string name="upload_documentation">Documentation</string>
+    <string name="documentation_verified">Documentation Verified</string>
+    <string name="update_documentation">Update Documentation</string>
+    <string name="submit_documentation">Submit Documentation</string>
+    <string name="documentation_upload_hint">Make sure the photos are clear and readable. The documents will be reviewed by our team.</string>
+
+    <string name="uploading">Uploading...</string>
     <string name="accept">Accept</string>
+    <string name="change">Change</string>
+    <string name="close">Close</string>
+    <string name="documentation_rejected_hint">Please, upload your documents again. Make sure that the pictures are clear and readable.</string>
 </resources>

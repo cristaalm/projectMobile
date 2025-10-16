@@ -20,6 +20,7 @@
     <string name="logged">Has iniciado sesión correctamente.</string>
     <string name="continuar">Continuar</string>
     <string name="error_access">Error de acceso</string>
+    <string name="unknown_error">Error desconocido</string>
     <string name="incorrect_information">Correo o contraseña incorrectos. Por favor verifica tus datos.</string>
     <string name="retry">Reintentar</string>
     <string name="mail_not_registered">El correo electrónico ingresado no está registrado.</string>
@@ -228,14 +229,15 @@
     <string name="bottom_nav_profile">Perfil</string>
 
     <!-- Mensajes de error genéricos -->
-    <string name="error_generic">Ha ocurrido un error. Por favor, inténtalo de nuevo.</string>
-    <string name="error_connection">Error de conexión. Verifica tu internet e inténtalo de nuevo.</string>
+    <string name="error_title2">¡Ocurrió un error!</string>
+    <string name="error_default_message">¡Oops! Sucedió un error, por favor reinicia o vuelve a iniciar sesión</string>
+    <string name="close_button">Cerrar</string>
 
-
+    <!-- Si no tienes estos, agrégalos también -->
     <string name="scroll_down_2">Deslizar hacia abajo</string>
     <string name="success_2">Éxito</string>
     <string name="completed_2">¡Completado!</string>
-    
+
     <!-- Venta -->
     <string name="sale">Venta</string>
 
@@ -249,4 +251,46 @@
     <string name="error_title">Error</string>
     <string name="error_file_too_large">El archivo seleccionado supera el tamaño máximo permitido de 5MB. Por favor, selecciona una imagen más pequeña.</string>
     <string name="accept">Aceptar</string>
+
+    <!-- Perfil -->
+    <string name="profile_verified_badge">Verificado</string>
+    <string name="profile_pending_badge">Pendiente</string>
+    <string name="profile_rejected_badge">Rechazado</string>
+    <string name="profile_no_badge">Sin Docs.</string>
+    <string name="profile_verified_title">Perfil Verificado</string>
+    <string name="profile_verified_description">Tu identidad ha sido verificada exitosamente.</string>
+    <string name="verification_pending_title">Verificación en Proceso</string>
+    <string name="verification_pending_description">Tu documentación está siendo revisada.</string>
+    <string name="verification_pending_info">Puedes editar tu correo y teléfono mientras tu perfil es verificado.</string>
+    <string name="verification_empty_title">Documentación Vacía</string>
+    <string name="verification_empty_description">No subiste documentación. Porfavor verifica y sube tu documentación.</string>
+    <string name="verification_rejected_title">Verificación Rechazada</string>
+    <string name="verification_rejected_description">Tu documentación fue rechazada. Por favor revisa y envía nuevamente.</string>
+    <string name="protected_profile_title">Perfil Protegido</string>
+    <string name="protected_profile_description">Tu perfil ha sido verificado. Tus datos personales están protegidos y no pueden ser modificados.</string>
+    <string name="action_required_title">Acción Requerida</string>
+    <string name="action_required_description">Tu documentación fue rechazada. Por favor revisa el motivo arriba y envía nuevamente las fotos correctas.</string>
+    <string name="documentation_rejected">Documentación Rechazada</string>
+    <string name="documentation_submitted">Documentación Enviada</string>
+    <string name="documentation_pending">Documentation Pending</string>
+    <string name="documentation_empty">Documentación Vacía</string>
+    <string name="ine_front">INE Frontal</string>
+    <string name="ine_back">INE Trasera</string>
+    <string name="curp_label">CURP</string>
+    <string name="edit_field">Editar</string>
+    <string name="save_field">Guardar</string>
+    <string name="cancel_field">Cancelar</string>
+    <string name="resubmit_documentation">Reenviar Documentación</string>
+    <string name="retry_button">Reintentar</string>
+
+    <string name="tap_to_upload">Toca para subir</string>
+    <string name="upload_documentation">Documentación</string>
+    <string name="documentation_verified">Documentación Verificada</string>
+    <string name="update_documentation">Actualizar Documentación</string>
+    <string name="submit_documentation">Enviar Documentación</string>
+    <string name="documentation_upload_hint">Asegúrate de que las fotos sean claras y legibles. Los documentos serán revisados por nuestro equipo.</string>
+    <string name="uploading">Subiendo...</string>
+    <string name="change">Cambiar</string>
+    <string name="close">Cerrar</string>
+    <string name="documentation_rejected_hint">Por favor, sube nuevamente tus documentos. Asegúrate de que las fotos sean claras y legibles.</string>
 </resources>

@@ -4,13 +4,14 @@ import com.renova.mobile.network.ApiClient
 import com.renova.mobile.network.HistoryResponse
 import com.renova.mobile.network.TotalScansResponse
 import com.renova.mobile.utils.SessionManager
+import android.util.Log
 
 class ActivityRepository {
     suspend fun getHistory(
         page: Int = 1,
         perPage: Int = 10,
-        key: String = "created_at",  // Campo por el cual ordenar: 'material_type.name' o 'created_at'
-        order: String = "desc"  // Orden: 'asc' o 'desc'
+        key: String = "created_at",
+        order: String = "desc"
     ): HistoryResponse {
 
         val response = ApiClient.apiService.getHistory(
@@ -22,6 +23,7 @@ class ActivityRepository {
 
         return if (response.isSuccessful) {
             response.body() ?: throw Exception("Response body is null")
+
         } else {
             val errorBody = response.errorBody()?.string()
             throw Exception("Error ${response.code()}: ${response.message()}. Body: $errorBody")
@@ -47,6 +49,8 @@ class ActivityRepository {
             return 0
         }
 
+        Log.d("Tokenn", "Token: ${token}")
+
         val cleanToken = token.removePrefix("Bearer ").trim()
 
         val response = ApiClient.apiService.identifyUser(
@@ -56,6 +60,7 @@ class ActivityRepository {
         return if (response.isSuccessful) {
             val body = response.body()
             body?.data?.user?.total_points ?: 0
+            Log.d("Tokenn", "Token: ${token}")
         } else {
             0
         }

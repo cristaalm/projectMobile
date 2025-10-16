@@ -11,9 +11,7 @@ import com.renova.mobile.utils.SessionManager
 import okhttp3.MultipartBody
 import retrofit2.http.*
 
-// para register
-
-// REQUEST para registro
+// ========== REGISTER ==========
 data class RegisterRequest(
     val name: String,
     val last_name: String,
@@ -24,7 +22,6 @@ data class RegisterRequest(
     val password_confirmation: String
 )
 
-// RESPONSE del registro
 data class RegisterResponse(
     val success: Boolean,
     val message: String,
@@ -58,7 +55,7 @@ data class RegisteredUser(
     val updated_at: String
 )
 
-// RESPONSE para documentos
+// ========== UPLOAD DOCUMENTS ==========
 data class UploadDocumentsResponse(
     val success: Boolean,
     val message: String,
@@ -81,7 +78,6 @@ data class DocumentResponseData(
     val updated_at: String
 )
 
-// RESPONSE para selfie
 data class UploadSelfieResponse(
     val success: Boolean,
     val message: String,
@@ -90,7 +86,7 @@ data class UploadSelfieResponse(
     val status: Int
 )
 
-// para login
+// ========== LOGIN ==========
 data class LoginRequest(
     val email: String,
     val password: String,
@@ -109,7 +105,7 @@ data class LoginData(
     val access_token: String?,
     val token_type: String?,
     val expires_at: String?,
-    val user: User?  // ⬅️ REVERTIDO: Es un objeto, no un array
+    val user: User?
 )
 
 data class User(
@@ -134,6 +130,7 @@ data class Role(
     val is_active: Boolean
 )
 
+// ========== FORGOT PASSWORD ==========
 data class ForgotPasswordRequest(
     val email: String
 )
@@ -146,6 +143,20 @@ data class ForgotPasswordResponse(
     val status: Int
 )
 
+// ========== VALIDATE TOKEN ==========
+data class ValidateTokenRequest(
+    val token: String
+)
+
+data class ValidateTokenResponse(
+    val success: Boolean,
+    val message: String,
+    val data: User?,
+    val errors: Any?,
+    val status: Int
+)
+
+// ========== ALIANZAS ==========
 data class AlianzasResponse(
     val success: Boolean,
     val message: String,
@@ -175,6 +186,7 @@ data class Alianza(
     val updated_at: String
 )
 
+// ========== TYPE SHOP ==========
 data class TypeShopResponse(
     val success: Boolean,
     val message: String,
@@ -188,6 +200,7 @@ data class TypeShop(
     val name: String
 )
 
+// ========== REWARDS ==========
 data class RewardResponse(
     val success: Boolean,
     val message: String,
@@ -324,7 +337,14 @@ data class Scan(
     val is_crushed: Boolean
 )
 
-// ========== Datos del usuario ==========
+// ========== IDENTITY USER / PROFILE ==========
+// Request para obtener perfil completo con documentos de verificación
+data class IdentifyUserRequest(
+    val token: String,
+    val with_identity: Boolean = false
+)
+
+// Response del perfil de usuario
 data class IdentifyUserResponse(
     val success: Boolean,
     val message: String,
@@ -333,27 +353,31 @@ data class IdentifyUserResponse(
     val code: Int
 )
 
+// Data del perfil (usuario + documentos de verificación)
 data class IdentifyUserData(
-    val user: UserData
+    val user: UserData,
+    val identityVerification: List<IdentityVerification>
 )
 
+// Usuario completo (usado en perfil y otras llamadas)
 data class UserData(
     val id: Int,
     val name: String,
-    val last_name: String?,
+    val last_name: String,
     val email: String,
-    val phone: String?,
-    @SerializedName("curp") val curp: String?,
+    val phone: String,
+    @SerializedName("curp") val curp: String,
     val total_points: Int,
-    val verification_status: Int,
+    val verification_status: Int, // 0=pendiente, 1=aprobado, 2=rechazado, 3=sin docs
     val two_factor_status: Boolean,
-    val code_identity: String?,
+    val code_identity: String,
     val status: Int,
     val created_at: String,
     val updated_at: String,
-    val role: RoleData?
+    val role: RoleData
 )
 
+// Rol del usuario
 data class RoleData(
     val id: Int,
     val name: String,
@@ -361,26 +385,27 @@ data class RoleData(
     val is_active: Boolean
 )
 
-data class IdentifyUserRequest(
-    val token: String
+// Documentos de verificación de identidad
+data class IdentityVerification(
+    val id: Int,
+    val user_id: Int,
+    val ine_front_url: String?,
+    val ine_back_url: String?,
+    val selfie_url: String?,
+    val status: Int,
+    val rejection_reason: String?,
+    val verified_by: Int?,
+    val verified_at: String?,
+    val created_at: String,
+    val updated_at: String
 )
 
+// Request para identificar usuario por código (si se usa en otras partes)
 data class IdentifyUserByCodeRequest(
     val code: String
 )
 
-data class ValidateTokenRequest(
-    val token: String
-)
-
-data class ValidateTokenResponse(
-    val success: Boolean,
-    val message: String,
-    val data: User?,
-    val errors: Any?,
-    val status: Int
-)
-
+// ========== API SERVICE ==========
 interface ApiService {
 
     @POST("api/users/register")
@@ -435,13 +460,16 @@ interface ApiService {
     @GET("api/scans/total-type-scans")
     suspend fun getTotalScans(): Response<TotalScansResponse>
 
+    // Endpoint principal para obtener perfil de usuario con documentos
     @POST("api/users/identityUser")
     suspend fun identifyUser(@Body request: IdentifyUserRequest): Response<IdentifyUserResponse>
 
+    // Endpoint para identificar usuario por código (mantener si otras partes lo usan)
     @POST("api/users/identityUserCode")
     suspend fun identifyUserByCode(@Body request: IdentifyUserByCodeRequest): Response<IdentifyUserResponse>
 }
 
+// ========== API CLIENT ==========
 object ApiClient {
     private const val BASE_URL = "https://renova-3q4h.onrender.com/"
 
