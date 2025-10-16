@@ -231,4 +231,15 @@
 
     <!-- Venta -->
     <string name="sale">Sale</string>
+
+    <!-- modal de logout-->
+    <string name="modal_logout_title">Log out</string>>
+    <string name="modal_logout_message">Are you sure you want to log out?</string>>
+    <string name="modal_logout_loading">Logging out…</string>>
+    <string name="modal_logout_cancel">Cancel</string>>
+    <string name="modal_logout_confirm">Log out</string>>
+
+    <string name="error_title">Error</string>
+    <string name="error_file_too_large">The selected file exceeds the maximum allowed size of 5MB. Please select a smaller image.</string>
+    <string name="accept">Accept</string>
 </resources>

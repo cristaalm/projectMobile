@@ -580,7 +580,7 @@ fun validatePhone(phone: String): Boolean =
     phone.length == 10 && phone.all { it.isDigit() }
 
 fun validateCURP(curp: String): Boolean {
-    val curpPattern = "^[A-Z]{4}[0-9]{6}[HM][A-Z]{5}[0-9]{2}$"
+    val curpPattern = "^[A-Z]{4}\\d{6}[HM][A-Z]{2}[BCDFGHJKLMNPQRSTVWXYZ]{3}[0-9A-Z]\\d$"
     return curp.matches(curpPattern.toRegex())
 }
 

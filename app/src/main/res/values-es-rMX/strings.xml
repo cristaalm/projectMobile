@@ -231,11 +231,22 @@
     <string name="error_generic">Ha ocurrido un error. Por favor, inténtalo de nuevo.</string>
     <string name="error_connection">Error de conexión. Verifica tu internet e inténtalo de nuevo.</string>
 
-    <!-- Si no tienes estos, agrégalos también -->
+
     <string name="scroll_down_2">Deslizar hacia abajo</string>
     <string name="success_2">Éxito</string>
     <string name="completed_2">¡Completado!</string>
     
     <!-- Venta -->
     <string name="sale">Venta</string>
+
+    <!-- modal de logout-->
+    <string name="modal_logout_title">Cerrar sesión</string>>
+    <string name="modal_logout_message">¿Seguro que deseas salir?</string>>
+    <string name="modal_logout_loading">Cerrando sesión…</string>>
+    <string name="modal_logout_cancel">Cancelar</string>>
+    <string name="modal_logout_confirm">Salir</string>>
+
+    <string name="error_title">Error</string>
+    <string name="error_file_too_large">El archivo seleccionado supera el tamaño máximo permitido de 5MB. Por favor, selecciona una imagen más pequeña.</string>
+    <string name="accept">Aceptar</string>
 </resources>

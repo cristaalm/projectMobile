@@ -55,18 +55,46 @@ fun DocumentsScreen(
     var showErrorDialog by remember { mutableStateOf(false) }
     var errorMessage by remember { mutableStateOf("") }
 
+    // Función para validar tamaño del archivo
+    fun validateFileSize(uri: Uri): Boolean {
+        try {
+            context.contentResolver.openInputStream(uri)?.use { inputStream ->
+                val fileSize = inputStream.available()
+                val maxSize = 5 * 1024 * 1024 // 5MB en bytes
+                return fileSize <= maxSize
+            }
+        } catch (e: Exception) {
+            return false
+        }
+        return false
+    }
+
     val ineFrontLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.GetContent()
     ) { uri: Uri? ->
-        ineFrontUri = uri
-        ineFrontValidation = if (uri != null) ValidationState.VALID else ValidationState.IDLE
+        if (uri != null) {
+            if (validateFileSize(uri)) {
+                ineFrontUri = uri
+                ineFrontValidation = ValidationState.VALID
+            } else {
+                errorMessage = context.getString(R.string.error_file_too_large)
+                showErrorDialog = true
+            }
+        }
     }
 
     val ineBackLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.GetContent()
     ) { uri: Uri? ->
-        ineBackUri = uri
-        ineBackValidation = if (uri != null) ValidationState.VALID else ValidationState.IDLE
+        if (uri != null) {
+            if (validateFileSize(uri)) {
+                ineBackUri = uri
+                ineBackValidation = ValidationState.VALID
+            } else {
+                errorMessage = context.getString(R.string.error_file_too_large)
+                showErrorDialog = true
+            }
+        }
     }
 
     // Observar el estado de subida
@@ -93,7 +121,7 @@ fun DocumentsScreen(
             onDismissRequest = { showErrorDialog = false },
             title = {
                 Text(
-                    text = "Error",
+                    text = stringResource(R.string.error_title),
                     fontFamily = Poppins,
                     fontWeight = FontWeight.Bold
                 )
@@ -114,7 +142,10 @@ fun DocumentsScreen(
                         containerColor = CustomGreenColor
                     )
                 ) {
-                    Text("Aceptar", fontFamily = Poppins)
+                    Text(
+                        text = stringResource(R.string.accept),
+                        fontFamily = Poppins
+                    )
                 }
             }
         )

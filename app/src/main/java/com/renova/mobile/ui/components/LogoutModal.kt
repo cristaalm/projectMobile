@@ -56,7 +56,7 @@ fun LogoutModal(
     val backgroundColor = if (isDarkTheme) Color(0xFF2C2C2C) else Color.White
     val textColor = if (isDarkTheme) Color(0xFFE0E0E0) else Color(0xFF333333)
     val secondaryTextColor = if (isDarkTheme) Color(0xFFAAAAAA) else Color(0xFF666666)
-    val buttonColor = if (isDarkTheme) Color(0xFFFF7043) else Color(0xFFFF5722)
+    val buttonColor = if (isDarkTheme) Color(0xFF349A18) else Color(0xFF1F901C)
 
     if (isVisible) {
         Dialog(
@@ -88,21 +88,21 @@ fun LogoutModal(
                         )
                         Spacer(modifier = Modifier.height(12.dp))
                         Text(
-                            "Cerrando sesión...",
+                            text = stringResource(R.string.modal_logout_loading),
                             fontWeight = FontWeight.Medium,
                             fontSize = 14.sp,
                             color = textColor
                         )
                     } else {
                         Text(
-                            "Cerrar sesión",
+                            text = stringResource(R.string.modal_logout_title),
                             fontWeight = FontWeight.Bold,
                             fontSize = 16.sp,
                             color = textColor
                         )
                         Spacer(modifier = Modifier.height(8.dp))
                         Text(
-                            "¿Seguro que deseas salir?",
+                            text = stringResource(R.string.modal_logout_message),
                             fontSize = 14.sp,
                             color = secondaryTextColor,
                             textAlign = TextAlign.Center
@@ -113,14 +113,20 @@ fun LogoutModal(
                                 onClick = onDismiss,
                                 modifier = Modifier.weight(1f)
                             ) {
-                                Text("Cancelar", color = buttonColor)
+                                Text(
+                                    text = stringResource(R.string.modal_logout_cancel),
+                                    color = buttonColor
+                                )
                             }
                             Button(
                                 onClick = { isLoading = true },
                                 modifier = Modifier.weight(1f),
                                 colors = ButtonDefaults.buttonColors(containerColor = buttonColor)
                             ) {
-                                Text("Salir", color = Color.White)
+                                Text(
+                                    text = stringResource(R.string.modal_logout_confirm),
+                                    color = Color.White
+                                )
                             }
                         }
                     }
