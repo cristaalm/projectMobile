@@ -58,14 +58,26 @@ fun SaleDetailModal(
 
                 // Resumen general
                 Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
-                    Text(text = "ID: ${summary.id}", style = MaterialTheme.typography.bodyMedium.copy(fontFamily = PoppinsFontFamily))
+                    // Eliminado: ID de la venta
                     if (summary.allianceName != null) {
-                        Text(text = "Comercio: ${summary.allianceName}", style = MaterialTheme.typography.bodyMedium.copy(fontFamily = PoppinsFontFamily))
+                        Text(
+                            text = "Comercio: ${summary.allianceName}",
+                            style = MaterialTheme.typography.bodyMedium.copy(fontFamily = PoppinsFontFamily)
+                        )
                     }
                     if (summary.consumerName != null) {
-                        Text(text = "Consumidor: ${summary.consumerName}", style = MaterialTheme.typography.bodyMedium.copy(fontFamily = PoppinsFontFamily))
+                        Text(
+                            text = "Cliente: ${summary.consumerName}",
+                            style = MaterialTheme.typography.bodyMedium.copy(fontFamily = PoppinsFontFamily)
+                        )
                     }
-                    Text(text = "Total de puntos: ${summary.totalPoints}", style = MaterialTheme.typography.bodyMedium.copy(fontFamily = PoppinsFontFamily, fontWeight = FontWeight.SemiBold), color = RenovaColors.Primary)
+                    Text(
+                        text = "Total puntos: ${summary.totalPoints}",
+                        style = MaterialTheme.typography.bodyMedium.copy(
+                            fontFamily = PoppinsFontFamily,
+                            fontWeight = FontWeight.SemiBold
+                        )
+                    )
                 }
 
                 Divider()
@@ -84,9 +96,26 @@ fun SaleDetailModal(
                 }
 
                 // Botón imprimir
-                Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.End) {
-                    Button(onClick = onPrint) {
+                Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                    OutlinedButton(
+                        onClick = onPrint,
+                        modifier = Modifier.weight(1f),
+                        colors = ButtonDefaults.outlinedButtonColors(
+                            contentColor = RenovaColors.Primary
+                        ),
+                        border = androidx.compose.foundation.BorderStroke(1.dp, RenovaColors.Primary)
+                    ) {
                         Text(text = "Imprimir")
+                    }
+                    Button(
+                        onClick = onClose,
+                        modifier = Modifier.weight(1f),
+                        colors = ButtonDefaults.buttonColors(
+                            containerColor = RenovaColors.Primary,
+                            contentColor = Color.White
+                        )
+                    ) {
+                        Text(text = "Cancelar")
                     }
                 }
             }

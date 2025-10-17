@@ -5,6 +5,7 @@ import androidx.lifecycle.viewModelScope
 import com.renova.mobile.network.ApiClient
 import com.renova.mobile.network.IdentifyUserByCodeRequest
 import com.renova.mobile.network.UserData
+import com.renova.mobile.network.ClaimRewardRequest
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
@@ -213,6 +214,26 @@ class BusinessSaleViewModel : ViewModel() {
                 return@launch
             }
 
+            // Validar puntos disponibles del cliente antes de agregar
+            val currentUser = _scannedUser.value
+            if (currentUser == null) {
+                _error.value = "Primero escanee al consumidor para agregar recompensas"
+                return@launch
+            }
+            val userPoints = currentUser.total_points
+            val ticketPoints = _ticket.value.sumOf { it.pointsRequired }
+            val neededPoints = reward.pointsRequired
+            if (userPoints < ticketPoints + neededPoints) {
+                _error.value = "Puntos insuficientes para agregar esta recompensa"
+                return@launch
+            }
+
+            // Restringir a una sola unidad por recompensa en el ticket
+            if (_ticket.value.any { it.id == reward.id }) {
+                _error.value = "Esta recompensa ya está en el ticket (solo 1 unidad permitida)"
+                return@launch
+            }
+
             _ticket.value = _ticket.value + reward
             _error.value = null
         }
@@ -256,5 +277,66 @@ class BusinessSaleViewModel : ViewModel() {
         // Mantener la alianza establecida para continuar vendiendo sin reconfigurar
         // No tocar _businessAllianceId ni _businessAlliance
         // Mantener el resumen de la última venta para mostrarlo en Home
+    }
+
+    // Función para reclamar recompensas via API
+    fun claimRewards(onSuccess: (String) -> Unit, onError: (String) -> Unit) {
+        val currentUser = _scannedUser.value
+        val currentTicket = _ticket.value
+        val currentAllianceId = _businessAllianceId.value
+
+        if (currentUser == null || currentTicket.isEmpty() || currentAllianceId == null) {
+            onError("Datos incompletos para procesar la venta")
+            return
+        }
+
+        viewModelScope.launch {
+            try {
+                // Procesar solo una unidad por recompensa (recompensas únicas)
+                val uniqueRewards = currentTicket.distinctBy { it.id }
+                for (reward in uniqueRewards) {
+                    val request = ClaimRewardRequest(
+                        user_id = currentUser.id,
+                        reward_id = reward.id,
+                        alliance_id = currentAllianceId
+                    )
+
+                    val response = ApiClient.apiService.claimReward(request)
+
+                    if (!response.isSuccessful) {
+                        onError("Error al procesar recompensa: ${response.message()}")
+                        return@launch
+                    }
+
+                    val body = response.body()
+                    if (body?.success != true) {
+                        onError(body?.message ?: "Error desconocido al reclamar recompensa")
+                        return@launch
+                    }
+                }
+
+                // Si todas las recompensas se procesaron exitosamente
+                val totalDeducted = uniqueRewards.sumOf { it.pointsRequired }
+                val rewardNames = uniqueRewards.joinToString(", ") { it.name }
+                val consumerName = currentUser.name
+                val allianceName = _businessAlliance.value?.name
+                val msg = buildString {
+                    append("Se descontaron ")
+                    append(totalDeducted)
+                    append(" puntos de ")
+                    append(consumerName)
+                    append(" por: ")
+                    append(rewardNames)
+                    if (allianceName != null) {
+                        append(" en ")
+                        append(allianceName)
+                    }
+                }
+                onSuccess(msg)
+
+            } catch (e: Exception) {
+                onError("Error de conexión: ${e.message}")
+            }
+        }
     }
 }

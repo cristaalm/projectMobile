@@ -59,8 +59,9 @@ class ActivityRepository {
 
         return if (response.isSuccessful) {
             val body = response.body()
-            body?.data?.user?.total_points ?: 0
-            Log.d("Tokenn", "Token: ${token}")
+            val points = body?.data?.user?.total_points ?: 0
+            Log.d("UserPoints", "total_points: $points")
+            points
         } else {
             0
         }

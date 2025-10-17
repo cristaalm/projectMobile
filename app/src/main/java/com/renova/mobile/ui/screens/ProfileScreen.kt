@@ -451,7 +451,7 @@ fun ProfileHeader(
                             modifier = Modifier.size(20.dp)
                         )
                         Text(
-                            text = "${user.total_points}",
+                            text = java.text.NumberFormat.getIntegerInstance(java.util.Locale.forLanguageTag("es-MX")).format(user.total_points),
                             color = colors.surface,
                             style = MaterialTheme.typography.headlineMedium,
                             fontWeight = FontWeight.W700

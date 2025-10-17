@@ -214,24 +214,12 @@ private fun ActivityContent(
                                 Spacer(modifier = Modifier.height(0.dp))
                                 Row {
                                     Text(
-                                        text = "${state.totalPoints}",
+                                        text = java.text.NumberFormat.getIntegerInstance(java.util.Locale.forLanguageTag("es-MX")).format(state.totalPoints),
                                         style = MaterialTheme.typography.displayLarge,
                                         color = Color.White,
                                         fontSize = 52.sp,
                                         fontWeight = FontWeight.Bold,
                                         lineHeight = 52.sp
-                                    )
-
-                                    Spacer(modifier = Modifier.width(2.dp))
-
-                                    Text(
-                                        modifier = Modifier.padding(top = 22.dp),
-                                        text = stringResource(R.string.points_unit),
-                                        style = MaterialTheme.typography.displayLarge,
-                                        color = Color.White,
-                                        fontSize = 30.sp,
-                                        fontWeight = FontWeight.Bold,
-                                        lineHeight = 30.sp
                                     )
                                 }
                             }

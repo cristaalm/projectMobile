@@ -40,6 +40,9 @@ import com.renova.mobile.navigation.NavigationItemBusiness
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Close
 import kotlinx.coroutines.launch
+import com.renova.mobile.ui.components.PrinterSelectionModal
+import com.renova.mobile.utils.TicketPrinter
+import com.renova.mobile.utils.PrinterModel
 
 @Composable
 fun BusinessStoreScreen(onLogout: () -> Unit, vm: BusinessSaleViewModel = viewModel(), navController: NavController) {
@@ -52,15 +55,14 @@ fun BusinessStoreScreen(onLogout: () -> Unit, vm: BusinessSaleViewModel = viewMo
     val lastSaleSummary by vm.lastSaleSummary.collectAsState()
 
     val scrollState = rememberScrollState()
+    val context = LocalContext.current
 
-    // Establecer una alianza por defecto para mostrar el nombre del comercio desde el inicio
-    LaunchedEffect(Unit) {
-        vm.setBusinessAllianceId(114)
-    }
+
 
     // Limpiar errores automáticamente después de 3 segundos
     LaunchedEffect(error) {
         if (error != null) {
+            Toast.makeText(context, error, Toast.LENGTH_SHORT).show()
             kotlinx.coroutines.delay(3000)
             vm.clearError()
         }
@@ -89,10 +91,12 @@ fun BusinessStoreScreen(onLogout: () -> Unit, vm: BusinessSaleViewModel = viewMo
         rewardScanner.launch(options)
     }
 
-    val context = LocalContext.current
     val scope = rememberCoroutineScope()
 
     var showSaleDetail by remember { mutableStateOf(false) }
+    var showPrinterSelection by remember { mutableStateOf(false) }
+    var isSubmitting by remember { mutableStateOf(false) }
+    var localPrintSummary by remember { mutableStateOf<SaleSummary?>(null) }
 
     // Permiso de notificaciones para Android 13+
     var pendingNotify by remember { mutableStateOf(false) }
@@ -128,16 +132,40 @@ fun BusinessStoreScreen(onLogout: () -> Unit, vm: BusinessSaleViewModel = viewMo
             items = items
         )
         vm.setLastSaleSummary(summary)
-        showSaleDetail = true
+        isSubmitting = true
+        Toast.makeText(context, "Procesando venta...", Toast.LENGTH_SHORT).show()
 
-        // Enviar notificación push (se mantiene)
-        val notification = NotificationCompat.Builder(context, channelId)
-            .setSmallIcon(android.R.drawable.ic_dialog_info)
-            .setContentTitle("Venta finalizada")
-            .setContentText("La venta se ha completado correctamente.")
-            .setAutoCancel(true)
-            .build()
-        NotificationManagerCompat.from(context).notify(1001, notification)
+        // Llamar API reward/claim antes de enviar notificación
+        vm.claimRewards(
+            onSuccess = { message ->
+                // Notificación local para el comerciante con más detalle
+                val title = "Venta finalizada - ${user?.name ?: "Consumidor"}"
+                val notification = NotificationCompat.Builder(context, channelId)
+                    .setSmallIcon(android.R.drawable.ic_dialog_info)
+                    .setContentTitle(title)
+                    .setStyle(NotificationCompat.BigTextStyle().bigText(message))
+                    .setAutoCancel(true)
+                    .build()
+                NotificationManagerCompat.from(context).notify(1001, notification)
+                // Feedback inmediato
+                Toast.makeText(context, "Venta registrada", Toast.LENGTH_SHORT).show()
+                isSubmitting = false
+                showSaleDetail = true
+            },
+            onError = { errorMessage ->
+                // Enviar notificación push con mensaje de error
+                val notification = NotificationCompat.Builder(context, channelId)
+                    .setSmallIcon(android.R.drawable.ic_dialog_alert)
+                    .setContentTitle("Error en venta")
+                    .setContentText(errorMessage)
+                    .setAutoCancel(true)
+                    .build()
+                NotificationManagerCompat.from(context).notify(1002, notification)
+                vm.setError(errorMessage)
+                isSubmitting = false
+                Toast.makeText(context, "Error al enviar la venta", Toast.LENGTH_SHORT).show()
+            }
+        )
 
         // No limpiar inmediatamente para que modal muestre datos; limpiar al cerrar modal
         // vm.finalizeSale() // mover a onClose del modal
@@ -408,6 +436,14 @@ fun BusinessStoreScreen(onLogout: () -> Unit, vm: BusinessSaleViewModel = viewMo
                                     return@Button
                                 }
 
+                                // Validar puntos del cliente suficientes para el total del ticket
+                                val userPts = user?.total_points ?: 0
+                                val totalTicketPoints = ticket.sumOf { it.pointsRequired }
+                                if (userPts < totalTicketPoints) {
+                                    vm.setError("Puntos insuficientes para finalizar la compra")
+                                    return@Button
+                                }
+
                                 if (Build.VERSION.SDK_INT >= 33) {
                                     val granted = ContextCompat.checkSelfPermission(
                                         context,
@@ -423,9 +459,13 @@ fun BusinessStoreScreen(onLogout: () -> Unit, vm: BusinessSaleViewModel = viewMo
                                     sendNotificationAndFinalize()
                                 }
                             },
-                            enabled = allianceId != null && ticket.isNotEmpty()
+                            enabled = allianceId != null && ticket.isNotEmpty() && !isSubmitting
                         ) {
                             Text("Finalizar compra")
+                        }
+                        if (isSubmitting) {
+                            Spacer(modifier = Modifier.width(8.dp))
+                            LinearProgressIndicator(color = RenovaColors.Primary, modifier = Modifier.fillMaxWidth())
                         }
                     }
                 }
@@ -440,13 +480,31 @@ fun BusinessStoreScreen(onLogout: () -> Unit, vm: BusinessSaleViewModel = viewMo
                 vm.finalizeSale()
             },
             onPrint = {
+                localPrintSummary = lastSaleSummary
+                showSaleDetail = false
+                vm.finalizeSale()
+                showPrinterSelection = true
+            }
+        )
+    }
+
+    // Printer Selection Modal
+    if (showPrinterSelection && localPrintSummary != null) {
+        PrinterSelectionModal(
+            summary = localPrintSummary!!,
+            onClose = { showPrinterSelection = false },
+            onPrintSelected = { printer ->
                 scope.launch {
-                    Toast.makeText(context, "Imprimiendo...", Toast.LENGTH_SHORT).show()
-                    kotlinx.coroutines.delay(1000)
-                    Toast.makeText(context, "Ticket impreso", Toast.LENGTH_SHORT).show()
-                    showSaleDetail = false
-                    vm.finalizeSale()
-                    navController.navigate(NavigationItemBusiness.Home.route)
+                    try {
+                        Toast.makeText(context, "Imprimiendo en ${printer.getDisplayName()}...", Toast.LENGTH_SHORT).show()
+                        TicketPrinter.printTicket(localPrintSummary!!, printer, context)
+                        Toast.makeText(context, "Ticket impreso correctamente", Toast.LENGTH_SHORT).show()
+
+                        navController.navigate(NavigationItemBusiness.Home.route)
+                    } catch (e: Exception) {
+                        Toast.makeText(context, "Error al imprimir: ${e.message}", Toast.LENGTH_LONG).show()
+                    }
+                    showPrinterSelection = false
                 }
             }
         )

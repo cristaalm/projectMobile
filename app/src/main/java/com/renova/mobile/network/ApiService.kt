@@ -405,7 +405,29 @@ data class IdentifyUserByCodeRequest(
     val code: String
 )
 
-// ========== API SERVICE ==========
+
+// ========== REWARD CLAIM ==========
+data class ClaimRewardRequest(
+    val user_id: Int,
+    val reward_id: Int,
+    val alliance_id: Int
+)
+
+data class ClaimRewardResponse(
+    val success: Boolean,
+    val message: String,
+    val data: ClaimRewardData?,
+    val error: String?,
+    val status: Int
+)
+
+data class ClaimRewardData(
+    val id: Int,
+    val user_id: Int,
+    val reward_id: Int,
+    val redeemed_at: String
+)
+
 interface ApiService {
 
     @POST("api/users/register")
@@ -457,8 +479,21 @@ interface ApiService {
         @Query("order") order: String = "desc"
     ): Response<HistoryResponse>
 
+    @GET("api/history/getAll")
+    suspend fun getHistoryByAlliance(
+        @Query("id_alliance") allianceId: Int,
+        @Query("page") page: Int = 1,
+        @Query("per_page") perPage: Int = 10,
+        @Query("key") key: String = "created_at",
+        @Query("order") order: String = "desc"
+    ): Response<HistoryResponse>
+
     @GET("api/scans/total-type-scans")
     suspend fun getTotalScans(): Response<TotalScansResponse>
+
+    @POST("api/reward/claim")
+    suspend fun claimReward(@Body request: ClaimRewardRequest): Response<ClaimRewardResponse>
+
 
     // Endpoint principal para obtener perfil de usuario con documentos
     @POST("api/users/identityUser")
