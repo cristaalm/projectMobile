@@ -41,6 +41,11 @@ import coil.decode.GifDecoder
 import coil.decode.ImageDecoderDecoder
 import coil.request.ImageRequest
 import com.renova.mobile.R
+import com.canopas.introshowcaseview.IntroShowcase
+import com.canopas.introshowcaseview.IntroShowcaseTheme
+import com.canopas.introshowcaseview.ShowcaseStyle
+import com.canopas.introshowcaseview.introShowcaseTarget
+import com.canopas.introshowcaseview.rememberIntroShowcaseState
 import com.renova.mobile.navigation.StoreGraph
 import com.renova.mobile.network.Alianza
 import com.renova.mobile.network.TypeShop
@@ -49,6 +54,7 @@ import com.renova.mobile.ui.components.CategoryCard
 import com.renova.mobile.ui.components.SectionHeader
 import com.renova.mobile.ui.screens.viewmodel.StoreViewModel
 import com.renova.mobile.ui.theme.*
+
 import kotlin.math.min
 
 
@@ -61,6 +67,8 @@ fun StoreScreen(
     var searchQuery by remember { mutableStateOf("") }
     val uiState = viewModel.uiState
     var selectedCategoryId by remember { mutableStateOf<Int?>(null) }
+
+    val showcaseState = rememberIntroShowcaseState()
 
     val activeCategories = remember(uiState.categories, uiState.alianzas) {
         uiState.categories.filter { category ->
@@ -105,42 +113,121 @@ fun StoreScreen(
         emptyList()
     }
 
-    Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .background(MaterialTheme.colorScheme.background)
-    ) {
-        SectionHeader(title = stringResource(id = R.string.store_screen_title))
-
-        LazyColumn(
-            modifier = Modifier
-                .padding(horizontal = 16.dp)
-                .imePadding(),
-            verticalArrangement = Arrangement.spacedBy(16.dp)
-        ) {
-            item { Spacer(modifier = Modifier.height(8.dp)) }
-
-            item {
-                SearchBar(
-                    query = searchQuery,
-                    onQueryChange = { searchQuery = it },
-                    colors = colors
-                )
+    IntroShowcase(
+        state = showcaseState,
+        onFinish = {
+            val firstAlianzaId = paginatedAlianzas.firstOrNull()?.id
+            if (firstAlianzaId != null) {
+                // Navegar a la siguiente pantalla para continuar el tour
+                navController.navigate("reward_screen/$firstAlianzaId?startTour=true")
             }
-            item { DiscoverSection(colors = colors) }
+        },
+        theme = IntroShowcaseTheme(
+            showcaseStyle = ShowcaseStyle.Default.copy(
+                backgroundColor = RenovaColors.Primary,
+                backgroundAlpha = 0.98f,
+                targetCircleColor = Color.White
+            )
+        )
+    ) {
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .background(MaterialTheme.colorScheme.background)
+        ) {
+            SectionHeader(title = stringResource(id = R.string.store_screen_title))
 
-            if (activeCategories.isNotEmpty()) {
+            LazyColumn(
+                modifier = Modifier
+                    .padding(horizontal = 16.dp)
+                    .imePadding(),
+                verticalArrangement = Arrangement.spacedBy(16.dp)
+            ) {
+                item { Spacer(modifier = Modifier.height(8.dp)) }
+
+                item {
+                    SearchBar(
+                        query = searchQuery,
+                        onQueryChange = { searchQuery = it },
+                        colors = colors
+                    )
+                }
+                item { DiscoverSection(colors = colors) }
+
+                if (activeCategories.isNotEmpty()) {
+                    item {
+                        Column {
+                            Text(
+                                text = stringResource(R.string.categories),
+                                fontSize = 20.sp,
+                                fontWeight = FontWeight.Bold,
+                                fontFamily = PoppinsFontFamily,
+                                color = colors.textPrimary
+                            )
+                            Text(
+                                text = stringResource(R.string.store_subtitle),
+                                fontSize = 13.sp,
+                                fontFamily = PoppinsFontFamily,
+                                color = colors.textSecondary,
+                                modifier = Modifier.padding(top = 4.dp)
+                            )
+                        }
+                    }
+
+                    item {
+                        LazyVerticalGrid(
+                            columns = GridCells.Fixed(4),
+                            modifier = Modifier.height(200.dp),
+                            horizontalArrangement = Arrangement.spacedBy(8.dp),
+                            verticalArrangement = Arrangement.spacedBy(8.dp)
+                        ) {
+                            item {
+                                val cardColor = RenovaColors.Primary
+                                // --- 3. MARCAR EL PRIMER OBJETIVO DEL TOUR ---
+                                CategoryCard(
+                                    modifier = Modifier.introShowcaseTarget(
+                                        key = "CATEGORIES",
+                                        style = ShowcaseStyle.Default.copy(cornerRadius = 12.dp),
+                                        content = {
+                                            Column(Modifier.padding(16.dp)) {
+                                                Text(text = stringResource(R.string.categories), fontWeight = FontWeight.Bold, color = Color.White, fontSize = 18.sp, fontFamily = PoppinsFontFamily)
+                                                Text(text = "Usa estas tarjetas para encontrar comercios de un tipo específico.", color = Color.White, fontSize = 14.sp, fontFamily = PoppinsFontFamily, modifier = Modifier.padding(top = 8.dp))
+                                            }
+                                        }
+                                    ),
+                                    category = TypeShop(id = -1, name = stringResource(R.string.all_categories)),
+                                    isSelected = selectedCategoryId == null,
+                                    onClick = { selectedCategoryId = null },
+                                    cardColor = cardColor
+                                )
+                            }
+
+                            items(activeCategories.take(7)) { category ->
+                                val cardColor = colors.categoryCardBackgrounds[category.id % colors.categoryCardBackgrounds.size]
+                                CategoryCard(
+                                    category = category,
+                                    isSelected = selectedCategoryId == category.id,
+                                    onClick = {
+                                        selectedCategoryId = if (selectedCategoryId == category.id) null else category.id
+                                    },
+                                    cardColor = cardColor
+                                )
+                            }
+                        }
+                    }
+                }
+
                 item {
                     Column {
                         Text(
-                            text = stringResource(R.string.categories),
+                            text = stringResource(R.string.featured_stores),
                             fontSize = 20.sp,
                             fontWeight = FontWeight.Bold,
                             fontFamily = PoppinsFontFamily,
                             color = colors.textPrimary
                         )
                         Text(
-                            text = stringResource(R.string.store_subtitle),
+                            text = stringResource(R.string.store_rewards_subtitle),
                             fontSize = 13.sp,
                             fontFamily = PoppinsFontFamily,
                             color = colors.textSecondary,
@@ -149,66 +236,32 @@ fun StoreScreen(
                     }
                 }
 
-                item {
-                    LazyVerticalGrid(
-                        columns = GridCells.Fixed(4),
-                        modifier = Modifier.height(200.dp),
-                        horizontalArrangement = Arrangement.spacedBy(8.dp),
-                        verticalArrangement = Arrangement.spacedBy(8.dp)
-                    ) {
-                        item {
-                            val cardColor = RenovaColors.Primary
-                            CategoryCard(
-                                category = TypeShop(id = -1, name = stringResource(R.string.all_categories)),
-                                isSelected = selectedCategoryId == null,
-                                onClick = { selectedCategoryId = null },
-                                cardColor = cardColor
-                            )
-                        }
+                when {
+                    uiState.isLoading -> item { LoadingSection(colors = colors) }
+                    uiState.error != null -> item { ErrorSection(message = uiState.error, onRetry = { viewModel.retryLoading() }, colors = colors) }
+                    filteredAlianzas.isEmpty() -> item { EmptySection(colors = colors) }
+                    else -> {
+                        itemsIndexed(paginatedAlianzas, key = { _, alianza -> alianza.id }) { index, alianza ->
+                            val logoColor = colors.allianceLogoBackgrounds[alianza.id % colors.allianceLogoBackgrounds.size]
 
-                        items(activeCategories.take(7)) { category ->
-                            val cardColor = colors.categoryCardBackgrounds[category.id % colors.categoryCardBackgrounds.size]
-                            CategoryCard(
-                                category = category,
-                                isSelected = selectedCategoryId == category.id,
-                                onClick = {
-                                    selectedCategoryId = if (selectedCategoryId == category.id) null else category.id
-                                },
-                                cardColor = cardColor
-                            )
-                        }
-                    }
-                }
-            }
+                            // --- 4. MARCAR EL SEGUNDO OBJETIVO DEL TOUR ---
+                            val cardModifier = if (index == 0) {
+                                Modifier.introShowcaseTarget(
+                                    key = "ALLIANCES",
+                                    style = ShowcaseStyle.Default.copy(cornerRadius = 12.dp),
+                                    content = {
+                                        Column(Modifier.padding(16.dp)) {
+                                            Text(text = "Explora Comercios Aliados", fontWeight = FontWeight.Bold, color = Color.White, fontSize = 18.sp, fontFamily = PoppinsFontFamily)
+                                            Text(text = "Aquí puedes ver los detalles de cada comercio aliado y sus recompensas.", color = Color.White, fontSize = 14.sp, fontFamily = PoppinsFontFamily, modifier = Modifier.padding(top = 8.dp))
+                                        }
+                                    }
+                                )
+                            } else {
+                                Modifier // Sin modificador para los demás
+                            }
 
-            item {
-                Column {
-                    Text(
-                        text = stringResource(R.string.featured_stores),
-                        fontSize = 20.sp,
-                        fontWeight = FontWeight.Bold,
-                        fontFamily = PoppinsFontFamily,
-                        color = colors.textPrimary
-                    )
-                    Text(
-                        text = stringResource(R.string.store_rewards_subtitle),
-                        fontSize = 13.sp,
-                        fontFamily = PoppinsFontFamily,
-                        color = colors.textSecondary,
-                        modifier = Modifier.padding(top = 4.dp)
-                    )
-                }
-            }
-
-            when {
-                uiState.isLoading -> item { LoadingSection(colors = colors) }
-                uiState.error != null -> item { ErrorSection(message = uiState.error, onRetry = { viewModel.retryLoading() }, colors = colors) }
-                filteredAlianzas.isEmpty() -> item { EmptySection(colors = colors) }
-                else -> {
-                    itemsIndexed(paginatedAlianzas, key = { _, alianza -> alianza.id }) { index, alianza ->
-                        val logoColor = colors.allianceLogoBackgrounds[alianza.id % colors.allianceLogoBackgrounds.size]
-                        Column {
                             AlianzaCard(
+                                modifier = cardModifier, // Aplicar el modificador aquí
                                 alianza = alianza,
                                 categories = uiState.categories,
                                 colors = colors,
@@ -216,7 +269,6 @@ fun StoreScreen(
                                 onClick = { navController.navigate("reward_screen/${alianza.id}") }
                             )
 
-                            // El divisor ahora se basa en el tamaño de la lista paginada
                             if (index < paginatedAlianzas.size - 1) {
                                 Divider(
                                     color = RenovaColors.PrimaryColor,
@@ -225,23 +277,29 @@ fun StoreScreen(
                                 )
                             }
                         }
-                    }
 
-                    // ✨ CAMBIO 3: Se añaden los controles de paginación al final de la lista ✨
-                    if (totalPages > 1) {
-                        item {
-                            PaginationControls(
-                                currentPage = currentPage,
-                                totalPages = totalPages,
-                                isLoading = uiState.isLoading, // Se añade el estado de carga
-                                onPreviousPage = { viewModel.previousPage() },
-                                onNextPage = { viewModel.nextPage() }
-                            )
+                        if (totalPages > 1) {
+                            item {
+                                PaginationControls(
+                                    currentPage = currentPage,
+                                    totalPages = totalPages,
+                                    isLoading = uiState.isLoading,
+                                    onPreviousPage = { viewModel.previousPage() },
+                                    onNextPage = { viewModel.nextPage() }
+                                )
+                            }
                         }
                     }
                 }
+                item { Spacer(modifier = Modifier.height(80.dp)) }
             }
-            item { Spacer(modifier = Modifier.height(80.dp)) }
+        }
+    }
+
+    // --- 5. LANZAR EL TOUR ---
+    LaunchedEffect(paginatedAlianzas) {
+        if (paginatedAlianzas.isNotEmpty() && showcaseState.currentState == IntroShowcase.State.Idle) {
+            showcaseState.start(listOf("CATEGORIES", "ALLIANCES"))
         }
     }
 }

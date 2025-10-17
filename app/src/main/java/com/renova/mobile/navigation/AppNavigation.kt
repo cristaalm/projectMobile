@@ -53,8 +53,7 @@ import androidx.compose.animation.AnimatedVisibility
 object StoreGraph {
     const val ROUTE = "store_graph"
     const val STORE_LIST = "store_list"
-    const val REWARDS = "reward_screen/{allianceId}"
-}
+    const val REWARDS = "reward_screen/{allianceId}?startTour={startTour}"}
 
 @Composable
 fun AppNavigation(
@@ -184,16 +183,22 @@ fun AppNavigation(
 
                         composable(
                             route = StoreGraph.REWARDS,
-                            arguments = listOf(navArgument("allianceId") {
+                            arguments = listOf(
+                                navArgument("allianceId") {
                                 type = NavType.IntType
-                            }),
+                            },
+                                navArgument("startTour") {
+                                    type = NavType.BoolType
+                                    defaultValue = false
+                                }),
                             enterTransition = { enterAnimation },
                             exitTransition = { exitAnimation },
                             popEnterTransition = { popEnterAnimation },
                             popExitTransition = { popExitAnimation }
                         ) { backStackEntry ->
                             val allianceId = backStackEntry.arguments?.getInt("allianceId") ?: 0
-                            RewardScreen(navController = navController, allianceId = allianceId)
+                            val startTour = backStackEntry.arguments?.getBoolean("startTour") ?: false
+                            RewardScreen(navController = navController, allianceId = allianceId, startTour = startTour)
                         }
                     }
 

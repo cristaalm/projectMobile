@@ -29,6 +29,7 @@ import com.renova.mobile.ui.theme.RenovaColors
 
 @Composable
 fun CategoryCard(
+    modifier: Modifier = Modifier, // <-- AÑADIR ESTO
     category: TypeShop,
     isSelected: Boolean,
     onClick: () -> Unit,

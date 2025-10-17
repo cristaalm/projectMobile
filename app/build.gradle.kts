@@ -93,9 +93,9 @@ dependencies {
     implementation("com.google.accompanist:accompanist-systemuicontroller:0.32.0")
     implementation("io.coil-kt:coil-compose:2.5.0")
     implementation("io.coil-kt:coil-gif:2.5.0")
-    implementation("io.coil-kt:coil-compose:2.4.0")
-}
+    implementation("com.canopas.introshowcaseview:introshowcaseview:1.0.7")
 
+}
 kapt {
     correctErrorTypes = true
 }
