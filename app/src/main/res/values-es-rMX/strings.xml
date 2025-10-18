@@ -293,4 +293,33 @@
     <string name="change">Cambiar</string>
     <string name="close">Cerrar</string>
     <string name="documentation_rejected_hint">Por favor, sube nuevamente tus documentos. Asegúrate de que las fotos sean claras y legibles.</string>
+
+    <string name="recent_activity">Actividad reciente</string>
+    <string name="last_movements">Últimos movimientos</string>
+    <string name="no_activity_yet">Aún no tienes actividad</string>
+
+    <string name="welcome_home">¡Bienvenido!</string>
+    <string name="start_recycling_today">Comienza a reciclar hoy</string>
+
+    <!-- Achievements Section -->
+    <string name="unlocked_achievements">Logros Desbloqueados</string>
+    <string name="your_achievements_and_ranks">Tus logros y rangos obtenidos</string>
+
+    <!-- Achievement Titles -->
+    <string name="achievement_eco_warrior">Eco Warrior</string>
+    <string name="achievement_recycler_pro">Recycler Pro</string>
+    <string name="achievement_green_hero">Green Hero</string>
+    <string name="achievement_planet_saver">Planet Saver</string>
+
+    <!-- Achievement Descriptions -->
+    <string name="achievement_eco_warrior_desc">Se desbloquea al alcanzar 100 puntos. ¡Estás comenzando tu viaje eco-amigable!</string>
+    <string name="achievement_recycler_pro_desc">Se desbloquea al alcanzar 500 puntos. ¡Eres un profesional del reciclaje!</string>
+    <string name="achievement_green_hero_desc">Se desbloquea al alcanzar 1,000 puntos. ¡Un verdadero héroe del medio ambiente!</string>
+    <string name="achievement_planet_saver_desc">Se desbloquea al alcanzar 2,500 puntos. ¡Estás salvando el planeta!</string>
+
+    <!-- Achievement Dialog -->
+    <string name="unlocked">¡DESBLOQUEADO!</string>
+    <string name="locked">BLOQUEADO</string>
+    <string name="progress_format">Progreso: %1$d / %2$d pts</string>
+
 </resources>

@@ -287,4 +287,33 @@
     <string name="change">Change</string>
     <string name="close">Close</string>
     <string name="documentation_rejected_hint">Please, upload your documents again. Make sure that the pictures are clear and readable.</string>
+
+    <string name="recent_activity">Recent activity</string>
+    <string name="last_movements">Last movements</string>
+    <string name="no_activity_yet">No activity yet</string>
+
+    <string name="welcome_home">Welcome!</string>
+    <string name="start_recycling_today">Start recycling today</string>
+
+    <!-- Achievements Section -->
+    <string name="unlocked_achievements">Unlocked Achievements</string>
+    <string name="your_achievements_and_ranks">Your achievements and ranks obtained</string>
+
+    <!-- Achievement Titles -->
+    <string name="achievement_eco_warrior">Eco Warrior</string>
+    <string name="achievement_recycler_pro">Recycler Pro</string>
+    <string name="achievement_green_hero">Green Hero</string>
+    <string name="achievement_planet_saver">Planet Saver</string>
+
+    <!-- Achievement Descriptions -->
+    <string name="achievement_eco_warrior_desc">Unlocks at 100 points. You\'re starting your eco-friendly journey!</string>
+    <string name="achievement_recycler_pro_desc">Unlocks at 500 points. You\'re a recycling professional!</string>
+    <string name="achievement_green_hero_desc">Unlocks at 1,000 points. A true environmental hero!</string>
+    <string name="achievement_planet_saver_desc">Unlocks at 2,500 points. You\'re saving the planet!</string>
+
+    <!-- Achievement Dialog -->
+    <string name="unlocked">UNLOCKED!</string>
+    <string name="locked">LOCKED</string>
+    <string name="progress_format">Progress: %1$d / %2$d pts</string>
+
 </resources>

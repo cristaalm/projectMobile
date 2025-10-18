@@ -1,62 +1,913 @@
 package com.renova.mobile.ui.screens
 
+import androidx.compose.animation.core.*
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.offset
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.lazy.LazyRow
+import androidx.compose.foundation.lazy.itemsIndexed
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.verticalScroll
+import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.alpha
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.scale
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.ui.window.Dialog
 import com.renova.mobile.R
+import com.renova.mobile.network.ActivityItem
 import com.renova.mobile.ui.components.SectionHeader
+import com.renova.mobile.ui.theme.LocalRenovaColors
 import com.renova.mobile.ui.theme.PoppinsFontFamily
-import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.text.style.TextAlign
+import com.renova.mobile.ui.theme.RenovaColorScheme
+import com.renova.mobile.ui.viewmodels.ActivityViewModel
+import java.text.SimpleDateFormat
+import java.util.Calendar
+import java.util.Locale
+import java.util.TimeZone
+
+data class Achievement(
+    val id: Int,
+    val title: String,
+    val description: String,
+    val iconRes: Int,
+    val requiredPoints: Int,
+    val color: Color,
+    val backgroundColor: Color
+)
 
 @Composable
-fun HomeScreen() {
+fun HomeScreen(
+    viewModel: ActivityViewModel = androidx.lifecycle.viewmodel.compose.viewModel()
+) {
+    val renovaColors = LocalRenovaColors.current
+    val state by viewModel.state.collectAsState()
+    val scrollState = rememberScrollState()
+
+    LaunchedEffect(Unit) {
+        viewModel.loadHistory(1)
+    }
+
     Column(
         modifier = Modifier
             .fillMaxSize()
             .background(MaterialTheme.colorScheme.background)
+            .verticalScroll(scrollState)
     ) {
-        SectionHeader(title = stringResource(id = R.string.bottom_nav_home), textColor = Color.White)
+        SectionHeader(
+            title = stringResource(id = R.string.bottom_nav_home),
+            textColor = Color.White
+        )
 
+        if (state.isLoading && state.activities.isEmpty()) {
+            Box(
+                modifier = Modifier.fillMaxSize(),
+                contentAlignment = Alignment.Center
+            ) {
+                CircularProgressIndicator(color = renovaColors.activityPrimary)
+            }
+        } else {
+            // Card de puntos totales con contador animado
+            AnimatedPointsCard(
+                totalPoints = state.totalPoints,
+                renovaColors = renovaColors
+            )
 
-        Box(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(16.dp),
-            contentAlignment = Alignment.Center
-        ) {
+            // Título de actividad reciente
             Column(
-                horizontalAlignment = Alignment.CenterHorizontally
+                modifier = Modifier.padding(
+                    start = 24.dp,
+                    end = 24.dp,
+                    top = 6.dp,
+                    bottom = 10.dp
+                )
             ) {
                 Text(
-                    text = stringResource(id = R.string.welcome_message),
-                    fontSize = 22.sp,
+                    text = stringResource(R.string.recent_activity),
+                    style = MaterialTheme.typography.titleLarge,
+                    color = renovaColors.textPrimary,
                     fontWeight = FontWeight.Bold,
-                    fontFamily = PoppinsFontFamily,
+                    fontSize = 21.sp,
+                    fontFamily = PoppinsFontFamily
                 )
-                Spacer(modifier = Modifier.height(8.dp))
+                Spacer(modifier = Modifier.height(3.dp))
                 Text(
-                    text = stringResource(id = R.string.reward_screen_subtitle),
+                    text = stringResource(R.string.last_movements),
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = renovaColors.textSecondary,
                     fontSize = 14.sp,
-                    fontFamily = PoppinsFontFamily,
-                    textAlign = TextAlign.Center,
-                    modifier = Modifier.fillMaxWidth()
+                    fontFamily = PoppinsFontFamily
                 )
             }
+
+            // Lista de actividades (solo 3) con animaciones
+            val recentActivities = state.activities.take(3)
+            Column(
+                modifier = Modifier
+                    .padding(horizontal = 24.dp)
+                    .padding(bottom = 6.dp),
+                verticalArrangement = Arrangement.spacedBy(7.dp)
+            ) {
+                if (recentActivities.isEmpty() && !state.isLoading) {
+                    Box(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(vertical = 32.dp),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Column(
+                            horizontalAlignment = Alignment.CenterHorizontally,
+                            verticalArrangement = Arrangement.spacedBy(8.dp)
+                        ) {
+                            Image(
+                                painter = painterResource(id = R.drawable.leaf),
+                                contentDescription = null,
+                                modifier = Modifier
+                                    .size(64.dp)
+                                    .clip(CircleShape),
+                                colorFilter = androidx.compose.ui.graphics.ColorFilter.tint(
+                                    renovaColors.textSecondary.copy(alpha = 0.3f)
+                                )
+                            )
+                            Text(
+                                text = stringResource(R.string.no_activity_yet),
+                                style = MaterialTheme.typography.bodyLarge,
+                                color = renovaColors.textSecondary,
+                                textAlign = TextAlign.Center,
+                                fontFamily = PoppinsFontFamily
+                            )
+                        }
+                    }
+                } else {
+                    recentActivities.forEachIndexed { index, item ->
+                        AnimatedActivityCard(
+                            item = item,
+                            renovaColors = renovaColors,
+                            index = index
+                        )
+                    }
+                }
+            }
+
+            // Sección de logros desbloqueados
+            AchievementsSection(
+                totalPoints = state.totalPoints,
+                renovaColors = renovaColors
+            )
+        }
+    }
+}
+
+@Composable
+private fun AchievementsSection(
+    totalPoints: Int,
+    renovaColors: RenovaColorScheme
+) {
+    val context = LocalContext.current
+
+    val achievements = remember {
+        listOf(
+            Achievement(
+                id = 1,
+                title = context.getString(R.string.achievement_eco_warrior),
+                description = context.getString(R.string.achievement_eco_warrior_desc),
+                iconRes = R.drawable.leaf,
+                requiredPoints = 100,
+                color = Color(0xFF000000),
+                backgroundColor = Color(0xFFFFF59C)
+            ),
+            Achievement(
+                id = 2,
+                title = context.getString(R.string.achievement_recycler_pro),
+                description = context.getString(R.string.achievement_recycler_pro_desc),
+                iconRes = R.drawable.leaf,
+                requiredPoints = 500,
+                color = Color(0xFF000000),
+                backgroundColor = Color(0xFFCDFF90)
+            ),
+            Achievement(
+                id = 3,
+                title = context.getString(R.string.achievement_green_hero),
+                description = context.getString(R.string.achievement_green_hero_desc),
+                iconRes = R.drawable.leaf,
+                requiredPoints = 1000,
+                color = Color(0xFF000000),
+                backgroundColor = Color(0xFF81D5FA)
+            ),
+            Achievement(
+                id = 4,
+                title = context.getString(R.string.achievement_planet_saver),
+                description = context.getString(R.string.achievement_planet_saver_desc),
+                iconRes = R.drawable.leaf,
+                requiredPoints = 2500,
+                color = Color(0xFF000000),
+                backgroundColor = Color(0xFF80CCC2)
+            )
+        )
+    }
+
+    var selectedAchievement by remember { mutableStateOf<Achievement?>(null) }
+
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(top = 10.dp, bottom = 18.dp)
+    ) {
+        // Título de la sección
+        Column(
+            modifier = Modifier.padding(horizontal = 24.dp, vertical = 8.dp)
+        ) {
+            Text(
+                text = stringResource(R.string.unlocked_achievements),
+                style = MaterialTheme.typography.titleLarge,
+                color = renovaColors.textPrimary,
+                fontWeight = FontWeight.Bold,
+                fontSize = 21.sp,
+                fontFamily = PoppinsFontFamily
+            )
+            Spacer(modifier = Modifier.height(3.dp))
+            Text(
+                text = stringResource(R.string.your_achievements_and_ranks),
+                style = MaterialTheme.typography.bodyMedium,
+                color = renovaColors.textSecondary,
+                fontSize = 14.sp,
+                fontFamily = PoppinsFontFamily
+            )
+        }
+
+        // Lista horizontal de logros con scroll
+        LazyRow(
+            modifier = Modifier.fillMaxWidth(),
+            contentPadding = androidx.compose.foundation.layout.PaddingValues(horizontal = 24.dp),
+            horizontalArrangement = Arrangement.spacedBy(10.dp)
+        ) {
+            itemsIndexed(achievements) { index, achievement ->
+                AchievementCard(
+                    achievement = achievement,
+                    isUnlocked = totalPoints >= achievement.requiredPoints,
+                    onClick = { selectedAchievement = achievement },
+                    index = index
+                )
+            }
+        }
+    }
+
+    // Modal de información
+    selectedAchievement?.let { achievement ->
+        AchievementDialog(
+            achievement = achievement,
+            isUnlocked = totalPoints >= achievement.requiredPoints,
+            currentPoints = totalPoints,
+            onDismiss = { selectedAchievement = null }
+        )
+    }
+}
+
+@Composable
+private fun AchievementCard(
+    achievement: Achievement,
+    isUnlocked: Boolean,
+    onClick: () -> Unit,
+    index: Int
+) {
+    // Animación de entrada
+    var isVisible by remember { mutableStateOf(false) }
+    val offsetX by animateFloatAsState(
+        targetValue = if (isVisible) 0f else 100f,
+        animationSpec = tween(
+            durationMillis = 500,
+            delayMillis = index * 100,
+            easing = FastOutSlowInEasing
+        ),
+        label = "offsetX"
+    )
+
+    val alpha by animateFloatAsState(
+        targetValue = if (isVisible) 1f else 0f,
+        animationSpec = tween(
+            durationMillis = 500,
+            delayMillis = index * 100
+        ),
+        label = "alpha"
+    )
+
+    LaunchedEffect(Unit) {
+        isVisible = true
+    }
+
+    // Animación de click
+    var isPressed by remember { mutableStateOf(false) }
+    val scale by animateFloatAsState(
+        targetValue = if (isPressed) 0.9f else 1f,
+        animationSpec = spring(
+            dampingRatio = Spring.DampingRatioMediumBouncy,
+            stiffness = Spring.StiffnessMedium
+        ),
+        label = "scale"
+    )
+
+    // Animación de brillo para logros desbloqueados
+    val infiniteTransition = rememberInfiniteTransition(label = "shine")
+    val shimmer by infiniteTransition.animateFloat(
+        initialValue = 0.7f,
+        targetValue = 1f,
+        animationSpec = infiniteRepeatable(
+            animation = tween(1500, easing = FastOutSlowInEasing),
+            repeatMode = RepeatMode.Reverse
+        ),
+        label = "shimmer"
+    )
+
+    Card(
+        modifier = Modifier
+            .width(120.dp)
+            .height(115.dp)
+            .offset(x = offsetX.dp)
+            .alpha(alpha)
+            .scale(scale)
+            .clickable(
+                interactionSource = remember { MutableInteractionSource() },
+                indication = null
+            ) {
+                isPressed = true
+                onClick()
+            },
+        shape = RoundedCornerShape(20.dp),
+        colors = CardDefaults.cardColors(
+            containerColor = if (isUnlocked) achievement.backgroundColor else Color(0xFF2C2C2E)
+        ),
+        elevation = CardDefaults.cardElevation(
+            defaultElevation = if (isUnlocked) 4.dp else 2.dp
+        )
+    ) {
+        LaunchedEffect(isPressed) {
+            if (isPressed) {
+                kotlinx.coroutines.delay(150)
+                isPressed = false
+            }
+        }
+
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(9.dp),
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.Center
+        ) {
+            // Icono del logro
+            Box(
+                modifier = Modifier
+                    .size(42.dp)
+                    .background(
+                        color = if (isUnlocked) {
+                            Color.White.copy(alpha = 0.5f)
+                        } else {
+                            Color(0xFF3C3C3E)
+                        },
+                        shape = CircleShape
+                    ),
+                contentAlignment = Alignment.Center
+            ) {
+                Image(
+                    painter = painterResource(id = achievement.iconRes),
+                    contentDescription = achievement.title,
+                    modifier = Modifier.size(24.dp),
+                    colorFilter = androidx.compose.ui.graphics.ColorFilter.tint(
+                        if (isUnlocked) Color(0xFF2E7D32) else Color(0xFF6C6C70)
+                    ),
+                    alpha = if (isUnlocked) 1f else 0.4f
+                )
+            }
+
+            Spacer(modifier = Modifier.height(6.dp))
+
+            // Título del logro
+            Text(
+                text = achievement.title,
+                style = MaterialTheme.typography.titleSmall,
+                color = if (isUnlocked) Color(0xFF000000) else Color(0xFFAEAEB2),
+                fontWeight = FontWeight.Bold,
+                fontSize = 9.5.sp,
+                textAlign = TextAlign.Center,
+                maxLines = 2,
+                overflow = TextOverflow.Ellipsis,
+                fontFamily = PoppinsFontFamily,
+                lineHeight = 10.5.sp
+            )
+
+            Spacer(modifier = Modifier.height(2.dp))
+
+            // Puntos requeridos
+            Text(
+                text = "${achievement.requiredPoints} pts",
+                style = MaterialTheme.typography.bodySmall,
+                color = if (isUnlocked) Color(0xFF000000).copy(alpha = 0.6f) else Color(0xFF8E8E93),
+                fontSize = 8.5.sp,
+                fontFamily = PoppinsFontFamily
+            )
+        }
+    }
+}
+
+@Composable
+private fun AchievementDialog(
+    achievement: Achievement,
+    isUnlocked: Boolean,
+    currentPoints: Int,
+    onDismiss: () -> Unit
+) {
+    // Animación de entrada del diálogo
+    var showDialog by remember { mutableStateOf(false) }
+    val scale by animateFloatAsState(
+        targetValue = if (showDialog) 1f else 0.8f,
+        animationSpec = spring(
+            dampingRatio = Spring.DampingRatioMediumBouncy,
+            stiffness = Spring.StiffnessMedium
+        ),
+        label = "dialogScale"
+    )
+
+    val alpha by animateFloatAsState(
+        targetValue = if (showDialog) 1f else 0f,
+        animationSpec = tween(300),
+        label = "dialogAlpha"
+    )
+
+    LaunchedEffect(Unit) {
+        showDialog = true
+    }
+
+    Dialog(onDismissRequest = onDismiss) {
+        Card(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 16.dp)
+                .graphicsLayer {
+                    scaleX = scale
+                    scaleY = scale
+                    this.alpha = alpha
+                },
+            shape = RoundedCornerShape(24.dp),
+            colors = CardDefaults.cardColors(
+                containerColor = if (isUnlocked) achievement.backgroundColor else Color(0xFF2C2C2E)
+            ),
+            elevation = CardDefaults.cardElevation(defaultElevation = 8.dp)
+        ) {
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(24.dp),
+                horizontalAlignment = Alignment.CenterHorizontally
+            ) {
+                // Icono grande del logro
+                Box(
+                    modifier = Modifier
+                        .size(100.dp)
+                        .background(
+                            color = if (isUnlocked) {
+                                achievement.color.copy(alpha = 0.2f)
+                            } else {
+                                Color(0xFF3C3C3E)
+                            },
+                            shape = CircleShape
+                        ),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Image(
+                        painter = painterResource(id = achievement.iconRes),
+                        contentDescription = achievement.title,
+                        modifier = Modifier.size(55.dp),
+                        colorFilter = androidx.compose.ui.graphics.ColorFilter.tint(
+                            if (isUnlocked) achievement.color else Color(0xFF6C6C70)
+                        ),
+                        alpha = if (isUnlocked) 1f else 0.4f
+                    )
+                }
+
+                Spacer(modifier = Modifier.height(20.dp))
+
+                // Título
+                Text(
+                    text = achievement.title,
+                    style = MaterialTheme.typography.headlineSmall,
+                    color = if (isUnlocked) achievement.color else Color(0xFF8E8E93),
+                    fontWeight = FontWeight.Bold,
+                    fontSize = 24.sp,
+                    textAlign = TextAlign.Center,
+                    fontFamily = PoppinsFontFamily
+                )
+
+                Spacer(modifier = Modifier.height(12.dp))
+
+                // Estado del logro
+                Text(
+                    text = if (isUnlocked) stringResource(R.string.unlocked) else stringResource(R.string.locked),
+                    style = MaterialTheme.typography.labelMedium,
+                    color = if (isUnlocked) achievement.color else Color(0xFF6C6C70),
+                    fontWeight = FontWeight.Bold,
+                    fontSize = 12.sp,
+                    fontFamily = PoppinsFontFamily
+                )
+
+                Spacer(modifier = Modifier.height(16.dp))
+
+                // Descripción
+                Text(
+                    text = achievement.description,
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = if (isUnlocked) Color(0xFF424242) else Color(0xFFAEAEB2),
+                    fontSize = 14.sp,
+                    textAlign = TextAlign.Center,
+                    fontFamily = PoppinsFontFamily,
+                    lineHeight = 20.sp
+                )
+
+                Spacer(modifier = Modifier.height(20.dp))
+
+                // Progreso
+                if (!isUnlocked) {
+                    val progress = (currentPoints.toFloat() / achievement.requiredPoints.toFloat()).coerceIn(0f, 1f)
+
+                    Column(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalAlignment = Alignment.CenterHorizontally
+                    ) {
+                        Text(
+                            text = stringResource(R.string.progress_format, currentPoints, achievement.requiredPoints),
+                            style = MaterialTheme.typography.bodySmall,
+                            color = Color(0xFFAEAEB2),
+                            fontSize = 12.sp,
+                            fontFamily = PoppinsFontFamily
+                        )
+
+                        Spacer(modifier = Modifier.height(8.dp))
+
+                        Box(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .height(8.dp)
+                                .background(Color(0xFF3C3C3E), RoundedCornerShape(4.dp))
+                        ) {
+                            Box(
+                                modifier = Modifier
+                                    .fillMaxWidth(progress)
+                                    .height(8.dp)
+                                    .background(achievement.color, RoundedCornerShape(4.dp))
+                            )
+                        }
+                    }
+
+                    Spacer(modifier = Modifier.height(20.dp))
+                }
+
+                // Botón de cerrar
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(50.dp)
+                        .clip(RoundedCornerShape(12.dp))
+                        .background(if (isUnlocked) achievement.color else Color(0xFF48484A))
+                        .clickable { onDismiss() },
+                    contentAlignment = Alignment.Center
+                ) {
+                    Text(
+                        text = stringResource(R.string.close),
+                        color = Color.White,
+                        fontWeight = FontWeight.SemiBold,
+                        fontSize = 16.sp,
+                        fontFamily = PoppinsFontFamily
+                    )
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun AnimatedPointsCard(
+    totalPoints: Int,
+    renovaColors: RenovaColorScheme
+) {
+    // Animación del contador de puntos
+    var animatedPoints by remember { mutableStateOf(0f) }
+
+    LaunchedEffect(totalPoints) {
+        animate(
+            initialValue = 0f,
+            targetValue = totalPoints.toFloat(),
+            animationSpec = tween(
+                durationMillis = 1500,
+                easing = FastOutSlowInEasing
+            )
+        ) { value, _ ->
+            animatedPoints = value
+        }
+    }
+
+    Card(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(top = 14.dp, start = 18.dp, end = 20.dp, bottom = 8.dp)
+            .height(135.dp),
+        shape = RoundedCornerShape(24.dp),
+        colors = CardDefaults.cardColors(containerColor = Color.Transparent),
+        elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
+    ) {
+        Box(modifier = Modifier.fillMaxSize()) {
+            Image(
+                painter = painterResource(id = R.drawable.fondo),
+                contentDescription = null,
+                contentScale = ContentScale.Crop,
+                colorFilter = androidx.compose.ui.graphics.ColorFilter.tint(
+                    Color(0xFF05D16E),
+                    blendMode = androidx.compose.ui.graphics.BlendMode.Modulate
+                ),
+                modifier = Modifier
+                    .matchParentSize()
+                    .clip(RoundedCornerShape(24.dp))
+            )
+
+            Row(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(24.dp),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Column(
+                    modifier = Modifier.weight(1f),
+                    verticalArrangement = Arrangement.Center
+                ) {
+                    Text(
+                        text = stringResource(R.string.total_points),
+                        style = MaterialTheme.typography.titleMedium,
+                        color = Color.White,
+                        fontWeight = FontWeight.SemiBold,
+                        fontSize = 16.sp
+                    )
+                    Spacer(modifier = Modifier.height(0.dp))
+                    Row {
+                        Text(
+                            text = java.text.NumberFormat.getIntegerInstance(
+                                java.util.Locale.forLanguageTag("es-MX")
+                            ).format(animatedPoints.toInt()),
+                            style = MaterialTheme.typography.displayLarge,
+                            color = Color.White,
+                            fontSize = 52.sp,
+                            fontWeight = FontWeight.Bold,
+                            lineHeight = 52.sp
+                        )
+                    }
+                }
+
+                Box(
+                    modifier = Modifier
+                        .size(90.dp)
+                        .background(
+                            Color.White.copy(alpha = 0.15f),
+                            shape = RoundedCornerShape(20.dp)
+                        ),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Image(
+                        painter = painterResource(id = R.drawable.leaf),
+                        contentDescription = null,
+                        modifier = Modifier.size(45.dp),
+                        colorFilter = androidx.compose.ui.graphics.ColorFilter.tint(
+                            Color.White.copy(alpha = 0.9f)
+                        )
+                    )
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun AnimatedActivityCard(
+    item: ActivityItem,
+    renovaColors: RenovaColorScheme,
+    index: Int
+) {
+    val context = LocalContext.current
+    val isPointRedemption = item.type_history == 1
+
+    // Animación de entrada (slide up + fade in)
+    var isVisible by remember { mutableStateOf(false) }
+    val offsetY by animateFloatAsState(
+        targetValue = if (isVisible) 0f else 100f,
+        animationSpec = tween(
+            durationMillis = 500,
+            delayMillis = index * 150,
+            easing = FastOutSlowInEasing
+        ),
+        label = "offsetY"
+    )
+
+    val alpha by animateFloatAsState(
+        targetValue = if (isVisible) 1f else 0f,
+        animationSpec = tween(
+            durationMillis = 500,
+            delayMillis = index * 150,
+            easing = LinearEasing
+        ),
+        label = "alpha"
+    )
+
+    LaunchedEffect(Unit) {
+        isVisible = true
+    }
+
+    // Animación de tap (scale/bounce)
+    var isPressed by remember { mutableStateOf(false) }
+    val scale by animateFloatAsState(
+        targetValue = if (isPressed) 0.95f else 1f,
+        animationSpec = spring(
+            dampingRatio = Spring.DampingRatioMediumBouncy,
+            stiffness = Spring.StiffnessLow
+        ),
+        label = "scale"
+    )
+
+    val interactionSource = remember { MutableInteractionSource() }
+
+    Card(
+        modifier = Modifier
+            .fillMaxWidth()
+            .offset(y = offsetY.dp)
+            .graphicsLayer {
+                this.alpha = alpha
+                this.scaleX = scale
+                this.scaleY = scale
+            }
+            .clickable(
+                interactionSource = interactionSource,
+                indication = null
+            ) {
+                isPressed = true
+            },
+        shape = RoundedCornerShape(16.dp),
+        colors = CardDefaults.cardColors(
+            containerColor = renovaColors.activityCardBackground
+        ),
+        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
+    ) {
+        LaunchedEffect(isPressed) {
+            if (isPressed) {
+                kotlinx.coroutines.delay(150)
+                isPressed = false
+            }
+        }
+
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(16.dp),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.SpaceBetween
+        ) {
+            Box(
+                modifier = Modifier
+                    .size(48.dp)
+                    .background(
+                        color = if (isPointRedemption)
+                            Color(0xFFFFCDD2)
+                        else
+                            Color(0xFFE8F5E9),
+                        shape = RoundedCornerShape(12.dp)
+                    ),
+                contentAlignment = Alignment.Center
+            ) {
+                val iconRes = when {
+                    isPointRedemption -> R.drawable.leaf
+                    item.material_type?.name?.contains("PET", ignoreCase = true) == true -> R.drawable.bottle
+                    item.material_type?.name?.contains("Aluminio", ignoreCase = true) == true -> R.drawable.can
+                    else -> R.drawable.bottle
+                }
+
+                Image(
+                    painter = painterResource(id = iconRes),
+                    contentDescription = null,
+                    modifier = Modifier.size(28.dp),
+                    colorFilter = androidx.compose.ui.graphics.ColorFilter.tint(
+                        if (isPointRedemption) Color(0xFFD32F2F) else Color(0xFF00C851)
+                    )
+                )
+            }
+
+            Spacer(modifier = Modifier.width(14.dp))
+
+            Column(
+                modifier = Modifier.weight(1f),
+                verticalArrangement = Arrangement.spacedBy(4.dp)
+            ) {
+                Text(
+                    text = if (isPointRedemption) {
+                        stringResource(R.string.points_exchange)
+                    } else {
+                        item.material_type?.name ?: stringResource(R.string.product_entry)
+                    },
+                    style = MaterialTheme.typography.titleMedium,
+                    color = renovaColors.textPrimary,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis,
+                    fontFamily = PoppinsFontFamily,
+                    fontWeight = FontWeight.SemiBold,
+                    fontSize = 15.sp
+                )
+
+                Text(
+                    text = formatFriendlyDate(item.created_at),
+                    style = MaterialTheme.typography.bodySmall,
+                    color = renovaColors.textSecondary,
+                    fontFamily = PoppinsFontFamily,
+                    fontSize = 12.sp
+                )
+            }
+
+            Text(
+                text = if (isPointRedemption) "${item.points} pts" else "+${item.points} pts",
+                style = MaterialTheme.typography.labelLarge,
+                color = if (isPointRedemption)
+                    Color(0xFFD32F2F)
+                else
+                    Color(0xFF00C851),
+                fontFamily = PoppinsFontFamily,
+                fontWeight = FontWeight.Bold,
+                fontSize = 16.sp
+            )
+        }
+    }
+}
+
+@Composable
+private fun formatFriendlyDate(isoString: String): String {
+    val context = LocalContext.current
+    val sdfInput = SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSSSSS'Z'", Locale.getDefault())
+    sdfInput.timeZone = TimeZone.getTimeZone("UTC")
+    val date = try {
+        sdfInput.parse(isoString)
+    } catch (_: Exception) {
+        null
+    }
+    if (date == null) return isoString
+
+    val calDate = Calendar.getInstance().apply { time = date }
+    val today = Calendar.getInstance()
+    val yesterday = Calendar.getInstance().apply { add(Calendar.DAY_OF_YEAR, -1) }
+    val locale = Locale.getDefault()
+    val timeFormat = SimpleDateFormat("h:mm a", locale)
+
+    return when {
+        calDate.get(Calendar.YEAR) == today.get(Calendar.YEAR) &&
+                calDate.get(Calendar.DAY_OF_YEAR) == today.get(Calendar.DAY_OF_YEAR) ->
+            "${context.getString(R.string.today)}, ${timeFormat.format(date).lowercase()}"
+
+        calDate.get(Calendar.YEAR) == yesterday.get(Calendar.YEAR) &&
+                calDate.get(Calendar.DAY_OF_YEAR) == yesterday.get(Calendar.DAY_OF_YEAR) ->
+            "${context.getString(R.string.yesterday)}, ${timeFormat.format(date).lowercase()}"
+
+        else -> {
+            val dateFormat = SimpleDateFormat("dd/MM/yyyy, h:mm a", locale)
+            dateFormat.format(date).lowercase()
         }
     }
 }
