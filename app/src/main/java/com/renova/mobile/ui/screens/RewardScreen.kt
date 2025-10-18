@@ -32,12 +32,7 @@ import androidx.navigation.NavController
 import com.renova.mobile.R
 import com.renova.mobile.ui.screens.viewmodel.RewardViewModel
 import com.renova.mobile.ui.screens.viewmodel.RewardViewModelFactory
-import com.canopas.introshowcaseview.IntroShowcase
-import com.canopas.introshowcaseview.IntroShowcaseTheme
-import com.canopas.introshowcaseview.ShowcaseStyle
-import com.canopas.introshowcaseview.introShowcaseTarget
-import com.canopas.introshowcaseview.rememberIntroShowcaseState
- com.renova.mobile.network.Reward
+import com.renova.mobile.network.Reward
 import com.renova.mobile.ui.components.SectionHeader
 import com.renova.mobile.ui.theme.LocalRenovaColors
 import com.renova.mobile.ui.theme.PoppinsFontFamily
@@ -45,7 +40,7 @@ import com.renova.mobile.ui.theme.RenovaColors
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun RewardScreen(navController: NavController, allianceId: Int,     startTour: Boolean = false) {
+fun RewardScreen(navController: NavController, allianceId: Int) {
     val viewModel: RewardViewModel = viewModel(factory = RewardViewModelFactory(allianceId))
     val uiState = viewModel.uiState
     val colors = LocalRenovaColors.current

@@ -22,6 +22,8 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import com.renova.mobile.ui.viewmodels.LanguageViewModel
 import com.renova.mobile.ui.viewmodels.RegisterViewModel
 import androidx.compose.runtime.LaunchedEffect
+import com.renova.mobile.ui.tour.LocalTourState // <-- IMPORTAR
+import com.renova.mobile.ui.tour.TourState
 
 class MainActivity : ComponentActivity() {
     override fun attachBaseContext(newBase: Context) {
@@ -49,20 +51,23 @@ class MainActivity : ComponentActivity() {
 
                 var isLoggedIn by remember { mutableStateOf(sessionManager.isLoggedIn()) }
 
-                if (isLoggedIn) {
-                    AppNavigation(
-                        onLogout = {
-                            sessionManager.logout()
-                            isLoggedIn = false
-                        },
-                        languageViewModel = languageViewModel,
-                        isUpdatingLanguage = isUpdatingLanguage
-                    )
-                } else {
-                    AuthNavigation(
-                        sessionManager = sessionManager,
-                        onLoginSuccess = { isLoggedIn = true }
-                    )
+                val tourState = remember { TourState() }
+                CompositionLocalProvider(LocalTourState provides tourState) {
+                    if (isLoggedIn) {
+                        AppNavigation(
+                            onLogout = {
+                                sessionManager.logout()
+                                isLoggedIn = false
+                            },
+                            languageViewModel = languageViewModel,
+                            isUpdatingLanguage = isUpdatingLanguage
+                        )
+                    } else {
+                        AuthNavigation(
+                            sessionManager = sessionManager,
+                            onLoginSuccess = { isLoggedIn = true }
+                        )
+                    }
                 }
             }
         }

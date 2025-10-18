@@ -53,16 +53,27 @@ import com.renova.mobile.navigation.StoreGraph
 import com.renova.mobile.ui.screens.PoppinsFontFamily
 import com.renova.mobile.navigation.TopNavigationItem
 
+// --- NUEVO: Imports para el Tour ---
+import androidx.compose.ui.layout.onGloballyPositioned
+import androidx.compose.runtime.DisposableEffect
+import com.renova.mobile.ui.tour.LocalTourState
+// --- FIN DE IMPORTS ---
+
 private val primaryColor = Color(0xFF08b662)
 private val qrBackgroundColor = Color(0xFF05D16E).copy(alpha = 0.5f)
 
 @Composable
-fun NavItem(item: NavigationItem, isSelected: Boolean, onClick: () -> Unit) {
+fun NavItem(
+    item: NavigationItem,
+    isSelected: Boolean,
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier // <-- MODIFICADO: Añadir modifier
+) {
     val interactionSource = remember { MutableInteractionSource() }
     val isPressed by interactionSource.collectIsPressedAsState()
 
     Box(
-        modifier = Modifier
+        modifier = modifier // <-- MODIFICADO: Aplicar modifier
             .size(72.dp)
             .padding(4.dp),
         contentAlignment = Alignment.Center
@@ -137,6 +148,10 @@ fun CustomBottomBar(
     val currentDestination = navBackStackEntry?.destination
     var showLogoutModal by remember { mutableStateOf(false) }
 
+    // --- NUEVO: Obtener el estado del Tour ---
+    val tourState = LocalTourState.current
+    // --- FIN ---
+
     Box(
         modifier = Modifier
             .fillMaxWidth()
@@ -174,6 +189,7 @@ fun CustomBottomBar(
                         restoreState = true
                     }
                 }
+                // NOTA: No registramos 'Home' en el tour por ahora
             )
 
             // --- TIENDA ---
@@ -181,6 +197,7 @@ fun CustomBottomBar(
                 it.route == StoreGraph.ROUTE || it.route == StoreGraph.STORE_LIST
             } == true
 
+            // --- MODIFICADO: Añadir modifier y DisposableEffect ---
             NavItem(
                 item = NavigationItem.Store,
                 isSelected = isStoreSelected,
@@ -192,12 +209,20 @@ fun CustomBottomBar(
                         launchSingleTop = true
                         restoreState = true
                     }
+                },
+                modifier = Modifier.onGloballyPositioned { coords ->
+                    tourState.registerTarget("bottom_bar_store", coords)
                 }
             )
+            DisposableEffect("bottom_bar_store") {
+                onDispose { tourState.unregisterTarget("bottom_bar_store") }
+            }
+            // --- FIN DE MODIFICACIÓN ---
 
             Spacer(modifier = Modifier.width(72.dp))
 
             // --- PERFIL ---
+            // --- MODIFICADO: Añadir modifier y DisposableEffect ---
             NavItem(
                 item = NavigationItem.Profile,
                 isSelected = currentDestination?.route == NavigationItem.Profile.route ||
@@ -211,8 +236,15 @@ fun CustomBottomBar(
                         launchSingleTop = true
                         restoreState = true
                     }
+                },
+                modifier = Modifier.onGloballyPositioned { coords ->
+                    tourState.registerTarget("bottom_bar_profile", coords)
                 }
             )
+            DisposableEffect("bottom_bar_profile") {
+                onDispose { tourState.unregisterTarget("bottom_bar_profile") }
+            }
+            // --- FIN DE MODIFICACIÓN ---
 
             // --- LOGOUT ---
             val interactionSource = remember { MutableInteractionSource() }
@@ -252,6 +284,7 @@ fun CustomBottomBar(
         }
 
         val isQrSelected = currentDestination?.route == NavigationItem.QR.route
+        // --- MODIFICADO: Añadir modifier y DisposableEffect ---
         Box(
             modifier = Modifier
                 .size(64.dp)
@@ -267,6 +300,9 @@ fun CustomBottomBar(
                         launchSingleTop = true
                         restoreState = true
                     }
+                }
+                .onGloballyPositioned { coords -> // <-- Añadido
+                    tourState.registerTarget("bottom_bar_qr", coords)
                 },
             contentAlignment = Alignment.Center
         ) {
@@ -297,6 +333,10 @@ fun CustomBottomBar(
                 }
             }
         }
+        DisposableEffect("bottom_bar_qr") { // <-- Añadido
+            onDispose { tourState.unregisterTarget("bottom_bar_qr") }
+        }
+        // --- FIN DE MODIFICACIÓN ---
     }
 
     LogoutModal(

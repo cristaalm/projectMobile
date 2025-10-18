@@ -49,11 +49,21 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.setValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.material.icons.Icons // <-- IMPORTAR
+import androidx.compose.material.icons.outlined.HelpOutline // <-- IMPORTAR
+import androidx.compose.material3.FloatingActionButton // <-- IMPORTAR
+import androidx.compose.material3.Icon // <-- IMPORTAR
+import androidx.compose.runtime.collectAsState
+import androidx.compose.ui.unit.dp
+import com.renova.mobile.ui.tour.LocalTourState // <-- IMPORTAR
+import com.renova.mobile.ui.tour.TourOverlay
+
 
 object StoreGraph {
     const val ROUTE = "store_graph"
     const val STORE_LIST = "store_list"
-    const val REWARDS = "reward_screen/{allianceId}?startTour={startTour}"}
+    const val REWARDS = "reward_screen/{allianceId}"
+}
 
 @Composable
 fun AppNavigation(
@@ -75,6 +85,18 @@ fun AppNavigation(
         kotlinx.coroutines.delay(100)
         contentVisible = true
     }
+
+    // 1. Obtener el estado del tour desde CompositionLocal
+    val tourState = LocalTourState.current
+    val isTourActive by tourState.isTourActive.collectAsState()
+
+    // 2. Obtener la ruta actual para que el tour sepa en qué pantalla está
+    val navBackStackEntry by navController.currentBackStackEntryAsState()
+    val currentRoute = navBackStackEntry?.destination?.route
+//iniciar automatico el tour
+//    LaunchedEffect(Unit) {
+//        tourState.startTour()
+//    }
 
     Box(modifier = Modifier.fillMaxSize()) {
         Scaffold(
@@ -157,6 +179,8 @@ fun AppNavigation(
                         BusinessQRScreen(onLogout = onLogout, vm = businessSaleVM, navController = navController)
                     }
 
+
+
                     composable(
                         route = NavigationItem.Home.route,
                         enterTransition = { enterAnimation },
@@ -183,22 +207,16 @@ fun AppNavigation(
 
                         composable(
                             route = StoreGraph.REWARDS,
-                            arguments = listOf(
-                                navArgument("allianceId") {
+                            arguments = listOf(navArgument("allianceId") {
                                 type = NavType.IntType
-                            },
-                                navArgument("startTour") {
-                                    type = NavType.BoolType
-                                    defaultValue = false
-                                }),
+                            }),
                             enterTransition = { enterAnimation },
                             exitTransition = { exitAnimation },
                             popEnterTransition = { popEnterAnimation },
                             popExitTransition = { popExitAnimation }
                         ) { backStackEntry ->
                             val allianceId = backStackEntry.arguments?.getInt("allianceId") ?: 0
-                            val startTour = backStackEntry.arguments?.getBoolean("startTour") ?: false
-                            RewardScreen(navController = navController, allianceId = allianceId, startTour = startTour)
+                            RewardScreen(navController = navController, allianceId = allianceId)
                         }
                     }
 
@@ -271,6 +289,37 @@ fun AppNavigation(
                 contentAlignment = Alignment.Center
             ) {
                 CircularProgressIndicator(color = MaterialTheme.colorScheme.primary)
+            }
+        }
+        if (isTourActive) {
+            TourOverlay(
+                tourState = tourState,
+                currentScreenRoute = currentRoute,
+                onNavigate = { route ->
+                    if (currentRoute != route) {
+                        navController.navigate(route) {
+                            popUpTo(navController.graph.findStartDestination().id) {
+                                saveState = true
+                            }
+                            launchSingleTop = true
+                            restoreState = true
+                        }
+                    }
+                }
+            )
+        }
+
+        // El botón flotante para INICIAR el tour
+        if (!isTourActive) {
+            FloatingActionButton(
+                onClick = { tourState.startTour() },
+                modifier = Modifier
+                    .align(Alignment.BottomEnd)
+                    .padding(16.dp)
+                    // Añadimos padding extra para que no se solape con la CustomBottomBar
+                    .padding(bottom = 80.dp)
+            ) {
+                Icon(Icons.Outlined.HelpOutline, "Iniciar Tour")
             }
         }
     }

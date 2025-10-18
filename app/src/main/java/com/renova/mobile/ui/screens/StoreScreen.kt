@@ -41,11 +41,6 @@ import coil.decode.GifDecoder
 import coil.decode.ImageDecoderDecoder
 import coil.request.ImageRequest
 import com.renova.mobile.R
-import com.canopas.introshowcaseview.IntroShowcase
-import com.canopas.introshowcaseview.IntroShowcaseTheme
-import com.canopas.introshowcaseview.ShowcaseStyle
-import com.canopas.introshowcaseview.introShowcaseTarget
-import com.canopas.introshowcaseview.rememberIntroShowcaseState
 import com.renova.mobile.navigation.StoreGraph
 import com.renova.mobile.network.Alianza
 import com.renova.mobile.network.TypeShop
@@ -54,8 +49,13 @@ import com.renova.mobile.ui.components.CategoryCard
 import com.renova.mobile.ui.components.SectionHeader
 import com.renova.mobile.ui.screens.viewmodel.StoreViewModel
 import com.renova.mobile.ui.theme.*
-
 import kotlin.math.min
+import com.renova.mobile.ui.tour.LocalTourState
+import androidx.compose.ui.layout.onGloballyPositioned
+import androidx.compose.runtime.DisposableEffect
+import androidx.compose.foundation.lazy.rememberLazyListState
+import androidx.compose.runtime.rememberCoroutineScope
+import kotlinx.coroutines.launch
 
 
 @Composable
@@ -68,7 +68,13 @@ fun StoreScreen(
     val uiState = viewModel.uiState
     var selectedCategoryId by remember { mutableStateOf<Int?>(null) }
 
-    val showcaseState = rememberIntroShowcaseState()
+    val tourState = LocalTourState.current
+    val isTourActive by tourState.isTourActive.collectAsState()
+
+    // --- NUEVO: Estado para controlar la LazyColumn y el Scope para lanzar el scroll ---
+    val lazyListState = rememberLazyListState()
+    val scope = rememberCoroutineScope()
+    // --- FIN DE BLOQUE NUEVO ---
 
     val activeCategories = remember(uiState.categories, uiState.alianzas) {
         uiState.categories.filter { category ->
@@ -77,6 +83,7 @@ fun StoreScreen(
     }
 
     val filteredAlianzas = remember(selectedCategoryId, searchQuery, uiState.alianzas, uiState.categories) {
+        // ... (lógica de filtro sin cambios)
         val categoryFiltered = if (selectedCategoryId == null) {
             uiState.alianzas
         } else {
@@ -87,114 +94,146 @@ fun StoreScreen(
             categoryFiltered
         } else {
             categoryFiltered.filter { alianza ->
-                // Buscamos el nombre de la categoría correspondiente a la alianza
                 val categoryName = uiState.categories
                     .find { it.id == alianza.type_shop_id }?.name ?: ""
-
-                // Comprobamos si el texto de búsqueda está en el nombre, la categoría o la dirección
                 val nameMatches = alianza.name.contains(searchQuery, ignoreCase = true)
                 val categoryMatches = categoryName.contains(searchQuery, ignoreCase = true)
                 val addressMatches = alianza.address?.contains(searchQuery, ignoreCase = true) ?: false
-
                 nameMatches || categoryMatches || addressMatches
             }
         }
     }
 
+    // ... (lógica de paginación sin cambios)
     val totalPages = (filteredAlianzas.size + uiState.itemsPerPage - 1) / uiState.itemsPerPage
     val currentPage = uiState.currentPage.coerceIn(1, if (totalPages > 0) totalPages else 1)
-
     val startIndex = (currentPage - 1) * uiState.itemsPerPage
     val endIndex = min(startIndex + uiState.itemsPerPage, filteredAlianzas.size)
-
     val paginatedAlianzas = if (filteredAlianzas.isNotEmpty()) {
         filteredAlianzas.subList(startIndex, endIndex)
     } else {
         emptyList()
     }
 
-    IntroShowcase(
-        state = showcaseState,
-        onFinish = {
-            val firstAlianzaId = paginatedAlianzas.firstOrNull()?.id
-            if (firstAlianzaId != null) {
-                // Navegar a la siguiente pantalla para continuar el tour
-                navController.navigate("reward_screen/$firstAlianzaId?startTour=true")
+
+    val currentStepTargetId by remember(tourState) {
+        derivedStateOf { tourState.currentStep?.targetId }
+    }
+
+    LaunchedEffect(isTourActive, currentStepTargetId, activeCategories.isNotEmpty(), paginatedAlianzas.isNotEmpty()) {        // Estos números de índice dependen del orden de tus 'item' en la LazyColumn.
+        // Si añades o quitas items, tendrás que ajustar estos índices.
+        if (isTourActive) {
+            // Cálculo de índices:
+            // 0: Spacer
+            // 1: SearchBar
+            // 2: DiscoverSection
+            var categoriesGridIndex = -1
+            var alliancesTitleIndex = 3 // Por defecto (si no hay categorías)
+            var firstAllianceIndex = 4  // Por defecto
+
+            if (activeCategories.isNotEmpty()) {
+                // 3: Título Categorías
+                categoriesGridIndex = 4 // 4: Grid Categorías
+                alliancesTitleIndex = 5 // 5: Título Alianzas
+                firstAllianceIndex = 6  // 6: Inicio de Alianzas (el 'when')
             }
-        },
-        theme = IntroShowcaseTheme(
-            showcaseStyle = ShowcaseStyle.Default.copy(
-                backgroundColor = RenovaColors.Primary,
-                backgroundAlpha = 0.98f,
-                targetCircleColor = Color.White
-            )
-        )
-    ) {
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .background(MaterialTheme.colorScheme.background)
-        ) {
-            SectionHeader(title = stringResource(id = R.string.store_screen_title))
 
-            LazyColumn(
-                modifier = Modifier
-                    .padding(horizontal = 16.dp)
-                    .imePadding(),
-                verticalArrangement = Arrangement.spacedBy(16.dp)
-            ) {
-                item { Spacer(modifier = Modifier.height(8.dp)) }
-
-                item {
-                    SearchBar(
-                        query = searchQuery,
-                        onQueryChange = { searchQuery = it },
-                        colors = colors
-                    )
-                }
-                item { DiscoverSection(colors = colors) }
-
-                if (activeCategories.isNotEmpty()) {
-                    item {
-                        Column {
-                            Text(
-                                text = stringResource(R.string.categories),
-                                fontSize = 20.sp,
-                                fontWeight = FontWeight.Bold,
-                                fontFamily = PoppinsFontFamily,
-                                color = colors.textPrimary
-                            )
-                            Text(
-                                text = stringResource(R.string.store_subtitle),
-                                fontSize = 13.sp,
-                                fontFamily = PoppinsFontFamily,
-                                color = colors.textSecondary,
-                                modifier = Modifier.padding(top = 4.dp)
+            // Lanza la corrutina de scroll
+            scope.launch {
+                when (currentStepTargetId) {
+                    "store_categories" -> {
+                        if (categoriesGridIndex != -1) {
+                            // Hacemos scroll al grid de categorías
+                            lazyListState.animateScrollToItem(
+                                index = categoriesGridIndex,
+                                scrollOffset = -50
                             )
                         }
                     }
 
-                    item {
+                    "store_alliances_title" -> {
+                        // Hacemos scroll al título de "Comercios Destacados"
+                        lazyListState.animateScrollToItem(
+                            index = alliancesTitleIndex,
+                            scrollOffset = -50
+                        )
+                    }
+
+                    "store_first_alliance" -> {
+                        if (paginatedAlianzas.isNotEmpty()) {
+                            // Hacemos scroll a la primera alianza de la lista
+                            lazyListState.animateScrollToItem(
+                                index = firstAllianceIndex,
+                                scrollOffset = -50
+                            )
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+
+    Column(
+        modifier = Modifier
+            .fillMaxSize()
+            .background(MaterialTheme.colorScheme.background)
+    ) {
+        SectionHeader(title = stringResource(id = R.string.store_screen_title))
+
+        LazyColumn(
+            state = lazyListState, // <-- MODIFICADO: Asigna el estado a la LazyColumn
+            modifier = Modifier
+                .padding(horizontal = 16.dp)
+                .imePadding(),
+            verticalArrangement = Arrangement.spacedBy(16.dp)
+        ) {
+            item { Spacer(modifier = Modifier.height(8.dp)) } // Índice 0
+
+            item { // Índice 1
+                SearchBar(
+                    query = searchQuery,
+                    onQueryChange = { searchQuery = it },
+                    colors = colors
+                )
+            }
+            item { DiscoverSection(colors = colors) } // Índice 2
+
+            if (activeCategories.isNotEmpty()) {
+                item { // Índice 3
+                    Column {
+                        Text(
+                            text = stringResource(R.string.categories),
+                            fontSize = 20.sp,
+                            fontWeight = FontWeight.Bold,
+                            fontFamily = PoppinsFontFamily,
+                            color = colors.textPrimary
+                        )
+                        Text(
+                            text = stringResource(R.string.store_subtitle),
+                            fontSize = 13.sp,
+                            fontFamily = PoppinsFontFamily,
+                            color = colors.textSecondary,
+                            modifier = Modifier.padding(top = 4.dp)
+                        )
+                    }
+                }
+
+                item { // Índice 4
+                    // --- MODIFICADO: Envuelto en un Box para un registro más estable ---
+                    Box(modifier = Modifier.onGloballyPositioned { coords ->
+                        tourState.registerTarget("store_categories", coords)
+                    }) {
                         LazyVerticalGrid(
                             columns = GridCells.Fixed(4),
-                            modifier = Modifier.height(200.dp),
+                            modifier = Modifier
+                                .height(200.dp),
                             horizontalArrangement = Arrangement.spacedBy(8.dp),
                             verticalArrangement = Arrangement.spacedBy(8.dp)
                         ) {
                             item {
                                 val cardColor = RenovaColors.Primary
-                                // --- 3. MARCAR EL PRIMER OBJETIVO DEL TOUR ---
                                 CategoryCard(
-                                    modifier = Modifier.introShowcaseTarget(
-                                        key = "CATEGORIES",
-                                        style = ShowcaseStyle.Default.copy(cornerRadius = 12.dp),
-                                        content = {
-                                            Column(Modifier.padding(16.dp)) {
-                                                Text(text = stringResource(R.string.categories), fontWeight = FontWeight.Bold, color = Color.White, fontSize = 18.sp, fontFamily = PoppinsFontFamily)
-                                                Text(text = "Usa estas tarjetas para encontrar comercios de un tipo específico.", color = Color.White, fontSize = 14.sp, fontFamily = PoppinsFontFamily, modifier = Modifier.padding(top = 8.dp))
-                                            }
-                                        }
-                                    ),
                                     category = TypeShop(id = -1, name = stringResource(R.string.all_categories)),
                                     isSelected = selectedCategoryId == null,
                                     onClick = { selectedCategoryId = null },
@@ -215,53 +254,69 @@ fun StoreScreen(
                             }
                         }
                     }
-                }
-
-                item {
-                    Column {
-                        Text(
-                            text = stringResource(R.string.featured_stores),
-                            fontSize = 20.sp,
-                            fontWeight = FontWeight.Bold,
-                            fontFamily = PoppinsFontFamily,
-                            color = colors.textPrimary
-                        )
-                        Text(
-                            text = stringResource(R.string.store_rewards_subtitle),
-                            fontSize = 13.sp,
-                            fontFamily = PoppinsFontFamily,
-                            color = colors.textSecondary,
-                            modifier = Modifier.padding(top = 4.dp)
-                        )
+                    DisposableEffect(Unit) {
+                        onDispose {
+                            tourState.unregisterTarget("store_categories")
+                        }
                     }
                 }
+            }
 
-                when {
-                    uiState.isLoading -> item { LoadingSection(colors = colors) }
-                    uiState.error != null -> item { ErrorSection(message = uiState.error, onRetry = { viewModel.retryLoading() }, colors = colors) }
-                    filteredAlianzas.isEmpty() -> item { EmptySection(colors = colors) }
-                    else -> {
-                        itemsIndexed(paginatedAlianzas, key = { _, alianza -> alianza.id }) { index, alianza ->
-                            val logoColor = colors.allianceLogoBackgrounds[alianza.id % colors.allianceLogoBackgrounds.size]
+            item { // Índice 5 (o 3 si no hay categorías)
+                Column (
+                    modifier = Modifier.onGloballyPositioned { coords ->
+                        tourState.registerTarget("store_alliances_title", coords)
+                    }
+                ){
+                    Text(
+                        text = stringResource(R.string.featured_stores),
+                        fontSize = 20.sp,
+                        fontWeight = FontWeight.Bold,
+                        fontFamily = PoppinsFontFamily,
+                        color = colors.textPrimary
+                    )
+                    Text(
+                        text = stringResource(R.string.store_rewards_subtitle),
+                        fontSize = 13.sp,
+                        fontFamily = PoppinsFontFamily,
+                        color = colors.textSecondary,
+                        modifier = Modifier.padding(top = 4.dp)
+                    )
+                }
+                DisposableEffect(Unit) {
+                    onDispose {
+                        tourState.unregisterTarget("store_alliances_title")
+                    }
+                }
+            }
 
-                            // --- 4. MARCAR EL SEGUNDO OBJETIVO DEL TOUR ---
-                            val cardModifier = if (index == 0) {
-                                Modifier.introShowcaseTarget(
-                                    key = "ALLIANCES",
-                                    style = ShowcaseStyle.Default.copy(cornerRadius = 12.dp),
-                                    content = {
-                                        Column(Modifier.padding(16.dp)) {
-                                            Text(text = "Explora Comercios Aliados", fontWeight = FontWeight.Bold, color = Color.White, fontSize = 18.sp, fontFamily = PoppinsFontFamily)
-                                            Text(text = "Aquí puedes ver los detalles de cada comercio aliado y sus recompensas.", color = Color.White, fontSize = 14.sp, fontFamily = PoppinsFontFamily, modifier = Modifier.padding(top = 8.dp))
-                                        }
-                                    }
-                                )
-                            } else {
-                                Modifier // Sin modificador para los demás
+            // Índice 6 (o 4 si no hay categorías)
+            when {
+                uiState.isLoading -> item { LoadingSection(colors = colors) }
+                uiState.error != null -> item { ErrorSection(message = uiState.error, onRetry = { viewModel.retryLoading() }, colors = colors) }
+                filteredAlianzas.isEmpty() -> item { EmptySection(colors = colors) }
+                else -> {
+                    itemsIndexed(paginatedAlianzas, key = { _, alianza -> alianza.id }) { index, alianza ->
+                        val logoColor = colors.allianceLogoBackgrounds[alianza.id % colors.allianceLogoBackgrounds.size]
+
+                        val itemModifier = if (index == 0) {
+                            Modifier.onGloballyPositioned { coords ->
+                                tourState.registerTarget("store_first_alliance", coords)
                             }
+                        } else {
+                            Modifier
+                        }
 
+                        // Limpiar el target si el item se va de la composición (scroll)
+                        if (index == 0) {
+                            DisposableEffect(Unit) {
+                                onDispose {
+                                    tourState.unregisterTarget("store_first_alliance")
+                                }
+                            }
+                        }
+                        Column (modifier = itemModifier){
                             AlianzaCard(
-                                modifier = cardModifier, // Aplicar el modificador aquí
                                 alianza = alianza,
                                 categories = uiState.categories,
                                 colors = colors,
@@ -269,6 +324,7 @@ fun StoreScreen(
                                 onClick = { navController.navigate("reward_screen/${alianza.id}") }
                             )
 
+                            // El divisor ahora se basa en el tamaño de la lista paginada
                             if (index < paginatedAlianzas.size - 1) {
                                 Divider(
                                     color = RenovaColors.PrimaryColor,
@@ -277,35 +333,29 @@ fun StoreScreen(
                                 )
                             }
                         }
+                    }
 
-                        if (totalPages > 1) {
-                            item {
-                                PaginationControls(
-                                    currentPage = currentPage,
-                                    totalPages = totalPages,
-                                    isLoading = uiState.isLoading,
-                                    onPreviousPage = { viewModel.previousPage() },
-                                    onNextPage = { viewModel.nextPage() }
-                                )
-                            }
+                    if (totalPages > 1) {
+                        item {
+                            PaginationControls(
+                                currentPage = currentPage,
+                                totalPages = totalPages,
+                                isLoading = uiState.isLoading,
+                                onPreviousPage = { viewModel.previousPage() },
+                                onNextPage = { viewModel.nextPage() }
+                            )
                         }
                     }
                 }
-                item { Spacer(modifier = Modifier.height(80.dp)) }
             }
-        }
-    }
-
-    // --- 5. LANZAR EL TOUR ---
-    LaunchedEffect(paginatedAlianzas) {
-        if (paginatedAlianzas.isNotEmpty() && showcaseState.currentState == IntroShowcase.State.Idle) {
-            showcaseState.start(listOf("CATEGORIES", "ALLIANCES"))
+            item { Spacer(modifier = Modifier.height(80.dp)) }
         }
     }
 }
 
 @Composable
 private fun PaginationControls(
+    // ... (sin cambios)
     currentPage: Int,
     totalPages: Int,
     isLoading: Boolean,
@@ -316,7 +366,6 @@ private fun PaginationControls(
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            // CAMBIO 1: Padding vertical aumentado a 16.dp para coincidir con ActivityScreen
             .padding(horizontal = 16.dp, vertical = 16.dp),
         horizontalArrangement = Arrangement.SpaceBetween,
         verticalAlignment = Alignment.CenterVertically
@@ -327,7 +376,6 @@ private fun PaginationControls(
             enabled = currentPage > 1 && !isLoading,
             colors = ButtonDefaults.buttonColors(
                 containerColor = if (currentPage > 1) renovaColors.buttonEnabled else renovaColors.buttonDisabled,
-                // CAMBIO 2: Se usa el color de ActivityScreen en lugar de Color.White
                 contentColor = renovaColors.activityCardBackground
             ),
             shape = RoundedCornerShape(12.dp),
@@ -338,7 +386,6 @@ private fun PaginationControls(
             Icon(
                 painter = painterResource(id = R.drawable.back),
                 contentDescription = stringResource(R.string.previous),
-                // CAMBIO 3: Se usa el color de ActivityScreen
                 tint = renovaColors.activityCardBackground,
                 modifier = Modifier.size(20.dp)
             )
@@ -364,7 +411,6 @@ private fun PaginationControls(
             enabled = currentPage < totalPages && !isLoading,
             colors = ButtonDefaults.buttonColors(
                 containerColor = if (currentPage < totalPages) renovaColors.buttonEnabled else renovaColors.buttonDisabled,
-                // CAMBIO 4: Se usa el color de ActivityScreen
                 contentColor = renovaColors.activityCardBackground
             ),
             shape = RoundedCornerShape(12.dp),
@@ -377,7 +423,6 @@ private fun PaginationControls(
             Icon(
                 painter = painterResource(id = R.drawable.next),
                 contentDescription = stringResource(R.string.next),
-                // CAMBIO 5: Se usa el color de ActivityScreen
                 tint = renovaColors.activityCardBackground,
                 modifier = Modifier.size(20.dp)
             )
@@ -386,7 +431,12 @@ private fun PaginationControls(
 }
 
 @Composable
-private fun SearchBar(query: String, onQueryChange: (String) -> Unit, colors: RenovaColorScheme) {
+private fun SearchBar(
+    // ... (sin cambios)
+    query: String,
+    onQueryChange: (String) -> Unit,
+    colors: RenovaColorScheme
+) {
     OutlinedTextField(
         value = query,
         onValueChange = onQueryChange,
@@ -427,7 +477,10 @@ private fun SearchBar(query: String, onQueryChange: (String) -> Unit, colors: Re
 
 
 @Composable
-private fun DiscoverSection(colors: RenovaColorScheme) {
+private fun DiscoverSection(
+    // ... (sin cambios)
+    colors: RenovaColorScheme
+) {
     val textColor = Color.Black
     Card(
         modifier = Modifier
@@ -493,7 +546,10 @@ private fun DiscoverSection(colors: RenovaColorScheme) {
 }
 
 @Composable
-private fun GifPlayer(modifier: Modifier = Modifier) {
+private fun GifPlayer(
+    // ... (sin cambios)
+    modifier: Modifier = Modifier
+) {
     val context = LocalContext.current
     val imageLoader = ImageLoader.Builder(context)
         .components {
@@ -516,7 +572,10 @@ private fun GifPlayer(modifier: Modifier = Modifier) {
 }
 
 @Composable
-fun LoadingSection(colors: RenovaColorScheme) {
+fun LoadingSection(
+    // ... (sin cambios)
+    colors: RenovaColorScheme
+) {
     Box(
         modifier = Modifier
             .fillMaxWidth()
@@ -536,7 +595,12 @@ fun LoadingSection(colors: RenovaColorScheme) {
 }
 
 @Composable
-fun ErrorSection(message: String, onRetry: () -> Unit, colors: RenovaColorScheme) {
+fun ErrorSection(
+    // ... (sin cambios)
+    message: String,
+    onRetry: () -> Unit,
+    colors: RenovaColorScheme
+) {
     Card(
         modifier = Modifier.fillMaxWidth(),
         shape = RoundedCornerShape(12.dp),
@@ -577,7 +641,10 @@ fun ErrorSection(message: String, onRetry: () -> Unit, colors: RenovaColorScheme
 }
 
 @Composable
-fun EmptySection(colors: RenovaColorScheme) {
+fun EmptySection(
+    // ... (sin cambios)
+    colors: RenovaColorScheme
+) {
     Box(
         modifier = Modifier
             .fillMaxWidth()

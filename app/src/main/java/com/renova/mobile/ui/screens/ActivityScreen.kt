@@ -39,8 +39,14 @@ import java.text.SimpleDateFormat
 import java.util.*
 import com.renova.mobile.ui.components.*
 
+// --- NUEVO: Imports para el Tour ---
+import androidx.compose.ui.layout.onGloballyPositioned
+import com.renova.mobile.ui.tour.LocalTourState
+// --- FIN DE IMPORTS ---
+
 
 fun Modifier.greenShadow(
+    // ... (sin cambios)
     color: Color = Color(0xFF4CAF50),
     alpha: Float = 0.15f,
     borderRadius: Dp = 16.dp,
@@ -78,6 +84,7 @@ fun Modifier.greenShadow(
 fun ActivityScreen(
     viewModel: ActivityViewModel = androidx.lifecycle.viewmodel.compose.viewModel()
 ) {
+    // ... (sin cambios)
     val renovaColors = LocalRenovaColors.current
     val state by viewModel.state.collectAsState()
     val pullToRefreshState = rememberPullToRefreshState()
@@ -154,6 +161,10 @@ private fun ActivityContent(
     onPreviousPage: () -> Unit,
     onNextPage: () -> Unit
 ) {
+    // --- NUEVO: Obtener estado del Tour ---
+    val tourState = LocalTourState.current
+    // --- FIN ---
+
     LazyColumn(
         modifier = Modifier
             .fillMaxSize()
@@ -162,6 +173,7 @@ private fun ActivityContent(
     ) {
         item {
             androidx.compose.animation.AnimatedVisibility(
+                // ... (sin cambios)
                 visible = true,
                 enter = androidx.compose.animation.fadeIn(
                     animationSpec = androidx.compose.animation.core.tween(durationMillis = 600)
@@ -174,11 +186,16 @@ private fun ActivityContent(
                     modifier = Modifier
                         .fillMaxWidth()
                         .padding(top = 16.dp, start = 18.dp, end = 20.dp, bottom = 10.dp)
-                        .height(140.dp),
+                        .height(140.dp)
+                        // --- MODIFICADO: Añadir onGloballyPositioned ---
+                        .onGloballyPositioned { coords ->
+                            tourState.registerTarget("activity_points_card", coords)
+                        },
                     shape = RoundedCornerShape(24.dp),
                     colors = CardDefaults.cardColors(containerColor = Color.Transparent),
                     elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
                 ) {
+                    // ... (Contenido de la Card de puntos sin cambios)
                     Box(modifier = Modifier.fillMaxSize()) {
                         Image(
                             painter = painterResource(id = R.drawable.fondo),
@@ -260,6 +277,7 @@ private fun ActivityContent(
 
         item {
             androidx.compose.animation.AnimatedVisibility(
+                // ... (sin cambios)
                 visible = true,
                 enter = androidx.compose.animation.fadeIn(
                     animationSpec = androidx.compose.animation.core.tween(durationMillis = 600, delayMillis = 100)
@@ -287,6 +305,7 @@ private fun ActivityContent(
 
         item {
             androidx.compose.animation.AnimatedVisibility(
+                // ... (sin cambios)
                 visible = true,
                 enter = androidx.compose.animation.fadeIn(
                     animationSpec = androidx.compose.animation.core.tween(durationMillis = 600, delayMillis = 200)
@@ -298,7 +317,11 @@ private fun ActivityContent(
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(horizontal = 20.dp, vertical = 8.dp),
+                        .padding(horizontal = 20.dp, vertical = 8.dp)
+                        // --- MODIFICADO: Añadir onGloballyPositioned ---
+                        .onGloballyPositioned { coords ->
+                            tourState.registerTarget("activity_materials_row", coords)
+                        },
                     horizontalArrangement = Arrangement.spacedBy(12.dp)
                 ) {
                     MaterialStatCard(
@@ -329,6 +352,7 @@ private fun ActivityContent(
 
         item {
             androidx.compose.animation.AnimatedVisibility(
+                // ... (sin cambios)
                 visible = true,
                 enter = androidx.compose.animation.fadeIn(
                     animationSpec = androidx.compose.animation.core.tween(durationMillis = 600, delayMillis = 300)
@@ -338,7 +362,12 @@ private fun ActivityContent(
                 )
             ) {
                 Column(
-                    modifier = Modifier.padding(start = 20.dp, top = 12.dp, bottom = 8.dp)
+                    modifier = Modifier
+                        .padding(start = 20.dp, top = 12.dp, bottom = 8.dp)
+                        // --- MODIFICADO: Añadir onGloballyPositioned ---
+                        .onGloballyPositioned { coords ->
+                            tourState.registerTarget("activity_history_title", coords)
+                        }
                 ) {
                     Text(
                         text = stringResource(R.string.history),
@@ -354,8 +383,23 @@ private fun ActivityContent(
             }
         }
 
+        // --- NUEVO: DisposableEffects agrupados ---
+        item {
+            DisposableEffect("activity_points_card") {
+                onDispose { tourState.unregisterTarget("activity_points_card") }
+            }
+            DisposableEffect("activity_materials_row") {
+                onDispose { tourState.unregisterTarget("activity_materials_row") }
+            }
+            DisposableEffect("activity_history_title") {
+                onDispose { tourState.unregisterTarget("activity_history_title") }
+            }
+        }
+        // --- FIN DE BLOQUE NUEVO ---
+
         items(state.activities.size) { index ->
             androidx.compose.animation.AnimatedVisibility(
+                // ... (sin cambios)
                 visible = true,
                 enter = androidx.compose.animation.fadeIn(
                     animationSpec = androidx.compose.animation.core.tween(
@@ -381,6 +425,7 @@ private fun ActivityContent(
 
         item {
             androidx.compose.animation.AnimatedVisibility(
+                // ... (sin cambios)
                 visible = true,
                 enter = androidx.compose.animation.fadeIn(
                     animationSpec = androidx.compose.animation.core.tween(
@@ -404,6 +449,7 @@ private fun ActivityContent(
 
 @Composable
 private fun MaterialStatCard(
+    // ... (sin cambios)
     title: String,
     count: Int,
     icon: Int,
@@ -468,7 +514,11 @@ private fun MaterialStatCard(
 }
 
 @Composable
-private fun ActivityCard(item: ActivityItem, renovaColors: RenovaColorScheme) {
+private fun ActivityCard(
+    // ... (sin cambios)
+    item: ActivityItem,
+    renovaColors: RenovaColorScheme
+) {
     val context = LocalContext.current
     val isPointRedemption = item.type_history == 1
 

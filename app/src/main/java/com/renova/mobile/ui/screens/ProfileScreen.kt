@@ -41,6 +41,11 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.pulltorefresh.*
 import com.renova.mobile.ui.components.CustomRefreshIndicator
 
+// --- NUEVO: Imports para el Tour ---
+import androidx.compose.ui.layout.onGloballyPositioned
+import com.renova.mobile.ui.tour.LocalTourState
+// --- FIN DE IMPORTS ---
+
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ProfileScreen(
@@ -123,7 +128,12 @@ private fun ProfileContent(
     val context = LocalContext.current
     val verificationStatus = VerificationStatus.fromCode(user.verification_status)
     val colors = LocalRenovaColors.current
-// Estados de edición
+
+    // --- NUEVO: Obtener estado del Tour ---
+    val tourState = LocalTourState.current
+    // --- FIN ---
+
+    // Estados de edición
     var isEditingEmail by remember { mutableStateOf(false) }
     var isEditingPhone by remember { mutableStateOf(false) }
     var emailValue by remember(user.email) { mutableStateOf(user.email) }
@@ -174,35 +184,44 @@ private fun ProfileContent(
             Spacer(modifier = Modifier.height(8.dp))
 
             // Card de información personal
-            PersonalInfoCard(
-                user = user,
-                verificationStatus = verificationStatus,
-                isSpanish = isSpanish,
-                emailValue = emailValue,
-                phoneValue = phoneValue,
-                isEditingEmail = isEditingEmail,
-                isEditingPhone = isEditingPhone,
-                onEditEmail = { isEditingEmail = true },
-                onEditPhone = { isEditingPhone = true },
-                onSaveEmail = {
-                    // TODO: Implementar actualización de email
-                    isEditingEmail = false
-                },
-                onSavePhone = {
-                    // TODO: Implementar actualización de teléfono
-                    isEditingPhone = false
-                },
-                onCancelEmail = {
-                    emailValue = user.email
-                    isEditingEmail = false
-                },
-                onCancelPhone = {
-                    phoneValue = user.phone
-                    isEditingPhone = false
-                },
-                onEmailChange = { emailValue = it },
-                onPhoneChange = { phoneValue = it }
-            )
+            // --- MODIFICADO: Añadir Box, modifier y DisposableEffect ---
+            Box(modifier = Modifier.onGloballyPositioned { coords ->
+                tourState.registerTarget("profile_info_card", coords)
+            }) {
+                PersonalInfoCard(
+                    user = user,
+                    verificationStatus = verificationStatus,
+                    isSpanish = isSpanish,
+                    emailValue = emailValue,
+                    phoneValue = phoneValue,
+                    isEditingEmail = isEditingEmail,
+                    isEditingPhone = isEditingPhone,
+                    onEditEmail = { isEditingEmail = true },
+                    onEditPhone = { isEditingPhone = true },
+                    onSaveEmail = {
+                        // TODO: Implementar actualización de email
+                        isEditingEmail = false
+                    },
+                    onSavePhone = {
+                        // TODO: Implementar actualización de teléfono
+                        isEditingPhone = false
+                    },
+                    onCancelEmail = {
+                        emailValue = user.email
+                        isEditingEmail = false
+                    },
+                    onCancelPhone = {
+                        phoneValue = user.phone
+                        isEditingPhone = false
+                    },
+                    onEmailChange = { emailValue = it },
+                    onPhoneChange = { phoneValue = it }
+                )
+            }
+            DisposableEffect("profile_info_card") {
+                onDispose { tourState.unregisterTarget("profile_info_card") }
+            }
+            // --- FIN DE MODIFICACIÓN ---
 
             Spacer(modifier = Modifier.height(16.dp))
 
@@ -306,6 +325,10 @@ fun ProfileHeader(
     val context = LocalContext.current
     val colors = LocalRenovaColors.current
 
+    // --- NUEVO: Obtener estado del Tour ---
+    val tourState = LocalTourState.current
+    // --- FIN ---
+
     Box(
         modifier = Modifier
             .fillMaxWidth()
@@ -369,14 +392,24 @@ fun ProfileHeader(
                 } else {
                     Spacer(modifier = Modifier.width(90.dp))
                 }
-                LanguageToggle(
-                    isSpanish = isSpanish,
-                    onLanguageChange = { newLang ->
-                        languageViewModel.changeLanguage(newLang) {
-                            (context as? Activity)?.recreate()
+
+                // --- MODIFICADO: Añadir Box, modifier y DisposableEffect ---
+                Box(modifier = Modifier.onGloballyPositioned { coords ->
+                    tourState.registerTarget("profile_language_toggle", coords)
+                }) {
+                    LanguageToggle(
+                        isSpanish = isSpanish,
+                        onLanguageChange = { newLang ->
+                            languageViewModel.changeLanguage(newLang) {
+                                (context as? Activity)?.recreate()
+                            }
                         }
-                    }
-                )
+                    )
+                }
+                DisposableEffect("profile_language_toggle") {
+                    onDispose { tourState.unregisterTarget("profile_language_toggle") }
+                }
+                // --- FIN DE MODIFICACIÓN ---
             }
             Spacer(modifier = Modifier.height(16.dp))
             // Foto de perfil y puntos
@@ -471,6 +504,7 @@ fun ProfileHeader(
 
 @Composable
 fun VerificationBanner(
+    // ... (Sin cambios)
     verificationStatus: VerificationStatus,
     rejectionReason: String?,
     isSpanish: Boolean
