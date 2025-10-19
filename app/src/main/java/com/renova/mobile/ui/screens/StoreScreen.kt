@@ -221,7 +221,7 @@ fun StoreScreen(
                                 Divider(
                                     color = RenovaColors.PrimaryColor,
                                     thickness = 1.dp,
-                                    modifier = Modifier.padding(vertical = 8.dp)
+                                    modifier = Modifier.padding(vertical = 3.dp)
                                 )
                             }
                         }

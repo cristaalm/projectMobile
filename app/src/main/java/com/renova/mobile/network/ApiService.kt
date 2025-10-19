@@ -119,6 +119,7 @@ data class User(
     val total_points: Int?,
     val code_identity: String?,
     val role: Role?,
+    val alliance_id: Int?,
     val created_at: String?,
     val updated_at: String?
 )
@@ -372,6 +373,7 @@ data class UserData(
     val two_factor_status: Boolean,
     val code_identity: String,
     val status: Int,
+    val alliance_id: Int?,
     val created_at: String,
     val updated_at: String,
     val role: RoleData
@@ -407,10 +409,16 @@ data class IdentifyUserByCodeRequest(
 
 
 // ========== REWARD CLAIM ==========
-data class ClaimRewardRequest(
-    val user_id: Int,
+@Deprecated("Use single-item ClaimRewardRequest with quantity")
+data class RewardClaim(
     val reward_id: Int,
-    val alliance_id: Int
+    val quantity: Int
+)
+
+data class ClaimRewardRequest(
+    @SerializedName("user_id") val user_id: Int,
+    @SerializedName("reward_id") val reward_id: Int,
+    @SerializedName("quantity") val quantity: Int
 )
 
 data class ClaimRewardResponse(
@@ -425,7 +433,57 @@ data class ClaimRewardData(
     val id: Int,
     val user_id: Int,
     val reward_id: Int,
+    val quantity: Int,
     val redeemed_at: String
+)
+
+// ========== NOTIFICATIONS ==========
+
+// ========== GENERAL ==========
+
+data class ErrorResponse(
+    val success: Boolean,
+    val message: String,
+    val data: ErrorResponseData?,
+    val errors: Any?,
+    val status: Int
+)
+
+data class ErrorResponseData(
+    val id: Int,
+    val user_id: Int,
+    val ine_front_url: String,
+    val ine_back_url: String,
+    val selfie_url: String?,
+    val status: Int,
+    val rejection_reason: String?,
+    val verified_by: Int?,
+    val verified_at: String?,
+    val created_at: String,
+    val updated_at: String
+)
+
+data class SendNotificationRequest(
+    @SerializedName("user_id") val userId: Int,
+    val title: String,
+    val message: String
+)
+
+data class SendNotificationResponse(
+    val success: Boolean,
+    val message: String
+)
+
+// ======= FCM TOKEN REGISTER =======
+data class RegisterFcmTokenRequest(
+    @SerializedName("user_id") val userId: Int,
+    @SerializedName("token") val token: String,
+    @SerializedName("platform") val platform: String = "android"
+)
+
+data class RegisterFcmTokenResponse(
+    val success: Boolean,
+    val message: String
 )
 
 interface ApiService {
@@ -502,6 +560,12 @@ interface ApiService {
     // Endpoint para identificar usuario por código (mantener si otras partes lo usan)
     @POST("api/users/identityUserCode")
     suspend fun identifyUserByCode(@Body request: IdentifyUserByCodeRequest): Response<IdentifyUserResponse>
+
+    @POST("api/notifications/send")
+    suspend fun sendNotification(@Body request: SendNotificationRequest): Response<SendNotificationResponse>
+
+    @POST("api/notifications/registerToken")
+    suspend fun registerFcmToken(@Body request: RegisterFcmTokenRequest): Response<RegisterFcmTokenResponse>
 }
 
 // ========== API CLIENT ==========

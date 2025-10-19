@@ -206,9 +206,41 @@ fun PaginationControls(
 @Composable
 fun formatFriendlyDate(isoString: String): String {
     val context = LocalContext.current
-    val sdfInput = SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSSSSS'Z'", Locale.getDefault())
-    sdfInput.timeZone = TimeZone.getTimeZone("UTC")
-    val date = try { sdfInput.parse(isoString) } catch (_: Exception) { null }
+
+    fun tryParse(vararg patterns: String): Date? {
+        for (p in patterns) {
+            try {
+                val sdf = SimpleDateFormat(p, Locale.getDefault())
+                // Tratar entradas con 'Z' o zona explícita como UTC
+                if (p.contains("'Z'") || p.contains("XXX")) {
+                    sdf.timeZone = TimeZone.getTimeZone("UTC")
+                }
+                val d = sdf.parse(isoString)
+                if (d != null) return d
+            } catch (_: Exception) {
+            }
+        }
+        return null
+    }
+
+    val date = tryParse(
+        // ISO con microsegundos
+        "yyyy-MM-dd'T'HH:mm:ss.SSSSSS'Z'",
+        "yyyy-MM-dd'T'HH:mm:ss.SSSSSSXXX",
+        // ISO con milisegundos
+        "yyyy-MM-dd'T'HH:mm:ss.SSS'Z'",
+        "yyyy-MM-dd'T'HH:mm:ss.SSSXXX",
+        // ISO sin fracción
+        "yyyy-MM-dd'T'HH:mm:ss'Z'",
+        "yyyy-MM-dd'T'HH:mm:ssXXX",
+        // Sin 'T' ni zona
+        "yyyy-MM-dd HH:mm:ss",
+        // ISO sin 'Z'
+        "yyyy-MM-dd'T'HH:mm:ss.SSSSSS",
+        "yyyy-MM-dd'T'HH:mm:ss.SSS",
+        "yyyy-MM-dd'T'HH:mm:ss"
+    )
+
     if (date == null) return isoString
 
     val calDate = Calendar.getInstance().apply { time = date }
@@ -216,17 +248,18 @@ fun formatFriendlyDate(isoString: String): String {
     val yesterday = Calendar.getInstance().apply { add(Calendar.DAY_OF_YEAR, -1) }
     val locale = Locale.getDefault()
     val timeFormat = SimpleDateFormat("h:mm a", locale)
+    val timeText = timeFormat.format(date).lowercase(locale)
 
     return when {
         calDate.get(Calendar.YEAR) == today.get(Calendar.YEAR) &&
                 calDate.get(Calendar.DAY_OF_YEAR) == today.get(Calendar.DAY_OF_YEAR) ->
-            "${context.getString(R.string.today)}, ${timeFormat.format(date).lowercase()}"
+            "${context.getString(R.string.today)}, ${timeText}"
         calDate.get(Calendar.YEAR) == yesterday.get(Calendar.YEAR) &&
                 calDate.get(Calendar.DAY_OF_YEAR) == yesterday.get(Calendar.DAY_OF_YEAR) ->
-            "${context.getString(R.string.yesterday)}, ${timeFormat.format(date).lowercase()}"
+            "${context.getString(R.string.yesterday)}, ${timeText}"
         else -> {
             val dateFormat = SimpleDateFormat("dd/MM/yyyy, h:mm a", locale)
-            dateFormat.format(date).lowercase()
+            dateFormat.format(date).lowercase(locale)
         }
     }
 }

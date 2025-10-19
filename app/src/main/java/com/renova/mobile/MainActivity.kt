@@ -22,6 +22,10 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import com.renova.mobile.ui.viewmodels.LanguageViewModel
 import com.renova.mobile.ui.viewmodels.RegisterViewModel
 import androidx.compose.runtime.LaunchedEffect
+import android.util.Log
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
+import com.renova.mobile.network.RegisterFcmTokenRequest
 
 class MainActivity : ComponentActivity() {
     override fun attachBaseContext(newBase: Context) {
@@ -48,6 +52,31 @@ class MainActivity : ComponentActivity() {
                 HideSystemNavigation()
 
                 var isLoggedIn by remember { mutableStateOf(sessionManager.isLoggedIn()) }
+
+                // Registrar token FCM almacenado tras login
+                LaunchedEffect(isLoggedIn) {
+                    if (isLoggedIn) {
+                        val fcmToken = sessionManager.getFcmToken()
+                        val userId = sessionManager.getUser()?.id
+                        if (!fcmToken.isNullOrBlank() && userId != null) {
+                            try {
+                                ApiClient.init(this@MainActivity)
+                                withContext(Dispatchers.IO) {
+                                    val resp = ApiClient.apiService.registerFcmToken(
+                                        RegisterFcmTokenRequest(userId = userId, token = fcmToken)
+                                    )
+                                    if (resp.isSuccessful && resp.body()?.success == true) {
+                                        Log.d("FCM", "Token registrado tras login para userId=$userId")
+                                    } else {
+                                        Log.e("FCM", "Error registrando token tras login: ${resp.code()} ${resp.body()?.message}")
+                                    }
+                                }
+                            } catch (e: Exception) {
+                                Log.e("FCM", "Excepción registrando token tras login", e)
+                            }
+                        }
+                    }
+                }
 
                 if (isLoggedIn) {
                     AppNavigation(

@@ -17,6 +17,7 @@ class SessionManager(context: Context) {
         private const val KEY_EXPIRES_AT = "expires_at"
         private const val KEY_USER = "user"
         private const val KEY_IS_LOGGED_IN = "is_logged_in"
+        private const val KEY_FCM_TOKEN = "fcm_token"
     }
 
     // Guardar sesión completa
@@ -115,6 +116,25 @@ class SessionManager(context: Context) {
             remove(KEY_ACCESS_TOKEN)
             remove(KEY_TOKEN_TYPE)
             remove(KEY_IS_LOGGED_IN)
+            apply()
+        }
+    }
+
+    // ===== FCM token helpers =====
+    fun saveFcmToken(token: String) {
+        sharedPreferences.edit().apply {
+            putString(KEY_FCM_TOKEN, token)
+            apply()
+        }
+    }
+
+    fun getFcmToken(): String? {
+        return sharedPreferences.getString(KEY_FCM_TOKEN, null)
+    }
+
+    fun clearFcmToken() {
+        sharedPreferences.edit().apply {
+            remove(KEY_FCM_TOKEN)
             apply()
         }
     }
