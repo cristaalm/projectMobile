@@ -322,4 +322,12 @@
     <string name="locked">BLOQUEADO</string>
     <string name="progress_format">Progreso: %1$d / %2$d pts</string>
 
+    <string name="error_invalid_credentials">Correo electrónico o contraseña incorrectos.</string>
+    <string name="error_account_disabled">Tu cuenta ha sido desactivada por un administrador.</string>
+    <string name="error_validation_failed">Correo electrónico o contraseña incorrectos.</string>
+    <string name="error_server_error">Ocurrió un error inesperado al intentar iniciar sesión.</string>
+    <string name="error_server_internal">Error interno del servidor.</string>
+    <string name="error_network">Error de conexión de red</string>
+    <string name="error_generic">Error inesperado</string>
+
 </resources>
