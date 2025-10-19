@@ -209,37 +209,37 @@ private fun AchievementsSection(
                 id = 1,
                 title = context.getString(R.string.achievement_eco_warrior),
                 description = context.getString(R.string.achievement_eco_warrior_desc),
-                iconRes = R.drawable.leaf,
+                iconRes = R.drawable.ic_goal_1,
                 requiredPoints = 100,
-                color = Color(0xFF000000),
-                backgroundColor = Color(0xFFFFF59C)
+                color = Color(0xFFFFFFFF),
+                backgroundColor = Color(0xFF024653)
             ),
             Achievement(
                 id = 2,
                 title = context.getString(R.string.achievement_recycler_pro),
                 description = context.getString(R.string.achievement_recycler_pro_desc),
-                iconRes = R.drawable.leaf,
+                iconRes = R.drawable.ic_goal_2,
                 requiredPoints = 500,
                 color = Color(0xFF000000),
-                backgroundColor = Color(0xFFCDFF90)
+                backgroundColor = Color(0xFFCCFF00)
             ),
             Achievement(
                 id = 3,
                 title = context.getString(R.string.achievement_green_hero),
                 description = context.getString(R.string.achievement_green_hero_desc),
-                iconRes = R.drawable.leaf,
+                iconRes = R.drawable.ic_goal_3,
                 requiredPoints = 1000,
-                color = Color(0xFF000000),
-                backgroundColor = Color(0xFF81D5FA)
+                color = Color(0xFFFFFFFF),
+                backgroundColor = Color(0xFF01C851)
             ),
             Achievement(
                 id = 4,
                 title = context.getString(R.string.achievement_planet_saver),
                 description = context.getString(R.string.achievement_planet_saver_desc),
-                iconRes = R.drawable.leaf,
+                iconRes = R.drawable.ic_goal_4,
                 requiredPoints = 2500,
-                color = Color(0xFF000000),
-                backgroundColor = Color(0xFF80CCC2)
+                color = Color(0xFFFFFFFF),
+                backgroundColor = Color(0xFF024653)
             )
         )
     }
@@ -423,7 +423,7 @@ private fun AchievementCard(
             Text(
                 text = achievement.title,
                 style = MaterialTheme.typography.titleSmall,
-                color = if (isUnlocked) Color(0xFF000000) else Color(0xFFAEAEB2),
+                color = if (isUnlocked) achievement.color else Color(0xFFAEAEB2),
                 fontWeight = FontWeight.Bold,
                 fontSize = 9.5.sp,
                 textAlign = TextAlign.Center,
@@ -439,7 +439,7 @@ private fun AchievementCard(
             Text(
                 text = "${achievement.requiredPoints} pts",
                 style = MaterialTheme.typography.bodySmall,
-                color = if (isUnlocked) Color(0xFF000000).copy(alpha = 0.6f) else Color(0xFF8E8E93),
+                color = if (isUnlocked) achievement.color.copy(alpha = 0.7f) else Color(0xFF8E8E93),
                 fontSize = 8.5.sp,
                 fontFamily = PoppinsFontFamily
             )
@@ -553,7 +553,7 @@ private fun AchievementDialog(
                 Text(
                     text = achievement.description,
                     style = MaterialTheme.typography.bodyMedium,
-                    color = if (isUnlocked) Color(0xFF424242) else Color(0xFFAEAEB2),
+                    color = if (isUnlocked) achievement.color.copy(alpha = 0.8f) else Color(0xFFAEAEB2),
                     fontSize = 14.sp,
                     textAlign = TextAlign.Center,
                     fontFamily = PoppinsFontFamily,
@@ -604,13 +604,19 @@ private fun AchievementDialog(
                         .fillMaxWidth()
                         .height(50.dp)
                         .clip(RoundedCornerShape(12.dp))
-                        .background(if (isUnlocked) achievement.color else Color(0xFF48484A))
+                        .background(
+                            if (isUnlocked) {
+                                achievement.color.copy(alpha = 0.2f)
+                            } else {
+                                Color(0xFF48484A)
+                            }
+                        )
                         .clickable { onDismiss() },
                     contentAlignment = Alignment.Center
                 ) {
                     Text(
                         text = stringResource(R.string.close),
-                        color = Color.White,
+                        color = if (isUnlocked) achievement.color else Color.White,
                         fontWeight = FontWeight.SemiBold,
                         fontSize = 16.sp,
                         fontFamily = PoppinsFontFamily
@@ -818,8 +824,16 @@ private fun AnimatedActivityCard(
             ) {
                 val iconRes = when {
                     isPointRedemption -> R.drawable.leaf
-                    item.material_type?.name?.contains("PET", ignoreCase = true) == true -> R.drawable.bottle
-                    item.material_type?.name?.contains("Aluminio", ignoreCase = true) == true -> R.drawable.can
+                    item.material_type?.name?.contains(
+                        "PET",
+                        ignoreCase = true
+                    ) == true -> R.drawable.bottle
+
+                    item.material_type?.name?.contains(
+                        "Aluminio",
+                        ignoreCase = true
+                    ) == true -> R.drawable.can
+
                     else -> R.drawable.bottle
                 }
 
