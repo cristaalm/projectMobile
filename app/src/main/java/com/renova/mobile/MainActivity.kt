@@ -18,11 +18,13 @@ import com.renova.mobile.network.ApiClient
 import com.renova.mobile.utils.SessionManager
 import com.renova.mobile.utils.LocaleHelper
 import android.content.Context
+import android.content.pm.ActivityInfo
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.renova.mobile.ui.viewmodels.LanguageViewModel
 import com.renova.mobile.ui.viewmodels.RegisterViewModel
 import androidx.compose.runtime.LaunchedEffect
 import android.util.Log
+import android.view.WindowManager
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import com.renova.mobile.network.RegisterFcmTokenRequest
@@ -36,6 +38,11 @@ class MainActivity : ComponentActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_PORTRAIT
+        window.setFlags(
+            WindowManager.LayoutParams.FLAG_SECURE,
+            WindowManager.LayoutParams.FLAG_SECURE
+        )
         ApiClient.init(this)
         enableEdgeToEdge()
         setContent {
