@@ -330,4 +330,8 @@
     <string name="error_network">Error de conexión de red</string>
     <string name="error_generic">Error inesperado</string>
 
+    <string name="recycling">Reciclaje</string>
+    <string name="reward_exchange">Canjeo de recompensa</string>
+
+
 </resources>

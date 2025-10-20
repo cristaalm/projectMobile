@@ -28,6 +28,7 @@ import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
+import androidx.compose.material3.Divider
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
@@ -52,12 +53,19 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.ShoppingCart
+import androidx.compose.material.icons.filled.Recycling
+import androidx.compose.material.icons.filled.History
+import androidx.compose.material3.Icon
 import com.renova.mobile.R
 import com.renova.mobile.network.ActivityItem
 import com.renova.mobile.ui.components.SectionHeader
+import com.renova.mobile.ui.components.formatFriendlyDate
 import com.renova.mobile.ui.theme.LocalRenovaColors
 import com.renova.mobile.ui.theme.PoppinsFontFamily
 import com.renova.mobile.ui.theme.RenovaColorScheme
+import com.renova.mobile.ui.theme.RenovaColors
 import com.renova.mobile.ui.viewmodels.ActivityViewModel
 import java.text.SimpleDateFormat
 import java.util.Calendar
@@ -138,59 +146,167 @@ fun HomeScreen(
                 )
             }
 
-            // Lista de actividades (solo 3) con animaciones
+            // Lista de actividades (solo 3) - EXACTAMENTE como BusinessHomeScreen
             val recentActivities = state.activities.take(3)
-            Column(
-                modifier = Modifier
-                    .padding(horizontal = 24.dp)
-                    .padding(bottom = 6.dp),
-                verticalArrangement = Arrangement.spacedBy(7.dp)
-            ) {
-                if (recentActivities.isEmpty() && !state.isLoading) {
-                    Box(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(vertical = 32.dp),
-                        contentAlignment = Alignment.Center
+
+            if (recentActivities.isEmpty() && !state.isLoading) {
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 24.dp, vertical = 32.dp),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Column(
+                        horizontalAlignment = Alignment.CenterHorizontally,
+                        verticalArrangement = Arrangement.spacedBy(8.dp)
                     ) {
-                        Column(
-                            horizontalAlignment = Alignment.CenterHorizontally,
-                            verticalArrangement = Arrangement.spacedBy(8.dp)
-                        ) {
-                            Image(
-                                painter = painterResource(id = R.drawable.leaf),
-                                contentDescription = null,
-                                modifier = Modifier
-                                    .size(64.dp)
-                                    .clip(CircleShape),
-                                colorFilter = androidx.compose.ui.graphics.ColorFilter.tint(
-                                    renovaColors.textSecondary.copy(alpha = 0.3f)
-                                )
+                        Image(
+                            painter = painterResource(id = R.drawable.leaf),
+                            contentDescription = null,
+                            modifier = Modifier
+                                .size(64.dp)
+                                .clip(CircleShape),
+                            colorFilter = androidx.compose.ui.graphics.ColorFilter.tint(
+                                renovaColors.textSecondary.copy(alpha = 0.3f)
                             )
-                            Text(
-                                text = stringResource(R.string.no_activity_yet),
-                                style = MaterialTheme.typography.bodyLarge,
-                                color = renovaColors.textSecondary,
-                                textAlign = TextAlign.Center,
-                                fontFamily = PoppinsFontFamily
-                            )
-                        }
-                    }
-                } else {
-                    recentActivities.forEachIndexed { index, item ->
-                        AnimatedActivityCard(
-                            item = item,
-                            renovaColors = renovaColors,
-                            index = index
+                        )
+                        Text(
+                            text = stringResource(R.string.no_activity_yet),
+                            style = MaterialTheme.typography.bodyLarge,
+                            color = renovaColors.textSecondary,
+                            textAlign = TextAlign.Center,
+                            fontFamily = PoppinsFontFamily
                         )
                     }
                 }
+            } else {
+                // Tabla de actividades EXACTA como BusinessHomeScreen
+                Column(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 24.dp),
+                    verticalArrangement = Arrangement.spacedBy(0.dp)
+                ) {
+                    recentActivities.forEachIndexed { index, activity ->
+                        HistoryActivityCard(
+                            activity = activity,
+                            colors = renovaColors,
+                            onClick = { /* Opcional: agregar acción de click */ }
+                        )
+                        if (index < recentActivities.size - 1) {
+                            Divider(
+                                color = RenovaColors.PrimaryColor,
+                                thickness = 1.dp,
+                                modifier = Modifier.padding(vertical = 3.dp)
+                            )
+                        }
+                    }
+                }
             }
+
+            Spacer(modifier = Modifier.height(16.dp))
 
             // Sección de logros desbloqueados
             AchievementsSection(
                 totalPoints = state.totalPoints,
                 renovaColors = renovaColors
+            )
+        }
+    }
+}
+
+@Composable
+fun HistoryActivityCard(
+    activity: ActivityItem,
+    colors: RenovaColorScheme,
+    onClick: () -> Unit = {}
+) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clickable { onClick() }
+            .padding(horizontal = 16.dp, vertical = 12.dp),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        // Icono según el tipo de actividad
+        val (icon, iconColor) = when (activity.type_history) {
+            2 -> Icons.Default.Recycling to RenovaColors.Success // Reciclaje
+            1 -> Icons.Default.ShoppingCart to RenovaColors.Primary // Compra/Canjeo
+            else -> Icons.Default.History to RenovaColors.Warning // Actividad
+        }
+
+        Icon(
+            imageVector = icon,
+            contentDescription = null,
+            tint = iconColor,
+            modifier = Modifier.size(32.dp)
+        )
+
+        Spacer(modifier = Modifier.width(16.dp))
+
+        Column(
+            modifier = Modifier.weight(1f)
+        ) {
+            // Título de la actividad
+            Text(
+                text = when (activity.type_history) {
+                    2 -> stringResource(R.string.recycling)
+                    1 -> stringResource(R.string.reward_exchange)
+                    else -> stringResource(R.string.activity)
+                },
+                style = MaterialTheme.typography.bodyMedium.copy(
+                    fontFamily = PoppinsFontFamily,
+                    fontWeight = FontWeight.SemiBold
+                ),
+                color = colors.textPrimary,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis
+            )
+
+            Spacer(modifier = Modifier.height(4.dp))
+            val subtitleText = when (activity.type_history) {
+                2 -> activity.material_type?.name ?: ""
+                1 -> {
+                    val name = activity.reward?.name ?: "Recompensa"
+                    "1 x $name"
+                }
+                else -> activity.alliance?.name ?: ""
+            }
+            if (subtitleText.isNotBlank()) {
+                Text(
+                    text = subtitleText,
+                    style = MaterialTheme.typography.bodySmall.copy(
+                        fontFamily = PoppinsFontFamily
+                    ),
+                    color = colors.textSecondary,
+                    maxLines = 2,
+                    overflow = TextOverflow.Ellipsis
+                )
+            }
+
+            // Fecha (formato amigable: Hoy/Ayer/dd/MM/yyyy h:mm a)
+            Text(
+                text = formatFriendlyDate(activity.created_at),
+                style = MaterialTheme.typography.bodySmall.copy(
+                    fontFamily = PoppinsFontFamily
+                ),
+                color = colors.textSecondary
+            )
+        }
+
+        // Puntos
+        Column(
+            horizontalAlignment = Alignment.End
+        ) {
+            val pointsColor = if (activity.points < 0) colors.negativePoints else colors.primaryColor
+            val pointsText = if (activity.type_history == 1) "${activity.points} pts" else "+${activity.points} pts"
+            Text(
+                text = pointsText,
+                style = MaterialTheme.typography.bodyLarge.copy(
+                    fontFamily = PoppinsFontFamily,
+                    fontWeight = FontWeight.Bold
+                ),
+                color = pointsColor
             )
         }
     }
@@ -342,18 +458,6 @@ private fun AchievementCard(
             stiffness = Spring.StiffnessMedium
         ),
         label = "scale"
-    )
-
-    // Animación de brillo para logros desbloqueados
-    val infiniteTransition = rememberInfiniteTransition(label = "shine")
-    val shimmer by infiniteTransition.animateFloat(
-        initialValue = 0.7f,
-        targetValue = 1f,
-        animationSpec = infiniteRepeatable(
-            animation = tween(1500, easing = FastOutSlowInEasing),
-            repeatMode = RepeatMode.Reverse
-        ),
-        label = "shimmer"
     )
 
     Card(
@@ -723,205 +827,6 @@ private fun AnimatedPointsCard(
                     )
                 }
             }
-        }
-    }
-}
-
-@Composable
-private fun AnimatedActivityCard(
-    item: ActivityItem,
-    renovaColors: RenovaColorScheme,
-    index: Int
-) {
-    val context = LocalContext.current
-    val isPointRedemption = item.type_history == 1
-
-    // Animación de entrada (slide up + fade in)
-    var isVisible by remember { mutableStateOf(false) }
-    val offsetY by animateFloatAsState(
-        targetValue = if (isVisible) 0f else 100f,
-        animationSpec = tween(
-            durationMillis = 500,
-            delayMillis = index * 150,
-            easing = FastOutSlowInEasing
-        ),
-        label = "offsetY"
-    )
-
-    val alpha by animateFloatAsState(
-        targetValue = if (isVisible) 1f else 0f,
-        animationSpec = tween(
-            durationMillis = 500,
-            delayMillis = index * 150,
-            easing = LinearEasing
-        ),
-        label = "alpha"
-    )
-
-    LaunchedEffect(Unit) {
-        isVisible = true
-    }
-
-    // Animación de tap (scale/bounce)
-    var isPressed by remember { mutableStateOf(false) }
-    val scale by animateFloatAsState(
-        targetValue = if (isPressed) 0.95f else 1f,
-        animationSpec = spring(
-            dampingRatio = Spring.DampingRatioMediumBouncy,
-            stiffness = Spring.StiffnessLow
-        ),
-        label = "scale"
-    )
-
-    val interactionSource = remember { MutableInteractionSource() }
-
-    Card(
-        modifier = Modifier
-            .fillMaxWidth()
-            .offset(y = offsetY.dp)
-            .graphicsLayer {
-                this.alpha = alpha
-                this.scaleX = scale
-                this.scaleY = scale
-            }
-            .clickable(
-                interactionSource = interactionSource,
-                indication = null
-            ) {
-                isPressed = true
-            },
-        shape = RoundedCornerShape(16.dp),
-        colors = CardDefaults.cardColors(
-            containerColor = renovaColors.activityCardBackground
-        ),
-        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
-    ) {
-        LaunchedEffect(isPressed) {
-            if (isPressed) {
-                kotlinx.coroutines.delay(150)
-                isPressed = false
-            }
-        }
-
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(16.dp),
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.SpaceBetween
-        ) {
-            Box(
-                modifier = Modifier
-                    .size(48.dp)
-                    .background(
-                        color = if (isPointRedemption)
-                            Color(0xFFFFCDD2)
-                        else
-                            Color(0xFFE8F5E9),
-                        shape = RoundedCornerShape(12.dp)
-                    ),
-                contentAlignment = Alignment.Center
-            ) {
-                val iconRes = when {
-                    isPointRedemption -> R.drawable.leaf
-                    item.material_type?.name?.contains(
-                        "PET",
-                        ignoreCase = true
-                    ) == true -> R.drawable.bottle
-
-                    item.material_type?.name?.contains(
-                        "Aluminio",
-                        ignoreCase = true
-                    ) == true -> R.drawable.can
-
-                    else -> R.drawable.bottle
-                }
-
-                Image(
-                    painter = painterResource(id = iconRes),
-                    contentDescription = null,
-                    modifier = Modifier.size(28.dp),
-                    colorFilter = androidx.compose.ui.graphics.ColorFilter.tint(
-                        if (isPointRedemption) Color(0xFFD32F2F) else Color(0xFF00C851)
-                    )
-                )
-            }
-
-            Spacer(modifier = Modifier.width(14.dp))
-
-            Column(
-                modifier = Modifier.weight(1f),
-                verticalArrangement = Arrangement.spacedBy(4.dp)
-            ) {
-                Text(
-                    text = if (isPointRedemption) {
-                        stringResource(R.string.points_exchange)
-                    } else {
-                        item.material_type?.name ?: stringResource(R.string.product_entry)
-                    },
-                    style = MaterialTheme.typography.titleMedium,
-                    color = renovaColors.textPrimary,
-                    maxLines = 1,
-                    overflow = TextOverflow.Ellipsis,
-                    fontFamily = PoppinsFontFamily,
-                    fontWeight = FontWeight.SemiBold,
-                    fontSize = 15.sp
-                )
-
-                Text(
-                    text = formatFriendlyDate(item.created_at),
-                    style = MaterialTheme.typography.bodySmall,
-                    color = renovaColors.textSecondary,
-                    fontFamily = PoppinsFontFamily,
-                    fontSize = 12.sp
-                )
-            }
-
-            Text(
-                text = if (isPointRedemption) "${item.points} pts" else "+${item.points} pts",
-                style = MaterialTheme.typography.labelLarge,
-                color = if (isPointRedemption)
-                    Color(0xFFD32F2F)
-                else
-                    Color(0xFF00C851),
-                fontFamily = PoppinsFontFamily,
-                fontWeight = FontWeight.Bold,
-                fontSize = 16.sp
-            )
-        }
-    }
-}
-
-@Composable
-private fun formatFriendlyDate(isoString: String): String {
-    val context = LocalContext.current
-    val sdfInput = SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSSSSS'Z'", Locale.getDefault())
-    sdfInput.timeZone = TimeZone.getTimeZone("UTC")
-    val date = try {
-        sdfInput.parse(isoString)
-    } catch (_: Exception) {
-        null
-    }
-    if (date == null) return isoString
-
-    val calDate = Calendar.getInstance().apply { time = date }
-    val today = Calendar.getInstance()
-    val yesterday = Calendar.getInstance().apply { add(Calendar.DAY_OF_YEAR, -1) }
-    val locale = Locale.getDefault()
-    val timeFormat = SimpleDateFormat("h:mm a", locale)
-
-    return when {
-        calDate.get(Calendar.YEAR) == today.get(Calendar.YEAR) &&
-                calDate.get(Calendar.DAY_OF_YEAR) == today.get(Calendar.DAY_OF_YEAR) ->
-            "${context.getString(R.string.today)}, ${timeFormat.format(date).lowercase()}"
-
-        calDate.get(Calendar.YEAR) == yesterday.get(Calendar.YEAR) &&
-                calDate.get(Calendar.DAY_OF_YEAR) == yesterday.get(Calendar.DAY_OF_YEAR) ->
-            "${context.getString(R.string.yesterday)}, ${timeFormat.format(date).lowercase()}"
-
-        else -> {
-            val dateFormat = SimpleDateFormat("dd/MM/yyyy, h:mm a", locale)
-            dateFormat.format(date).lowercase()
         }
     }
 }

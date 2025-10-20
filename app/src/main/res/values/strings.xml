@@ -324,5 +324,9 @@
     <string name="error_network">Network connection error</string>
     <string name="error_generic">Unexpected error</string>
 
+    <string name="recycling">Recycling</string>
+    <string name="reward_exchange">Reward Exchange</string>
+
+
     <string name="default_notification_channel_id" translatable="false">fcm_default_channel</string>
 </resources>
