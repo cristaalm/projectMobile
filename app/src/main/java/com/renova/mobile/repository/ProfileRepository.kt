@@ -49,10 +49,6 @@ class ProfileRepository(private val context: Context) {
         }
     }
 
-    /**
-     * Sube los documentos INE (frente y reverso)
-     * Usa el endpoint existente de uploadDocuments
-     */
     suspend fun uploadDocuments(
         userId: Int,
         documentFront: MultipartBody.Part,
@@ -81,19 +77,65 @@ class ProfileRepository(private val context: Context) {
         }
     }
 
-    /**
-     * Sube la selfie del usuario
-     * Usa el endpoint existente de uploadSelfie
-     */
-    suspend fun uploadSelfie(
-        userId: Int,
-        selfie: MultipartBody.Part
-    ): Result<UploadSelfieResponse> = withContext(Dispatchers.IO) {
+    suspend fun getDocumentImage(
+        type: String,
+        userId: Int
+    ): Result<ByteArray> = withContext(Dispatchers.IO) {
         try {
-            val response = apiService.uploadSelfie(
-                userId = userId,
-                selfie = selfie
-            )
+            val token = sessionManager.getAuthToken()
+            val response = apiService.getDocumentImage(type, userId)
+
+            if (response.isSuccessful) {
+                response.body()?.bytes()?.let { bytes ->
+                    Result.success(bytes)
+                } ?: run {
+                    Result.failure(Exception("Imagen vacía"))
+                }
+            } else {
+                val errorBody = response.errorBody()?.string()
+                Result.failure(Exception("Error ${response.code()}: ${response.message()}"))
+            }
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
+
+    // En tu archivo ProfileRepository (Document 2)
+
+    suspend fun updateUserField(
+        field: String,
+        value: String
+    ): Result<UpdateFieldResponse> = withContext(Dispatchers.IO) {
+        try {
+            val userId = sessionManager.getUserId()
+            if (userId == null) {
+                return@withContext Result.failure(Exception("No se encontró el ID del usuario"))
+            }
+            val request = UpdateFieldRequest(value = value)
+            val response = apiService.updateUserField(field, userId, request)
+
+            if (response.isSuccessful) {
+                response.body()?.let {
+                    if (it.success) {
+                        Result.success(it)
+                    } else {
+                        Result.failure(Exception(it.message))
+                    }
+                } ?: Result.failure(Exception("Respuesta vacía"))
+            } else {
+                val errorBody = response.errorBody()?.string()
+                Result.failure(Exception("Error ${response.code()}: ${response.message()}"))
+            }
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
+
+    suspend fun resetVerificationStatus(
+        userId: Int
+    ): Result<UpdateFieldResponse> = withContext(Dispatchers.IO) {
+        try {
+            val response = apiService.toggleStatusPending(userId)
 
             if (response.isSuccessful) {
                 response.body()?.let {
@@ -111,31 +153,25 @@ class ProfileRepository(private val context: Context) {
         }
     }
 
-    /**
-     * TODO: Método para actualizar email cuando el endpoint esté disponible
-     */
-    suspend fun updateEmail(newEmail: String): Result<Any> = withContext(Dispatchers.IO) {
+    suspend fun uploadSingleDocument(
+        type: String,
+        userId: Int,
+        document: MultipartBody.Part
+    ): Result<UploadDocumentsResponse> = withContext(Dispatchers.IO) {
         try {
-            // TODO: Implementar cuando el endpoint esté listo
-            // val response = apiService.updateEmail(UpdateEmailRequest(email = newEmail))
-            // ... manejar respuesta
+            val response = apiService.uploadSingleDocument(type, userId, document)
 
-            Result.success(Unit)
-        } catch (e: Exception) {
-            Result.failure(e)
-        }
-    }
-
-    /**
-     * TODO: Método para actualizar teléfono cuando el endpoint esté disponible
-     */
-    suspend fun updatePhone(newPhone: String): Result<Any> = withContext(Dispatchers.IO) {
-        try {
-            // TODO: Implementar cuando el endpoint esté listo
-            // val response = apiService.updatePhone(UpdatePhoneRequest(phone = newPhone))
-            // ... manejar respuesta
-
-            Result.success(Unit)
+            if (response.isSuccessful) {
+                response.body()?.let {
+                    if (it.success) {
+                        Result.success(it)
+                    } else {
+                        Result.failure(Exception(it.message))
+                    }
+                } ?: Result.failure(Exception("Respuesta vacía"))
+            } else {
+                Result.failure(Exception("Error ${response.code()}: ${response.message()}"))
+            }
         } catch (e: Exception) {
             Result.failure(e)
         }

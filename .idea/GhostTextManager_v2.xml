@@ -1,0 +1,112 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="GhostTextManager">
+    <option name="inputs">
+      <map>
+        <entry key="For the following code:&#10;```&#10;&#10;if (showSelfieDialog &amp;&amp; selfieImage != null) {&#10;    ImagePreviewDialog(&#10;```&#10;We have the error: Function declaration must have a name.&#10;Please fix this. If needed, you can use the get_errors tool on this file.">
+          <value>
+            <GhostTextMetaData>
+              <option name="count" value="1.0" />
+              <option name="timestamps">
+                <list>
+                  <option value="1760918119571" />
+                </list>
+              </option>
+            </GhostTextMetaData>
+          </value>
+        </entry>
+        <entry key="For the following code:&#10;```&#10;                                Text(&#10;                                    text = stringResource(R.string.documentation_auto_upload_hint_compressed),&#10;                                    style = MaterialTheme.typography.bodySmall,&#10;```&#10;We have the error: Unresolved reference 'documentation_auto_upload_hint_compressed'.&#10;Please fix this. If needed, you can use the get_errors tool on this file.">
+          <value>
+            <GhostTextMetaData>
+              <option name="count" value="1.0" />
+              <option name="timestamps">
+                <list>
+                  <option value="1760913816687" />
+                </list>
+              </option>
+            </GhostTextMetaData>
+          </value>
+        </entry>
+        <entry key="For the following code:&#10;```&#10;                isSpanish = isSpanish,&#10;                viewModel = profileViewModel&#10;            )&#10;```&#10;We have the error: Unresolved reference 'profileViewModel'.&#10;Please fix this. If needed, you can use the get_errors tool on this file.">
+          <value>
+            <GhostTextMetaData>
+              <option name="count" value="2.0" />
+              <option name="timestamps">
+                <list>
+                  <option value="1760799967228" />
+                  <option value="1760799711274" />
+                </list>
+              </option>
+            </GhostTextMetaData>
+          </value>
+        </entry>
+        <entry key="For the following code:&#10;```&#10;            // ✅ Usar UpdateFieldRequest con el campo &quot;value&quot;&#10;            val request = UpdateFieldRequest(value = value)&#10;&#10;```&#10;We have the error: Unresolved reference 'UpdateFieldRequest'.&#10;Please fix this. If needed, you can use the get_errors tool on this file.">
+          <value>
+            <GhostTextMetaData>
+              <option name="count" value="1.0" />
+              <option name="timestamps">
+                <list>
+                  <option value="1760888823734" />
+                </list>
+              </option>
+            </GhostTextMetaData>
+          </value>
+        </entry>
+        <entry key="For the following code:&#10;```&#10;        @&lt;file_name&gt;&#10;    ): Response&lt;UpdateFieldResponse&gt;&#10;&#10;```&#10;We have the error: Unresolved reference 'UpdateFieldResponse'.&#10;Please fix this. If needed, you can use the get_errors tool on this file.">
+          <value>
+            <GhostTextMetaData>
+              <option name="count" value="2.0" />
+              <option name="timestamps">
+                <list>
+                  <option value="1760820797714" />
+                  <option value="1760818873373" />
+                </list>
+              </option>
+            </GhostTextMetaData>
+          </value>
+        </entry>
+        <entry key="For the following code:&#10;```&#10;    val colors = LocalRenovaColors.current&#10;    val updateFieldState by viewModel.updateFieldState.collectAsState()&#10;    val isLoading = updateFieldState is UpdateFieldState.Loading&#10;```&#10;We have the error: Cannot infer type for this parameter. Specify it explicitly.&#10;Please fix this. If needed, you can use the get_errors tool on this file.">
+          <value>
+            <GhostTextMetaData>
+              <option name="count" value="1.0" />
+              <option name="timestamps">
+                <list>
+                  <option value="1760801016040" />
+                </list>
+              </option>
+            </GhostTextMetaData>
+          </value>
+        </entry>
+        <entry key="For the following code:&#10;```&#10;import androidx.compose.ui.graphics.vector.ImageVector&#10;import androidx.compose.ui.foundation.Image&#10;import androidx.compose.ui.layout.ContentScale&#10;```&#10;We have the error: Unused import directive&#10;Please fix this. If needed, you can use the get_errors tool on this file.&#10;fix the edge case in calculate_average (it's a temp file)">
+          <value>
+            <GhostTextMetaData>
+              <option name="count" value="6.0" />
+              <option name="timestamps">
+                <list>
+                  <option value="1760725581032" />
+                  <option value="1760724864671" />
+                  <option value="1760724535265" />
+                  <option value="1760724446442" />
+                  <option value="1760724339815" />
+                  <option value="1760724017341" />
+                </list>
+              </option>
+            </GhostTextMetaData>
+          </value>
+        </entry>
+        <entry key="hay muchos errores en las strings y no se porque">
+          <value>
+            <GhostTextMetaData>
+              <option name="count" value="1.0" />
+              <option name="timestamps">
+                <list>
+                  <option value="1760885446692" />
+                </list>
+              </option>
+            </GhostTextMetaData>
+          </value>
+        </entry>
+      </map>
+    </option>
+  </component>
+</project>

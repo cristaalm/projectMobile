@@ -10,6 +10,7 @@ import retrofit2.converter.gson.GsonConverterFactory
 import com.renova.mobile.utils.SessionManager
 import okhttp3.MultipartBody
 import retrofit2.http.*
+import java.util.concurrent.TimeUnit
 
 // ========== REGISTER ==========
 data class RegisterRequest(
@@ -437,6 +438,18 @@ data class ClaimRewardData(
     val redeemed_at: String
 )
 
+data class UpdateFieldRequest(
+    val value: String
+)
+
+data class UpdateFieldResponse(
+    val success: Boolean,
+    val message: String,
+    val data: Any?,
+    val error: String?,
+    val status: Int
+)
+
 // ========== NOTIFICATIONS ==========
 
 // ========== GENERAL ==========
@@ -561,6 +574,36 @@ interface ApiService {
     @POST("api/users/identityUserCode")
     suspend fun identifyUserByCode(@Body request: IdentifyUserByCodeRequest): Response<IdentifyUserResponse>
 
+    // Endpoint para obtener imagen de documento
+    @GET("api/users/documents/{type}/{userId}")
+    suspend fun getDocumentImage(
+        @Path("type") type: String,
+        @Path("userId") userId: Int
+    ): Response<okhttp3.ResponseBody>
+
+    // Endpoint para actualizar campo individual del perfil
+    @POST("api/users/updateField/{field}/{userId}")
+    suspend fun updateUserField(
+        @Path("field") field: String,
+        @Path("userId") userId: Int,
+        @Body request: UpdateFieldRequest
+    ): Response<UpdateFieldResponse>
+
+    // Endpoint para reiniciar estado de verificación a pendiente
+    @POST("api/users/toggle-status-pending/{userId}")
+    suspend fun toggleStatusPending(
+        @Path("userId") userId: Int
+    ): Response<UpdateFieldResponse>
+
+    // Endpoint para subir documento individual
+    @Multipart
+    @POST("api/users/documents/{type}/{userId}")
+    suspend fun uploadSingleDocument(
+        @Path("type") type: String,
+        @Path("userId") userId: Int,
+        @Part document: MultipartBody.Part
+    ): Response<UploadDocumentsResponse>
+
     @POST("api/notifications/send")
     suspend fun sendNotification(@Body request: SendNotificationRequest): Response<SendNotificationResponse>
 
@@ -598,6 +641,9 @@ object ApiClient {
 
                     chain.proceed(builder.build())
                 }
+                .connectTimeout(30, TimeUnit.SECONDS)
+                .readTimeout(30, TimeUnit.SECONDS)
+                .writeTimeout(60, TimeUnit.SECONDS)
                 .build()
         }
 

@@ -1,26 +1,36 @@
 package com.renova.mobile.ui.components
 
 import androidx.compose.animation.Crossfade
+import androidx.compose.animation.core.FastOutSlowInEasing
+import androidx.compose.animation.core.animate
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material3.*
 import androidx.compose.material3.pulltorefresh.*
 import androidx.compose.runtime.*
-import androidx.compose.ui.Alignment
-import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import java.util.*
+import androidx.compose.ui.draw.shadow
+import androidx.compose.foundation.Image
+import androidx.compose.foundation.background
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.unit.sp
 import com.renova.mobile.R
 import com.renova.mobile.ui.theme.RenovaColorScheme
+import com.renova.mobile.ui.theme.RenovaColors
 import java.text.SimpleDateFormat
-import java.util.*
 
 // Componente del indicador de refresco personalizado
 @OptIn(ExperimentalMaterial3Api::class)
@@ -83,54 +93,6 @@ fun LoadingState(
     ) {
         CircularProgressIndicator(color = renovaColors.activityPrimary)
     }
-}
-
-// Componente de diálogo de error
-@Composable
-fun ErrorDialog(
-    error: String,
-    onRetry: () -> Unit,
-    onDismiss: () -> Unit,
-    title: String = "¡Ocurrió un error!",
-    message: String = "¡Oops! Sucedió un error, por favor reinicia o vuelve a iniciar sesión"
-) {
-    AlertDialog(
-        onDismissRequest = onDismiss,
-        title = {
-            Text(
-                text = title,
-                style = MaterialTheme.typography.titleLarge,
-                color = MaterialTheme.colorScheme.error,
-                textAlign = TextAlign.Center,
-                modifier = Modifier.fillMaxWidth()
-            )
-        },
-        text = {
-            Text(
-                text = message,
-                style = MaterialTheme.typography.bodyLarge,
-                color = MaterialTheme.colorScheme.onSurface,
-                textAlign = TextAlign.Center,
-                modifier = Modifier.fillMaxWidth()
-            )
-        },
-        confirmButton = {
-            Button(
-                onClick = onRetry,
-                colors = ButtonDefaults.buttonColors(
-                    containerColor = MaterialTheme.colorScheme.primary
-                )
-            ) {
-                Text("Reintentar", color = MaterialTheme.colorScheme.onPrimary)
-            }
-        },
-        dismissButton = {
-            TextButton(onClick = onDismiss) {
-                Text("Cerrar")
-            }
-        },
-        shape = RoundedCornerShape(18.dp)
-    )
 }
 
 // Controles de paginación
@@ -260,6 +222,106 @@ fun formatFriendlyDate(isoString: String): String {
         else -> {
             val dateFormat = SimpleDateFormat("dd/MM/yyyy, h:mm a", locale)
             dateFormat.format(date).lowercase(locale)
+        }
+    }
+}
+
+@Composable
+fun AnimatedPointsCardActivity(
+    totalPoints: Int,
+    renovaColors: RenovaColorScheme
+) {
+    // Animación del contador de puntos
+    var animatedPoints by remember { mutableStateOf(0f) }
+
+    LaunchedEffect(totalPoints) {
+        animate(
+            initialValue = 0f,
+            targetValue = totalPoints.toFloat(),
+            animationSpec = tween(
+                durationMillis = 1500,
+                easing = FastOutSlowInEasing
+            )
+        ) { value, _ ->
+            animatedPoints = value
+        }
+    }
+
+    Card(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(top = 14.dp, start = 18.dp, end = 20.dp, bottom = 8.dp)
+            .height(135.dp),
+        shape = RoundedCornerShape(24.dp),
+        colors = CardDefaults.cardColors(containerColor = Color.Transparent),
+        elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
+    ) {
+        Box(modifier = Modifier.fillMaxSize()) {
+            Image(
+                painter = painterResource(id = R.drawable.fondo),
+                contentDescription = null,
+                contentScale = ContentScale.Crop,
+                colorFilter = androidx.compose.ui.graphics.ColorFilter.tint(
+                    Color(0xFF05D16E),
+                    blendMode = androidx.compose.ui.graphics.BlendMode.Modulate
+                ),
+                modifier = Modifier
+                    .matchParentSize()
+                    .clip(RoundedCornerShape(24.dp))
+            )
+
+            Row(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(24.dp),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Column(
+                    modifier = Modifier.weight(1f),
+                    verticalArrangement = Arrangement.Center
+                ) {
+                    Text(
+                        text = stringResource(R.string.total_points),
+                        style = MaterialTheme.typography.titleMedium,
+                        color = Color.White,
+                        fontWeight = FontWeight.SemiBold,
+                        fontSize = 16.sp
+                    )
+                    Spacer(modifier = Modifier.height(0.dp))
+                    Row {
+                        Text(
+                            text = java.text.NumberFormat.getIntegerInstance(
+                                java.util.Locale.forLanguageTag("es-MX")
+                            ).format(animatedPoints.toInt()),
+                            style = MaterialTheme.typography.displayLarge,
+                            color = Color.White,
+                            fontSize = 52.sp,
+                            fontWeight = FontWeight.Bold,
+                            lineHeight = 52.sp
+                        )
+                    }
+                }
+
+                Box(
+                    modifier = Modifier
+                        .size(90.dp)
+                        .background(
+                            Color.White.copy(alpha = 0.15f),
+                            shape = RoundedCornerShape(20.dp)
+                        ),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Image(
+                        painter = painterResource(id = R.drawable.leaf),
+                        contentDescription = null,
+                        modifier = Modifier.size(45.dp),
+                        colorFilter = androidx.compose.ui.graphics.ColorFilter.tint(
+                            Color.White.copy(alpha = 0.9f)
+                        )
+                    )
+                }
+            }
         }
     }
 }

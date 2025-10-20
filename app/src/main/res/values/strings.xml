@@ -226,9 +226,6 @@
     <string name="bottom_nav_qr">Scan</string>
     <string name="bottom_nav_profile">Profile</string>
 
-    <!-- Mensajes de error genéricos -->
-    <string name="error_title2">¡Ocurrió un error!</string>
-    <string name="error_default_message">¡Oops! Sucedió un error, por favor reinicia o vuelve a iniciar sesión</string>
     <string name="close_button">Cerrar</string>
 
     <!-- Venta -->
@@ -272,7 +269,7 @@
     <string name="edit_field">Edit</string>
     <string name="save_field">Save</string>
     <string name="cancel_field">Cancel</string>
-    <string name="resubmit_documentation">Resubmit Documentation</string>
+    <string name="request_verification">Request Verification</string>
     <string name="retry_button">Retry</string>
 
     <string name="tap_to_upload">Tap to upload</string>
@@ -316,6 +313,23 @@
     <string name="locked">LOCKED</string>
     <string name="progress_format">Progress: %1$d / %2$d pts</string>
 
+    <string name="requesting_verification">Requesting…</string>
+    <string name="verification_requested_title">Verification requested!</string>
+    <string name="verification_requested_message">Your verification request has been submitted. An administrator will review your documents soon.</string>
+    <string name="understood">Understood</string>
+
+    <string name="document_uploaded_title">Document uploaded</string>
+    <string name="document_uploaded_message">%1$s has been uploaded successfully</string>
+    <string name="documentation_auto_upload_hint">Images will be uploaded automatically when selected. Once all are uploaded, press the request verification button.</string>
+
+    <string name="documentation_auto_upload_hint_compressed">Images will be automatically compressed and uploaded when selected. Once all are uploaded, press the request verification button.</string>
+    <string name="compressing_image">Compressing image…</string>
+    <string name="image_too_large">Image is too large, it will be compressed automatically</string>
+    <string name="image_processing_error">Error processing image. Try with another photo.</string>
+    <string name="upload_error_title">Upload Error</string>
+    <string name="upload_error_message">Could not upload the document. Please try again.</string>
+    <string name="verification_error_title">Verification Error</string>
+    <string name="verification_error_message">Could not process your verification request. Try again later.</string>
     <string name="error_invalid_credentials">Incorrect email or password.</string>
     <string name="error_account_disabled">Your account has been disabled by an administrator.</string>
     <string name="error_validation_failed">Incorrect email or password.</string>
@@ -327,6 +341,8 @@
     <string name="recycling">Recycling</string>
     <string name="reward_exchange">Reward Exchange</string>
 
+    <string name="points_adjustment">Points Adjustment</string>
+    <string name="manual_adjustment">Manual Adjustment</string>
 
     <string name="default_notification_channel_id" translatable="false">fcm_default_channel</string>
 </resources>

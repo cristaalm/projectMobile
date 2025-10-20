@@ -272,7 +272,7 @@
     <string name="action_required_description">Tu documentación fue rechazada. Por favor revisa el motivo arriba y envía nuevamente las fotos correctas.</string>
     <string name="documentation_rejected">Documentación Rechazada</string>
     <string name="documentation_submitted">Documentación Enviada</string>
-    <string name="documentation_pending">Documentation Pending</string>
+    <string name="documentation_pending">Documentación Pendiente</string>
     <string name="documentation_empty">Documentación Vacía</string>
     <string name="ine_front">INE Frontal</string>
     <string name="ine_back">INE Trasera</string>
@@ -280,7 +280,7 @@
     <string name="edit_field">Editar</string>
     <string name="save_field">Guardar</string>
     <string name="cancel_field">Cancelar</string>
-    <string name="resubmit_documentation">Reenviar Documentación</string>
+    <string name="request_verification">Solicitar Verificación</string>
     <string name="retry_button">Reintentar</string>
 
     <string name="tap_to_upload">Toca para subir</string>
@@ -322,6 +322,25 @@
     <string name="locked">BLOQUEADO</string>
     <string name="progress_format">Progreso: %1$d / %2$d pts</string>
 
+    <string name="requesting_verification">Solicitando…</string>
+    <string name="verification_requested_title">¡Verificación solicitada!</string>
+    <string name="verification_requested_message">Tu solicitud de verificación ha sido enviada. Un administrador revisará tus documentos pronto.</string>
+    <string name="understood">Entendido</string>
+
+    <string name="document_uploaded_title">Documento subido</string>
+    <string name="document_uploaded_message">%1$s se ha subido correctamente</string>
+    <string name="documentation_auto_upload_hint">Las imágenes se subirán automáticamente al seleccionarlas. Una vez que todas estén subidas, presiona el botón de solicitar verificación.</string>
+
+    <string name="compressing_image">Comprimiendo imagen…</string>
+    <string name="image_too_large">La imagen es muy grande, será comprimida automáticamente</string>
+    <string name="image_processing_error">Error al procesar la imagen. Intenta con otra foto.</string>
+    <string name="documentation_auto_upload_hint_compressed">Las imágenes se comprimirán y subirán automáticamente al seleccionarlas. Una vez que todas estén subidas, presiona el botón de solicitar verificación.</string>
+    <string name="upload_error_title">Error al subir</string>
+    <string name="upload_error_message">No se pudo subir el documento. Por favor, intenta nuevamente.</string>
+    <string name="verification_error_title">Error de verificación</string>
+    <string name="verification_error_message">No se pudo procesar tu solicitud de verificación. Intenta más tarde.</string>
+
+
     <string name="error_invalid_credentials">Correo electrónico o contraseña incorrectos.</string>
     <string name="error_account_disabled">Tu cuenta ha sido desactivada por un administrador.</string>
     <string name="error_validation_failed">Correo electrónico o contraseña incorrectos.</string>
@@ -333,5 +352,6 @@
     <string name="recycling">Reciclaje</string>
     <string name="reward_exchange">Canjeo de recompensa</string>
 
-
+    <string name="points_adjustment">Ajuste de puntos</string>
+    <string name="manual_adjustment">Ajuste manual</string>
 </resources>
