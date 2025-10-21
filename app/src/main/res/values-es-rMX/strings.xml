@@ -229,8 +229,16 @@
     <string name="bottom_nav_profile">Perfil</string>
 
     <!-- Mensajes de error genéricos -->
+    <string name="error_title2">¡Ocurrió un error!</string>
+    <string name="error_default_message">¡Oops! Sucedió un error, por favor reinicia o vuelve a iniciar sesión</string>
     <string name="close_button">Cerrar</string>
 
+    <!-- Si no tienes estos, agrégalos también -->
+    <string name="scroll_down_2">Deslizar hacia abajo</string>
+    <string name="success_2">Éxito</string>
+    <string name="completed_2">¡Completado!</string>
+
+    <!-- Venta -->
     <string name="sale">Venta</string>
 
     <!-- modal de logout-->
@@ -294,14 +302,14 @@
     <string name="start_recycling_today">Comienza a reciclar hoy</string>
 
     <!-- Achievements Section -->
-    <string name="unlocked_achievements">Logros Desbloqueados</string>
+    <string name="unlocked_achievements">Logros desbloqueados</string>
     <string name="your_achievements_and_ranks">Tus logros y rangos obtenidos</string>
 
     <!-- Achievement Titles -->
-    <string name="achievement_eco_warrior">Eco Warrior</string>
-    <string name="achievement_recycler_pro">Recycler Pro</string>
-    <string name="achievement_green_hero">Green Hero</string>
-    <string name="achievement_planet_saver">Planet Saver</string>
+    <string name="achievement_eco_warrior">Guerrero Eco</string>
+    <string name="achievement_recycler_pro">Reciclador Pro</string>
+    <string name="achievement_green_hero">Héroe Verde</string>
+    <string name="achievement_planet_saver">Salvador del Planeta</string>
 
     <!-- Achievement Descriptions -->
     <string name="achievement_eco_warrior_desc">Se desbloquea al alcanzar 100 puntos. ¡Estás comenzando tu viaje eco-amigable!</string>
@@ -348,5 +356,7 @@
     <string name="manual_adjustment">Ajuste manual</string>
     <string name="quantity">Cantidad</string>
     <string name="no_activity_description">Tus actividades de reciclaje y canjes aparecerán aquí</string>
+
+
 
 </resources>

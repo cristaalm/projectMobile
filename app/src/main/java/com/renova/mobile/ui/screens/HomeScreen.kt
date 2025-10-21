@@ -98,7 +98,6 @@ fun HomeScreen(
         modifier = Modifier
             .fillMaxSize()
             .background(MaterialTheme.colorScheme.background)
-            .verticalScroll(scrollState)
     ) {
         SectionHeader(
             title = stringResource(id = R.string.bottom_nav_home),
@@ -113,104 +112,106 @@ fun HomeScreen(
                 CircularProgressIndicator(color = renovaColors.activityPrimary)
             }
         } else {
-            // Card de puntos totales con contador animado
-            AnimatedPointsCard(
-                totalPoints = state.totalPoints,
-                renovaColors = renovaColors
-            )
-
-            // Título de actividad reciente
             Column(
-                modifier = Modifier.padding(
-                    start = 24.dp,
-                    end = 24.dp,
-                    top = 6.dp,
-                    bottom = 10.dp
-                )
+                modifier = Modifier
+                    .fillMaxSize()
+                    .verticalScroll(scrollState)
             ) {
-                Text(
-                    text = stringResource(R.string.recent_activity),
-                    style = MaterialTheme.typography.titleLarge,
-                    color = renovaColors.textPrimary,
-                    fontWeight = FontWeight.Bold,
-                    fontSize = 21.sp,
-                    fontFamily = PoppinsFontFamily
+                // Card de puntos totales con contador animado
+                AnimatedPointsCard(
+                    totalPoints = state.totalPoints,
+                    renovaColors = renovaColors
                 )
-                Spacer(modifier = Modifier.height(3.dp))
-                Text(
-                    text = stringResource(R.string.last_movements),
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = renovaColors.textSecondary,
-                    fontSize = 14.sp,
-                    fontFamily = PoppinsFontFamily
-                )
-            }
 
-            // Lista de actividades (solo 3) - EXACTAMENTE como BusinessHomeScreen
-            val recentActivities = state.activities.take(3)
-
-            if (recentActivities.isEmpty() && !state.isLoading) {
-                Box(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(horizontal = 24.dp, vertical = 32.dp),
-                    contentAlignment = Alignment.Center
-                ) {
-                    Column(
-                        horizontalAlignment = Alignment.CenterHorizontally,
-                        verticalArrangement = Arrangement.spacedBy(8.dp)
-                    ) {
-                        Image(
-                            painter = painterResource(id = R.drawable.leaf),
-                            contentDescription = null,
-                            modifier = Modifier
-                                .size(64.dp)
-                                .clip(CircleShape),
-                            colorFilter = androidx.compose.ui.graphics.ColorFilter.tint(
-                                renovaColors.textSecondary.copy(alpha = 0.3f)
-                            )
-                        )
-                        Text(
-                            text = stringResource(R.string.no_activity_yet),
-                            style = MaterialTheme.typography.bodyLarge,
-                            color = renovaColors.textSecondary,
-                            textAlign = TextAlign.Center,
-                            fontFamily = PoppinsFontFamily
-                        )
-                    }
-                }
-            } else {
-                // Tabla de actividades EXACTA como BusinessHomeScreen
+                // Título de actividad reciente
                 Column(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(horizontal = 24.dp),
-                    verticalArrangement = Arrangement.spacedBy(0.dp)
+                    modifier = Modifier.padding(
+                        start = 24.dp,
+                        end = 24.dp,
+                        top = 6.dp,
+                        bottom = 10.dp
+                    )
                 ) {
-                    recentActivities.forEachIndexed { index, activity ->
-                        ActivityHistoryCard(
-                            activity = activity,
-                            colors = renovaColors,
-                            onClick = { /* Opcional: agregar acción de click */ }
-                        )
-                        if (index < recentActivities.size - 1) {
-                            Divider(
-                                color = RenovaColors.PrimaryColor,
-                                thickness = 1.dp,
-                                modifier = Modifier.padding(vertical = 3.dp)
+                    Text(
+                        text = stringResource(R.string.recent_activity),
+                        style = MaterialTheme.typography.titleLarge,
+                        color = renovaColors.textPrimary,
+                        fontWeight = FontWeight.Bold,
+                        fontSize = 21.sp,
+                        fontFamily = PoppinsFontFamily
+                    )
+                    Spacer(modifier = Modifier.height(3.dp))
+                    Text(
+                        text = stringResource(R.string.last_movements),
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = renovaColors.textSecondary,
+                        fontSize = 14.sp,
+                        fontFamily = PoppinsFontFamily
+                    )
+                }
+
+                // Lista de actividades (solo 3) - EXACTAMENTE como BusinessHomeScreen
+                val recentActivities = state.activities.take(3)
+
+                if (recentActivities.isEmpty() && !state.isLoading) {
+                    Box(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(horizontal = 24.dp, vertical = 32.dp),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Column(
+                            horizontalAlignment = Alignment.CenterHorizontally,
+                            verticalArrangement = Arrangement.spacedBy(8.dp)
+                        ) {
+                            Icon(
+                                imageVector = Icons.Default.History,
+                                contentDescription = null,
+                                tint = renovaColors.textSecondary.copy(alpha = 0.3f),
+                                modifier = Modifier.size(64.dp)
+                            )
+                            Text(
+                                text = stringResource(R.string.no_activity_yet),
+                                style = MaterialTheme.typography.bodyLarge,
+                                color = renovaColors.textSecondary,
+                                textAlign = TextAlign.Center,
+                                fontFamily = PoppinsFontFamily
                             )
                         }
                     }
+                } else {
+                    // Tabla de actividades EXACTA como BusinessHomeScreen
+                    Column(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(horizontal = 24.dp),
+                        verticalArrangement = Arrangement.spacedBy(0.dp)
+                    ) {
+                        recentActivities.forEachIndexed { index, activity ->
+                            HistoryActivityCard(
+                                activity = activity,
+                                colors = renovaColors,
+                                onClick = { /* Opcional: agregar acción de click */ }
+                            )
+                            if (index < recentActivities.size - 1) {
+                                Divider(
+                                    color = RenovaColors.PrimaryColor,
+                                    thickness = 1.dp,
+                                    modifier = Modifier.padding(vertical = 3.dp)
+                                )
+                            }
+                        }
+                    }
                 }
+
+                Spacer(modifier = Modifier.height(16.dp))
+
+                // Sección de logros desbloqueados
+                AchievementsSection(
+                    totalPoints = state.totalPoints,
+                    renovaColors = renovaColors
+                )
             }
-
-            Spacer(modifier = Modifier.height(16.dp))
-
-            // Sección de logros desbloqueados
-            AchievementsSection(
-                totalPoints = state.totalPoints,
-                renovaColors = renovaColors
-            )
         }
     }
 }
@@ -319,57 +320,55 @@ private fun AchievementsSection(
 ) {
     val context = LocalContext.current
 
-    val achievements = remember {
-        listOf(
-            Achievement(
-                id = 1,
-                title = context.getString(R.string.achievement_eco_warrior),
-                description = context.getString(R.string.achievement_eco_warrior_desc),
-                iconRes = R.drawable.ic_goal_1,
-                requiredPoints = 100,
-                color = Color(0xFFFFFFFF),
-                backgroundColor = Color(0xFF024653)
-            ),
-            Achievement(
-                id = 2,
-                title = context.getString(R.string.achievement_recycler_pro),
-                description = context.getString(R.string.achievement_recycler_pro_desc),
-                iconRes = R.drawable.ic_goal_2,
-                requiredPoints = 500,
-                color = Color(0xFF000000),
-                backgroundColor = Color(0xFFCCFF00)
-            ),
-            Achievement(
-                id = 3,
-                title = context.getString(R.string.achievement_green_hero),
-                description = context.getString(R.string.achievement_green_hero_desc),
-                iconRes = R.drawable.ic_goal_3,
-                requiredPoints = 1000,
-                color = Color(0xFFFFFFFF),
-                backgroundColor = Color(0xFF01C851)
-            ),
-            Achievement(
-                id = 4,
-                title = context.getString(R.string.achievement_planet_saver),
-                description = context.getString(R.string.achievement_planet_saver_desc),
-                iconRes = R.drawable.ic_goal_4,
-                requiredPoints = 2500,
-                color = Color(0xFFFFFFFF),
-                backgroundColor = Color(0xFF024653)
-            )
+    val achievements = listOf(
+        Achievement(
+            id = 1,
+            title = stringResource(R.string.achievement_eco_warrior),
+            description = stringResource(R.string.achievement_eco_warrior_desc),
+            iconRes = R.drawable.ic_goal_1,
+            requiredPoints = 100,
+            color = Color(0xFFFFFFFF),
+            backgroundColor = Color(0xFF024653)
+        ),
+        Achievement(
+            id = 2,
+            title = stringResource(R.string.achievement_recycler_pro),
+            description = stringResource(R.string.achievement_recycler_pro_desc),
+            iconRes = R.drawable.ic_goal_2,
+            requiredPoints = 500,
+            color = Color(0xFFFFFFFF),
+            backgroundColor = Color(0xFF01C851)
+        ),
+        Achievement(
+            id = 3,
+            title = stringResource(R.string.achievement_green_hero),
+            description = stringResource(R.string.achievement_green_hero_desc),
+            iconRes = R.drawable.ic_goal_3,
+            requiredPoints = 1000,
+            color = Color(0xFFFFFFFF),
+            backgroundColor = Color(0xFF024653)
+        ),
+        Achievement(
+            id = 4,
+            title = stringResource(R.string.achievement_planet_saver),
+            description = stringResource(R.string.achievement_planet_saver_desc),
+            iconRes = R.drawable.ic_goal_4,
+            requiredPoints = 2500,
+            color = Color(0xFFFFFFFF),
+            backgroundColor = Color(0xFF01C851)
         )
-    }
+    )
 
     var selectedAchievement by remember { mutableStateOf<Achievement?>(null) }
 
     Column(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(top = 10.dp, bottom = 18.dp)
+            .padding(top = 6.dp, bottom = 18.dp)
     ) {
         // Título de la sección
         Column(
-            modifier = Modifier.padding(horizontal = 24.dp, vertical = 8.dp)
+            modifier = Modifier.padding(start = 24.dp, end = 24.dp, top = 10.dp, bottom = 10.dp)
         ) {
             Text(
                 text = stringResource(R.string.unlocked_achievements),
@@ -476,10 +475,15 @@ private fun AchievementCard(
             },
         shape = RoundedCornerShape(20.dp),
         colors = CardDefaults.cardColors(
-            containerColor = if (isUnlocked) achievement.backgroundColor else Color(0xFF2C2C2E)
+            containerColor = if (isUnlocked) achievement.backgroundColor else Color(0xFFD0D0D0)
         ),
         elevation = CardDefaults.cardElevation(
-            defaultElevation = if (isUnlocked) 4.dp else 2.dp
+            defaultElevation = 0.dp,
+            pressedElevation = 0.dp,
+            hoveredElevation = 0.dp,
+            draggedElevation = 0.dp,
+            disabledElevation = 0.dp,
+            focusedElevation = 0.dp
         )
     ) {
         LaunchedEffect(isPressed) {
@@ -499,12 +503,12 @@ private fun AchievementCard(
             // Icono del logro
             Box(
                 modifier = Modifier
-                    .size(42.dp)
+                    .size(50.dp)
                     .background(
                         color = if (isUnlocked) {
                             Color.White.copy(alpha = 0.5f)
                         } else {
-                            Color(0xFF3C3C3E)
+                            Color(0xFFE8E8E8)
                         },
                         shape = CircleShape
                     ),
@@ -513,11 +517,11 @@ private fun AchievementCard(
                 Image(
                     painter = painterResource(id = achievement.iconRes),
                     contentDescription = achievement.title,
-                    modifier = Modifier.size(24.dp),
+                    modifier = Modifier.size(28.dp),
                     colorFilter = androidx.compose.ui.graphics.ColorFilter.tint(
-                        if (isUnlocked) Color(0xFF2E7D32) else Color(0xFF6C6C70)
+                        if (isUnlocked) Color(0xFF000000) else Color(0xFF7A7A7A)
                     ),
-                    alpha = if (isUnlocked) 1f else 0.4f
+                    alpha = if (isUnlocked) 0.8f else 0.5f
                 )
             }
 
@@ -527,7 +531,7 @@ private fun AchievementCard(
             Text(
                 text = achievement.title,
                 style = MaterialTheme.typography.titleSmall,
-                color = if (isUnlocked) achievement.color else Color(0xFFAEAEB2),
+                color = if (isUnlocked) achievement.color else Color(0xFF5A5A5A),
                 fontWeight = FontWeight.Bold,
                 fontSize = 9.5.sp,
                 textAlign = TextAlign.Center,
@@ -543,7 +547,7 @@ private fun AchievementCard(
             Text(
                 text = "${achievement.requiredPoints} pts",
                 style = MaterialTheme.typography.bodySmall,
-                color = if (isUnlocked) achievement.color.copy(alpha = 0.7f) else Color(0xFF8E8E93),
+                color = if (isUnlocked) achievement.color.copy(alpha = 0.7f) else Color(0xFF7A7A7A),
                 fontSize = 8.5.sp,
                 fontFamily = PoppinsFontFamily
             )
@@ -591,9 +595,9 @@ private fun AchievementDialog(
                 },
             shape = RoundedCornerShape(24.dp),
             colors = CardDefaults.cardColors(
-                containerColor = if (isUnlocked) achievement.backgroundColor else Color(0xFF2C2C2E)
+                containerColor = if (isUnlocked) achievement.backgroundColor else Color(0xFFD0D0D0)
             ),
-            elevation = CardDefaults.cardElevation(defaultElevation = 8.dp)
+            elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
         ) {
             Column(
                 modifier = Modifier
@@ -609,7 +613,7 @@ private fun AchievementDialog(
                             color = if (isUnlocked) {
                                 achievement.color.copy(alpha = 0.2f)
                             } else {
-                                Color(0xFF3C3C3E)
+                                Color(0xFFE8E8E8)
                             },
                             shape = CircleShape
                         ),
@@ -620,9 +624,9 @@ private fun AchievementDialog(
                         contentDescription = achievement.title,
                         modifier = Modifier.size(55.dp),
                         colorFilter = androidx.compose.ui.graphics.ColorFilter.tint(
-                            if (isUnlocked) achievement.color else Color(0xFF6C6C70)
+                            if (isUnlocked) achievement.color else Color(0xFF7A7A7A)
                         ),
-                        alpha = if (isUnlocked) 1f else 0.4f
+                        alpha = if (isUnlocked) 1f else 0.5f
                     )
                 }
 
@@ -632,7 +636,7 @@ private fun AchievementDialog(
                 Text(
                     text = achievement.title,
                     style = MaterialTheme.typography.headlineSmall,
-                    color = if (isUnlocked) achievement.color else Color(0xFF8E8E93),
+                    color = if (isUnlocked) achievement.color else Color(0xFF5A5A5A),
                     fontWeight = FontWeight.Bold,
                     fontSize = 24.sp,
                     textAlign = TextAlign.Center,
@@ -645,7 +649,7 @@ private fun AchievementDialog(
                 Text(
                     text = if (isUnlocked) stringResource(R.string.unlocked) else stringResource(R.string.locked),
                     style = MaterialTheme.typography.labelMedium,
-                    color = if (isUnlocked) achievement.color else Color(0xFF6C6C70),
+                    color = if (isUnlocked) achievement.color else Color(0xFF7A7A7A),
                     fontWeight = FontWeight.Bold,
                     fontSize = 12.sp,
                     fontFamily = PoppinsFontFamily
@@ -657,7 +661,7 @@ private fun AchievementDialog(
                 Text(
                     text = achievement.description,
                     style = MaterialTheme.typography.bodyMedium,
-                    color = if (isUnlocked) achievement.color.copy(alpha = 0.8f) else Color(0xFFAEAEB2),
+                    color = if (isUnlocked) achievement.color.copy(alpha = 0.8f) else Color(0xFF7A7A7A),
                     fontSize = 14.sp,
                     textAlign = TextAlign.Center,
                     fontFamily = PoppinsFontFamily,
@@ -677,7 +681,7 @@ private fun AchievementDialog(
                         Text(
                             text = stringResource(R.string.progress_format, currentPoints, achievement.requiredPoints),
                             style = MaterialTheme.typography.bodySmall,
-                            color = Color(0xFFAEAEB2),
+                            color = Color(0xFF7A7A7A),
                             fontSize = 12.sp,
                             fontFamily = PoppinsFontFamily
                         )
@@ -688,13 +692,13 @@ private fun AchievementDialog(
                             modifier = Modifier
                                 .fillMaxWidth()
                                 .height(8.dp)
-                                .background(Color(0xFF3C3C3E), RoundedCornerShape(4.dp))
+                                .background(Color(0xFFE8E8E8), RoundedCornerShape(4.dp))
                         ) {
                             Box(
                                 modifier = Modifier
                                     .fillMaxWidth(progress)
                                     .height(8.dp)
-                                    .background(achievement.color, RoundedCornerShape(4.dp))
+                                    .background(Color(0xFF01C851), RoundedCornerShape(4.dp))
                             )
                         }
                     }
@@ -712,7 +716,7 @@ private fun AchievementDialog(
                             if (isUnlocked) {
                                 achievement.color.copy(alpha = 0.2f)
                             } else {
-                                Color(0xFF48484A)
+                                Color(0xFFB8B8B8)
                             }
                         )
                         .clickable { onDismiss() },
@@ -720,7 +724,7 @@ private fun AchievementDialog(
                 ) {
                     Text(
                         text = stringResource(R.string.close),
-                        color = if (isUnlocked) achievement.color else Color.White,
+                        color = if (isUnlocked) achievement.color else Color(0xFF404040),
                         fontWeight = FontWeight.SemiBold,
                         fontSize = 16.sp,
                         fontFamily = PoppinsFontFamily
