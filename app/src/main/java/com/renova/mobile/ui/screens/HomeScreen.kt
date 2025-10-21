@@ -188,7 +188,7 @@ fun HomeScreen(
                     verticalArrangement = Arrangement.spacedBy(0.dp)
                 ) {
                     recentActivities.forEachIndexed { index, activity ->
-                        HistoryActivityCard(
+                        ActivityHistoryCard(
                             activity = activity,
                             colors = renovaColors,
                             onClick = { /* Opcional: agregar acción de click */ }

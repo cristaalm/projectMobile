@@ -5,7 +5,7 @@ import androidx.compose.animation.core.FastOutSlowInEasing
 import androidx.compose.animation.core.animate
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.layout.*
-import androidx.compose.material.icons.filled.Refresh
+import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
 import androidx.compose.material3.pulltorefresh.*
 import androidx.compose.runtime.*
@@ -15,7 +15,6 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import java.util.*
-import androidx.compose.ui.draw.shadow
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -26,8 +25,13 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.sp
 import com.renova.mobile.R
+import com.renova.mobile.network.ActivityItem
+import com.renova.mobile.ui.theme.LocalRenovaColors
+import com.renova.mobile.ui.theme.PoppinsFontFamily
 import com.renova.mobile.ui.theme.RenovaColorScheme
 import com.renova.mobile.ui.theme.RenovaColors
 import java.text.SimpleDateFormat
@@ -115,7 +119,7 @@ fun PaginationControls(
             onClick = onPreviousPage,
             enabled = currentPage > 1 && !isLoading,
             colors = ButtonDefaults.buttonColors(
-                containerColor = if (currentPage > 1) renovaColors.buttonEnabled else renovaColors.buttonDisabled,
+                containerColor = if (currentPage > 1) RenovaColors.Secondary else renovaColors.buttonDisabled,
                 contentColor = renovaColors.activityCardBackground
             ),
             shape = RoundedCornerShape(12.dp),
@@ -144,7 +148,7 @@ fun PaginationControls(
             onClick = onNextPage,
             enabled = currentPage < totalPages && !isLoading,
             colors = ButtonDefaults.buttonColors(
-                containerColor = if (currentPage < totalPages) renovaColors.buttonEnabled else renovaColors.buttonDisabled,
+                containerColor = if (currentPage < totalPages) RenovaColors.Secondary else renovaColors.buttonDisabled,
                 contentColor = renovaColors.activityCardBackground
             ),
             shape = RoundedCornerShape(12.dp),
@@ -227,23 +231,244 @@ fun formatFriendlyDate(isoString: String): String {
 }
 
 @Composable
+fun DetailSheet(activity: ActivityItem) {
+    val colors = LocalRenovaColors.current
+    val context = LocalContext.current
+
+    // Determinar el color según si suma o resta puntos
+    val pointsColor = when (activity.type_history) {
+        1 -> colors.negativePoints // Canjeo - siempre rojo
+        2 -> if (activity.points == 0) colors.textPrimary else colors.primaryColor
+        3 -> if (activity.points < 0) colors.negativePoints else colors.primaryColor
+        else -> if (activity.points < 0) colors.negativePoints else colors.primaryColor
+    }
+
+    // Determinar el texto de los puntos
+    val pointsText = when (activity.type_history) {
+        1 -> if ("${activity.points}".startsWith("-")) "${activity.points}" else "-${activity.points}"
+        2 -> if (activity.points == 0) "-${activity.points}-" else "+${activity.points}"
+        3 -> if (activity.points < 0) "${activity.points}" else "+${activity.points}"
+        else -> if (activity.points < 0) "${activity.points}" else "+${activity.points}"
+    }
+
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(start = 24.dp, end = 24.dp, top = 24.dp, bottom = 48.dp),
+        horizontalAlignment = Alignment.CenterHorizontally
+    ) {
+        // Icono según el tipo de actividad
+        val (icon, iconColor) = when (activity.type_history) {
+            1 -> Icons.Default.ShoppingCart to colors.primaryColor
+            2 -> Icons.Default.Recycling to colors.primaryColor
+            3 -> Icons.Default.Person to colors.primaryColor
+            else -> Icons.Default.History to colors.primaryColor
+        }
+
+        Icon(
+            imageVector = icon,
+            contentDescription = null,
+            tint = iconColor,
+            modifier = Modifier.size(48.dp)
+        )
+
+        Spacer(modifier = Modifier.height(16.dp))
+
+        // Título del tipo de actividad
+        Text(
+            text = when (activity.type_history) {
+                1 -> stringResource(R.string.reward_exchange)
+                2 -> stringResource(R.string.recycling)
+                3 -> stringResource(R.string.points_adjustment)
+                else -> stringResource(R.string.activity)
+            },
+            fontFamily = PoppinsFontFamily,
+            fontWeight = FontWeight.Bold,
+            fontSize = 24.sp,
+            color = colors.textPrimary
+        )
+
+        Spacer(modifier = Modifier.height(8.dp))
+
+        // Subtítulo según el tipo
+        when (activity.type_history) {
+            1 -> {
+                // Canjeo: Mostrar nombre del comercio y recompensa
+                activity.alliance?.let { alliance ->
+                    Spacer(modifier = Modifier.height(10.dp))
+                    Text(
+                        text = alliance.name,
+                        fontFamily = PoppinsFontFamily,
+                        fontWeight = FontWeight.SemiBold,
+                        fontSize = 18.sp,
+                        color = colors.textPrimary,
+                        textAlign = TextAlign.Center
+                    )
+                }
+                activity.reward?.let { reward ->
+                    Spacer(modifier = Modifier.height(10.dp))
+                    Text(
+                        text = reward.name,
+                        fontFamily = PoppinsFontFamily,
+                        fontSize = 16.sp,
+                        color = colors.textSecondary,
+                        textAlign = TextAlign.Center
+                    )
+                    reward.description?.let { desc ->
+                        Spacer(modifier = Modifier.height(10.dp))
+                        Text(
+                            text = desc,
+                            fontFamily = PoppinsFontFamily,
+                            fontSize = 14.sp,
+                            color = colors.textSecondary,
+                            textAlign = TextAlign.Center
+                        )
+                    }
+                }
+            }
+            2 -> {
+                // Reciclaje: Mostrar tipo de material
+                activity.material_type?.let { material ->
+                    val materialName = when {
+                        material.name.contains("Plástico", ignoreCase = true) ->
+                            context.getString(R.string.plastic)
+                        material.name.contains("Aluminio", ignoreCase = true) ->
+                            context.getString(R.string.aluminum)
+                        else -> material.name
+                    }
+                    Spacer(modifier = Modifier.height(10.dp))
+                    Text(
+                        text = materialName,
+                        fontFamily = PoppinsFontFamily,
+                        fontWeight = FontWeight.SemiBold,
+                        fontSize = 18.sp,
+                        color = colors.textPrimary,
+                        textAlign = TextAlign.Center
+                    )
+                    material.description?.let { desc ->
+                        Spacer(modifier = Modifier.height(10.dp))
+                        Text(
+                            text = desc,
+                            fontFamily = PoppinsFontFamily,
+                            fontSize = 14.sp,
+                            color = colors.textSecondary,
+                            textAlign = TextAlign.Center
+                        )
+                    }
+                }
+                // Información del escaneo
+                activity.scan?.let { scan ->
+                    Spacer(modifier = Modifier.height(10.dp))
+                    // Descripción del escaneo
+                    scan.description?.let { desc ->
+                        Text(
+                            text = desc,
+                            fontFamily = PoppinsFontFamily,
+                            fontSize = 14.sp,
+                            color = colors.textSecondary,
+                            textAlign = TextAlign.Center
+                        )
+                    }
+
+                }
+            }
+            3 -> {
+
+                // Ajuste manual: Mostrar descripción si existe
+                Text(
+                    text = context.getString(R.string.manual_adjustment),
+                    fontFamily = PoppinsFontFamily,
+                    fontWeight = FontWeight.SemiBold,
+                    fontSize = 18.sp,
+                    color = colors.textPrimary,
+                    textAlign = TextAlign.Center
+                )
+
+                activity.description?.let { desc ->
+                    Spacer(modifier = Modifier.height(10.dp))
+                    Text(
+                        text = desc,
+                        fontFamily = PoppinsFontFamily,
+                        fontSize = 14.sp,
+                        color = colors.textSecondary,
+                        textAlign = TextAlign.Center
+                    )
+                }
+            }
+        }
+
+        // Cantidad si existe (para canjeos)
+        if (activity.quantity != null) {
+            Spacer(modifier = Modifier.height(10.dp))
+            Text(
+                text = "${context.getString(R.string.quantity)}: ${activity.quantity}",
+                fontFamily = PoppinsFontFamily,
+                fontSize = 14.sp,
+                color = colors.textSecondary,
+                textAlign = TextAlign.Center
+            )
+        }
+
+        Spacer(modifier = Modifier.height(10.dp))
+
+        // Puntos con color dinámico
+        Text(
+            text = "$pointsText",
+            fontFamily = PoppinsFontFamily,
+            fontWeight = FontWeight.ExtraBold,
+            fontSize = 56.sp,
+            color = pointsColor,
+            maxLines = 2,
+            overflow = TextOverflow.Ellipsis
+        )
+
+        Spacer(modifier = Modifier.height(10.dp))
+
+        // Equivalente en MXN
+        Text(
+            text = "$${"%.2f".format(kotlin.math.abs(activity.points) * 0.1)} MXN",
+            fontFamily = PoppinsFontFamily,
+            fontWeight = FontWeight.SemiBold,
+            fontSize = 20.sp,
+            color = colors.textSecondary
+        )
+
+        Spacer(modifier = Modifier.height(10.dp))
+
+        // Fecha
+        Text(
+            text = formatFriendlyDate(activity.created_at),
+            fontFamily = PoppinsFontFamily,
+            fontSize = 14.sp,
+            color = colors.textSecondary,
+            textAlign = TextAlign.Center
+        )
+    }
+}
+
+@Composable
 fun AnimatedPointsCardActivity(
     totalPoints: Int,
-    renovaColors: RenovaColorScheme
+    renovaColors: RenovaColorScheme,
+    shouldAnimate: Boolean = true
 ) {
     // Animación del contador de puntos
-    var animatedPoints by remember { mutableStateOf(0f) }
+    var animatedPoints by remember { mutableStateOf(if (shouldAnimate) 0f else totalPoints.toFloat()) }
 
-    LaunchedEffect(totalPoints) {
-        animate(
-            initialValue = 0f,
-            targetValue = totalPoints.toFloat(),
-            animationSpec = tween(
-                durationMillis = 1500,
-                easing = FastOutSlowInEasing
-            )
-        ) { value, _ ->
-            animatedPoints = value
+    LaunchedEffect(totalPoints, shouldAnimate) {
+        if (shouldAnimate) {
+            animate(
+                initialValue = 0f,
+                targetValue = totalPoints.toFloat(),
+                animationSpec = tween(
+                    durationMillis = 1500,
+                    easing = FastOutSlowInEasing
+                )
+            ) { value, _ ->
+                animatedPoints = value
+            }
+        } else {
+            animatedPoints = totalPoints.toFloat()
         }
     }
 
@@ -288,7 +513,7 @@ fun AnimatedPointsCardActivity(
                         fontWeight = FontWeight.SemiBold,
                         fontSize = 16.sp
                     )
-                    Spacer(modifier = Modifier.height(0.dp))
+                    Spacer(modifier = Modifier.height(4.dp))
                     Row {
                         Text(
                             text = java.text.NumberFormat.getIntegerInstance(
@@ -310,12 +535,14 @@ fun AnimatedPointsCardActivity(
                             Color.White.copy(alpha = 0.15f),
                             shape = RoundedCornerShape(20.dp)
                         ),
-                    contentAlignment = Alignment.Center
+                    contentAlignment = Alignment.BottomStart
                 ) {
                     Image(
                         painter = painterResource(id = R.drawable.leaf),
                         contentDescription = null,
-                        modifier = Modifier.size(45.dp),
+                        modifier = Modifier
+                            .size(45.dp)
+                            .padding(start = 8.dp, bottom = 8.dp),
                         colorFilter = androidx.compose.ui.graphics.ColorFilter.tint(
                             Color.White.copy(alpha = 0.9f)
                         )

@@ -38,6 +38,9 @@ import com.renova.mobile.ui.viewmodels.ProfileUiState
 import com.renova.mobile.ui.viewmodels.VerificationStatus
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.pulltorefresh.*
+import androidx.compose.ui.graphics.asImageBitmap
+import android.graphics.BitmapFactory
+import coil.compose.rememberAsyncImagePainter
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -101,7 +104,7 @@ fun ProfileScreen(
 
                 LaunchedEffect(Unit) {
                     mainErrorMessage = errorState.message
-                    canRetryMainError = !isAuthError // No permitir retry si es error de sesión
+                    canRetryMainError = !isAuthError
                     showMainErrorModal = true
                 }
                 Box(modifier = Modifier.fillMaxSize())
@@ -122,7 +125,7 @@ fun ProfileScreen(
                 showMainErrorModal = false
                 profileViewModel.retry()
             }
-        } else null // No mostrar botón de retry para errores de sesión
+        } else null
     )
 }
 
@@ -170,7 +173,6 @@ private fun ProfileContent(
         }
     }
 
-    // Observar cambios en el estado de subida de documentos
     // Observar cambios en el estado de subida de documentos
     LaunchedEffect(documentUploadState) {
         when (documentUploadState) {
@@ -223,20 +225,19 @@ private fun ProfileContent(
         ProfileHeader(
             user = user,
             verificationStatus = verificationStatus,
-            languageViewModel = languageViewModel
+            languageViewModel = languageViewModel,
+            selfieBytes = documentImages["selfie"]
         )
 
-        Spacer(modifier = Modifier.height(16.dp))
-
         Column(
-            modifier = Modifier.padding(16.dp)
+            modifier = Modifier.padding(10.dp)
         ) {
             VerificationBanner(
                 verificationStatus = verificationStatus,
                 rejectionReason = identityVerification?.rejection_reason,
                 isSpanish = isSpanish
             )
-            Spacer(modifier = Modifier.height(16.dp))
+            Spacer(modifier = Modifier.height(12.dp))
 
             PersonalInfoCard(
                 user = user,
@@ -245,7 +246,7 @@ private fun ProfileContent(
                 viewModel = profileViewModel
             )
 
-            Spacer(modifier = Modifier.height(16.dp))
+            Spacer(modifier = Modifier.height(12.dp))
 
             if (identityVerification != null) {
                 DocumentsUploadSection(
@@ -254,12 +255,11 @@ private fun ProfileContent(
                     documentImages = documentImages,
                     documentUploadState = documentUploadState,
                     onImageSelected = { type: DocumentType, uri: Uri ->
-                        // Subir automáticamente al seleccionar la imagen
                         profileViewModel.uploadDocument(type, uri, context)
                     }
                 )
 
-                Spacer(modifier = Modifier.height(16.dp))
+                Spacer(modifier = Modifier.height(12.dp))
 
                 if (verificationStatus == VerificationStatus.REJECTED) {
                     val allDocumentsReady = editDocuments.all { doc ->
@@ -311,7 +311,7 @@ private fun ProfileContent(
                                 modifier = Modifier.size(22.dp)
                             )
                         }
-                        Spacer(modifier = Modifier.width(12.dp))
+                        Spacer(modifier = Modifier.width(10.dp))
                         Text(
                             text = if (isLoading)
                                 stringResource(R.string.requesting_verification)
@@ -323,7 +323,7 @@ private fun ProfileContent(
                     }
                 }
 
-                Spacer(modifier = Modifier.height(16.dp))
+                Spacer(modifier = Modifier.height(12.dp))
             }
         }
     }
@@ -414,7 +414,7 @@ private fun ProfileContent(
             showErrorDialog = false
             errorMessage = ""
         },
-        onRetry = null // Sin retry para no recargar la página
+        onRetry = null
     )
 }
 
@@ -423,11 +423,19 @@ fun ProfileHeader(
     user: UserData,
     verificationStatus: VerificationStatus,
     languageViewModel: LanguageViewModel,
+    selfieBytes: ByteArray? = null
 ) {
     val currentLanguage by languageViewModel.currentLanguage.collectAsState()
     val isSpanish = currentLanguage == "es"
     val context = LocalContext.current
     val colors = LocalRenovaColors.current
+
+    // Convertir ByteArray a Bitmap
+    val selfieBitmap = remember(selfieBytes) {
+        selfieBytes?.let { bytes ->
+            BitmapFactory.decodeByteArray(bytes, 0, bytes.size)
+        }
+    }
 
     Box(
         modifier = Modifier
@@ -442,7 +450,7 @@ fun ProfileHeader(
             alignment = Alignment.BottomStart,
             modifier = Modifier.matchParentSize()
         )
-        Column (
+        Column(
             modifier = Modifier.padding(horizontal = 16.dp)
         ) {
             Row(
@@ -502,7 +510,7 @@ fun ProfileHeader(
                     }
                 )
             }
-            Spacer(modifier = Modifier.height(16.dp))
+            Spacer(modifier = Modifier.height(6.dp))
             Column(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalAlignment = Alignment.CenterHorizontally
@@ -518,50 +526,43 @@ fun ProfileHeader(
                             modifier = Modifier.fillMaxSize(),
                             contentAlignment = Alignment.Center
                         ) {
-                            Icon(
-                                imageVector = Icons.Default.Person,
-                                contentDescription = null,
-                                tint = colors.primaryColor,
-                                modifier = Modifier.size(48.dp)
-                            )
-                        }
-                    }
-
-                    if (verificationStatus == VerificationStatus.VERIFIED) {
-                        Surface(
-                            modifier = Modifier
-                                .size(24.dp)
-                                .align(Alignment.BottomEnd),
-                            shape = CircleShape,
-                            color = colors.primaryColor
-                        ) {
-                            Icon(
-                                imageVector = Icons.Default.Check,
-                                contentDescription = null,
-                                tint = colors.surface,
-                                modifier = Modifier.padding(4.dp)
-                            )
+                            if (selfieBitmap != null) {
+                                Image(
+                                    bitmap = selfieBitmap.asImageBitmap(),
+                                    contentDescription = null,
+                                    contentScale = ContentScale.Crop,
+                                    modifier = Modifier.fillMaxSize()
+                                )
+                            } else {
+                                Icon(
+                                    imageVector = Icons.Default.Person,
+                                    contentDescription = null,
+                                    tint = colors.primaryColor,
+                                    modifier = Modifier.size(48.dp)
+                                )
+                            }
                         }
                     }
                 }
 
-                Spacer(modifier = Modifier.height(8.dp))
+                    Spacer(modifier = Modifier.height(10.dp))
 
-                Text(
-                    text = "${user.name} ${user.last_name}",
-                    color = colors.surface,
-                    style = MaterialTheme.typography.titleLarge,
-                    fontWeight = FontWeight.W600,
-                    textAlign = TextAlign.Center,
-                    maxLines = 3,
-                    overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis
-                )
+                    Text(
+                        text = "${user.name} ${user.last_name}",
+                        color = colors.surface,
+                        style = MaterialTheme.typography.titleLarge,
+                        fontWeight = FontWeight.W600,
+                        textAlign = TextAlign.Center,
+                        maxLines = 3,
+                        overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis
+                    )
 
-                Spacer(modifier = Modifier.height(16.dp))
+                    Spacer(modifier = Modifier.height(12.dp))
+                }
             }
         }
     }
-}
+
 
 @Composable
 fun VerificationBanner(
@@ -572,105 +573,108 @@ fun VerificationBanner(
     val colors = LocalRenovaColors.current
     val protectedTitle = stringResource(R.string.protected_profile_title)
     val protectedDesc = stringResource(R.string.protected_profile_description)
-    val pendingTitle = stringResource(R.string.verification_pending_title)
-    val pendingDesc = stringResource(R.string.verification_pending_description)
-    val rejectedTitle = stringResource(R.string.verification_rejected_title)
-    val rejectedDesc = stringResource(R.string.verification_rejected_description)
-    val emptyTitle = stringResource(R.string.verification_empty_title)
-    val emptyDesc = stringResource(R.string.verification_empty_description)
+        val pendingTitle = stringResource(R.string.verification_pending_title)
+        val pendingDesc = stringResource(R.string.verification_pending_description)
+        val rejectedTitle = stringResource(R.string.verification_rejected_title)
+        val rejectedDesc = stringResource(R.string.verification_rejected_description)
+        val emptyTitle = stringResource(R.string.verification_empty_title)
+        val emptyDesc = stringResource(R.string.verification_empty_description)
 
-    val backgroundColor: Color
-    val icon: ImageVector
-    val title: String
-    val description: String
-    val border: androidx.compose.foundation.BorderStroke
+        val backgroundColor: Color
+        val icon: ImageVector
+        val title: String
+        val description: String
+        val border: androidx.compose.foundation.BorderStroke
 
-    when (verificationStatus) {
-        VerificationStatus.VERIFIED -> {
-            backgroundColor = colors.primaryColor.copy(alpha = 0.125f)
-            icon = Icons.Default.VerifiedUser
-            title = protectedTitle
-            description = protectedDesc
-            border = androidx.compose.foundation.BorderStroke(
-                width = 1.5.dp,
-                color = colors.primaryColor
-            )
-        }
-        VerificationStatus.PENDING -> {
-            backgroundColor = RenovaColors.Warning.copy(alpha = 0.125f)
-            icon = Icons.Default.Schedule
-            title = pendingTitle
-            description = pendingDesc
-            border = androidx.compose.foundation.BorderStroke(
-                width = 1.5.dp,
-                color = RenovaColors.Warning
-            )
-        }
-        VerificationStatus.REJECTED -> {
-            backgroundColor = RenovaColors.Error.copy(alpha = 0.125f)
-            icon = Icons.Default.Cancel
-            title = rejectedTitle
-            description = rejectionReason ?: rejectedDesc
-            border = androidx.compose.foundation.BorderStroke(
-                width = 1.5.dp,
-                color = RenovaColors.Error
-            )
-        }
-        VerificationStatus.NO_DOCS -> {
-            backgroundColor = colors.textSecondary.copy(alpha = 0.125f)
-            icon = Icons.Default.QuestionMark
-            title = emptyTitle
-            description = emptyDesc
-            border = androidx.compose.foundation.BorderStroke(
-                width = 1.5.dp,
-                color = colors.textSecondary
-            )
-        }
-        else -> return
-    }
-
-    Surface(
-        modifier = Modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(12.dp),
-        color = Color.Transparent,
-        border = border
-    ) {
-        Box(
-            modifier = Modifier
-                .fillMaxWidth()
-                .background(backgroundColor)
-                .padding(12.dp)
-        ) {
-            Row(
-                verticalAlignment = Alignment.Top,
-                horizontalArrangement = Arrangement.spacedBy(12.dp)
-            ) {
-                Icon(
-                    imageVector = icon,
-                    contentDescription = null,
-                    tint = when (verificationStatus) {
-                        VerificationStatus.REJECTED -> RenovaColors.Error
-                        VerificationStatus.VERIFIED -> colors.primaryColor
-                        VerificationStatus.PENDING -> RenovaColors.Warning
-                        else -> colors.textSecondary
-                    },
-                    modifier = Modifier.size(24.dp)
+        when (verificationStatus) {
+            VerificationStatus.VERIFIED -> {
+                backgroundColor = colors.primaryColor.copy(alpha = 0.125f)
+                icon = Icons.Default.VerifiedUser
+                title = protectedTitle
+                description = protectedDesc
+                border = androidx.compose.foundation.BorderStroke(
+                    width = 1.5.dp,
+                    color = colors.primaryColor
                 )
-                Column(modifier = Modifier.weight(1f)) {
-                    Text(
-                        text = title,
-                        color = colors.textPrimary,
-                        style = MaterialTheme.typography.titleSmall
+            }
+
+            VerificationStatus.PENDING -> {
+                backgroundColor = RenovaColors.Warning.copy(alpha = 0.125f)
+                icon = Icons.Default.Schedule
+                title = pendingTitle
+                description = pendingDesc
+                border = androidx.compose.foundation.BorderStroke(
+                    width = 1.5.dp,
+                    color = RenovaColors.Warning
+                )
+            }
+
+            VerificationStatus.REJECTED -> {
+                backgroundColor = RenovaColors.Error.copy(alpha = 0.125f)
+                icon = Icons.Default.Cancel
+                title = rejectedTitle
+                description = rejectionReason ?: rejectedDesc
+                border = androidx.compose.foundation.BorderStroke(
+                    width = 1.5.dp,
+                    color = RenovaColors.Error
+                )
+            }
+
+            VerificationStatus.NO_DOCS -> {
+                backgroundColor = colors.textSecondary.copy(alpha = 0.125f)
+                icon = Icons.Default.QuestionMark
+                title = emptyTitle
+                description = emptyDesc
+                border = androidx.compose.foundation.BorderStroke(
+                    width = 1.5.dp,
+                    color = colors.textSecondary
+                )
+            }
+
+            else -> return
+        }
+
+        Surface(
+            modifier = Modifier.fillMaxWidth(),
+            shape = RoundedCornerShape(12.dp),
+            color = Color.Transparent,
+            border = border
+        ) {
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .background(backgroundColor)
+                    .padding(12.dp)
+            ) {
+                Row(
+                    verticalAlignment = Alignment.Top,
+                    horizontalArrangement = Arrangement.spacedBy(12.dp)
+                ) {
+                    Icon(
+                        imageVector = icon,
+                        contentDescription = null,
+                        tint = when (verificationStatus) {
+                            VerificationStatus.REJECTED -> RenovaColors.Error
+                            VerificationStatus.VERIFIED -> colors.primaryColor
+                            VerificationStatus.PENDING -> RenovaColors.Warning
+                            else -> colors.textSecondary
+                        },
+                        modifier = Modifier.size(24.dp)
                     )
-                    Spacer(modifier = Modifier.height(4.dp))
-                    Text(
-                        text = description,
-                        color = colors.textSecondary.copy(alpha = 0.95f),
-                        style = MaterialTheme.typography.bodySmall
-                    )
+                    Column(modifier = Modifier.weight(1f)) {
+                        Text(
+                            text = title,
+                            color = colors.textPrimary,
+                            style = MaterialTheme.typography.titleSmall
+                        )
+                        Spacer(modifier = Modifier.height(6.dp))
+                        Text(
+                            text = description,
+                            color = colors.textSecondary.copy(alpha = 0.95f),
+                            style = MaterialTheme.typography.bodySmall
+                        )
+                    }
                 }
             }
         }
     }
-    Spacer(modifier = Modifier.height(16.dp))
-}

@@ -343,6 +343,7 @@
 
     <string name="points_adjustment">Points Adjustment</string>
     <string name="manual_adjustment">Manual Adjustment</string>
-
+    <string name="quantity">Quantity</string>
     <string name="default_notification_channel_id" translatable="false">fcm_default_channel</string>
+    <string name="no_activity_description">Your recycling and reward activities will appear here</string>
 </resources>

@@ -133,15 +133,19 @@ class BusinessHistoryViewModel : ViewModel() {
             }
 
             val aggregated = ActivityItem(
-                id = firstItem.id, // usa el primero como referencia
+                id = firstItem.id,
                 user_id = firstItem.user_id,
-                type_history = 2, // recompensa
+                type_history = 2,
                 material_type_id = null,
                 points = totalPoints,
                 reward_id = firstItem.reward_id,
                 alliance_id = firstItem.alliance_id,
                 created_at = lastItem.created_at,
                 updated_at = lastItem.updated_at,
+                scan_id = null,
+                comerciant_id = null,
+                description = null,
+                quantity = currentGroup.size,
                 alliance = lastItem.alliance,
                 material_type = null,
                 reward = aggregatedReward ?: firstItem.reward,

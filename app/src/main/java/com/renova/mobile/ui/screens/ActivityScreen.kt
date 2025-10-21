@@ -1,26 +1,22 @@
 package com.renova.mobile.ui.screens
 
-import androidx.compose.animation.Crossfade
-import androidx.compose.animation.core.tween
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material.icons.filled.ShoppingCart
 import androidx.compose.material.icons.filled.Recycling
 import androidx.compose.material.icons.filled.History
+import androidx.compose.material.icons.filled.Person
 import androidx.compose.material3.*
 import androidx.compose.material3.pulltorefresh.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
@@ -29,7 +25,6 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
-import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.renova.mobile.R
@@ -39,8 +34,6 @@ import com.renova.mobile.ui.theme.PoppinsFontFamily
 import com.renova.mobile.ui.theme.RenovaColorScheme
 import com.renova.mobile.ui.theme.RenovaColors
 import com.renova.mobile.ui.viewmodels.ActivityViewModel
-import java.text.SimpleDateFormat
-import java.util.*
 import com.renova.mobile.ui.components.*
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -51,13 +44,22 @@ fun ActivityScreen(
     val renovaColors = LocalRenovaColors.current
     val state by viewModel.state.collectAsState()
     val pullToRefreshState = rememberPullToRefreshState()
+    val sheetState = rememberModalBottomSheetState()
+    var selectedActivity by remember { mutableStateOf<ActivityItem?>(null) }
     var showErrorModal by remember { mutableStateOf(false) }
+
+    var isFirstLoad by remember { mutableStateOf(true) }
 
     LaunchedEffect(Unit) {
         viewModel.loadHistory(1)
     }
 
-    // Mostrar modal de error cuando haya un error
+    LaunchedEffect(state.activities.isNotEmpty()) {
+        if (state.activities.isNotEmpty() && isFirstLoad){
+            isFirstLoad = false
+        }
+    }
+
     LaunchedEffect(state.error) {
         if (state.error != null) {
             showErrorModal = true
@@ -73,9 +75,9 @@ fun ActivityScreen(
             }
 
             state.error != null && state.activities.isEmpty() -> {
-                // Mostrar pantalla vacía cuando hay error
                 Box(modifier = Modifier.fillMaxSize())
             }
+
             else -> {
                 PullToRefreshBox(
                     isRefreshing = state.isLoading && state.activities.isNotEmpty(),
@@ -105,11 +107,27 @@ fun ActivityScreen(
                             state = state,
                             renovaColors = renovaColors,
                             onPreviousPage = { viewModel.previousPage() },
-                            onNextPage = { viewModel.nextPage() }
+                            onNextPage = { viewModel.nextPage() },
+                            shouldAnimatePoints = isFirstLoad,
+                            onActivityClick = { activity ->
+                                selectedActivity = activity
+                            }
                         )
                     }
                 }
             }
+        }
+    }
+
+    // Modal de detalle de actividad
+    selectedActivity?.let { activity ->
+        ModalBottomSheet(
+            onDismissRequest = { selectedActivity = null },
+            sheetState = sheetState,
+            containerColor = renovaColors.cardBackground,
+            shape = RoundedCornerShape(topStart = 24.dp, topEnd = 24.dp)
+        ) {
+            DetailSheet(activity = activity)
         }
     }
 
@@ -120,7 +138,6 @@ fun ActivityScreen(
         onDismiss = {
             showErrorModal = false
             viewModel.clearError()
-            // NO se recarga automáticamente, solo cierra el modal
         },
         onRetry = {
             showErrorModal = false
@@ -135,7 +152,9 @@ private fun ActivityContent(
     state: com.renova.mobile.ui.viewmodels.ActivityState,
     renovaColors: RenovaColorScheme,
     onPreviousPage: () -> Unit,
-    onNextPage: () -> Unit
+    onNextPage: () -> Unit,
+    shouldAnimatePoints: Boolean = false,
+    onActivityClick: (ActivityItem) -> Unit
 ) {
     LazyColumn(
         modifier = Modifier
@@ -155,7 +174,8 @@ private fun ActivityContent(
             ) {
                 AnimatedPointsCardActivity(
                     totalPoints = state.totalPoints,
-                    renovaColors = renovaColors
+                    renovaColors = renovaColors,
+                    shouldAnimate = shouldAnimatePoints
                 )
             }
         }
@@ -266,49 +286,57 @@ private fun ActivityContent(
             }
         }
 
-        item {
-            // Tabla de actividades con el mismo estilo que HomeScreen
-            Column(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = 24.dp),
-                verticalArrangement = Arrangement.spacedBy(0.dp)
-            ) {
-                state.activities.forEachIndexed { index, activity ->
-                    ActivityHistoryCard(
-                        activity = activity,
-                        colors = renovaColors,
-                        onClick = { /* Opcional: agregar acción de click */ }
-                    )
-                    if (index < state.activities.size - 1) {
-                        Divider(
-                            color = RenovaColors.PrimaryColor,
-                            thickness = 1.dp,
-                            modifier = Modifier.padding(vertical = 3.dp)
+        // Aquí va el contenido de registros o el estado vacío
+        if (state.activities.isEmpty()) {
+            item {
+                EmptyStateInline(renovaColors = renovaColors)
+            }
+        } else {
+            item {
+                Column(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 24.dp),
+                    verticalArrangement = Arrangement.spacedBy(0.dp)
+                ) {
+                    state.activities.forEachIndexed { index, activity ->
+                        ActivityHistoryCard(
+                            activity = activity,
+                            colors = renovaColors,
+                            onClick = {
+                                onActivityClick(activity)
+                            }
                         )
+                        if (index < state.activities.size - 1) {
+                            Divider(
+                                color = RenovaColors.PrimaryColor,
+                                thickness = 1.dp,
+                                modifier = Modifier.padding(vertical = 3.dp)
+                            )
+                        }
                     }
                 }
             }
-        }
 
-        item {
-            androidx.compose.animation.AnimatedVisibility(
-                visible = true,
-                enter = androidx.compose.animation.fadeIn(
-                    animationSpec = androidx.compose.animation.core.tween(
-                        durationMillis = 600,
-                        delayMillis = 500 + (state.activities.size * 50)
+            item {
+                androidx.compose.animation.AnimatedVisibility(
+                    visible = true,
+                    enter = androidx.compose.animation.fadeIn(
+                        animationSpec = androidx.compose.animation.core.tween(
+                            durationMillis = 600,
+                            delayMillis = 500 + (state.activities.size * 50)
+                        )
                     )
-                )
-            ) {
-                PaginationControls(
-                    currentPage = state.currentPage,
-                    totalPages = state.totalPages,
-                    isLoading = state.isLoading,
-                    renovaColors = renovaColors,
-                    onPreviousPage = onPreviousPage,
-                    onNextPage = onNextPage
-                )
+                ) {
+                    PaginationControls(
+                        currentPage = state.currentPage,
+                        totalPages = state.totalPages,
+                        isLoading = state.isLoading,
+                        renovaColors = renovaColors,
+                        onPreviousPage = onPreviousPage,
+                        onNextPage = onNextPage
+                    )
+                }
             }
         }
     }
@@ -330,12 +358,14 @@ fun ActivityHistoryCard(
         verticalAlignment = Alignment.CenterVertically
     ) {
         // Icono según el tipo de actividad
-        val (icon, iconColor) = when (activity.type_history) {
-            1 -> Icons.Default.ShoppingCart to RenovaColors.PrimaryColor // Canjeo - Verde
-            2 -> Icons.Default.Recycling to RenovaColors.PrimaryColor // Reciclaje - Verde
-            3 -> Icons.Default.Refresh to RenovaColors.PrimaryColor // Ajuste manual - Verde
-            else -> Icons.Default.History to RenovaColors.PrimaryColor // Actividad - Verde
+        val iconData = when (activity.type_history) {
+            1 -> Pair(Icons.Default.ShoppingCart, RenovaColors.PrimaryColor)
+            2 -> Pair(Icons.Default.Recycling, RenovaColors.PrimaryColor)
+            3 -> Pair(Icons.Default.Person, RenovaColors.PrimaryColor)
+            else -> Pair(Icons.Default.History, RenovaColors.PrimaryColor)
         }
+        val icon = iconData.first
+        val iconColor = iconData.second
 
         Icon(
             imageVector = icon,
@@ -349,12 +379,11 @@ fun ActivityHistoryCard(
         Column(
             modifier = Modifier.weight(1f)
         ) {
-            // Título de la actividad
             Text(
                 text = when (activity.type_history) {
                     1 -> stringResource(R.string.reward_exchange)
                     2 -> stringResource(R.string.recycling)
-                    3 -> stringResource(R.string.points_adjustment) // Nuevo tipo
+                    3 -> stringResource(R.string.points_adjustment)
                     else -> stringResource(R.string.activity)
                 },
                 style = MaterialTheme.typography.bodyMedium.copy(
@@ -368,29 +397,21 @@ fun ActivityHistoryCard(
 
             Spacer(modifier = Modifier.height(4.dp))
 
-            // Subtítulo según el tipo
             val subtitleText = when (activity.type_history) {
-                1 -> {
-                    // Para canje, mostrar nombre del comercio
-                    activity.alliance?.name ?: ""
-                }
+                1 -> activity.alliance?.name ?: ""
                 2 -> {
-                    // Para reciclaje, mostrar tipo de material (Plástico o Aluminio)
                     val materialName = activity.material_type?.name ?: ""
-                    when {
-                        materialName.contains("PET", ignoreCase = true) ||
-                                materialName.contains("HDPE", ignoreCase = true) ->
+                    val baseName = when {
+                        materialName.contains("Plástico", ignoreCase = true)  ->
                             context.getString(R.string.plastic)
-                        materialName.contains("Aluminio", ignoreCase = true) ||
-                                materialName.contains("Aluminum", ignoreCase = true) ->
+                        materialName.contains("Aluminio", ignoreCase = true) ->
                             context.getString(R.string.aluminum)
                         else -> materialName
                     }
+                    // Agregar "- Aplastada" si es plástico y está aplastada
+                    if (activity.scan?.is_crushed == true) "$baseName - ${context.getString(R.string.crushed)}" else baseName
                 }
-                3 -> {
-                    // Para ajuste manual, mostrar "Ajuste manual de puntos"
-                    context.getString(R.string.manual_adjustment)
-                }
+                3 -> context.getString(R.string.manual_adjustment)
                 else -> activity.alliance?.name ?: ""
             }
 
@@ -401,25 +422,11 @@ fun ActivityHistoryCard(
                         fontFamily = PoppinsFontFamily
                     ),
                     color = colors.textSecondary,
-                    maxLines = 2,
+                    maxLines = 1,
                     overflow = TextOverflow.Ellipsis
                 )
             }
 
-            // Para canje, agregar línea adicional con "1 x Nombre de la recompensa"
-            if (activity.type_history == 1 && activity.reward != null) {
-                Text(
-                    text = "1 x ${activity.reward.name}",
-                    style = MaterialTheme.typography.bodySmall.copy(
-                        fontFamily = PoppinsFontFamily
-                    ),
-                    color = colors.textSecondary,
-                    maxLines = 2,
-                    overflow = TextOverflow.Ellipsis
-                )
-            }
-
-            // Fecha (formato amigable: Hoy/Ayer/dd/MM/yyyy h:mm a)
             Text(
                 text = formatFriendlyDate(activity.created_at),
                 style = MaterialTheme.typography.bodySmall.copy(
@@ -429,21 +436,20 @@ fun ActivityHistoryCard(
             )
         }
 
-        // Puntos
         Column(
             horizontalAlignment = Alignment.End
         ) {
             val pointsColor = when (activity.type_history) {
-                1 -> RenovaColors.Error // Rojo para canjeo (siempre negativo)
-                2 -> RenovaColors.PrimaryColor // Verde para reciclaje (siempre positivo)
-                3 -> if (activity.points < 0) RenovaColors.Error  else RenovaColors.PrimaryColor
-                else -> if (activity.points < 0) colors.negativePoints else colors.primaryColor
+                1 -> colors.negativePoints
+                2 -> if (activity.points == 0) colors.textPrimary else colors.primaryColor
+                3 -> if (activity.points < 0) colors.negativePoints else colors.primaryColor
+                else -> if (activity.points == 0) colors.textPrimary else colors.primaryColor
             }
             val pointsText = when (activity.type_history) {
-                1 -> if ("${activity.points}".startsWith("-")) "${activity.points} pts" else "-${activity.points} pts"
-                2 -> "+${activity.points} pts" // Reciclaje (siempre positivo)
-                3 -> if (activity.points < 0) "${activity.points} pts" else "+${activity.points} pts"
-                else -> if (activity.points < 0) "${activity.points} pts" else "+${activity.points} pts"
+                1 -> if ("${activity.points}".startsWith("-")) "${activity.points}" else "-${activity.points}"
+                2 -> if (activity.points == 0) "-${activity.points}-" else "+${activity.points}"
+                3 -> if (activity.points < 0) "${activity.points}" else "+${activity.points}"
+                else -> if (activity.points == 0) "${activity.points}" else "+${activity.points}"
             }
             Text(
                 text = pointsText,
@@ -519,5 +525,61 @@ private fun MaterialStatCard(
                 )
             }
         }
+    }
+}
+
+@Composable
+fun EmptyStateInline(
+    renovaColors: RenovaColorScheme,
+    modifier: Modifier = Modifier
+) {
+    Column(
+        modifier = modifier
+            .fillMaxWidth()
+            .padding(horizontal = 32.dp, vertical = 48.dp),
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.Center
+    ) {
+        // Icono decorativo
+        Box(
+            modifier = Modifier
+                .size(100.dp)
+                .background(
+                    renovaColors.activityPrimary.copy(alpha = 0.1f),
+                    shape = RoundedCornerShape(50.dp)
+                ),
+            contentAlignment = Alignment.Center
+        ) {
+            Icon(
+                imageVector = Icons.Default.History,
+                contentDescription = null,
+                tint = renovaColors.activityPrimary.copy(alpha = 0.5f),
+                modifier = Modifier.size(50.dp)
+            )
+        }
+
+        Spacer(modifier = Modifier.height(20.dp))
+
+        // Título
+        Text(
+            text = stringResource(R.string.no_activity_yet),
+            fontFamily = PoppinsFontFamily,
+            fontWeight = FontWeight.Bold,
+            fontSize = 18.sp,
+            color = renovaColors.textPrimary,
+            textAlign = TextAlign.Center
+        )
+
+        Spacer(modifier = Modifier.height(8.dp))
+
+        // Descripción
+        Text(
+            text = stringResource(R.string.no_activity_description),
+            fontFamily = PoppinsFontFamily,
+            fontSize = 14.sp,
+            color = renovaColors.textSecondary,
+            textAlign = TextAlign.Center,
+            lineHeight = 20.sp
+        )
     }
 }
