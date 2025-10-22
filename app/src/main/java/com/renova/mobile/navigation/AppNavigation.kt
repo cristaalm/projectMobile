@@ -21,6 +21,7 @@ import com.renova.mobile.ui.components.CustomTopBar
 import com.renova.mobile.ui.screens.business.BusinessHomeScreen
 import com.renova.mobile.ui.screens.business.BusinessStoreScreen
 import com.renova.mobile.ui.screens.business.BusinessQRScreen
+import com.renova.mobile.ui.screens.business.payments.PointsCashoutScreen
 import com.renova.mobile.navigation.NavigationItemBusiness
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
@@ -93,11 +94,6 @@ fun AppNavigation(
     // 2. Obtener la ruta actual para que el tour sepa en qué pantalla está
     val navBackStackEntry by navController.currentBackStackEntryAsState()
     val currentRoute = navBackStackEntry?.destination?.route
-//iniciar automatico el tour
-//    LaunchedEffect(Unit) {
-//        tourState.startTour()
-//    }
-
     Box(modifier = Modifier.fillMaxSize()) {
         Scaffold(
             topBar = {
@@ -156,7 +152,11 @@ fun AppNavigation(
                         popEnterTransition = { popEnterAnimation },
                         popExitTransition = { popExitAnimation }
                     ) {
-                        BusinessHomeScreen(onLogout = onLogout, vm = businessSaleVM)
+                        BusinessHomeScreen(
+                            onLogout = onLogout,
+                            vm = businessSaleVM,
+                            onNavigateToCashout = { navController.navigate("business/cashout") }
+                        )
                     }
 
                     composable(
@@ -180,6 +180,16 @@ fun AppNavigation(
                     }
 
 
+
+                    composable(
+                        route = "business/cashout",
+                        enterTransition = { enterAnimation },
+                        exitTransition = { exitAnimation },
+                        popEnterTransition = { popEnterAnimation },
+                        popExitTransition = { popExitAnimation }
+                    ) {
+                        PointsCashoutScreen(onLogout = onLogout)
+                    }
 
                     composable(
                         route = NavigationItem.Home.route,

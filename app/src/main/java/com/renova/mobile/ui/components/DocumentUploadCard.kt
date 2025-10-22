@@ -33,6 +33,7 @@ import com.renova.mobile.R
 import com.renova.mobile.ui.theme.LocalRenovaColors
 import com.renova.mobile.ui.theme.RenovaColors
 import androidx.compose.ui.unit.sp
+import com.renova.mobile.ui.viewmodels.ProfileViewModel
 import com.renova.mobile.ui.viewmodels.VerificationStatus
 
 enum class DocumentType {
@@ -109,15 +110,25 @@ fun DocumentUploadCard(
     document: DocumentCardData,
     verificationStatus: VerificationStatus,
     onImageSelected: (Uri) -> Unit,
+    documentImages: Map<String, ByteArray>,
+    isUploading: Boolean = false,
     modifier: Modifier = Modifier
 ) {
     val colors = LocalRenovaColors.current
     var showImagePreview by remember { mutableStateOf(false) }
 
+    // Determinar si se puede subir/cambiar imagen
+    val canUploadImage = verificationStatus == VerificationStatus.REJECTED ||
+            verificationStatus == VerificationStatus.NO_DOCS
+
     val launcher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.GetContent()
     ) { uri: Uri? ->
-        uri?.let { onImageSelected(it) }
+        uri?.let {
+            if (canUploadImage && !isUploading) {
+                onImageSelected(it)
+            }
+        }
     }
 
     val label = when (document.type) {
@@ -168,17 +179,21 @@ fun DocumentUploadCard(
                         }
                     )
                     .then(
-                        if (verificationStatus == VerificationStatus.REJECTED || verificationStatus == VerificationStatus.NO_DOCS) {
+                        if ((verificationStatus == VerificationStatus.REJECTED ||
+                                    verificationStatus == VerificationStatus.NO_DOCS) && !isUploading) {
                             Modifier
                                 .border(
                                     width = 1.dp,
-                                    color = if (verificationStatus == VerificationStatus.REJECTED)RenovaColors.Error else colors.textSecondary,
+                                    color = if (verificationStatus == VerificationStatus.REJECTED)
+                                        RenovaColors.Error
+                                    else
+                                        colors.textSecondary,
                                     shape = RoundedCornerShape(6.dp)
                                 )
                                 .clickable { launcher.launch("image/*") }
                         } else {
                             Modifier.clickable {
-                                if (document.imageUri != null || document.imageUrl != null) {
+                                if (!isUploading && (document.imageUri != null || document.imageUrl != null)) {
                                     showImagePreview = true
                                 }
                             }
@@ -187,11 +202,44 @@ fun DocumentUploadCard(
                 contentAlignment = Alignment.Center
             ) {
                 when {
+                    isUploading -> {
+                        Column(
+                            horizontalAlignment = Alignment.CenterHorizontally,
+                            verticalArrangement = Arrangement.Center,
+                            modifier = Modifier.padding(8.dp)
+                        ) {
+                            CircularProgressIndicator(
+                                modifier = Modifier.size(32.dp),
+                                color = when (verificationStatus) {
+                                    VerificationStatus.REJECTED -> RenovaColors.Error
+                                    VerificationStatus.VERIFIED -> colors.primaryColor
+                                    VerificationStatus.PENDING -> RenovaColors.Warning
+                                    else -> colors.textSecondary
+                                },
+                                strokeWidth = 3.dp
+                            )
+                            Spacer(modifier = Modifier.height(8.dp))
+                            Text(
+                                text = stringResource(R.string.uploading),
+                                style = MaterialTheme.typography.labelSmall,
+                                color = colors.textSecondary,
+                                textAlign = TextAlign.Center
+                            )
+                        }
+                    }
+
                     document.imageUri != null || document.imageUrl != null -> {
+                        val imageSource = when {
+                            document.imageUri != null -> document.imageUri
+                            document.imageUrl?.startsWith("memory://") == true -> {
+                                val key = document.imageUrl.removePrefix("memory://")
+                                documentImages[key]
+                            }
+                            else -> document.imageUrl
+                        }
+
                         Image(
-                            painter = rememberAsyncImagePainter(
-                                document.imageUri ?: document.imageUrl
-                            ),
+                            painter = rememberAsyncImagePainter(imageSource),
                             contentDescription = label,
                             contentScale = ContentScale.Crop,
                             modifier = Modifier.fillMaxSize()
@@ -204,22 +252,6 @@ fun DocumentUploadCard(
                                     .background(Color.Black.copy(alpha = 0.3f)),
                                 contentAlignment = Alignment.Center
                             ) {
-                                Icon(
-                                    imageVector = when (verificationStatus) {
-                                        VerificationStatus.VERIFIED -> Icons.Default.CheckCircle
-                                        VerificationStatus.REJECTED -> Icons.Default.Cancel
-                                        VerificationStatus.PENDING -> Icons.Default.Schedule
-                                        else -> Icons.Default.Warning
-                                    },
-                                    contentDescription = null,
-                                    tint = when (verificationStatus) {
-                                        VerificationStatus.VERIFIED -> colors.primaryColor
-                                        VerificationStatus.REJECTED -> RenovaColors.Error
-                                        VerificationStatus.PENDING -> RenovaColors.Warning
-                                        else -> colors.textSecondary
-                                    },
-                                    modifier = Modifier.size(32.dp)
-                                )
                             }
                         }
                     }
@@ -315,9 +347,18 @@ fun DocumentUploadCard(
         }
     }
 
-    if (showImagePreview && (document.imageUri != null || document.imageUrl != null)) {
+    if (showImagePreview && !isUploading && (document.imageUri != null || document.imageUrl != null)) {
+        val imageSource = when {
+            document.imageUri != null -> document.imageUri
+            document.imageUrl?.startsWith("memory://") == true -> {
+                val key = document.imageUrl.removePrefix("memory://")
+                documentImages[key]
+            }
+            else -> document.imageUrl
+        }
+
         ImagePreviewDialog(
-            imageSource = document.imageUri ?: document.imageUrl!!,
+            imageSource = imageSource!!,
             title = label,
             onDismiss = { showImagePreview = false },
             verificationStatus = verificationStatus
@@ -330,6 +371,8 @@ fun DocumentsUploadSection(
     documents: List<DocumentCardData>,
     verificationStatus: VerificationStatus,
     onImageSelected: (DocumentType, Uri) -> Unit,
+    documentImages: Map<String, ByteArray> = emptyMap(),
+    documentUploadState: ProfileViewModel.DocumentUploadState = ProfileViewModel.DocumentUploadState.Idle,
     modifier: Modifier = Modifier
 ) {
     val colors = LocalRenovaColors.current
@@ -459,14 +502,20 @@ fun DocumentsUploadSection(
                         horizontalArrangement = Arrangement.spacedBy(8.dp)
                     ) {
                         documents.forEach { doc ->
+                            val isCurrentlyUploading = documentUploadState is ProfileViewModel.DocumentUploadState.Loading &&
+                                    (documentUploadState as ProfileViewModel.DocumentUploadState.Loading).documentType == doc.type
+
                             DocumentUploadCard(
                                 document = doc,
                                 verificationStatus = verificationStatus,
                                 onImageSelected = { uri ->
-                                    if (verificationStatus == VerificationStatus.REJECTED) {
+                                    if (verificationStatus == VerificationStatus.REJECTED ||
+                                        verificationStatus == VerificationStatus.NO_DOCS) {
                                         onImageSelected(doc.type, uri)
                                     }
                                 },
+                                documentImages = documentImages,
+                                isUploading = isCurrentlyUploading,
                                 modifier = Modifier.weight(1f)
                             )
                         }
@@ -494,16 +543,13 @@ fun DocumentsUploadSection(
                                     imageVector = if (verificationStatus == VerificationStatus.REJECTED)
                                         Icons.Default.Warning
                                     else
-                                        Icons.Default.QuestionMark,
+                                        Icons.Default.Info,
                                     contentDescription = null,
                                     tint = RenovaColors.Warning,
                                     modifier = Modifier.size(18.dp)
                                 )
                                 Text(
-                                    text = if (verificationStatus == VerificationStatus.REJECTED)
-                                        stringResource(R.string.documentation_rejected_hint)
-                                    else
-                                        stringResource(R.string.documentation_upload_hint),
+                                    text = stringResource(R.string.documentation_auto_upload_hint_compressed),
                                     style = MaterialTheme.typography.bodySmall,
                                     color = colors.textPrimary,
                                     lineHeight = 18.sp

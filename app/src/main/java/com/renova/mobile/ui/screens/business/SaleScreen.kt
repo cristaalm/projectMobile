@@ -40,6 +40,11 @@ import com.renova.mobile.navigation.NavigationItemBusiness
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Close
 import kotlinx.coroutines.launch
+import com.renova.mobile.ui.components.PrinterSelectionModal
+import com.renova.mobile.utils.TicketPrinter
+import com.renova.mobile.utils.PrinterModel
+import com.renova.mobile.network.SendNotificationRequest
+import com.renova.mobile.utils.SessionManager
 
 @Composable
 fun BusinessStoreScreen(onLogout: () -> Unit, vm: BusinessSaleViewModel = viewModel(), navController: NavController) {
@@ -47,52 +52,58 @@ fun BusinessStoreScreen(onLogout: () -> Unit, vm: BusinessSaleViewModel = viewMo
     val ticket by vm.ticket.collectAsState()
     val isRewardLoading by vm.isRewardLoading.collectAsState()
     val error by vm.error.collectAsState()
-    val alliance by vm.businessAlliance.collectAsState()
-    val allianceId by vm.businessAllianceId.collectAsState()
     val lastSaleSummary by vm.lastSaleSummary.collectAsState()
 
     val scrollState = rememberScrollState()
+    val context = LocalContext.current
 
-    // Establecer una alianza por defecto para mostrar el nombre del comercio desde el inicio
-    LaunchedEffect(Unit) {
-        vm.setBusinessAllianceId(114)
-    }
+    val sessionManager = remember { SessionManager(context) }
+    val userCommerce = sessionManager.getUser()
 
     // Limpiar errores automáticamente después de 3 segundos
     LaunchedEffect(error) {
-        if (error != null) {
+        if (!error.isNullOrBlank()) {
+            Toast.makeText(context, error, Toast.LENGTH_SHORT).show()
             kotlinx.coroutines.delay(3000)
             vm.clearError()
+        }
+    }
+
+    // Toast para indicar proceso de escaneo/agregado de recompensa
+    LaunchedEffect(isRewardLoading) {
+        if (isRewardLoading) {
+            Toast.makeText(context, "Agregando recompensa al ticket...", Toast.LENGTH_SHORT).show()
         }
     }
 
     val rewardScanner = rememberLauncherForActivityResult(ScanContract()) { result ->
         if (result.contents != null) {
             if (user != null) {
+                Toast.makeText(context, "Recompensa detectada, agregando...", Toast.LENGTH_SHORT).show()
                 vm.addRewardByCode(result.contents.trim())
             } else {
                 vm.setError("Primero escanee al consumidor para agregar recompensas")
             }
-        } else {
-            vm.setError("No se detectó ningún código. Intente nuevamente.")
         }
     }
 
     fun startRewardScanner() {
         val options = ScanOptions().apply {
-            setCaptureActivity(com.renova.mobile.scan.PortraitCaptureActivity::class.java)
-            setDesiredBarcodeFormats(ScanOptions.ALL_CODE_TYPES)
-            setPrompt("Escanee el código de la recompensa")
+            setDesiredBarcodeFormats(ScanOptions.ONE_D_CODE_TYPES)
+            setPrompt("Escanee el código de barras de la recompensa")
             setBeepEnabled(true)
             setOrientationLocked(true)
+            setCaptureActivity(com.renova.mobile.scan.PortraitCaptureActivity::class.java)
         }
         rewardScanner.launch(options)
     }
 
-    val context = LocalContext.current
     val scope = rememberCoroutineScope()
 
     var showSaleDetail by remember { mutableStateOf(false) }
+    var showPrinterSelection by remember { mutableStateOf(false) }
+    var isSubmitting by remember { mutableStateOf(false) }
+    var localPrintSummary by remember { mutableStateOf<SaleSummary?>(null) }
 
     // Permiso de notificaciones para Android 13+
     var pendingNotify by remember { mutableStateOf(false) }
@@ -122,25 +133,51 @@ fun BusinessStoreScreen(onLogout: () -> Unit, vm: BusinessSaleViewModel = viewMo
         }
         val summary = SaleSummary(
             id = System.currentTimeMillis().toString(),
-            allianceName = alliance?.name,
+            allianceName = userCommerce?.name ?: "N/A",
             consumerName = user?.name,
             totalPoints = totalPoints,
             items = items
         )
         vm.setLastSaleSummary(summary)
-        showSaleDetail = true
+        isSubmitting = true
+        Toast.makeText(context, "Finalizando la compra...", Toast.LENGTH_SHORT).show()
 
-        // Enviar notificación push (se mantiene)
-        val notification = NotificationCompat.Builder(context, channelId)
-            .setSmallIcon(android.R.drawable.ic_dialog_info)
-            .setContentTitle("Venta finalizada")
-            .setContentText("La venta se ha completado correctamente.")
-            .setAutoCancel(true)
-            .build()
-        NotificationManagerCompat.from(context).notify(1001, notification)
+        // Llamar API reward/claim
+        vm.claimRewards(
+            merchantUserId = userCommerce?.id,
+            onSuccess = { message ->
+                // Notificación local para el comerciante con más detalle
+                val title = "Venta finalizada - ${user?.name ?: "Consumidor"}"
+                val notification = NotificationCompat.Builder(context, channelId)
+                    .setSmallIcon(android.R.drawable.ic_dialog_info)
+                    .setContentTitle(title)
+                    .setStyle(NotificationCompat.BigTextStyle().bigText(message))
+                    .setAutoCancel(true)
+                    .build()
+                NotificationManagerCompat.from(context).notify(1001, notification)
 
-        // No limpiar inmediatamente para que modal muestre datos; limpiar al cerrar modal
-        // vm.finalizeSale() // mover a onClose del modal
+                // Feedback inmediato
+                Toast.makeText(context, "Venta registrada", Toast.LENGTH_SHORT).show()
+                isSubmitting = false
+                showSaleDetail = true
+            },
+            onError = { errorMessage ->
+                // Enviar notificación push con mensaje de error
+                val notification = NotificationCompat.Builder(context, channelId)
+                    .setSmallIcon(android.R.drawable.ic_dialog_alert)
+                    .setContentTitle("Error en venta")
+                    .setContentText(errorMessage)
+                    .setAutoCancel(true)
+                    .build()
+                NotificationManagerCompat.from(context).notify(1002, notification)
+                vm.setError(errorMessage)
+                isSubmitting = false
+                Toast.makeText(context, "Error al enviar la venta", Toast.LENGTH_SHORT).show()
+            },
+            onPushFeedback = { feedbackMsg ->
+                Toast.makeText(context, feedbackMsg, Toast.LENGTH_SHORT).show()
+            }
+        )
     }
 
     val notificationPermissionLauncher = rememberLauncherForActivityResult(ActivityResultContracts.RequestPermission()) { granted ->
@@ -239,19 +276,18 @@ fun BusinessStoreScreen(onLogout: () -> Unit, vm: BusinessSaleViewModel = viewMo
                     ),
                     color = RenovaColors.Primary
                 )
-                if (alliance != null) {
+                if (userCommerce != null) {
                     Text(
-                        text = "Nombre: ${alliance!!.name}",
+                        text = "Nombre: ${userCommerce.name}",
                         style = MaterialTheme.typography.bodyMedium.copy(
                             fontFamily = PoppinsFontFamily,
                             fontWeight = FontWeight.SemiBold
                         ),
                         color = Color.Black
                     )
-                    // Se elimina la muestra de puntos en la tarjeta de comercio
                 } else {
                     Text(
-                        text = "Aún no se identifica el comercio. Escanea una recompensa para identificarlo.",
+                        text = "No hay comercio identificado",
                         style = MaterialTheme.typography.bodyMedium.copy(fontFamily = PoppinsFontFamily),
                         color = Color.DarkGray
                     )
@@ -259,147 +295,136 @@ fun BusinessStoreScreen(onLogout: () -> Unit, vm: BusinessSaleViewModel = viewMo
             }
         }
 
+        // Ticket y acciones
         Spacer(modifier = Modifier.height(8.dp))
-
-        // Sección: Agregar recompensa (solo escáner, requiere consumidor)
-        Card(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(horizontal = 16.dp),
-            shape = RoundedCornerShape(12.dp),
-            colors = CardDefaults.cardColors(containerColor = RenovaColors.BackgroundMint)
-        ) {
-            Column(modifier = Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
-                Text(
-                    text = "Agregar recompensa",
-                    style = MaterialTheme.typography.titleMedium.copy(
-                        fontFamily = PoppinsFontFamily,
-                        fontWeight = FontWeight.Bold
-                    ),
-                    color = RenovaColors.Primary
-                )
-
-                Button(onClick = { startRewardScanner() }, modifier = Modifier.fillMaxWidth(), enabled = user != null) {
-                    Text("Escanear recompensa")
-                }
-
-                if (user == null) {
-                    Text(
-                        text = "Primero escanee al consumidor para agregar recompensas",
-                        style = MaterialTheme.typography.bodySmall.copy(fontFamily = PoppinsFontFamily),
-                        color = Color.DarkGray
-                    )
-                }
-
-                if (error != null) {
-                    Text(text = error ?: "", color = Color.Red)
-                }
-            }
-        }
-
-        Spacer(modifier = Modifier.height(8.dp))
-
-        // Sección: Ticket
         Card(
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(16.dp),
-            shape = RoundedCornerShape(12.dp),
-            colors = CardDefaults.cardColors(containerColor = RenovaColors.BackgroundMint)
+            colors = CardDefaults.cardColors(containerColor = RenovaColors.BackgroundMint),
+            shape = RoundedCornerShape(12.dp)
         ) {
-            Column(modifier = Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                Text(
-                    text = "Ticket",
-                    style = MaterialTheme.typography.titleMedium.copy(
-                        fontFamily = PoppinsFontFamily,
-                        fontWeight = FontWeight.ExtraBold
+            Column(modifier = Modifier.padding(16.dp)) {
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Text(
+                        text = "Ticket",
+                        style = MaterialTheme.typography.titleMedium.copy(
+                            fontFamily = PoppinsFontFamily,
+                            fontWeight = FontWeight.ExtraBold
+                        ),
+                        color = RenovaColors.Primary
                     )
-                )
-
+                    Button(
+                        onClick = {
+                            if (user != null) {
+                                startRewardScanner()
+                            } else {
+                                vm.setError("Primero escanee al consumidor para agregar recompensas")
+                            }
+                        }
+                    ) { Text("Agregar recompensa") }
+                }
+                Spacer(modifier = Modifier.height(8.dp))
                 if (ticket.isEmpty()) {
                     Text(
-                        text = "Aún no hay recompensas en el ticket",
+                        text = "No hay recompensas en el ticket",
                         style = MaterialTheme.typography.bodyMedium.copy(fontFamily = PoppinsFontFamily),
-                        color = Color.Gray
+                        color = Color.DarkGray
                     )
                 } else {
-                    val grouped = remember(ticket) {
-                        ticket.groupBy { it.code ?: it.id?.toString() ?: it.name }
-                    }
-
-                    val totalPoints = grouped.values.sumOf { group ->
-                        val pts = group.first().pointsRequired
-                        group.size * pts
-                    }
-
-                    grouped.forEach { (_, items) ->
-                        val reward = items.first()
+                    val groupedByName = remember(ticket) { ticket.groupBy { it.name } }
+                    groupedByName.entries.forEachIndexed { index, (name, items) ->
                         val quantity = items.size
-                        Card(
+                        val pointsPerItem = items.first().pointsRequired
+                        val subtotalPoints = quantity * pointsPerItem
+
+                        Row(
                             modifier = Modifier.fillMaxWidth(),
-                            shape = RoundedCornerShape(10.dp),
-                            colors = CardDefaults.cardColors(containerColor = Color.White)
+                            verticalAlignment = Alignment.CenterVertically
                         ) {
-                            Row(
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .padding(12.dp),
-                                verticalAlignment = Alignment.CenterVertically
-                            ) {
-                                Box(
-                                    modifier = Modifier
-                                        .size(28.dp),
-                                ) {
-                                    Text(
-                                        text = quantity.toString(),
-                                        style = MaterialTheme.typography.titleSmall.copy(
-                                            fontFamily = PoppinsFontFamily,
-                                            fontWeight = FontWeight.Bold
-                                        ),
-                                        color = RenovaColors.Primary
-                                    )
-                                }
-                                Spacer(modifier = Modifier.width(12.dp))
-                                Column(modifier = Modifier.weight(1f)) {
-                                    Text(
-                                        text = reward.name,
-                                        style = MaterialTheme.typography.bodyMedium.copy(
-                                            fontFamily = PoppinsFontFamily,
-                                            fontWeight = FontWeight.SemiBold
-                                        ),
-                                        color = Color.Black
-                                    )
-                                    Text(
-                                        text = "Puntos requeridos: ${reward.pointsRequired}",
-                                        style = MaterialTheme.typography.bodySmall.copy(fontFamily = PoppinsFontFamily),
-                                        color = Color.DarkGray
-                                    )
-                                }
+                            Column(modifier = Modifier.weight(1f)) {
+                                Text(
+                                    text = name,
+                                    style = MaterialTheme.typography.bodyMedium.copy(
+                                        fontFamily = PoppinsFontFamily,
+                                        fontWeight = FontWeight.SemiBold
+                                    ),
+                                    color = Color.Black
+                                )
+                                Text(
+                                    text = "Cantidad: $quantity",
+                                    style = MaterialTheme.typography.bodySmall.copy(fontFamily = PoppinsFontFamily),
+                                    color = Color.DarkGray
+                                )
                             }
+                            Column(horizontalAlignment = Alignment.End) {
+                                Text(
+                                    text = "Puntos",
+                                    style = MaterialTheme.typography.bodySmall.copy(
+                                        fontFamily = PoppinsFontFamily,
+                                        fontWeight = FontWeight.Medium
+                                    ),
+                                    color = Color.DarkGray
+                                )
+                                Text(
+                                    text = "$subtotalPoints",
+                                    style = MaterialTheme.typography.titleSmall.copy(
+                                        fontFamily = PoppinsFontFamily,
+                                        fontWeight = FontWeight.Bold
+                                    ),
+                                    color = RenovaColors.Primary
+                                )
+                            }
+                        }
+
+                        if (index < groupedByName.size - 1) {
+                            Divider(modifier = Modifier.padding(vertical = 8.dp), thickness = 1.dp, color = Color.LightGray)
                         }
                     }
 
-                    Divider()
-                    Text(
-                        text = "Total de puntos: $totalPoints",
-                        style = MaterialTheme.typography.titleSmall.copy(
-                            fontFamily = PoppinsFontFamily,
-                            fontWeight = FontWeight.Bold
-                        ),
-                        color = Color.Black
-                    )
+                    val totalPoints = groupedByName.values.sumOf { group -> group.size * group.first().pointsRequired }
 
                     Spacer(modifier = Modifier.height(12.dp))
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Text(
+                            text = "Total de puntos",
+                            style = MaterialTheme.typography.bodyMedium.copy(
+                                fontFamily = PoppinsFontFamily,
+                                fontWeight = FontWeight.Medium
+                            ),
+                            color = Color.DarkGray
+                        )
+                        Text(
+                            text = "$totalPoints",
+                            style = MaterialTheme.typography.titleMedium.copy(
+                                fontFamily = PoppinsFontFamily,
+                                fontWeight = FontWeight.Bold
+                            ),
+                            color = RenovaColors.Primary
+                        )
+                    }
 
-                    Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                        OutlinedButton(onClick = {
-                            vm.finalizeSale()
-                            Toast.makeText(context, "Venta limpiada. Escanee un nuevo consumidor.", Toast.LENGTH_SHORT).show()
-                        }) { Text("Limpiar venta") }
+                    Spacer(modifier = Modifier.height(12.dp))
+                    Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                        OutlinedButton(
+                            onClick = {
+                                vm.finalizeSale()
+                                Toast.makeText(context, "Venta limpiada. Escanee un nuevo consumidor.", Toast.LENGTH_SHORT).show()
+                            },
+                            modifier = Modifier.weight(1f)
+                        ) { Text("Limpiar venta") }
+
                         Button(
                             onClick = {
-                                // Validaciones antes de finalizar
-                                if (allianceId == null) {
+                                if (userCommerce == null) {
                                     vm.setError("Identifica el comercio antes de finalizar la compra")
                                     return@Button
                                 }
@@ -408,11 +433,15 @@ fun BusinessStoreScreen(onLogout: () -> Unit, vm: BusinessSaleViewModel = viewMo
                                     return@Button
                                 }
 
+                                val userPts = user?.total_points ?: 0
+                                val totalTicketPoints = ticket.sumOf { it.pointsRequired }
+                                if (userPts < totalTicketPoints) {
+                                    vm.setError("Puntos insuficientes para finalizar la compra")
+                                    return@Button
+                                }
+
                                 if (Build.VERSION.SDK_INT >= 33) {
-                                    val granted = ContextCompat.checkSelfPermission(
-                                        context,
-                                        Manifest.permission.POST_NOTIFICATIONS
-                                    ) == PackageManager.PERMISSION_GRANTED
+                                    val granted = ContextCompat.checkSelfPermission(context, Manifest.permission.POST_NOTIFICATIONS) == PackageManager.PERMISSION_GRANTED
                                     if (!granted) {
                                         pendingNotify = true
                                         notificationPermissionLauncher.launch(Manifest.permission.POST_NOTIFICATIONS)
@@ -423,30 +452,56 @@ fun BusinessStoreScreen(onLogout: () -> Unit, vm: BusinessSaleViewModel = viewMo
                                     sendNotificationAndFinalize()
                                 }
                             },
-                            enabled = allianceId != null && ticket.isNotEmpty()
+                            enabled = userCommerce != null && ticket.isNotEmpty() && !isSubmitting,
+                            modifier = Modifier.weight(1f)
                         ) {
                             Text("Finalizar compra")
                         }
                     }
+
+                    if (isSubmitting) {
+                        Spacer(modifier = Modifier.height(8.dp))
+                        LinearProgressIndicator(color = RenovaColors.Primary, modifier = Modifier.fillMaxWidth())
+                    }
                 }
             }
         }
-    }
-    if (showSaleDetail && lastSaleSummary != null) {
-        SaleDetailModal(
-            summary = lastSaleSummary!!,
-            onClose = {
-                showSaleDetail = false
-                vm.finalizeSale()
-            },
-            onPrint = {
-                scope.launch {
-                    Toast.makeText(context, "Imprimiendo...", Toast.LENGTH_SHORT).show()
-                    kotlinx.coroutines.delay(1000)
-                    Toast.makeText(context, "Ticket impreso", Toast.LENGTH_SHORT).show()
+
+        // Sale detail modal should only render if summary is non-null
+        if (showSaleDetail && lastSaleSummary != null) {
+            SaleDetailModal(
+                summary = lastSaleSummary!!,
+                onClose = {
                     showSaleDetail = false
                     vm.finalizeSale()
-                    navController.navigate(NavigationItemBusiness.Home.route)
+                },
+                onPrint = {
+                    localPrintSummary = lastSaleSummary
+                    showSaleDetail = false
+                    vm.finalizeSale()
+                    showPrinterSelection = true
+                }
+            )
+        }
+    }
+
+    // Printer Selection Modal
+    if (showPrinterSelection && localPrintSummary != null) {
+        PrinterSelectionModal(
+            summary = localPrintSummary!!,
+            onClose = { showPrinterSelection = false },
+            onPrintSelected = { printer ->
+                scope.launch {
+                    try {
+                        Toast.makeText(context, "Imprimiendo en ${printer.getDisplayName()}...", Toast.LENGTH_SHORT).show()
+                        TicketPrinter.printTicket(localPrintSummary!!, printer, context)
+                        Toast.makeText(context, "Ticket impreso correctamente", Toast.LENGTH_SHORT).show()
+
+                        navController.navigate(NavigationItemBusiness.Home.route)
+                    } catch (e: Exception) {
+                        Toast.makeText(context, "Error al imprimir: ${e.message}", Toast.LENGTH_LONG).show()
+                    }
+                    showPrinterSelection = false
                 }
             }
         )

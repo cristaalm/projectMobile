@@ -10,6 +10,7 @@ import retrofit2.converter.gson.GsonConverterFactory
 import com.renova.mobile.utils.SessionManager
 import okhttp3.MultipartBody
 import retrofit2.http.*
+import java.util.concurrent.TimeUnit
 
 // ========== REGISTER ==========
 data class RegisterRequest(
@@ -119,6 +120,7 @@ data class User(
     val total_points: Int?,
     val code_identity: String?,
     val role: Role?,
+    val alliance_id: Int?,
     val created_at: String?,
     val updated_at: String?
 )
@@ -268,10 +270,14 @@ data class ActivityItem(
     val type_history: Int,
     val material_type_id: Int?,
     val points: Int,
-    val reward_id: Int,
+    val reward_id: Int?,   
     val alliance_id: Int?,
     val created_at: String,
     val updated_at: String,
+    val scan_id: Int?,
+    val comerciant_id: Int?,
+    val description: String?,
+    val quantity: Int?,
     val alliance: Alliance?,
     val material_type: MaterialType?,
     val reward: HistoryReward?,
@@ -372,6 +378,7 @@ data class UserData(
     val two_factor_status: Boolean,
     val code_identity: String,
     val status: Int,
+    val alliance_id: Int?,
     val created_at: String,
     val updated_at: String,
     val role: RoleData
@@ -405,7 +412,97 @@ data class IdentifyUserByCodeRequest(
     val code: String
 )
 
-// ========== API SERVICE ==========
+
+// ========== REWARD CLAIM ==========
+@Deprecated("Use single-item ClaimRewardRequest with quantity")
+data class RewardClaim(
+    val reward_id: Int,
+    val quantity: Int
+)
+
+data class ClaimRewardRequest(
+    @SerializedName("user_id") val user_id: Int,
+    @SerializedName("reward_id") val reward_id: Int,
+    @SerializedName("quantity") val quantity: Int
+)
+
+data class ClaimRewardResponse(
+    val success: Boolean,
+    val message: String,
+    val data: ClaimRewardData?,
+    val error: String?,
+    val status: Int
+)
+
+data class ClaimRewardData(
+    val id: Int,
+    val user_id: Int,
+    val reward_id: Int,
+    val quantity: Int,
+    val redeemed_at: String
+)
+
+data class UpdateFieldRequest(
+    val value: String
+)
+
+data class UpdateFieldResponse(
+    val success: Boolean,
+    val message: String,
+    val data: Any?,
+    val error: String?,
+    val status: Int
+)
+
+// ========== NOTIFICATIONS ==========
+
+// ========== GENERAL ==========
+
+data class ErrorResponse(
+    val success: Boolean,
+    val message: String,
+    val data: ErrorResponseData?,
+    val errors: Any?,
+    val status: Int
+)
+
+data class ErrorResponseData(
+    val id: Int,
+    val user_id: Int,
+    val ine_front_url: String,
+    val ine_back_url: String,
+    val selfie_url: String?,
+    val status: Int,
+    val rejection_reason: String?,
+    val verified_by: Int?,
+    val verified_at: String?,
+    val created_at: String,
+    val updated_at: String
+)
+
+data class SendNotificationRequest(
+    @SerializedName("user_id") val userId: Int,
+    val title: String,
+    val message: String
+)
+
+data class SendNotificationResponse(
+    val success: Boolean,
+    val message: String
+)
+
+// ======= FCM TOKEN REGISTER =======
+data class RegisterFcmTokenRequest(
+    @SerializedName("user_id") val userId: Int,
+    @SerializedName("token") val token: String,
+    @SerializedName("platform") val platform: String = "android"
+)
+
+data class RegisterFcmTokenResponse(
+    val success: Boolean,
+    val message: String
+)
+
 interface ApiService {
 
     @POST("api/users/register")
@@ -457,8 +554,21 @@ interface ApiService {
         @Query("order") order: String = "desc"
     ): Response<HistoryResponse>
 
+    @GET("api/history/getAll")
+    suspend fun getHistoryByAlliance(
+        @Query("id_alliance") allianceId: Int,
+        @Query("page") page: Int = 1,
+        @Query("per_page") perPage: Int = 10,
+        @Query("key") key: String = "created_at",
+        @Query("order") order: String = "desc"
+    ): Response<HistoryResponse>
+
     @GET("api/scans/total-type-scans")
     suspend fun getTotalScans(): Response<TotalScansResponse>
+
+    @POST("api/reward/claim")
+    suspend fun claimReward(@Body request: ClaimRewardRequest): Response<ClaimRewardResponse>
+
 
     // Endpoint principal para obtener perfil de usuario con documentos
     @POST("api/users/identityUser")
@@ -467,6 +577,42 @@ interface ApiService {
     // Endpoint para identificar usuario por código (mantener si otras partes lo usan)
     @POST("api/users/identityUserCode")
     suspend fun identifyUserByCode(@Body request: IdentifyUserByCodeRequest): Response<IdentifyUserResponse>
+
+    // Endpoint para obtener imagen de documento
+    @GET("api/users/documents/{type}/{userId}")
+    suspend fun getDocumentImage(
+        @Path("type") type: String,
+        @Path("userId") userId: Int
+    ): Response<okhttp3.ResponseBody>
+
+    // Endpoint para actualizar campo individual del perfil
+    @POST("api/users/updateField/{field}/{userId}")
+    suspend fun updateUserField(
+        @Path("field") field: String,
+        @Path("userId") userId: Int,
+        @Body request: UpdateFieldRequest
+    ): Response<UpdateFieldResponse>
+
+    // Endpoint para reiniciar estado de verificación a pendiente
+    @POST("api/users/toggle-status-pending/{userId}")
+    suspend fun toggleStatusPending(
+        @Path("userId") userId: Int
+    ): Response<UpdateFieldResponse>
+
+    // Endpoint para subir documento individual
+    @Multipart
+    @POST("api/users/documents/{type}/{userId}")
+    suspend fun uploadSingleDocument(
+        @Path("type") type: String,
+        @Path("userId") userId: Int,
+        @Part document: MultipartBody.Part
+    ): Response<UploadDocumentsResponse>
+
+    @POST("api/notifications/send")
+    suspend fun sendNotification(@Body request: SendNotificationRequest): Response<SendNotificationResponse>
+
+    @POST("api/notifications/registerToken")
+    suspend fun registerFcmToken(@Body request: RegisterFcmTokenRequest): Response<RegisterFcmTokenResponse>
 }
 
 // ========== API CLIENT ==========
@@ -499,6 +645,9 @@ object ApiClient {
 
                     chain.proceed(builder.build())
                 }
+                .connectTimeout(30, TimeUnit.SECONDS)
+                .readTimeout(30, TimeUnit.SECONDS)
+                .writeTimeout(60, TimeUnit.SECONDS)
                 .build()
         }
 

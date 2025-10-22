@@ -62,9 +62,9 @@ class ActivityViewModel(
                     // Ordenar las actividades por fecha de creación (más reciente primero)
                     val sortedActivities = historyResponse.data.data.sortedByDescending { activity ->
                         try {
-                            parseActivityDate(activity.created_at)
+                            parseActivityDate(activity.created_at)?.time ?: 0L
                         } catch (e: Exception) {
-                            null
+                            0L
                         }
                     }
 
@@ -99,13 +99,30 @@ class ActivityViewModel(
     }
 
     private fun parseActivityDate(dateString: String): Date? {
-        return try {
-            val sdfInput = SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSSSSS'Z'", Locale.getDefault())
-            sdfInput.timeZone = TimeZone.getTimeZone("UTC")
-            sdfInput.parse(dateString)
-        } catch (e: Exception) {
-            null
+        val patterns = arrayOf(
+            "yyyy-MM-dd'T'HH:mm:ss.SSSSSS'Z'",
+            "yyyy-MM-dd'T'HH:mm:ss.SSSSSSXXX",
+            "yyyy-MM-dd'T'HH:mm:ss.SSS'Z'",
+            "yyyy-MM-dd'T'HH:mm:ss.SSSXXX",
+            "yyyy-MM-dd'T'HH:mm:ss'Z'",
+            "yyyy-MM-dd'T'HH:mm:ssXXX",
+            "yyyy-MM-dd HH:mm:ss",
+            "yyyy-MM-dd'T'HH:mm:ss.SSSSSS",
+            "yyyy-MM-dd'T'HH:mm:ss.SSS",
+            "yyyy-MM-dd'T'HH:mm:ss"
+        )
+        for (p in patterns) {
+            try {
+                val sdfInput = SimpleDateFormat(p, Locale.getDefault())
+                if (p.contains("'Z'") || p.contains("XXX")) {
+                    sdfInput.timeZone = TimeZone.getTimeZone("UTC")
+                }
+                val date = sdfInput.parse(dateString)
+                if (date != null) return date
+            } catch (_: Exception) {
+            }
         }
+        return null
     }
 
     fun nextPage() {

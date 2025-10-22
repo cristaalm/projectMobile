@@ -21,6 +21,8 @@ class ActivityRepository {
             order = order
         )
 
+        Log.d("ActivityRepository", "Respuesta: ${response.body()}")
+
         return if (response.isSuccessful) {
             response.body() ?: throw Exception("Response body is null")
 
@@ -59,8 +61,8 @@ class ActivityRepository {
 
         return if (response.isSuccessful) {
             val body = response.body()
-            body?.data?.user?.total_points ?: 0
-            Log.d("Tokenn", "Token: ${token}")
+            val points = body?.data?.user?.total_points ?: 0
+            points
         } else {
             0
         }

@@ -5,11 +5,12 @@ import androidx.lifecycle.viewModelScope
 import com.renova.mobile.network.ApiClient
 import com.renova.mobile.network.IdentifyUserByCodeRequest
 import com.renova.mobile.network.UserData
+import com.renova.mobile.network.ClaimRewardRequest
+import com.renova.mobile.network.SendNotificationRequest
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
 
-// Maneja el estado del cliente escaneado para el flujo de venta del comerciante
 class BusinessSaleViewModel : ViewModel() {
     private val _scannedUser = MutableStateFlow<UserData?>(null)
     val scannedUser: StateFlow<UserData?> = _scannedUser
@@ -20,7 +21,6 @@ class BusinessSaleViewModel : ViewModel() {
     private val _error = MutableStateFlow<String?>(null)
     val error: StateFlow<String?> = _error
 
-    // Estado de recompensas disponibles y ticket actual
     private val _isRewardLoading = MutableStateFlow(false)
     val isRewardLoading: StateFlow<Boolean> = _isRewardLoading
 
@@ -33,28 +33,12 @@ class BusinessSaleViewModel : ViewModel() {
     private val _businessAllianceId = MutableStateFlow<Int?>(null)
     val businessAllianceId: StateFlow<Int?> = _businessAllianceId
 
-    // Información del comercio identificado (alianza)
     private val _businessAlliance = MutableStateFlow<com.renova.mobile.network.Alianza?>(null)
     val businessAlliance: StateFlow<com.renova.mobile.network.Alianza?> = _businessAlliance
 
-    // Última venta resumida para usar en Home y detalle
     private val _lastSaleSummary = MutableStateFlow<com.renova.mobile.ui.components.SaleSummary?>(null)
     val lastSaleSummary: StateFlow<com.renova.mobile.ui.components.SaleSummary?> = _lastSaleSummary
 
-    fun setBusinessAllianceId(id: Int) {
-        _businessAllianceId.value = id
-        // Cargar recompensas del comercio
-        loadRewardsForAlliance(id)
-        // Cargar información de la alianza para mostrar nombre
-        viewModelScope.launch {
-            try {
-                val alianzasResult = com.renova.mobile.repository.AlianzasRepository().getAllAlianzas()
-                if (alianzasResult.isSuccess) {
-                    _businessAlliance.value = alianzasResult.getOrDefault(emptyList()).firstOrNull { it.id == id }
-                }
-            } catch (_: Exception) {}
-        }
-    }
 
     fun clear() {
         _scannedUser.value = null
@@ -67,73 +51,41 @@ class BusinessSaleViewModel : ViewModel() {
         _businessAlliance.value = null
     }
 
-    fun identifyUserByCode(scannedCode: String) {
+    fun identifyUserByCode(code: String) {
         viewModelScope.launch {
-            _isLoading.value = true
-            _error.value = null
             try {
-                val code = scannedCode.trim()
-                if (code.isEmpty()) {
-                    _error.value = "No es un escaneo válido"
-                    _scannedUser.value = null
-                    return@launch
-                }
-
-                val response = ApiClient.apiService.identifyUserByCode(
-                    IdentifyUserByCodeRequest(code = code)
-                )
-
-                if (response.isSuccessful) {
-                    val body = response.body()
-                    if (body?.success == true && body.data?.user != null) {
-                        _scannedUser.value = body.data.user
-                    } else {
-                        val message = body?.message
-                        _error.value = message ?: "Usuario no encontrado"
-                        _scannedUser.value = null
-                    }
+                val response = ApiClient.apiService.identifyUserByCode(IdentifyUserByCodeRequest(code = code))
+                if (response.isSuccessful && response.body()?.data != null) {
+                    val userData = response.body()!!.data!!.user
+                    _scannedUser.value = userData
                 } else {
-                    val errorBody = try { response.errorBody()?.string() } catch (e: Exception) { null }
-                    _error.value = when (response.code()) {
-                        401 -> "No es un escaneo válido"
-                        404 -> "Usuario no encontrado"
-                        else -> "Error ${response.code()}: ${errorBody ?: response.message()}"
-                    }
-                    _scannedUser.value = null
+                    _error.value = response.body()?.message ?: "No se pudo identificar al usuario"
                 }
             } catch (e: Exception) {
-                _error.value = e.message ?: "Ocurrió un error"
-                _scannedUser.value = null
-            } finally {
-                _isLoading.value = false
+                _error.value = e.message ?: "Error de conexión al identificar usuario"
             }
         }
     }
 
     fun setError(message: String) {
         _error.value = message
-        // No limpiar al usuario escaneado; debe permanecer visible hasta finalizar la compra
     }
 
     fun clearError() {
         _error.value = null
     }
 
-    // Cargar recompensas para la alianza del comercio
     fun loadRewardsForAlliance(allianceId: Int) {
         viewModelScope.launch {
-            _isRewardLoading.value = true
             try {
-                val result = com.renova.mobile.repository.RewardRepository().getRewardsByAlliance(allianceId)
-                if (result.isSuccess) {
-                    _availableRewards.value = result.getOrDefault(emptyList())
+                val response = com.renova.mobile.repository.RewardRepository().getRewardsByAlliance(allianceId)
+                if (response.isSuccess) {
+                    _availableRewards.value = response.getOrDefault(emptyList())
                 } else {
-                    _error.value = result.exceptionOrNull()?.message ?: "No se pudieron cargar las recompensas"
+                    _error.value = response.exceptionOrNull()?.message ?: "Error al cargar recompensas"
                 }
             } catch (e: Exception) {
-                _error.value = e.message ?: "Error al cargar recompensas"
-            } finally {
-                _isRewardLoading.value = false
+                _error.value = e.message ?: "Error de conexión al cargar recompensas"
             }
         }
     }
@@ -213,48 +165,145 @@ class BusinessSaleViewModel : ViewModel() {
                 return@launch
             }
 
+            // Validar puntos disponibles del cliente antes de agregar
+            val currentUser = _scannedUser.value
+            if (currentUser == null) {
+                _error.value = "Primero escanee al consumidor para agregar recompensas"
+                return@launch
+            }
+            val userPoints = currentUser.total_points
+            val ticketPoints = _ticket.value.sumOf { it.pointsRequired }
+            val neededPoints = reward.pointsRequired
+            if (userPoints < ticketPoints + neededPoints) {
+                _error.value = "Puntos insuficientes para agregar esta recompensa"
+                return@launch
+            }
+
             _ticket.value = _ticket.value + reward
             _error.value = null
         }
-    }
-
-    fun clearTicket() {
-        _ticket.value = emptyList()
-        _error.value = null
     }
 
     fun setLastSaleSummary(summary: com.renova.mobile.ui.components.SaleSummary) {
         _lastSaleSummary.value = summary
     }
 
-    fun buildLastSaleSummaryFromTicket(): com.renova.mobile.ui.components.SaleSummary? {
-        val currentTicket = _ticket.value
-        if (currentTicket.isEmpty()) return null
-
-        val grouped = currentTicket.groupBy { it.code ?: it.id?.toString() ?: it.name }
-        val totalPoints = grouped.values.sumOf { group -> group.size * group.first().pointsRequired }
-        val items = grouped.map { (_, items) ->
-            val reward = items.first()
-            com.renova.mobile.ui.components.SaleItem(name = reward.name, quantity = items.size, pointsRequired = reward.pointsRequired)
-        }
-        val summary = com.renova.mobile.ui.components.SaleSummary(
-            id = System.currentTimeMillis().toString(),
-            allianceName = _businessAlliance.value?.name,
-            consumerName = _scannedUser.value?.name,
-            totalPoints = totalPoints,
-            items = items
-        )
-        _lastSaleSummary.value = summary
-        return summary
-    }
-
     fun finalizeSale() {
-        // Al finalizar, limpiar ticket, errores y datos del consumidor
         _ticket.value = emptyList()
         _error.value = null
         _scannedUser.value = null
-        // Mantener la alianza establecida para continuar vendiendo sin reconfigurar
-        // No tocar _businessAllianceId ni _businessAlliance
-        // Mantener el resumen de la última venta para mostrarlo en Home
+        // Mantener la alianza y el último resumen para continuidad del flujo
+    }
+
+    // Función para reclamar recompensas via API
+    fun claimRewards(
+        merchantUserId: Int?,
+        onSuccess: (String) -> Unit,
+        onError: (String) -> Unit,
+        onPushFeedback: (String) -> Unit
+    ) {
+        val currentUser = _scannedUser.value
+        val currentTicket = _ticket.value
+        val currentAllianceId = _businessAllianceId.value
+
+        if (currentUser == null || currentTicket.isEmpty() || currentAllianceId == null) {
+            onError("Datos incompletos para procesar la venta")
+            return
+        }
+
+        viewModelScope.launch {
+            try {
+                // Agrupar por id de recompensa para obtener cantidades
+                val grouped = currentTicket.groupBy { it.id }
+                val results = mutableListOf<String>()
+
+                for ((rewardId, group) in grouped) {
+                    val req = ClaimRewardRequest(
+                        user_id = currentUser.id,
+                        reward_id = rewardId,
+                        quantity = group.size
+                    )
+                    val resp = ApiClient.apiService.claimReward(req)
+                    if (!resp.isSuccessful || resp.body()?.success != true) {
+                        val err = resp.body()?.message ?: resp.message() ?: "Error al reclamar recompensa"
+                        onError(err)
+                        return@launch
+                    } else {
+                        val data = resp.body()?.data
+                        val redeemedQty = data?.quantity ?: group.size
+                        val rewardName = group.first().name
+                        results.add("${redeemedQty} x ${rewardName}")
+                    }
+                }
+
+                val consumerName = currentUser.name
+                val allianceName = _businessAlliance.value?.name
+                val msg = buildString {
+                    append("Venta exitosa para ")
+                    append(consumerName)
+                    if (allianceName != null) {
+                        append(" en ")
+                        append(allianceName)
+                    }
+                    append(": ")
+                    append(results.joinToString(", "))
+                }
+
+                // Enviar push al cliente comprador
+                try {
+                    val clientTitle = "Compra finalizada"
+                    val clientMessage = buildString {
+                        append("Has canjeado: ")
+                        append(results.joinToString(", "))
+                        append(". ¡Gracias por tu compra!")
+                    }
+                    val pushReq = SendNotificationRequest(
+                        userId = currentUser.id,
+                        title = clientTitle,
+                        message = clientMessage
+                    )
+                    val pushResp = ApiClient.apiService.sendNotification(pushReq)
+                    if (pushResp.isSuccessful && pushResp.body()?.success == true) {
+                        onPushFeedback("Notificación enviada al cliente")
+                    } else {
+                        val errMsg = pushResp.body()?.message ?: pushResp.message() ?: "No se pudo enviar notificación al cliente"
+                        _error.value = errMsg
+                    }
+                } catch (e: Exception) {
+                    _error.value = e.message ?: "Error al enviar notificación al cliente"
+                }
+
+                // Enviar push al comercio (si tenemos su user_id)
+                if (merchantUserId != null) {
+                    try {
+                        val title = "Venta finalizada"
+                        val merchantMessage = buildString {
+                            append("Se registró una venta para ")
+                            append(consumerName)
+                            append(": ")
+                            append(results.joinToString(", "))
+                        }
+                        val mReq = SendNotificationRequest(
+                            userId = merchantUserId,
+                            title = title,
+                            message = merchantMessage
+                        )
+                        val mResp = ApiClient.apiService.sendNotification(mReq)
+                        if (mResp.isSuccessful && mResp.body()?.success == true) {
+                            onPushFeedback("Notificación enviada al comercio")
+                        } else {
+                            val errMsg = mResp.body()?.message ?: mResp.message() ?: "No se pudo enviar notificación al comercio"
+                            _error.value = errMsg
+                        }
+                    } catch (e: Exception) {
+                        _error.value = e.message ?: "Error al enviar notificación al comercio"
+                    }
+                }
+
+                onSuccess(msg)
+            } catch (e: Exception) {
+                onError("Error de conexión: ${e.message}")
+            }
+        }
     }
 }

@@ -13,6 +13,8 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import com.renova.mobile.R
+import com.renova.mobile.ui.viewmodels.ProfileViewModel
+import com.renova.mobile.ui.viewmodels.ProfileViewModel.*
 import com.renova.mobile.network.IdentityVerification
 import com.renova.mobile.network.UserData
 import com.renova.mobile.ui.theme.LocalRenovaColors
@@ -22,13 +24,19 @@ import coil.compose.rememberAsyncImagePainter
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.animation.*
+import androidx.compose.animation.core.*
+import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.ui.text.input.KeyboardType
+import com.renova.mobile.screens.ValidationState
+import kotlinx.coroutines.delay
 
 @Composable
 fun ProfileField(
     label: String,
     value: String,
     icon: ImageVector,
-    isVerified: Boolean,
+    verificationStatus: VerificationStatus,
     isMono: Boolean = false
 ) {
     val colors = LocalRenovaColors.current
@@ -67,7 +75,8 @@ fun ProfileField(
                 color = colors.textPrimary,
                 modifier = Modifier.weight(1f)
             )
-            if (isVerified) {
+            // Mostrar badge de verificado solo si está VERIFIED
+            if (verificationStatus == VerificationStatus.VERIFIED) {
                 Icon(
                     imageVector = Icons.Default.VerifiedUser,
                     contentDescription = stringResource(R.string.profile_verified_badge),
@@ -89,9 +98,27 @@ fun EditableProfileField(
     onEditClick: () -> Unit,
     onSave: () -> Unit,
     onCancel: () -> Unit,
-    onValueChange: (String) -> Unit
+    onValueChange: (String) -> Unit,
+    validator: (String) -> Boolean = { true },
+    keyboardType: KeyboardType = KeyboardType.Text,
+    maxLength: Int? = null,
+    errorMessage: String = "",
+    isLoading: Boolean = false  // NUEVO PARÁMETRO
 ) {
     val colors = LocalRenovaColors.current
+    var validationState by remember { mutableStateOf(ValidationState.IDLE) }
+
+    // Validación automática con delay
+    LaunchedEffect(value) {
+        if (isEditing && value.isNotEmpty()) {
+            validationState = ValidationState.VALIDATING
+            delay(800)
+            val isValid = validator(value)
+            validationState = if (isValid) ValidationState.VALID else ValidationState.ERROR
+        } else if (value.isEmpty()) {
+            validationState = ValidationState.IDLE
+        }
+    }
 
     Column {
         Row(
@@ -139,7 +166,8 @@ fun EditableProfileField(
                     if (!isVerified) {
                         IconButton(
                             onClick = onEditClick,
-                            modifier = Modifier.size(32.dp)
+                            modifier = Modifier.size(32.dp),
+                            enabled = !isLoading  // DESHABILITAR SI ESTÁ CARGANDO
                         ) {
                             Icon(
                                 imageVector = Icons.Default.Edit,
@@ -155,18 +183,84 @@ fun EditableProfileField(
             Column(modifier = Modifier.fillMaxWidth()) {
                 OutlinedTextField(
                     value = value,
-                    onValueChange = onValueChange,
+                    onValueChange = { newValue ->
+                        val filteredValue = if (maxLength != null) {
+                            newValue.take(maxLength)
+                        } else newValue
+                        onValueChange(filteredValue)
+                    },
                     modifier = Modifier.fillMaxWidth(),
                     singleLine = true,
                     textStyle = MaterialTheme.typography.bodyMedium,
+                    keyboardOptions = KeyboardOptions(keyboardType = keyboardType),
+                    isError = validationState == ValidationState.ERROR,
+                    enabled = !isLoading,  // DESHABILITAR SI ESTÁ CARGANDO
+                    trailingIcon = {
+                        AnimatedVisibility(
+                            visible = validationState != ValidationState.IDLE || isLoading,
+                            enter = fadeIn() + scaleIn(),
+                            exit = fadeOut() + scaleOut()
+                        ) {
+                            when {
+                                isLoading -> {
+                                    CircularProgressIndicator(
+                                        modifier = Modifier.size(20.dp),
+                                        color = colors.primaryColor,
+                                        strokeWidth = 2.dp
+                                    )
+                                }
+                                validationState == ValidationState.VALIDATING -> {
+                                    CircularProgressIndicator(
+                                        modifier = Modifier.size(20.dp),
+                                        color = colors.primaryColor,
+                                        strokeWidth = 2.dp
+                                    )
+                                }
+                                validationState == ValidationState.VALID -> {
+                                    Icon(
+                                        imageVector = Icons.Default.CheckCircle,
+                                        contentDescription = "Valid",
+                                        tint = colors.primaryColor,
+                                        modifier = Modifier.size(20.dp)
+                                    )
+                                }
+                                validationState == ValidationState.ERROR -> {
+                                    Icon(
+                                        imageVector = Icons.Default.Error,
+                                        contentDescription = "Error",
+                                        tint = RenovaColors.Error,
+                                        modifier = Modifier.size(20.dp)
+                                    )
+                                }
+                            }
+                        }
+                    },
                     colors = OutlinedTextFieldDefaults.colors(
                         focusedBorderColor = colors.borderFocused,
                         unfocusedBorderColor = colors.border,
+                        errorBorderColor = RenovaColors.Error,
                         cursorColor = colors.primaryColor,
                         focusedTextColor = colors.textPrimary,
-                        unfocusedTextColor = colors.textPrimary
+                        unfocusedTextColor = colors.textPrimary,
+                        disabledBorderColor = colors.border.copy(alpha = 0.5f),
+                        disabledTextColor = colors.textPrimary.copy(alpha = 0.5f)
                     )
                 )
+
+                // Mensaje de error
+                AnimatedVisibility(
+                    visible = validationState == ValidationState.ERROR,
+                    enter = fadeIn() + expandVertically(),
+                    exit = fadeOut() + shrinkVertically()
+                ) {
+                    Text(
+                        text = errorMessage,
+                        color = RenovaColors.Error,
+                        style = MaterialTheme.typography.bodySmall,
+                        modifier = Modifier.padding(start = 16.dp, top = 4.dp)
+                    )
+                }
+
                 Spacer(modifier = Modifier.height(8.dp))
                 Row(
                     modifier = Modifier.fillMaxWidth(),
@@ -175,6 +269,7 @@ fun EditableProfileField(
                 ) {
                     TextButton(
                         onClick = onCancel,
+                        enabled = !isLoading,
                         colors = ButtonDefaults.textButtonColors(
                             contentColor = colors.textSecondary
                         )
@@ -191,113 +286,44 @@ fun EditableProfileField(
                         )
                     }
                     Spacer(modifier = Modifier.width(8.dp))
+                    // En tu ProfileComponents.kt, reemplaza el Button de guardar:
+
                     Button(
-                        onClick = onSave,
+                        onClick = {
+                            android.util.Log.d("EditableProfileField", "🟢 Save button clicked")
+                            android.util.Log.d("EditableProfileField", "🟢 Label: $label")
+                            android.util.Log.d("EditableProfileField", "🟢 Value: $value")
+                            android.util.Log.d("EditableProfileField", "🟢 ValidationState: $validationState")
+                            android.util.Log.d("EditableProfileField", "🟢 isLoading: $isLoading")
+                            onSave()
+                        },
+                        enabled = validationState == ValidationState.VALID && !isLoading,
                         colors = ButtonDefaults.buttonColors(
                             containerColor = colors.primaryColor
                         ),
                         contentPadding = PaddingValues(horizontal = 16.dp, vertical = 8.dp),
                         modifier = Modifier.height(36.dp)
                     ) {
-                        Icon(
-                            imageVector = Icons.Default.Check,
-                            contentDescription = null,
-                            modifier = Modifier.size(16.dp)
-                        )
-                        Spacer(modifier = Modifier.width(4.dp))
-                        Text(
-                            text = stringResource(R.string.save_field),
-                            style = MaterialTheme.typography.labelMedium
-                        )
+                        if (isLoading) {
+                            CircularProgressIndicator(
+                                modifier = Modifier.size(16.dp),
+                                color = MaterialTheme.colorScheme.onPrimary,
+                                strokeWidth = 2.dp
+                            )
+                        } else {
+                            Icon(
+                                imageVector = Icons.Default.Check,
+                                contentDescription = null,
+                                modifier = Modifier.size(16.dp)
+                            )
+                            Spacer(modifier = Modifier.width(4.dp))
+                            Text(
+                                text = stringResource(R.string.save_field),
+                                style = MaterialTheme.typography.labelMedium
+                            )
+                        }
                     }
                 }
-            }
-        }
-    }
-}
-
-@Composable
-fun DocumentationSection(
-    identityVerification: IdentityVerification?,
-    verificationStatus: VerificationStatus,
-    isSpanish: Boolean
-) {
-    val colors = LocalRenovaColors.current
-
-    Surface(
-        modifier = Modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(12.dp),
-        color = colors.cardBackground,
-        border = androidx.compose.foundation.BorderStroke(
-            width = 1.5.dp,
-            color = when (verificationStatus){
-                VerificationStatus.REJECTED -> RenovaColors.Error
-                VerificationStatus.VERIFIED -> colors.primaryColor
-                VerificationStatus.PENDING -> RenovaColors.Warning
-                else -> colors.textSecondary
-            }
-        )
-    ) {
-        Column {
-            Surface(
-                modifier = Modifier.fillMaxWidth(),
-                color = when (verificationStatus){
-                    VerificationStatus.REJECTED -> RenovaColors.Error.copy(alpha = 0.125f)
-                    VerificationStatus.VERIFIED -> colors.primaryColor.copy(alpha = 0.124f)
-                    VerificationStatus.PENDING -> RenovaColors.Warning.copy(alpha = 0.125f)
-                    else -> colors.textSecondary.copy(alpha = 0.125f)
-                }
-            ) {
-                Row(
-                    modifier = Modifier.padding(16.dp),
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.spacedBy(8.dp)
-                ) {
-                    Icon(
-                        imageVector = Icons.Default.CameraAlt,
-                        contentDescription = null,
-                        tint = when (verificationStatus){
-                                VerificationStatus.REJECTED -> RenovaColors.Error
-                                VerificationStatus.VERIFIED -> colors.primaryColor
-                                VerificationStatus.PENDING -> RenovaColors.Warning
-                                else -> colors.textSecondary
-                            },
-                        modifier = Modifier.size(16.dp)
-                    )
-                    Text(
-                        text = stringResource(
-                            if (verificationStatus == VerificationStatus.REJECTED)
-                                R.string.documentation_rejected
-                            else
-                                R.string.documentation_submitted
-                        ),
-                        style = MaterialTheme.typography.titleSmall,
-                        color = colors.textPrimary
-                    )
-                }
-            }
-
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(16.dp),
-                horizontalArrangement = Arrangement.spacedBy(8.dp)
-            ) {
-                DocumentCard(
-                    label = stringResource(R.string.selfie),
-                    isRejected = verificationStatus == VerificationStatus.REJECTED,
-                    modifier = Modifier.weight(1f)
-                )
-                DocumentCard(
-                    label = stringResource(R.string.ine_front),
-                    isRejected = verificationStatus == VerificationStatus.REJECTED,
-                    modifier = Modifier.weight(1f)
-                )
-                DocumentCard(
-                    label = stringResource(R.string.ine_back),
-                    isRejected = verificationStatus == VerificationStatus.REJECTED,
-                    modifier = Modifier.weight(1f)
-                )
             }
         }
     }
@@ -371,20 +397,40 @@ fun PersonalInfoCard(
     user: UserData,
     verificationStatus: VerificationStatus,
     isSpanish: Boolean,
-    emailValue: String,
-    phoneValue: String,
-    isEditingEmail: Boolean,
-    isEditingPhone: Boolean,
-    onEditEmail: () -> Unit,
-    onEditPhone: () -> Unit,
-    onSaveEmail: () -> Unit,
-    onSavePhone: () -> Unit,
-    onCancelEmail: () -> Unit,
-    onCancelPhone: () -> Unit,
-    onEmailChange: (String) -> Unit,
-    onPhoneChange: (String) -> Unit
+    viewModel: ProfileViewModel
 ) {
     val colors = LocalRenovaColors.current
+    val updateFieldState by viewModel.updateFieldState.collectAsState()
+    val isLoading = updateFieldState is UpdateFieldState.Loading
+
+    LaunchedEffect(updateFieldState) {
+        when (updateFieldState) {
+            is UpdateFieldState.Success -> {
+                delay(1000)
+                viewModel.resetUpdateState()
+            }
+            is UpdateFieldState.Error -> {
+                delay(3000)
+                viewModel.resetUpdateState()
+            }
+            else -> {}
+        }
+    }
+
+    // Determinar qué campos son editables según el estado
+    val canEditBasicInfo = when (verificationStatus) {
+        VerificationStatus.VERIFIED -> false
+        VerificationStatus.PENDING -> false
+        VerificationStatus.REJECTED, VerificationStatus.NO_DOCS -> true
+        else -> false
+    }
+
+    val canEditContactInfo = when (verificationStatus) {
+        VerificationStatus.VERIFIED -> false
+        VerificationStatus.PENDING -> true
+        VerificationStatus.REJECTED, VerificationStatus.NO_DOCS -> true
+        else -> false
+    }
 
     Surface(
         modifier = Modifier.fillMaxWidth(),
@@ -401,13 +447,12 @@ fun PersonalInfoCard(
         )
     ) {
         Column {
-            // Header de la sección
             Surface(
                 modifier = Modifier.fillMaxWidth(),
                 color = when (verificationStatus) {
                     VerificationStatus.REJECTED -> RenovaColors.Error.copy(alpha = 0.125f)
                     VerificationStatus.VERIFIED -> colors.primaryColor.copy(alpha = 0.125f)
-                    VerificationStatus.PENDING -> colors.textSecondary.copy(alpha = 0.125f)
+                    VerificationStatus.PENDING -> RenovaColors.Warning.copy(alpha = 0.125f)
                     else -> colors.textSecondary.copy(alpha = 0.125f)
                 }
             ) {
@@ -419,7 +464,12 @@ fun PersonalInfoCard(
                     Icon(
                         imageVector = Icons.Default.Person,
                         contentDescription = null,
-                        tint = colors.primaryColor,
+                        tint = when (verificationStatus) {
+                            VerificationStatus.REJECTED -> RenovaColors.Error
+                            VerificationStatus.VERIFIED -> colors.primaryColor
+                            VerificationStatus.PENDING -> RenovaColors.Warning
+                            else -> colors.textSecondary
+                        },
                         modifier = Modifier.size(16.dp)
                     )
                     Text(
@@ -430,14 +480,18 @@ fun PersonalInfoCard(
                 }
             }
 
-            // Campos
             Column(
                 modifier = Modifier.padding(16.dp),
                 verticalArrangement = Arrangement.spacedBy(16.dp)
             ) {
-                if (verificationStatus == VerificationStatus.REJECTED || verificationStatus == VerificationStatus.NO_DOCS ) {
+                // NOMBRE - Siempre mostrar
+                if (canEditBasicInfo) {
                     var nameValue by remember { mutableStateOf(user.name) }
                     var isEditingName by remember { mutableStateOf(false) }
+
+                    LaunchedEffect(user.name) {
+                        nameValue = user.name
+                    }
 
                     EditableProfileField(
                         label = stringResource(R.string.first_name),
@@ -447,29 +501,36 @@ fun PersonalInfoCard(
                         isEditing = isEditingName,
                         onEditClick = { isEditingName = true },
                         onSave = {
-                            // TODO: Implementar actualización
+                            viewModel.updateName(nameValue)
                             isEditingName = false
                         },
                         onCancel = {
                             nameValue = user.name
                             isEditingName = false
                         },
-                        onValueChange = { nameValue = it }
+                        onValueChange = { nameValue = it },
+                        validator = { validateName(it) },
+                        errorMessage = stringResource(R.string.error_name_min_length),
+                        isLoading = isLoading
                     )
                 } else {
+                    // Mostrar solo lectura para usuarios verificados
                     ProfileField(
                         label = stringResource(R.string.first_name),
                         value = user.name,
                         icon = Icons.Default.Person,
-                        isVerified = verificationStatus == VerificationStatus.VERIFIED
+                        verificationStatus = verificationStatus
                     )
                 }
 
-                Divider(color = colors.textSecondary.copy(alpha = 0.1f))
-
-                if (verificationStatus == VerificationStatus.REJECTED || verificationStatus == VerificationStatus.NO_DOCS ) {
+                // APELLIDO - Siempre mostrar
+                if (canEditBasicInfo) {
                     var lastNameValue by remember { mutableStateOf(user.last_name) }
                     var isEditingLastName by remember { mutableStateOf(false) }
+
+                    LaunchedEffect(user.last_name) {
+                        lastNameValue = user.last_name
+                    }
 
                     EditableProfileField(
                         label = stringResource(R.string.last_name),
@@ -479,30 +540,118 @@ fun PersonalInfoCard(
                         isEditing = isEditingLastName,
                         onEditClick = { isEditingLastName = true },
                         onSave = {
-                            // TODO: Implementar actualización
+                            viewModel.updateLastName(lastNameValue)
                             isEditingLastName = false
                         },
                         onCancel = {
                             lastNameValue = user.last_name
                             isEditingLastName = false
                         },
-                        onValueChange = { lastNameValue = it }
+                        onValueChange = { lastNameValue = it },
+                        validator = { validateName(it) },
+                        errorMessage = stringResource(R.string.error_name_min_length),
+                        isLoading = isLoading
                     )
                 } else {
                     ProfileField(
                         label = stringResource(R.string.last_name),
                         value = user.last_name,
                         icon = Icons.Default.Person,
-                        isVerified = verificationStatus == VerificationStatus.VERIFIED
+                        verificationStatus = verificationStatus
                     )
                 }
 
-                Divider(color = colors.textSecondary.copy(alpha = 0.1f))
+                // EMAIL - Siempre mostrar
+                if (canEditContactInfo) {
+                    var emailValue by remember { mutableStateOf(user.email) }
+                    var isEditingEmail by remember { mutableStateOf(false) }
 
-                // CURP - Editable si está rechazado
-                if (verificationStatus == VerificationStatus.REJECTED || verificationStatus == VerificationStatus.NO_DOCS) {
+                    LaunchedEffect(user.email) {
+                        emailValue = user.email
+                    }
+
+                    EditableProfileField(
+                        label = stringResource(R.string.email),
+                        value = emailValue,
+                        icon = Icons.Default.Email,
+                        isVerified = false,
+                        isEditing = isEditingEmail,
+                        onEditClick = { isEditingEmail = true },
+                        onSave = {
+                            viewModel.updateEmail(emailValue)
+                            isEditingEmail = false
+                        },
+                        onCancel = {
+                            emailValue = user.email
+                            isEditingEmail = false
+                        },
+                        onValueChange = { emailValue = it },
+                        validator = { validateEmail(it) },
+                        keyboardType = KeyboardType.Email,
+                        errorMessage = stringResource(R.string.email_invalid),
+                        isLoading = isLoading
+                    )
+                } else {
+                    ProfileField(
+                        label = stringResource(R.string.email),
+                        value = user.email,
+                        icon = Icons.Default.Email,
+                        verificationStatus = verificationStatus
+                    )
+                }
+
+                // TELÉFONO - Siempre mostrar
+                if (canEditContactInfo) {
+                    var phoneValue by remember { mutableStateOf(user.phone) }
+                    var isEditingPhone by remember { mutableStateOf(false) }
+
+                    LaunchedEffect(user.phone) {
+                        phoneValue = user.phone
+                    }
+
+                    EditableProfileField(
+                        label = stringResource(R.string.phone_number),
+                        value = phoneValue,
+                        icon = Icons.Default.Phone,
+                        isVerified = false,
+                        isEditing = isEditingPhone,
+                        onEditClick = { isEditingPhone = true },
+                        onSave = {
+                            viewModel.updatePhone(phoneValue)
+                            isEditingPhone = false
+                        },
+                        onCancel = {
+                            phoneValue = user.phone
+                            isEditingPhone = false
+                        },
+                        onValueChange = {
+                            if (it.all { char -> char.isDigit() }) {
+                                phoneValue = it
+                            }
+                        },
+                        validator = { validatePhone(it) },
+                        keyboardType = KeyboardType.Phone,
+                        maxLength = 10,
+                        errorMessage = stringResource(R.string.error_phone_digits),
+                        isLoading = isLoading
+                    )
+                } else {
+                    ProfileField(
+                        label = stringResource(R.string.phone_number),
+                        value = user.phone,
+                        icon = Icons.Default.Phone,
+                        verificationStatus = verificationStatus
+                    )
+                }
+
+                // CURP - Siempre mostrar
+                if (canEditBasicInfo) {
                     var curpValue by remember { mutableStateOf(user.curp) }
                     var isEditingCurp by remember { mutableStateOf(false) }
+
+                    LaunchedEffect(user.curp) {
+                        curpValue = user.curp
+                    }
 
                     EditableProfileField(
                         label = stringResource(R.string.curp_label),
@@ -512,51 +661,45 @@ fun PersonalInfoCard(
                         isEditing = isEditingCurp,
                         onEditClick = { isEditingCurp = true },
                         onSave = {
+                            viewModel.updateCurp(curpValue)
                             isEditingCurp = false
                         },
                         onCancel = {
                             curpValue = user.curp
                             isEditingCurp = false
                         },
-                        onValueChange = { curpValue = it }
+                        onValueChange = {
+                            if (it.length <= 18) curpValue = it.uppercase()
+                        },
+                        validator = { validateCURP(it) },
+                        maxLength = 18,
+                        errorMessage = "CURP inválido",
+                        isLoading = isLoading
                     )
                 } else {
                     ProfileField(
                         label = stringResource(R.string.curp_label),
                         value = user.curp,
                         icon = Icons.Default.CreditCard,
-                        isVerified = verificationStatus == VerificationStatus.VERIFIED,
+                        verificationStatus = verificationStatus,
                         isMono = true
                     )
                 }
-                Divider(color = colors.textSecondary.copy(alpha = 0.1f))
-
-                EditableProfileField(
-                    label = stringResource(R.string.email),
-                    value = emailValue,
-                    icon = Icons.Default.Email,
-                    isVerified = verificationStatus == VerificationStatus.VERIFIED,
-                    isEditing = isEditingEmail,
-                    onEditClick = onEditEmail,
-                    onSave = onSaveEmail,
-                    onCancel = onCancelEmail,
-                    onValueChange = onEmailChange
-                )
-
-                Divider(color = colors.textSecondary.copy(alpha = 0.1f))
-
-                EditableProfileField(
-                    label = stringResource(R.string.phone_number),
-                    value = phoneValue,
-                    icon = Icons.Default.Phone,
-                    isVerified = verificationStatus == VerificationStatus.VERIFIED,
-                    isEditing = isEditingPhone,
-                    onEditClick = onEditPhone,
-                    onSave = onSavePhone,
-                    onCancel = onCancelPhone,
-                    onValueChange = onPhoneChange
-                )
             }
         }
     }
+}
+
+fun validateName(name: String): Boolean =
+    name.length >= 2 && name.all { it.isLetter() || it.isWhitespace() }
+
+fun validateEmail(email: String): Boolean =
+    android.util.Patterns.EMAIL_ADDRESS.matcher(email).matches()
+
+fun validatePhone(phone: String): Boolean =
+    phone.length == 10 && phone.all { it.isDigit() }
+
+fun validateCURP(curp: String): Boolean {
+    val curpPattern = "^[A-Z]{4}\\d{6}[HM][A-Z]{2}[BCDFGHJKLMNPQRSTVWXYZ]{3}[0-9A-Z]\\d$"
+    return curp.matches(curpPattern.toRegex())
 }

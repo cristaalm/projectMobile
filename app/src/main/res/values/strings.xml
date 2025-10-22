@@ -1,8 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <!-- English -->
-
-    <!-- LoginScreen -->
     <string name="app_name">Renova</string>
     <string name="email">Email</string>
     <string name="email_required">Email is required</string>
@@ -30,7 +27,6 @@
     <string name="connection_timeout">Connection timed out. Try again.</string>
     <string name="error_unknown">Unknown error. Try again.</string>
 
-    <!-- ForgotPasswordScreen -->
     <string name="forgot_password_title">Recover Password</string>
     <string name="enter_email_password">Enter your email address and we\'ll send you a link to reset your password.</string>
     <string name="send_link">SEND LINK</string>
@@ -40,7 +36,6 @@
     <string name="entendido">OK</string>
     <string name="sending">SENDING...</string>
 
-    <!-- StoreScreen -->
     <string name="store_screen_title">Store</string>
     <string name="search_allied_stores">Allied Stores</string>
     <string name="search_icon">Search stores</string>
@@ -57,7 +52,6 @@
     <string name="address_icon_content_description">Address icon</string>
     <string name="view_details_content_description">View details</string>
 
-    <!-- Categories -->
     <string name="category_restaurant">Restaurant</string>
     <string name="category_supermarket">Supermarket</string>
     <string name="category_pharmacy">Pharmacy</string>
@@ -69,13 +63,11 @@
     <string name="category_toys">Toys</string>
     <string name="category_store">Store</string>
 
-    <!-- Loading states -->
     <string name="loading_stores">Loading stores...</string>
     <string name="error_loading_stores">Error loading stores</string>
     <string name="no_stores_available">No stores available</string>
     <string name="no_stores_found">No allied stores found at this moment</string>
 
-    <!--Screen QR-->
     <string name="mycode">My QR Code</string>
     <string name="current_points">Available points</string>
     <string name="points_unit">PTS</string>
@@ -86,7 +78,6 @@
     <string name="instruction_2">Press and hold the products to facilitate the process.</string>
     <string name="instruction_3">Place the recommended products to gain more points.</string>
 
-    <!-- ActivityScreen -->
     <string name="recycling_materials">Recycling Materials</string>
     <string name="earn_points_recycling">Accumulate points for recycling</string>
     <string name="plastic">Plastic</string>
@@ -99,17 +90,14 @@
     <string name="of">of</string>
     <string name="points">pts</string>
 
-    <!-- CustomTopBar -->
     <string name="profile">Profile</string>
     <string name="activity">Activity</string>
     <string name="streak">Streak</string>
 
-    <!-- Content descriptions -->
     <string name="logo_description">Renova Logo</string>
     <string name="bottle_description">Bottle</string>
     <string name="can_description">Can</string>
 
-    <!-- Activities -->
     <string name="points_exchange">Points Exchange</string>
     <string name="product_entry">Product Entry</string>
     <string name="unknown_material">Unknown Material</string>
@@ -117,33 +105,27 @@
     <string name="aluminum_can">Aluminum Can</string>
     <string name="crushed">Crushed</string>
 
-    <!-- Dates -->
     <string name="today">Today</string>
     <string name="yesterday">Yesterday</string>
 
-    <!-- Points -->
     <string name="total_points">Total Points</string>
     <string name="accumulated_points">Pts accumulated</string>
 
-    <!-- Code Mode -->
     <string name="points_code_title">Renova Points Code</string>
     <string name="code_instruction_1">Select your reward first.</string>
     <string name="code_instruction_2">Then choose to pay with Renova Points to display this code and be identified.</string>
     <string name="code_instruction_3">Present the barcode at checkout or to the scanner.</string>
 
-    <!-- Language Selector -->
     <string name="language_spanish_label">Language: Spanish (Mexico)</string>
     <string name="language_english_label">Language: English</string>
     <string name="choose_spanish">Spanish</string>
     <string name="choose_english">English</string>
 
-    <!-- Terms and Conditions -->
     <string name="terms_by_continuing">By continuing, you accept our </string>
     <string name="terms_of_service">Terms of Service</string>
     <string name="terms_and">and</string>
     <string name="privacy_policy">Privacy Policy</string>
 
-    <!-- Terms and Conditions Dialog -->
     <string name="terms_dialog_title">Terms and Conditions</string>
     <string name="terms_dialog_close">Close</string>
     <string name="terms_section_title">Terms of Service</string>
@@ -153,7 +135,6 @@
 
     <string name="privacy_content">1. Information we collect\n\nWe collect information you provide directly to us, such as name, email, and application usage data.\n\n2. Use of information\n\nWe use the collected information to provide, maintain, and improve our services, as well as to communicate with you.\n\n3. Sharing information\n\nWe do not share your personal information with third parties without your consent, except when necessary to provide our services.\n\n4. Security\n\nWe implement security measures to protect your personal information against unauthorized access and misuse.\n\n5. Your rights\n\nYou have the right to access, correct, or delete your personal information at any time.</string>
 
-    <!-- RegisterScreen -->
     <string name="register_title">REGISTER</string>
     <string name="complete_information">Complete your information</string>
     <string name="step_1_of_3">Step 1 of 3</string>
@@ -170,14 +151,12 @@
     <string name="valid">Valid</string>
     <string name="error">Error</string>
 
-    <!-- Validation Errors -->
     <string name="error_name_min_length">Must contain at least 2 letters</string>
     <string name="error_phone_digits">Must contain 10 digits</string>
     <string name="error_password_requirements">Minimum 6 characters, letters and numbers</string>
     <string name="error_passwords_not_match">Passwords do not match</string>
     <string name="error_invalid_field">Invalid field</string>
 
-    <!-- DocumentsScreen -->
     <string name="documents_title">DOCUMENTS</string>
     <string name="upload_official_id">Upload your official ID</string>
     <string name="step_2_of_3">Step 2 of 3</string>
@@ -188,7 +167,6 @@
     <string name="document_curp_number">Document/ID Number</string>
     <string name="error_invalid_curp">Invalid ID. Must have 18 characters</string>
 
-    <!-- VerificationScreen -->
     <string name="verification_title">VERIFICATION</string>
     <string name="take_selfie_subtitle">Take a selfie to\nconfirm your identity</string>
     <string name="step_3_of_3">Step 3 of 3</string>
@@ -205,7 +183,6 @@
     <string name="success">Success</string>
     <string name="completed">Completed!</string>
 
-    <!-- Recompensas -->
     <string name="loading_rewards">Loading rewards...</string>
     <string name="reward_screen_title">Rewards</string>
     <string name="reward_screen_subtitle">Explore and choose the reward you like the most</string>
@@ -226,15 +203,10 @@
     <string name="bottom_nav_qr">Scan</string>
     <string name="bottom_nav_profile">Profile</string>
 
-    <!-- Mensajes de error genéricos -->
-    <string name="error_title2">¡Ocurrió un error!</string>
-    <string name="error_default_message">¡Oops! Sucedió un error, por favor reinicia o vuelve a iniciar sesión</string>
     <string name="close_button">Cerrar</string>
 
-    <!-- Venta -->
     <string name="sale">Sale</string>
 
-    <!-- modal de logout-->
     <string name="modal_logout_title">Log out</string>>
     <string name="modal_logout_message">Are you sure you want to log out?</string>>
     <string name="modal_logout_loading">Logging out…</string>>
@@ -244,7 +216,6 @@
     <string name="error_title">Error</string>
     <string name="error_file_too_large">The selected file exceeds the maximum allowed size of 5MB. Please select a smaller image.</string>
 
-    <!-- Profile -->
     <string name="profile_verified_badge">Verified</string>
     <string name="profile_pending_badge">Pending</string>
     <string name="profile_rejected_badge">Rejected</string>
@@ -272,7 +243,7 @@
     <string name="edit_field">Edit</string>
     <string name="save_field">Save</string>
     <string name="cancel_field">Cancel</string>
-    <string name="resubmit_documentation">Resubmit Documentation</string>
+    <string name="request_verification">Request Verification</string>
     <string name="retry_button">Retry</string>
 
     <string name="tap_to_upload">Tap to upload</string>
@@ -287,4 +258,104 @@
     <string name="change">Change</string>
     <string name="close">Close</string>
     <string name="documentation_rejected_hint">Please, upload your documents again. Make sure that the pictures are clear and readable.</string>
+
+    <string name="recent_activity">Recent activity</string>
+    <string name="last_movements">Last movements</string>
+    <string name="no_activity_yet">No activity yet</string>
+
+    <string name="welcome_home">Welcome!</string>
+    <string name="start_recycling_today">Start recycling today</string>
+
+    <string name="unlocked_achievements">Unlocked achievements</string>
+    <string name="your_achievements_and_ranks">Your achievements and ranks obtained</string>
+
+    <string name="achievement_eco_warrior">Eco Warrior</string>
+    <string name="achievement_recycler_pro">Recycler Pro</string>
+    <string name="achievement_green_hero">Green Hero</string>
+    <string name="achievement_planet_saver">Planet Saver</string>
+
+    <string name="achievement_eco_warrior_desc">Unlocks at 100 points. You\'re starting your eco-friendly journey!</string>
+    <string name="achievement_recycler_pro_desc">Unlocks at 500 points. You\'re a recycling professional!</string>
+    <string name="achievement_green_hero_desc">Unlocks at 1,000 points. A true environmental hero!</string>
+    <string name="achievement_planet_saver_desc">Unlocks at 2,500 points. You\'re saving the planet!</string>
+
+    <string name="unlocked">UNLOCKED!</string>
+    <string name="locked">LOCKED</string>
+    <string name="progress_format">Progress: %1$d / %2$d pts</string>
+
+    <string name="requesting_verification">Requesting…</string>
+    <string name="verification_requested_title">Verification requested!</string>
+    <string name="verification_requested_message">Your verification request has been submitted. An administrator will review your documents soon.</string>
+    <string name="understood">Understood</string>
+
+    <string name="document_uploaded_title">Document uploaded</string>
+    <string name="document_uploaded_message">%1$s has been uploaded successfully</string>
+    <string name="documentation_auto_upload_hint">Images will be uploaded automatically when selected. Once all are uploaded, press the request verification button.</string>
+
+    <string name="documentation_auto_upload_hint_compressed">Images will be automatically compressed and uploaded when selected. Once all are uploaded, press the request verification button.</string>
+    <string name="compressing_image">Compressing image…</string>
+    <string name="image_too_large">Image is too large, it will be compressed automatically</string>
+    <string name="image_processing_error">Error processing image. Try with another photo.</string>
+    <string name="upload_error_title">Upload Error</string>
+    <string name="upload_error_message">Could not upload the document. Please try again.</string>
+    <string name="verification_error_title">Verification Error</string>
+    <string name="verification_error_message">Could not process your verification request. Try again later.</string>
+    <string name="error_invalid_credentials">Incorrect email or password.</string>
+    <string name="error_account_disabled">Your account has been disabled by an administrator.</string>
+    <string name="error_validation_failed">Incorrect email or password.</string>
+    <string name="error_server_error">An unexpected error occurred while trying to log in.</string>
+    <string name="error_server_internal">Internal server error.</string>
+    <string name="error_network">Network connection error</string>
+    <string name="error_generic">Unexpected error</string>
+
+    <string name="recycling">Recycling</string>
+    <string name="reward_exchange">Reward Exchange</string>
+
+    <string name="points_adjustment">Points Adjustment</string>
+    <string name="manual_adjustment">Manual Adjustment</string>
+    <string name="quantity">Quantity</string>
+    <string name="default_notification_channel_id" translatable="false">fcm_default_channel</string>
+    <string name="no_activity_description">Your recycling and reward activities will appear here</string>
+
+    <string name="error_title2">¡Ocurrió un error!</string>
+    <string name="error_default_message">¡Oops! Sucedió un error, por favor reinicia o vuelve a iniciar sesión</string>
+
+    <string name="resubmit_documentation">Resubmit Documentation</string>
+
+    <string name="tour_title_nav_main">Main Navigation</string>
+    <string name="tour_desc_nav_main">Welcome to Renova. Let\'s start with the Store. Tap \'Next\' to continue.</string>
+    <string name="tour_title_store_categories">Categories</string>
+    <string name="tour_desc_store_categories">Here you can filter stores by category. Tap \'All\' to see them all again.</string>
+    <string name="tour_title_store_alliances">Partner Stores</string>
+    <string name="tour_desc_store_alliances">This is the list of our partner stores where you can earn points.</string>
+    <string name="tour_title_store_rewards">View Rewards</string>
+    <string name="tour_desc_store_rewards">Tap a store (or \'Next\') to see the exclusive rewards it offers for your points.</string>
+    <string name="tour_title_qr_button">Your QR Code</string>
+    <string name="tour_desc_qr_button">Great! Now let\'s see your QR code. This is the main button.</string>
+    <string name="tour_title_qr_container">QR for Container</string>
+    <string name="tour_desc_qr_container">Use this QR code to identify yourself at the smart containers and earn points.</string>
+    <string name="tour_title_qr_barcode">Barcode</string>
+    <string name="tour_desc_qr_barcode">You can also tap this button to switch to your barcode. Use it to redeem rewards in stores!</string>
+    <string name="tour_title_profile_button">Your Profile</string>
+    <string name="tour_desc_profile_button">Almost done. Finally, let\'s take a look at your profile.</string>
+    <string name="tour_title_profile_language">Change Language</string>
+    <string name="tour_desc_profile_language">Here you can change the application language.</string>
+    <string name="tour_title_profile_info">Personal Information</string>
+    <string name="tour_desc_profile_info">And here you can view and edit your personal information and verification status.</string>
+    <string name="tour_title_activity_button">Your Activity</string>
+    <string name="tour_desc_activity_button">Finally, let\'s see your activity history. This is the button to access it.</string>
+    <string name="tour_title_navigating">Navigating...</string>
+    <string name="tour_desc_navigating">Loading your history...</string>
+    <string name="tour_title_activity_points">Total Points</string>
+    <string name="tour_desc_activity_points">This card shows the total points you have accumulated.</string>
+    <string name="tour_title_activity_materials">Recycled Materials</string>
+    <string name="tour_desc_activity_materials">Here you see a summary of how much plastic and aluminum you have recycled.</string>
+    <string name="tour_title_activity_history">History</string>
+    <string name="tour_desc_activity_history">And below you will find the detailed history of all your movements. That\'s all!</string>
+
+    <string name="tour_button_exit">Exit</string>
+    <string name="tour_button_prev">Prev</string>
+    <string name="tour_button_next">Next</string>
+    <string name="tour_button_finish">Finish</string>
+
 </resources>

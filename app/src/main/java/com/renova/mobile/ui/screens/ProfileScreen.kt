@@ -1,24 +1,34 @@
 package com.renova.mobile.ui.screens
 
 import android.app.Activity
+import android.graphics.BitmapFactory // <-- de la v2
 import android.net.Uri
+import androidx.compose.foundation.Image // <-- de la v2
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
+import androidx.compose.material3.pulltorefresh.* // <-- de la v1 y v2
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.paint // <-- de la v1
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.asImageBitmap // <-- de la v2
+import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.layout.onGloballyPositioned // <-- de la v1
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
-import com.renova.mobile.ui.components.ErrorDialog
-import com.renova.mobile.ui.components.LoadingState
-import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign // <-- de la v2
 import androidx.compose.ui.unit.dp
 import com.renova.mobile.R
 import com.renova.mobile.network.IdentityVerification
@@ -26,25 +36,11 @@ import com.renova.mobile.network.UserData
 import com.renova.mobile.ui.components.*
 import com.renova.mobile.ui.theme.LocalRenovaColors
 import com.renova.mobile.ui.theme.RenovaColors
+import com.renova.mobile.ui.tour.LocalTourState // <-- de la v1
 import com.renova.mobile.ui.viewmodels.LanguageViewModel
-import com.renova.mobile.ui.viewmodels.ProfileViewModel
-import androidx.compose.foundation.border
-import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.ui.draw.paint
-import androidx.compose.ui.graphics.vector.ImageVector
-import androidx.compose.ui.layout.ContentScale
-import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.text.font.FontWeight
 import com.renova.mobile.ui.viewmodels.ProfileUiState
+import com.renova.mobile.ui.viewmodels.ProfileViewModel
 import com.renova.mobile.ui.viewmodels.VerificationStatus
-import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.pulltorefresh.*
-import com.renova.mobile.ui.components.CustomRefreshIndicator
-
-// --- NUEVO: Imports para el Tour ---
-import androidx.compose.ui.layout.onGloballyPositioned
-import com.renova.mobile.ui.tour.LocalTourState
-// --- FIN DE IMPORTS ---
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -58,7 +54,11 @@ fun ProfileScreen(
     val isRefreshing by profileViewModel.isRefreshing.collectAsState()
     val colors = LocalRenovaColors.current
 
-    // Estado para el pull to refresh
+    // Estados de la v2 para el ErrorModal principal
+    var showMainErrorModal by remember { mutableStateOf(false) }
+    var mainErrorMessage by remember { mutableStateOf("") }
+    var canRetryMainError by remember { mutableStateOf(true) }
+
     val pullToRefreshState = rememberPullToRefreshState()
 
     Box(
@@ -70,7 +70,6 @@ fun ProfileScreen(
             }
 
             is ProfileUiState.Success -> {
-                // Agregar PullToRefreshBox
                 PullToRefreshBox(
                     isRefreshing = isRefreshing,
                     onRefresh = {
@@ -86,35 +85,50 @@ fun ProfileScreen(
                         )
                     }
                 ) {
+                    // Se pasa el profileViewModel (lógica de v2)
                     ProfileContent(
                         user = state.user,
                         identityVerification = state.identityVerification,
                         languageViewModel = languageViewModel,
                         isSpanish = isSpanish,
+                        profileViewModel = profileViewModel, // <-- de la v2
                         onRefresh = { profileViewModel.refreshProfile() }
                     )
                 }
             }
 
             is ProfileUiState.Error -> {
-                // Mostrar contenedor vacío (el ErrorDialog se mostrará encima)
+                // Lógica de error avanzada de la v2
+                val errorState = uiState as ProfileUiState.Error
+                val isAuthError = errorState.message.contains("token", ignoreCase = true) ||
+                        errorState.message.contains("autenticación", ignoreCase = true) ||
+                        errorState.message.contains("sesión", ignoreCase = true)
+
+                LaunchedEffect(Unit) {
+                    mainErrorMessage = errorState.message
+                    canRetryMainError = !isAuthError
+                    showMainErrorModal = true
+                }
                 Box(modifier = Modifier.fillMaxSize())
             }
         }
     }
 
-    // Mostrar ErrorDialog cuando hay un error
-    if (uiState is ProfileUiState.Error) {
-        ErrorDialog(
-            error = (uiState as ProfileUiState.Error).message,
-            onRetry = {
+    // Error modal principal (de la v2)
+    ErrorModal(
+        isVisible = showMainErrorModal,
+        errorMessage = mainErrorMessage,
+        onDismiss = {
+            showMainErrorModal = false
+            mainErrorMessage = ""
+        },
+        onRetry = if (canRetryMainError) {
+            {
+                showMainErrorModal = false
                 profileViewModel.retry()
-            },
-            onDismiss = {
-                profileViewModel.clearError()
             }
-        )
-    }
+        } else null
+    )
 }
 
 @Composable
@@ -123,38 +137,89 @@ private fun ProfileContent(
     identityVerification: IdentityVerification?,
     languageViewModel: LanguageViewModel,
     isSpanish: Boolean,
+    profileViewModel: ProfileViewModel, // <-- de la v2
     onRefresh: () -> Unit
 ) {
     val context = LocalContext.current
     val verificationStatus = VerificationStatus.fromCode(user.verification_status)
     val colors = LocalRenovaColors.current
 
-    // --- NUEVO: Obtener estado del Tour ---
+    // --- NUEVO: Obtener estado del Tour (de la v1) ---
     val tourState = LocalTourState.current
     // --- FIN ---
 
-    // Estados de edición
-    var isEditingEmail by remember { mutableStateOf(false) }
-    var isEditingPhone by remember { mutableStateOf(false) }
-    var emailValue by remember(user.email) { mutableStateOf(user.email) }
-    var phoneValue by remember(user.phone) { mutableStateOf(user.phone) }
+    // Estados del ViewModel (de la v2)
+    val documentImages by profileViewModel.documentImages.collectAsState()
+    val verificationRequestState by profileViewModel.verificationRequestState.collectAsState()
+    val documentUploadState by profileViewModel.documentUploadState.collectAsState()
 
-    // Documentos editables para usuarios rechazados
-    val editDocuments = remember(identityVerification) {
-        mutableStateOf(
-            listOf(
-                DocumentCardData(
-                    type = DocumentType.SELFIE,
-                    imageUrl = identityVerification?.selfie_url
-                ),
-                DocumentCardData(
-                    type = DocumentType.INE_FRONT,
-                    imageUrl = identityVerification?.ine_front_url
-                ),
-                DocumentCardData(
-                    type = DocumentType.INE_BACK,
-                    imageUrl = identityVerification?.ine_back_url
-                )
+    // Estados de los diálogos (de la v2)
+    var showSuccessDialog by remember { mutableStateOf(false) }
+    var showErrorDialog by remember { mutableStateOf(false) }
+    var errorMessage by remember { mutableStateOf("") }
+    var showUploadSuccessDialog by remember { mutableStateOf(false) }
+    var uploadedDocumentName by remember { mutableStateOf("") }
+
+    // Lógica de carga de imágenes (de la v2)
+    LaunchedEffect(Unit) {
+        profileViewModel.loadDocumentImages(user.id, identityVerification)
+    }
+
+    // Observadores de estado (de la v2)
+    LaunchedEffect(verificationRequestState) {
+        when (verificationRequestState) {
+            is ProfileViewModel.VerificationRequestState.Success -> {
+                showSuccessDialog = true
+                profileViewModel.resetVerificationRequestState()
+            }
+            is ProfileViewModel.VerificationRequestState.Error -> {
+                errorMessage = (verificationRequestState as ProfileViewModel.VerificationRequestState.Error).message
+                showErrorDialog = true
+                profileViewModel.resetVerificationRequestState()
+            }
+            else -> {}
+        }
+    }
+
+    LaunchedEffect(documentUploadState) {
+        when (documentUploadState) {
+            is ProfileViewModel.DocumentUploadState.Success -> {
+                val docType = (documentUploadState as ProfileViewModel.DocumentUploadState.Success).documentType
+                uploadedDocumentName = when (docType) {
+                    DocumentType.SELFIE -> context.getString(R.string.selfie)
+                    DocumentType.INE_FRONT -> context.getString(R.string.ine_front)
+                    DocumentType.INE_BACK -> context.getString(R.string.ine_back)
+                }
+                showUploadSuccessDialog = true
+                profileViewModel.resetDocumentUploadState()
+            }
+            is ProfileViewModel.DocumentUploadState.Error -> {
+                val state = documentUploadState as ProfileViewModel.DocumentUploadState.Error
+                errorMessage = state.message
+                showErrorDialog = true
+                profileViewModel.resetDocumentUploadState()
+            }
+            else -> {}
+        }
+    }
+
+    // Documentos basados en el estado del ViewModel (de la v2)
+    val editDocuments = remember(documentImages) {
+        listOf(
+            DocumentCardData(
+                type = DocumentType.SELFIE,
+                imageUrl = if (documentImages.containsKey("selfie"))
+                    "memory://selfie" else null
+            ),
+            DocumentCardData(
+                type = DocumentType.INE_FRONT,
+                imageUrl = if (documentImages.containsKey("ine_front"))
+                    "memory://ine_front" else null
+            ),
+            DocumentCardData(
+                type = DocumentType.INE_BACK,
+                imageUrl = if (documentImages.containsKey("ine_back"))
+                    "memory://ine_back" else null
             )
         )
     }
@@ -164,16 +229,17 @@ private fun ProfileContent(
             .fillMaxSize()
             .verticalScroll(rememberScrollState())
     ) {
-        // Header
+        // Header fusionado
         ProfileHeader(
             user = user,
             verificationStatus = verificationStatus,
-            languageViewModel = languageViewModel
+            languageViewModel = languageViewModel,
+            selfieBytes = documentImages["selfie"] // <-- de la v2
         )
 
         // Contenido
         Column(
-            modifier = Modifier.padding(16.dp)
+            modifier = Modifier.padding(10.dp) // <-- padding de la v2
         ) {
             // Banner de estado
             VerificationBanner(
@@ -181,41 +247,19 @@ private fun ProfileContent(
                 rejectionReason = identityVerification?.rejection_reason,
                 isSpanish = isSpanish
             )
-            Spacer(modifier = Modifier.height(8.dp))
+            Spacer(modifier = Modifier.height(12.dp)) // <-- spacer de la v2
 
-            // Card de información personal
-            // --- MODIFICADO: Añadir Box, modifier y DisposableEffect ---
+            // Card de información personal (fusionada)
+            // --- MODIFICADO: Añadir Box, modifier y DisposableEffect (de la v1) ---
             Box(modifier = Modifier.onGloballyPositioned { coords ->
                 tourState.registerTarget("profile_info_card", coords)
             }) {
+                // Se usa la firma de PersonalInfoCard de la v2
                 PersonalInfoCard(
                     user = user,
                     verificationStatus = verificationStatus,
                     isSpanish = isSpanish,
-                    emailValue = emailValue,
-                    phoneValue = phoneValue,
-                    isEditingEmail = isEditingEmail,
-                    isEditingPhone = isEditingPhone,
-                    onEditEmail = { isEditingEmail = true },
-                    onEditPhone = { isEditingPhone = true },
-                    onSaveEmail = {
-                        // TODO: Implementar actualización de email
-                        isEditingEmail = false
-                    },
-                    onSavePhone = {
-                        // TODO: Implementar actualización de teléfono
-                        isEditingPhone = false
-                    },
-                    onCancelEmail = {
-                        emailValue = user.email
-                        isEditingEmail = false
-                    },
-                    onCancelPhone = {
-                        phoneValue = user.phone
-                        isEditingPhone = false
-                    },
-                    onEmailChange = { emailValue = it },
-                    onPhoneChange = { phoneValue = it }
+                    viewModel = profileViewModel
                 )
             }
             DisposableEffect("profile_info_card") {
@@ -223,46 +267,40 @@ private fun ProfileContent(
             }
             // --- FIN DE MODIFICACIÓN ---
 
-            Spacer(modifier = Modifier.height(16.dp))
+            Spacer(modifier = Modifier.height(12.dp))
 
-            // Sección de documentos
-            // Sección de documentos
+            // Sección de documentos (de la v2)
             if (identityVerification != null) {
-                // USAR SIEMPRE DocumentsUploadSection para todos los estados
                 DocumentsUploadSection(
-                    documents = editDocuments.value,
+                    documents = editDocuments,
                     verificationStatus = verificationStatus,
+                    documentImages = documentImages,
+                    documentUploadState = documentUploadState,
                     onImageSelected = { type: DocumentType, uri: Uri ->
-                        // Solo permitir cambios si está rechazado
-                        if (verificationStatus == VerificationStatus.REJECTED) {
-                            editDocuments.value = editDocuments.value.map { doc ->
-                                if (doc.type == type) {
-                                    doc.copy(imageUri = uri)
-                                } else {
-                                    doc
-                                }
-                            }
-                        }
+                        // Llama al ViewModel (lógica de v2)
+                        profileViewModel.uploadDocument(type, uri, context)
                     }
                 )
 
-                Spacer(modifier = Modifier.height(16.dp))
+                Spacer(modifier = Modifier.height(12.dp))
 
-                // Botón de reenviar SOLO si está rechazado
+                // Botón de reenviar con estado de carga (de la v2)
                 if (verificationStatus == VerificationStatus.REJECTED) {
-                    val allDocumentsReady = editDocuments.value.all { doc ->
-                        doc.imageUri != null || doc.imageUrl != null
+                    val allDocumentsReady = editDocuments.all { doc ->
+                        doc.imageUrl != null
                     }
+
+                    val isLoading = verificationRequestState is ProfileViewModel.VerificationRequestState.Loading
 
                     Button(
                         onClick = {
-                            // TODO: Implementar reenvío de documentación
+                            profileViewModel.requestVerification()
                         },
                         modifier = Modifier
                             .fillMaxWidth()
                             .height(56.dp)
                             .then(
-                                if (allDocumentsReady) {
+                                if (allDocumentsReady && !isLoading) {
                                     Modifier.border(
                                         width = 1.5.dp,
                                         color = RenovaColors.Warning,
@@ -270,22 +308,12 @@ private fun ProfileContent(
                                     )
                                 } else Modifier
                             ),
-                        enabled = allDocumentsReady,
+                        enabled = allDocumentsReady && !isLoading,
                         colors = ButtonDefaults.buttonColors(
                             containerColor = RenovaColors.Warning,
-                            disabledContainerColor = when (verificationStatus) {
-                                VerificationStatus.REJECTED -> RenovaColors.Error
-                                VerificationStatus.VERIFIED -> colors.primaryColor
-                                VerificationStatus.PENDING -> RenovaColors.Warning
-                                else -> colors.textSecondary
-                            },
+                            disabledContainerColor = colors.textSecondary,
                             contentColor = Color.White,
-                            disabledContentColor = when (verificationStatus) {
-                                VerificationStatus.REJECTED -> RenovaColors.Error
-                                VerificationStatus.VERIFIED -> colors.primaryColor
-                                VerificationStatus.PENDING -> RenovaColors.Warning
-                                else -> colors.textSecondary
-                            },
+                            disabledContentColor = Color.White.copy(alpha = 0.6f)
                         ),
                         shape = RoundedCornerShape(12.dp),
                         elevation = ButtonDefaults.buttonElevation(
@@ -294,24 +322,122 @@ private fun ProfileContent(
                             disabledElevation = 0.dp
                         )
                     ) {
-                        Icon(
-                            imageVector = Icons.Default.Refresh,
-                            contentDescription = null,
-                            modifier = Modifier.size(22.dp)
-                        )
-                        Spacer(modifier = Modifier.width(12.dp))
+                        if (isLoading) {
+                            CircularProgressIndicator(
+                                modifier = Modifier.size(22.dp),
+                                color = Color.White,
+                                strokeWidth = 2.dp
+                            )
+                        } else {
+                            Icon(
+                                imageVector = Icons.Default.Refresh,
+                                contentDescription = null,
+                                modifier = Modifier.size(22.dp)
+                            )
+                        }
+                        Spacer(modifier = Modifier.width(10.dp))
                         Text(
-                            text = stringResource(R.string.resubmit_documentation),
+                            text = if (isLoading)
+                                stringResource(R.string.requesting_verification)
+                            else
+                                stringResource(R.string.request_verification),
                             style = MaterialTheme.typography.titleMedium,
-                            fontWeight = androidx.compose.ui.text.font.FontWeight.SemiBold
+                            fontWeight = FontWeight.SemiBold
                         )
                     }
                 }
 
-                Spacer(modifier = Modifier.height(24.dp))
+                Spacer(modifier = Modifier.height(12.dp))
             }
         }
     }
+
+    // --- Diálogos de la v2 ---
+    if (showSuccessDialog) {
+        AlertDialog(
+            onDismissRequest = { showSuccessDialog = false },
+            icon = {
+                Icon(
+                    imageVector = Icons.Default.CheckCircle,
+                    contentDescription = null,
+                    tint = colors.primaryColor,
+                    modifier = Modifier.size(48.dp)
+                )
+            },
+            title = {
+                Text(
+                    text = stringResource(R.string.verification_requested_title),
+                    style = MaterialTheme.typography.titleLarge,
+                    textAlign = TextAlign.Center
+                )
+            },
+            text = {
+                Text(
+                    text = stringResource(R.string.verification_requested_message),
+                    style = MaterialTheme.typography.bodyMedium,
+                    textAlign = TextAlign.Center,
+                    color = colors.textSecondary
+                )
+            },
+            confirmButton = {
+                TextButton(
+                    onClick = { showSuccessDialog = false }
+                ) {
+                    Text(stringResource(R.string.understood))
+                }
+            },
+            containerColor = colors.surface,
+            shape = RoundedCornerShape(16.dp)
+        )
+    }
+
+    if (showUploadSuccessDialog) {
+        AlertDialog(
+            onDismissRequest = { showUploadSuccessDialog = false },
+            icon = {
+                Icon(
+                    imageVector = Icons.Default.CloudDone,
+                    contentDescription = null,
+                    tint = colors.primaryColor,
+                    modifier = Modifier.size(48.dp)
+                )
+            },
+            title = {
+                Text(
+                    text = stringResource(R.string.document_uploaded_title),
+                    style = MaterialTheme.typography.titleLarge,
+                    textAlign = TextAlign.Center
+                )
+            },
+            text = {
+                Text(
+                    text = stringResource(R.string.document_uploaded_message, uploadedDocumentName),
+                    style = MaterialTheme.typography.bodyMedium,
+                    textAlign = TextAlign.Center,
+                    color = colors.textSecondary
+                )
+            },
+            confirmButton = {
+                TextButton(
+                    onClick = { showUploadSuccessDialog = false }
+                ) {
+                    Text(stringResource(R.string.accept))
+                }
+            },
+            containerColor = colors.surface,
+            shape = RoundedCornerShape(16.dp)
+        )
+    }
+
+    ErrorModal(
+        isVisible = showErrorDialog,
+        errorMessage = errorMessage,
+        onDismiss = {
+            showErrorDialog = false
+            errorMessage = ""
+        },
+        onRetry = null
+    )
 }
 
 @Composable
@@ -319,17 +445,26 @@ fun ProfileHeader(
     user: UserData,
     verificationStatus: VerificationStatus,
     languageViewModel: LanguageViewModel,
+    selfieBytes: ByteArray? = null // <-- Parámetro de la v2
 ) {
     val currentLanguage by languageViewModel.currentLanguage.collectAsState()
     val isSpanish = currentLanguage == "es"
     val context = LocalContext.current
     val colors = LocalRenovaColors.current
 
-    // --- NUEVO: Obtener estado del Tour ---
+    // --- NUEVO: Obtener estado del Tour (de la v1) ---
     val tourState = LocalTourState.current
     // --- FIN ---
 
+    // Convertir ByteArray a Bitmap (de la v2)
+    val selfieBitmap = remember(selfieBytes) {
+        selfieBytes?.let { bytes ->
+            BitmapFactory.decodeByteArray(bytes, 0, bytes.size)
+        }
+    }
+
     Box(
+        // Se usa el layout de la v1 (con .paint y altura fija)
         modifier = Modifier
             .fillMaxWidth()
             .height(345.dp)
@@ -353,9 +488,9 @@ fun ProfileHeader(
                 if (verificationStatus != null) {
                     Surface(
                         shape = RoundedCornerShape(22.dp),
-                        color =  colors.surface.copy(alpha = 0.3f),
+                        color = colors.surface.copy(alpha = 0.3f),
                         modifier = Modifier
-                            .width(130.dp)
+                            .width(130.dp) // <-- de la v1
                             .height(44.dp)
                     ) {
                         Row(
@@ -393,7 +528,7 @@ fun ProfileHeader(
                     Spacer(modifier = Modifier.width(90.dp))
                 }
 
-                // --- MODIFICADO: Añadir Box, modifier y DisposableEffect ---
+                // --- MODIFICADO: Añadir Box, modifier y DisposableEffect (de la v1) ---
                 Box(modifier = Modifier.onGloballyPositioned { coords ->
                     tourState.registerTarget("profile_language_toggle", coords)
                 }) {
@@ -428,12 +563,23 @@ fun ProfileHeader(
                             modifier = Modifier.fillMaxSize(),
                             contentAlignment = Alignment.Center
                         ) {
-                            Icon(
-                                imageVector = Icons.Default.Person,
-                                contentDescription = null,
-                                tint = colors.primaryColor,
-                                modifier = Modifier.size(48.dp)
-                            )
+                            // --- Lógica de Selfie de la v2 ---
+                            if (selfieBitmap != null) {
+                                Image(
+                                    bitmap = selfieBitmap.asImageBitmap(),
+                                    contentDescription = null,
+                                    contentScale = ContentScale.Crop,
+                                    modifier = Modifier.fillMaxSize()
+                                )
+                            } else {
+                                Icon(
+                                    imageVector = Icons.Default.Person,
+                                    contentDescription = null,
+                                    tint = colors.primaryColor,
+                                    modifier = Modifier.size(48.dp)
+                                )
+                            }
+                            // --- Fin de lógica de Selfie ---
                         }
                     }
 
@@ -466,6 +612,7 @@ fun ProfileHeader(
 
                 Spacer(modifier = Modifier.height(8.dp))
 
+                // --- Sección de Puntos (de la v1) ---
                 Surface(
                     shape = RoundedCornerShape(20.dp),
                     color = colors.surface.copy(alpha = 0.2f)
@@ -497,6 +644,7 @@ fun ProfileHeader(
                         )
                     }
                 }
+                // --- Fin de Sección de Puntos ---
             }
         }
     }
@@ -504,7 +652,6 @@ fun ProfileHeader(
 
 @Composable
 fun VerificationBanner(
-    // ... (Sin cambios)
     verificationStatus: VerificationStatus,
     rejectionReason: String?,
     isSpanish: Boolean
@@ -602,7 +749,7 @@ fun VerificationBanner(
                         color = colors.textPrimary,
                         style = MaterialTheme.typography.titleSmall
                     )
-                    Spacer(modifier = Modifier.height(4.dp))
+                    Spacer(modifier = Modifier.height(6.dp)) // <-- Spacer de la v2
                     Text(
                         text = description,
                         color = colors.textSecondary.copy(alpha = 0.95f),
@@ -612,5 +759,5 @@ fun VerificationBanner(
             }
         }
     }
-    Spacer(modifier = Modifier.height(16.dp))
+    // Se elimina el spacer extra que estaba aquí en la v1
 }

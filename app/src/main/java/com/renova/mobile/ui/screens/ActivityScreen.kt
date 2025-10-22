@@ -1,52 +1,60 @@
 package com.renova.mobile.ui.screens
 
-import androidx.compose.animation.Crossfade
-import androidx.compose.animation.core.tween
+import androidx.compose.animation.Crossfade // <-- de v1
+import androidx.compose.animation.core.tween // <-- de v1
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable // <-- de v2
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Refresh
+import androidx.compose.material.icons.filled.Refresh // <-- de v1
+import androidx.compose.material.icons.filled.ShoppingCart // <-- de v2
+import androidx.compose.material.icons.filled.Recycling // <-- de v2
+import androidx.compose.material.icons.filled.History // <-- de v2
+import androidx.compose.material.icons.filled.Person // <-- de v2
 import androidx.compose.material3.*
 import androidx.compose.material3.pulltorefresh.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.draw.drawBehind
+import androidx.compose.ui.draw.drawBehind // <-- de v1
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.Paint
-import androidx.compose.ui.graphics.drawscope.drawIntoCanvas
-import androidx.compose.ui.graphics.graphicsLayer
-import androidx.compose.ui.graphics.toArgb
+import androidx.compose.ui.graphics.Paint // <-- de v1
+import androidx.compose.ui.graphics.drawscope.drawIntoCanvas // <-- de v1
+import androidx.compose.ui.graphics.graphicsLayer // <-- de v1
+import androidx.compose.ui.graphics.toArgb // <-- de v1
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.unit.Dp
+import androidx.compose.ui.text.style.TextOverflow // <-- de v2
+import androidx.compose.ui.unit.Dp // <-- de v1
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.renova.mobile.R
 import com.renova.mobile.network.ActivityItem
 import com.renova.mobile.ui.theme.LocalRenovaColors
+import com.renova.mobile.ui.theme.PoppinsFontFamily // <-- de v2
 import com.renova.mobile.ui.theme.RenovaColorScheme
+import com.renova.mobile.ui.theme.RenovaColors // <-- de v2
 import com.renova.mobile.ui.viewmodels.ActivityViewModel
-import java.text.SimpleDateFormat
-import java.util.*
+import java.text.SimpleDateFormat // <-- de v1
+import java.util.* // <-- de v1
 import com.renova.mobile.ui.components.*
 
-// --- NUEVO: Imports para el Tour ---
+// --- NUEVO: Imports para el Tour (de v1) ---
 import androidx.compose.ui.layout.onGloballyPositioned
 import com.renova.mobile.ui.tour.LocalTourState
 // --- FIN DE IMPORTS ---
 
 
+// --- Modifier de v1 ---
 fun Modifier.greenShadow(
-    // ... (sin cambios)
     color: Color = Color(0xFF4CAF50),
     alpha: Float = 0.15f,
     borderRadius: Dp = 16.dp,
@@ -84,13 +92,30 @@ fun Modifier.greenShadow(
 fun ActivityScreen(
     viewModel: ActivityViewModel = androidx.lifecycle.viewmodel.compose.viewModel()
 ) {
-    // ... (sin cambios)
+    // --- Lógica de v2 (más avanzada) ---
     val renovaColors = LocalRenovaColors.current
     val state by viewModel.state.collectAsState()
     val pullToRefreshState = rememberPullToRefreshState()
+    val sheetState = rememberModalBottomSheetState()
+    var selectedActivity by remember { mutableStateOf<ActivityItem?>(null) }
+    var showErrorModal by remember { mutableStateOf(false) }
+
+    var isFirstLoad by remember { mutableStateOf(true) }
 
     LaunchedEffect(Unit) {
         viewModel.loadHistory(1)
+    }
+
+    LaunchedEffect(state.activities.isNotEmpty()) {
+        if (state.activities.isNotEmpty() && isFirstLoad){
+            isFirstLoad = false
+        }
+    }
+
+    LaunchedEffect(state.error) {
+        if (state.error != null) {
+            showErrorModal = true
+        }
     }
 
     Box(
@@ -104,6 +129,7 @@ fun ActivityScreen(
             state.error != null && state.activities.isEmpty() -> {
                 Box(modifier = Modifier.fillMaxSize())
             }
+
             else -> {
                 PullToRefreshBox(
                     isRefreshing = state.isLoading && state.activities.isNotEmpty(),
@@ -133,7 +159,11 @@ fun ActivityScreen(
                             state = state,
                             renovaColors = renovaColors,
                             onPreviousPage = { viewModel.previousPage() },
-                            onNextPage = { viewModel.nextPage() }
+                            onNextPage = { viewModel.nextPage() },
+                            shouldAnimatePoints = isFirstLoad,
+                            onActivityClick = { activity ->
+                                selectedActivity = activity
+                            }
                         )
                     }
                 }
@@ -141,27 +171,44 @@ fun ActivityScreen(
         }
     }
 
-    if (state.error != null && state.activities.isEmpty()) {
-        ErrorDialog(
-            error = state.error ?: stringResource(R.string.unknown_error),
-            onRetry = {
-                viewModel.clearError()
-                viewModel.retry()
-            },
-            onDismiss = {
-                viewModel.clearError()
-            }
-        )
+    // Modal de detalle de actividad (de v2)
+    selectedActivity?.let { activity ->
+        ModalBottomSheet(
+            onDismissRequest = { selectedActivity = null },
+            sheetState = sheetState,
+            containerColor = renovaColors.cardBackground,
+            shape = RoundedCornerShape(topStart = 24.dp, topEnd = 24.dp)
+        ) {
+            DetailSheet(activity = activity)
+        }
     }
+
+    // Modal de error con opción de reintentar (de v2)
+    RetryableErrorModal(
+        isVisible = showErrorModal,
+        errorMessage = state.error ?: stringResource(R.string.unknown_error),
+        onDismiss = {
+            showErrorModal = false
+            viewModel.clearError()
+        },
+        onRetry = {
+            showErrorModal = false
+            viewModel.clearError()
+            viewModel.retry()
+        }
+    )
 }
+
 @Composable
 private fun ActivityContent(
     state: com.renova.mobile.ui.viewmodels.ActivityState,
     renovaColors: RenovaColorScheme,
     onPreviousPage: () -> Unit,
-    onNextPage: () -> Unit
+    onNextPage: () -> Unit,
+    shouldAnimatePoints: Boolean = false,
+    onActivityClick: (ActivityItem) -> Unit
 ) {
-    // --- NUEVO: Obtener estado del Tour ---
+    // --- NUEVO: Obtener estado del Tour (de v1) ---
     val tourState = LocalTourState.current
     // --- FIN ---
 
@@ -173,7 +220,6 @@ private fun ActivityContent(
     ) {
         item {
             androidx.compose.animation.AnimatedVisibility(
-                // ... (sin cambios)
                 visible = true,
                 enter = androidx.compose.animation.fadeIn(
                     animationSpec = androidx.compose.animation.core.tween(durationMillis = 600)
@@ -182,102 +228,21 @@ private fun ActivityContent(
                     animationSpec = androidx.compose.animation.core.tween(durationMillis = 600)
                 )
             ) {
-                Card(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(top = 16.dp, start = 18.dp, end = 20.dp, bottom = 10.dp)
-                        .height(140.dp)
-                        // --- MODIFICADO: Añadir onGloballyPositioned ---
-                        .onGloballyPositioned { coords ->
-                            tourState.registerTarget("activity_points_card", coords)
-                        },
-                    shape = RoundedCornerShape(24.dp),
-                    colors = CardDefaults.cardColors(containerColor = Color.Transparent),
-                    elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
-                ) {
-                    // ... (Contenido de la Card de puntos sin cambios)
-                    Box(modifier = Modifier.fillMaxSize()) {
-                        Image(
-                            painter = painterResource(id = R.drawable.fondo),
-                            contentDescription = null,
-                            contentScale = ContentScale.Crop,
-                            colorFilter = androidx.compose.ui.graphics.ColorFilter.tint(
-                                Color(0xFF05D16E),
-                                blendMode = androidx.compose.ui.graphics.BlendMode.Modulate
-                            ),
-                            modifier = Modifier
-                                .matchParentSize()
-                                .clip(RoundedCornerShape(24.dp))
-                        )
-
-                        Row(
-                            modifier = Modifier
-                                .fillMaxSize()
-                                .padding(24.dp),
-                            horizontalArrangement = Arrangement.SpaceBetween,
-                            verticalAlignment = Alignment.CenterVertically
-                        ) {
-                            Column(
-                                modifier = Modifier.weight(1f),
-                                verticalArrangement = Arrangement.Center
-                            ) {
-                                Text(
-                                    text = stringResource(R.string.total_points),
-                                    style = MaterialTheme.typography.titleMedium,
-                                    color = Color.White,
-                                    fontWeight = FontWeight.SemiBold,
-                                    fontSize = 16.sp
-                                )
-                                Spacer(modifier = Modifier.height(0.dp))
-                                Row {
-                                    Text(
-                                        text = "${state.totalPoints}",
-                                        style = MaterialTheme.typography.displayLarge,
-                                        color = Color.White,
-                                        fontSize = 52.sp,
-                                        fontWeight = FontWeight.Bold,
-                                        lineHeight = 52.sp
-                                    )
-
-                                    Spacer(modifier = Modifier.width(2.dp))
-
-                                    Text(
-                                        modifier = Modifier.padding(top = 22.dp),
-                                        text = stringResource(R.string.points_unit),
-                                        style = MaterialTheme.typography.displayLarge,
-                                        color = Color.White,
-                                        fontSize = 30.sp,
-                                        fontWeight = FontWeight.Bold,
-                                        lineHeight = 30.sp
-                                    )
-                                }
-                            }
-
-                            Box(
-                                modifier = Modifier
-                                    .size(90.dp)
-                                    .background(
-                                        Color.White.copy(alpha = 0.15f),
-                                        shape = RoundedCornerShape(20.dp)
-                                    ),
-                                contentAlignment = Alignment.Center
-                            ) {
-                                Image(
-                                    painter = painterResource(id = R.drawable.leaf),
-                                    contentDescription = null,
-                                    modifier = Modifier.size(45.dp),
-                                    colorFilter = androidx.compose.ui.graphics.ColorFilter.tint(Color.White.copy(alpha = 0.9f))
-                                )
-                            }
-                        }
-                    }
+                // --- MODIFICADO: Añadir Box con hook del tour (v1) alrededor de la llamada de v2 ---
+                Box(modifier = Modifier.onGloballyPositioned { coords ->
+                    tourState.registerTarget("activity_points_card", coords)
+                }) {
+                    AnimatedPointsCardActivity(
+                        totalPoints = state.totalPoints,
+                        renovaColors = renovaColors,
+                        shouldAnimate = shouldAnimatePoints
+                    )
                 }
             }
         }
 
         item {
             androidx.compose.animation.AnimatedVisibility(
-                // ... (sin cambios)
                 visible = true,
                 enter = androidx.compose.animation.fadeIn(
                     animationSpec = androidx.compose.animation.core.tween(durationMillis = 600, delayMillis = 100)
@@ -292,12 +257,17 @@ private fun ActivityContent(
                     Text(
                         text = stringResource(R.string.recycling_materials),
                         style = MaterialTheme.typography.titleLarge,
-                        color = renovaColors.textPrimary
+                        color = renovaColors.textPrimary,
+                        fontWeight = FontWeight.Bold, // <-- de v2
+                        fontSize = 21.sp, // <-- de v2
+                        fontFamily = PoppinsFontFamily // <-- de v2
                     )
                     Text(
                         text = stringResource(R.string.earn_points_recycling),
                         style = MaterialTheme.typography.bodyMedium,
-                        color = renovaColors.textSecondary
+                        color = renovaColors.textSecondary,
+                        fontSize = 14.sp, // <-- de v2
+                        fontFamily = PoppinsFontFamily // <-- de v2
                     )
                 }
             }
@@ -305,7 +275,6 @@ private fun ActivityContent(
 
         item {
             androidx.compose.animation.AnimatedVisibility(
-                // ... (sin cambios)
                 visible = true,
                 enter = androidx.compose.animation.fadeIn(
                     animationSpec = androidx.compose.animation.core.tween(durationMillis = 600, delayMillis = 200)
@@ -318,7 +287,7 @@ private fun ActivityContent(
                     modifier = Modifier
                         .fillMaxWidth()
                         .padding(horizontal = 20.dp, vertical = 8.dp)
-                        // --- MODIFICADO: Añadir onGloballyPositioned ---
+                        // --- MODIFICADO: Añadir hook del tour (v1) ---
                         .onGloballyPositioned { coords ->
                             tourState.registerTarget("activity_materials_row", coords)
                         },
@@ -352,7 +321,6 @@ private fun ActivityContent(
 
         item {
             androidx.compose.animation.AnimatedVisibility(
-                // ... (sin cambios)
                 visible = true,
                 enter = androidx.compose.animation.fadeIn(
                     animationSpec = androidx.compose.animation.core.tween(durationMillis = 600, delayMillis = 300)
@@ -364,7 +332,7 @@ private fun ActivityContent(
                 Column(
                     modifier = Modifier
                         .padding(start = 20.dp, top = 12.dp, bottom = 8.dp)
-                        // --- MODIFICADO: Añadir onGloballyPositioned ---
+                        // --- MODIFICADO: Añadir hook del tour (v1) ---
                         .onGloballyPositioned { coords ->
                             tourState.registerTarget("activity_history_title", coords)
                         }
@@ -372,18 +340,23 @@ private fun ActivityContent(
                     Text(
                         text = stringResource(R.string.history),
                         style = MaterialTheme.typography.titleLarge,
-                        color = renovaColors.textPrimary
+                        color = renovaColors.textPrimary,
+                        fontWeight = FontWeight.Bold, // <-- de v2
+                        fontSize = 21.sp, // <-- de v2
+                        fontFamily = PoppinsFontFamily // <-- de v2
                     )
                     Text(
                         text = stringResource(R.string.activity_record),
                         style = MaterialTheme.typography.bodyMedium,
-                        color = renovaColors.textSecondary
+                        color = renovaColors.textSecondary,
+                        fontSize = 14.sp, // <-- de v2
+                        fontFamily = PoppinsFontFamily // <-- de v2
                     )
                 }
             }
         }
 
-        // --- NUEVO: DisposableEffects agrupados ---
+        // --- NUEVO: DisposableEffects agrupados (de v1) ---
         item {
             DisposableEffect("activity_points_card") {
                 onDispose { tourState.unregisterTarget("activity_points_card") }
@@ -397,59 +370,187 @@ private fun ActivityContent(
         }
         // --- FIN DE BLOQUE NUEVO ---
 
-        items(state.activities.size) { index ->
-            androidx.compose.animation.AnimatedVisibility(
-                // ... (sin cambios)
-                visible = true,
-                enter = androidx.compose.animation.fadeIn(
-                    animationSpec = androidx.compose.animation.core.tween(
-                        durationMillis = 400,
-                        delayMillis = 400 + (index * 50)
-                    )
-                ) + androidx.compose.animation.slideInVertically(
-                    initialOffsetY = { 20 },
-                    animationSpec = androidx.compose.animation.core.tween(
-                        durationMillis = 400,
-                        delayMillis = 400 + (index * 50)
-                    )
-                )
-            ) {
-                Box(modifier = Modifier.padding(horizontal = 18.dp)) {
-                    ActivityCard(
-                        item = state.activities[index],
-                        renovaColors = renovaColors
-                    )
+        // --- Lógica de lista de v2 (con estado vacío) ---
+        if (state.activities.isEmpty()) {
+            item {
+                EmptyStateInline(renovaColors = renovaColors)
+            }
+        } else {
+            item {
+                Column(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 24.dp),
+                    verticalArrangement = Arrangement.spacedBy(0.dp)
+                ) {
+                    state.activities.forEachIndexed { index, activity ->
+                        ActivityHistoryCard(
+                            activity = activity,
+                            colors = renovaColors,
+                            onClick = {
+                                onActivityClick(activity)
+                            }
+                        )
+                        if (index < state.activities.size - 1) {
+                            Divider(
+                                color = RenovaColors.PrimaryColor,
+                                thickness = 1.dp,
+                                modifier = Modifier.padding(vertical = 3.dp)
+                            )
+                        }
+                    }
                 }
             }
-        }
 
-        item {
-            androidx.compose.animation.AnimatedVisibility(
-                // ... (sin cambios)
-                visible = true,
-                enter = androidx.compose.animation.fadeIn(
-                    animationSpec = androidx.compose.animation.core.tween(
-                        durationMillis = 600,
-                        delayMillis = 500 + (state.activities.size * 50)
+            item {
+                androidx.compose.animation.AnimatedVisibility(
+                    visible = true,
+                    enter = androidx.compose.animation.fadeIn(
+                        animationSpec = androidx.compose.animation.core.tween(
+                            durationMillis = 600,
+                            delayMillis = 500 + (state.activities.size * 50)
+                        )
                     )
-                )
-            ) {
-                PaginationControls(
-                    currentPage = state.currentPage,
-                    totalPages = state.totalPages,
-                    isLoading = state.isLoading,
-                    renovaColors = renovaColors,
-                    onPreviousPage = onPreviousPage,
-                    onNextPage = onNextPage
-                )
+                ) {
+                    PaginationControls(
+                        currentPage = state.currentPage,
+                        totalPages = state.totalPages,
+                        isLoading = state.isLoading,
+                        renovaColors = renovaColors,
+                        onPreviousPage = onPreviousPage,
+                        onNextPage = onNextPage
+                    )
+                }
             }
         }
     }
 }
 
+// --- Composable de v2 ---
+@Composable
+fun ActivityHistoryCard(
+    activity: ActivityItem,
+    colors: RenovaColorScheme,
+    onClick: () -> Unit = {}
+) {
+    val context = LocalContext.current
+
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clickable { onClick() }
+            .padding(horizontal = 16.dp, vertical = 12.dp),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        // Icono según el tipo de actividad
+        val iconData = when (activity.type_history) {
+            1 -> Pair(Icons.Default.ShoppingCart, RenovaColors.PrimaryColor)
+            2 -> Pair(Icons.Default.Recycling, RenovaColors.PrimaryColor)
+            3 -> Pair(Icons.Default.Person, RenovaColors.PrimaryColor)
+            else -> Pair(Icons.Default.History, RenovaColors.PrimaryColor)
+        }
+        val icon = iconData.first
+        val iconColor = iconData.second
+
+        Icon(
+            imageVector = icon,
+            contentDescription = null,
+            tint = iconColor,
+            modifier = Modifier.size(32.dp)
+        )
+
+        Spacer(modifier = Modifier.width(16.dp))
+
+        Column(
+            modifier = Modifier.weight(1f)
+        ) {
+            Text(
+                text = when (activity.type_history) {
+                    1 -> stringResource(R.string.reward_exchange)
+                    2 -> stringResource(R.string.recycling)
+                    3 -> stringResource(R.string.points_adjustment)
+                    else -> stringResource(R.string.activity)
+                },
+                style = MaterialTheme.typography.bodyMedium.copy(
+                    fontFamily = PoppinsFontFamily,
+                    fontWeight = FontWeight.SemiBold
+                ),
+                color = colors.textPrimary,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis
+            )
+
+            Spacer(modifier = Modifier.height(4.dp))
+
+            val subtitleText = when (activity.type_history) {
+                1 -> activity.alliance?.name ?: ""
+                2 -> {
+                    val materialName = activity.material_type?.name ?: ""
+                    val baseName = when {
+                        materialName.contains("Plástico", ignoreCase = true)  ->
+                            context.getString(R.string.plastic)
+                        materialName.contains("Aluminio", ignoreCase = true) ->
+                            context.getString(R.string.aluminum)
+                        else -> materialName
+                    }
+                    // Agregar "- Aplastada" si es plástico y está aplastada
+                    if (activity.scan?.is_crushed == true) "$baseName - ${context.getString(R.string.crushed)}" else baseName
+                }
+                3 -> context.getString(R.string.manual_adjustment)
+                else -> activity.alliance?.name ?: ""
+            }
+
+            if (subtitleText.isNotBlank()) {
+                Text(
+                    text = subtitleText,
+                    style = MaterialTheme.typography.bodySmall.copy(
+                        fontFamily = PoppinsFontFamily
+                    ),
+                    color = colors.textSecondary,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis
+                )
+            }
+
+            Text(
+                text = formatFriendlyDate(activity.created_at),
+                style = MaterialTheme.typography.bodySmall.copy(
+                    fontFamily = PoppinsFontFamily
+                ),
+                color = colors.textSecondary
+            )
+        }
+
+        Column(
+            horizontalAlignment = Alignment.End
+        ) {
+            val pointsColor = when (activity.type_history) {
+                1 -> colors.negativePoints
+                2 -> if (activity.points == 0) colors.textPrimary else colors.primaryColor
+                3 -> if (activity.points < 0) colors.negativePoints else colors.primaryColor
+                else -> if (activity.points == 0) colors.textPrimary else colors.primaryColor
+            }
+            val pointsText = when (activity.type_history) {
+                1 -> if ("${activity.points}".startsWith("-")) "${activity.points}" else "-${activity.points}"
+                2 -> if (activity.points == 0) "-${activity.points}-" else "+${activity.points}"
+                3 -> if (activity.points < 0) "${activity.points}" else "+${activity.points}"
+                else -> if (activity.points == 0) "${activity.points}" else "+${activity.points}"
+            }
+            Text(
+                text = pointsText,
+                style = MaterialTheme.typography.bodyLarge.copy(
+                    fontFamily = PoppinsFontFamily,
+                    fontWeight = FontWeight.Bold
+                ),
+                color = pointsColor
+            )
+        }
+    }
+}
+
+// --- Composable (idéntico en ambas versiones) ---
 @Composable
 private fun MaterialStatCard(
-    // ... (sin cambios)
     title: String,
     count: Int,
     icon: Int,
@@ -513,115 +614,59 @@ private fun MaterialStatCard(
     }
 }
 
+// --- Composable de v2 ---
 @Composable
-private fun ActivityCard(
-    // ... (sin cambios)
-    item: ActivityItem,
-    renovaColors: RenovaColorScheme
+fun EmptyStateInline(
+    renovaColors: RenovaColorScheme,
+    modifier: Modifier = Modifier
 ) {
-    val context = LocalContext.current
-    val isPointRedemption = item.type_history == 1
-
     Column(
-        modifier = Modifier.fillMaxWidth()
+        modifier = modifier
+            .fillMaxWidth()
+            .padding(horizontal = 32.dp, vertical = 48.dp),
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.Center
     ) {
-        Row(
+        // Icono decorativo
+        Box(
             modifier = Modifier
-                .fillMaxWidth()
-                .padding(horizontal = 0.dp, vertical = 6.dp),
-            verticalAlignment = Alignment.Top
+                .size(100.dp)
+                .background(
+                    renovaColors.activityPrimary.copy(alpha = 0.1f),
+                    shape = RoundedCornerShape(50.dp)
+                ),
+            contentAlignment = Alignment.Center
         ) {
-            Column(
-                modifier = Modifier.weight(1f),
-                verticalArrangement = Arrangement.spacedBy(0.dp)
-            ) {
-                if (isPointRedemption) {
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.SpaceBetween,
-                        verticalAlignment = Alignment.Top
-                    ) {
-                        Text(
-                            text = stringResource(R.string.points_exchange),
-                            style = MaterialTheme.typography.titleMedium,
-                            color = renovaColors.textPrimary,
-                            maxLines = 2,
-                            overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis,
-                            modifier = Modifier.weight(1f)
-                        )
-                        Text(
-                            text = "${item.points}",
-                            style = MaterialTheme.typography.titleMedium,
-                            color = renovaColors.negativePoints,
-                            modifier = Modifier.padding(start = 8.dp)
-                        )
-                    }
-                    if (item.alliance != null) {
-                        Text(
-                            text = item.alliance.name,
-                            style = MaterialTheme.typography.bodySmall,
-                            color = renovaColors.textSecondary,
-                            maxLines = 1,
-                            overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis
-                        )
-                    }
-                    if (item.reward != null) {
-                        Text(
-                            text = item.reward.description,
-                            style = MaterialTheme.typography.bodySmall,
-                            color = renovaColors.textSecondary,
-                            maxLines = 3,
-                            overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis
-                        )
-                    }
-                } else {
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.SpaceBetween,
-                        verticalAlignment = Alignment.Top
-                    ) {
-                        Text(
-                            text = stringResource(R.string.product_entry),
-                            style = MaterialTheme.typography.titleMedium,
-                            color = renovaColors.textPrimary,
-                            maxLines = 1,
-                            overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis,
-                            modifier = Modifier.weight(1f)
-                        )
-                        Text(
-                            text = "+${item.points}",
-                            style = MaterialTheme.typography.titleMedium,
-                            color = renovaColors.positivePoints,
-                            modifier = Modifier.padding(start = 8.dp)
-                        )
-                    }
-                    val materialName = item.material_type?.name
-                    val displayText = if (item.scan?.is_crushed == true) {
-                        "$materialName - ${stringResource(R.string.crushed)}"
-                    } else {
-                        materialName
-                    }
-                    Text(
-                        text = "$displayText",
-                        style = MaterialTheme.typography.bodySmall,
-                        color = renovaColors.textSecondary,
-                        maxLines = 1,
-                        overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis
-                    )
-                }
-                Text(
-                    text = formatFriendlyDate(item.created_at),
-                    style = MaterialTheme.typography.bodySmall,
-                    color = renovaColors.textSecondary
-                )
-            }
+            Icon(
+                imageVector = Icons.Default.History,
+                contentDescription = null,
+                tint = renovaColors.activityPrimary.copy(alpha = 0.5f),
+                modifier = Modifier.size(50.dp)
+            )
         }
 
-        Spacer(
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(2.dp)
-                .background(renovaColors.activityPrimary)
+        Spacer(modifier = Modifier.height(20.dp))
+
+        // Título
+        Text(
+            text = stringResource(R.string.no_activity_yet),
+            fontFamily = PoppinsFontFamily,
+            fontWeight = FontWeight.Bold,
+            fontSize = 18.sp,
+            color = renovaColors.textPrimary,
+            textAlign = TextAlign.Center
+        )
+
+        Spacer(modifier = Modifier.height(8.dp))
+
+        // Descripción
+        Text(
+            text = stringResource(R.string.no_activity_description),
+            fontFamily = PoppinsFontFamily,
+            fontSize = 14.sp,
+            color = renovaColors.textSecondary,
+            textAlign = TextAlign.Center,
+            lineHeight = 20.sp
         )
     }
 }

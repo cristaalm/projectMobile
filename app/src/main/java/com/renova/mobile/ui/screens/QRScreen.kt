@@ -32,7 +32,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.renova.mobile.R
-import com.renova.mobile.repository.LoginRepository
+// import com.renova.mobile.repository.LoginRepository // <-- Comentado en v1, se mantiene así
 import com.renova.mobile.ui.components.SectionHeader
 import com.renova.mobile.ui.theme.RenovaColors
 import com.renova.mobile.utils.SessionManager
@@ -50,25 +50,37 @@ import com.google.zxing.common.BitMatrix
 import com.google.zxing.EncodeHintType
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalDensity
+import com.renova.mobile.ui.viewmodels.QRViewModel // <-- de v2
+import com.renova.mobile.ui.viewmodels.QRState // <-- de v2
+import com.renova.mobile.ui.components.CustomRefreshIndicator // <-- de v2
+import androidx.compose.material3.pulltorefresh.PullToRefreshBox // <-- de v2
+import androidx.compose.material3.pulltorefresh.rememberPullToRefreshState // <-- de v2
+import androidx.compose.material.icons.filled.Star // <-- de v2
+import androidx.compose.animation.core.animateIntAsState // <-- de v2
 
-// --- NUEVO: Imports para el Tour ---
+// --- NUEVO: Imports para el Tour (de v1) ---
 import androidx.compose.ui.layout.onGloballyPositioned
 import com.renova.mobile.ui.tour.LocalTourState
 // --- FIN DE IMPORTS ---
 
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun QRScreen() {
+fun QRScreen(
+    viewModel: QRViewModel = androidx.lifecycle.viewmodel.compose.viewModel() // <-- de v2
+) {
     val context = LocalContext.current
     val sessionManager = remember { SessionManager(context) }
-    // val loginRepository = remember { LoginRepository() }
+    // val loginRepository = remember { LoginRepository() } // <-- de v1
 
-    // --- NUEVO: Obtener estado del Tour ---
+    // --- NUEVO: Obtener estado del Tour (de v1) ---
     val tourState = LocalTourState.current
     // --- FIN ---
 
-    val currentPointsState = sessionManager.getUser()
-    val currentPoints = currentPointsState?.total_points ?: 0
+    // --- Lógica de ViewModel y PullToRefresh (de v2) ---
+    val uiState by viewModel.state.collectAsState()
+    val pullToRefreshState = rememberPullToRefreshState()
+    // --- Fin lógica v2 ---
 
     val user = sessionManager.getUser()
     val accessToken = sessionManager.getAccessToken()
@@ -82,308 +94,336 @@ fun QRScreen() {
 
     var showQr by remember { mutableStateOf(true) }
 
-    Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .background(MaterialTheme.colorScheme.background)
-            .verticalScroll(rememberScrollState())
+    // --- PullToRefreshBox (de v2) ---
+    PullToRefreshBox(
+        isRefreshing = uiState.isLoading,
+        onRefresh = { viewModel.loadPoints() },
+        state = pullToRefreshState,
+        indicator = {
+            CustomRefreshIndicator(
+                state = pullToRefreshState,
+                isRefreshing = uiState.isLoading,
+                renovaColors = com.renova.mobile.ui.theme.LocalRenovaColors.current,
+                modifier = Modifier.align(Alignment.TopCenter)
+            )
+        }
     ) {
-        SectionHeader(title = stringResource(id = if (showQr) R.string.mycode else R.string.points_code_title), textColor = Color.White)
-        Spacer(modifier = Modifier.height(20.dp))
-
-        // ===== CARD PRINCIPAL =====
-        Card(
+        Column(
             modifier = Modifier
-                .fillMaxWidth()
-                .aspectRatio(5f / 5f)
-                .padding(horizontal = 16.dp)
-                .shadow(
-                    elevation = 3.dp,
-                    shape = RoundedCornerShape(16.dp),
-                    spotColor = RenovaColors.Light.ActivityShadowColor
-                )
-                // --- MODIFICADO: Añadir onGloballyPositioned ---
-                .onGloballyPositioned { coords ->
-                    tourState.registerTarget("qr_card", coords)
-                },
-            shape = RoundedCornerShape(20.dp),
-            colors = CardDefaults.cardColors(containerColor = Color.Transparent)
+                .fillMaxSize()
+                .background(MaterialTheme.colorScheme.background)
+                .verticalScroll(rememberScrollState())
         ) {
-            // Animación simplificada: Crossfade entre vistas, sin rotación
+            SectionHeader(title = stringResource(id = if (showQr) R.string.mycode else R.string.points_code_title), textColor = Color.White)
+            Spacer(modifier = Modifier.height(20.dp))
 
-            Box(
+            // ===== CARD PRINCIPAL =====
+            Card(
                 modifier = Modifier
-                    .clip(RoundedCornerShape(20.dp))
-                    .background(Color.Transparent)
-                    .paint(
-                        painter = painterResource(id = R.drawable.fondo_chico),
-                        contentScale = ContentScale.Crop
+                    .fillMaxWidth()
+                    .aspectRatio(5f / 5f)
+                    .padding(horizontal = 16.dp)
+                    .shadow(
+                        elevation = 3.dp,
+                        shape = RoundedCornerShape(16.dp),
+                        spotColor = RenovaColors.Light.ActivityShadowColor
                     )
-                    .padding(15.dp)
+                    // --- MODIFICADO: Añadir onGloballyPositioned (de v1) ---
+                    .onGloballyPositioned { coords ->
+                        tourState.registerTarget("qr_card", coords)
+                    },
+                shape = RoundedCornerShape(20.dp),
+                colors = CardDefaults.cardColors(containerColor = Color.Transparent)
             ) {
-                // === Vista principal: Crossfade entre código de barras y QR ===
-                Crossfade(targetState = showQr, animationSpec = tween(durationMillis = 400, easing = FastOutSlowInEasing)) { showingQr ->
-                    if (!showingQr) {
-                        Column(
-                            modifier = Modifier.fillMaxWidth()
-                        ) {
-                            // ==== Fila 1: usuario ====
-                            Row(
-                                modifier = Modifier.fillMaxWidth(),
-                                horizontalArrangement = Arrangement.SpaceBetween,
-                                verticalAlignment = Alignment.CenterVertically
-                            ) {
-                                Column {
-                                    Text(
-                                        text = nameUser,
-                                        color = Color.White,
-                                        style = MaterialTheme.typography.headlineSmall.copy(
-                                            fontFamily = com.renova.mobile.ui.theme.PoppinsFontFamily,
-                                            fontWeight = FontWeight.Bold
-                                        )
-                                    )
-                                    Text(
-                                        text = "$currentPoints ${stringResource(id = R.string.points_unit)}",
-                                        color = Color.White,
-                                        style = MaterialTheme.typography.headlineSmall.copy(
-                                            fontFamily = com.renova.mobile.ui.theme.PoppinsFontFamily,
-                                            fontWeight = FontWeight.ExtraBold
-                                        )
-                                    )
-                                    Text(
-                                        text = stringResource(id = R.string.current_points),
-                                        color = Color.White,
-                                        style = MaterialTheme.typography.bodySmall.copy(
-                                            fontFamily = com.renova.mobile.ui.theme.PoppinsFontFamily,
-                                            fontWeight = FontWeight.Medium
-                                        )
-                                    )
-                                }
+                // Animación simplificada: Crossfade entre vistas, sin rotación
 
-                                IconButton(
-                                    onClick = { showQr = !showQr },
-                                    modifier = Modifier
-                                        .size(56.dp)
-                                        .background(
-                                            color = Color.White.copy(alpha = 0.3f),
-                                            shape = RoundedCornerShape(16.dp)
-                                        )
-                                        // --- MODIFICADO: Añadir onGloballyPositioned ---
-                                        .onGloballyPositioned { coords ->
-                                            tourState.registerTarget("qr_switch_button", coords)
-                                        }
+                Box(
+                    modifier = Modifier
+                        .clip(RoundedCornerShape(20.dp))
+                        .background(Color.Transparent)
+                        .paint(
+                            painter = painterResource(id = R.drawable.fondo_chico),
+                            contentScale = ContentScale.Crop
+                        )
+                        .padding(15.dp)
+                ) {
+                    // === Vista principal: Crossfade entre código de barras y QR ===
+                    Crossfade(targetState = showQr, animationSpec = tween(durationMillis = 400, easing = FastOutSlowInEasing)) { showingQr ->
+                        if (!showingQr) {
+                            Column(
+                                modifier = Modifier.fillMaxWidth()
+                            ) {
+                                // ==== Fila 1: usuario ====
+                                Row(
+                                    modifier = Modifier.fillMaxWidth(),
+                                    horizontalArrangement = Arrangement.SpaceBetween,
+                                    verticalAlignment = Alignment.CenterVertically
                                 ) {
-                                    Icon(
-                                        imageVector = if (showQr) Icons.Default.CreditCard else Icons.Default.QrCode,
-                                        contentDescription = if (showQr) "Mostrar código" else "Mostrar QR",
-                                        tint = if (isDark) Color.Black else Color.White,
-                                        modifier = Modifier.size(32.dp)
-                                    )
-                                }
-                            }
-
-                            Divider(
-                                color = if (isDark) Color.Black.copy(alpha = 0.5f)
-                                else Color.White.copy(alpha = 0.5f),
-                                thickness = 1.dp,
-                                modifier = Modifier.padding(vertical = 10.dp)
-                            )
-
-                            // ==== Contenido (Código de barras) ====
-                            Box(
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .padding(vertical = 12.dp)
-                                    .height(200.dp)
-                                    .clip(RoundedCornerShape(12.dp))
-                                    .background(Color.White), // fondo blanco mejora lectura
-                                contentAlignment = Alignment.Center
-                            ) {
-                                // ... (Lógica de generación de código de barras sin cambios)
-                                val codeDigits = user?.code_identity ?: ""
-                                val barcodeData: String? = if (codeDigits.length == 13) codeDigits else null
-                                val configuration = LocalConfiguration.current
-                                val density = LocalDensity.current
-                                val screenWidthDp = configuration.screenWidthDp
-                                val targetWidth = with(density) { (screenWidthDp * 0.9f).dp.toPx().toInt() }
-                                val targetHeight = (targetWidth * 0.25f).toInt()
-                                val hints = mapOf(
-                                    EncodeHintType.MARGIN to 10,
-                                    EncodeHintType.CHARACTER_SET to "UTF-8"
-                                )
-                                val bitMatrix: BitMatrix? = if (barcodeData != null) {
-                                    try {
-                                        MultiFormatWriter().encode(
-                                            barcodeData,
-                                            BarcodeFormat.EAN_13,
-                                            targetWidth,
-                                            targetHeight,
-                                            hints
-                                        )
-                                    } catch (e: Exception) {
-                                        null
-                                    }
-                                } else null
-                                val backgroundAndroid = android.graphics.Color.WHITE
-                                val barColorCompose = RenovaColors.Primary
-                                val barColorInt = barColorCompose.toArgb()
-
-                                if (bitMatrix != null) {
-                                    val width = bitMatrix.width
-                                    val height = bitMatrix.height
-                                    val barcodeBitmap = Bitmap.createBitmap(width, height, Bitmap.Config.ARGB_8888)
-                                    for (x in 0 until width) {
-                                        for (y in 0 until height) {
-                                            barcodeBitmap.setPixel(
-                                                x,
-                                                y,
-                                                if (bitMatrix[x, y]) barColorInt else backgroundAndroid
+                                    Column {
+                                        Text(
+                                            text = nameUser,
+                                            color = Color.White,
+                                            style = MaterialTheme.typography.headlineSmall.copy(
+                                                fontFamily = com.renova.mobile.ui.theme.PoppinsFontFamily,
+                                                fontWeight = FontWeight.Bold
                                             )
-                                        }
+                                        )
+                                        // --- Puntos animados (de v2) ---
+                                        val animatedPoints by animateIntAsState(
+                                            targetValue = uiState.points,
+                                            animationSpec = tween(durationMillis = 500),
+                                            label = "animatedPoints"
+                                        )
+                                        val pointsFormatted = java.text.NumberFormat.getIntegerInstance(java.util.Locale.forLanguageTag("es-MX")).format(animatedPoints)
+                                        Text(
+                                            text = "$pointsFormatted ${stringResource(id = R.string.points_unit)}",
+                                            color = Color.White,
+                                            style = MaterialTheme.typography.headlineSmall.copy(
+                                                fontFamily = com.renova.mobile.ui.theme.PoppinsFontFamily,
+                                                fontWeight = FontWeight.ExtraBold
+                                            )
+                                        )
+                                        Text(
+                                            text = stringResource(id = R.string.current_points),
+                                            color = Color.White,
+                                            style = MaterialTheme.typography.bodySmall.copy(
+                                                fontFamily = com.renova.mobile.ui.theme.PoppinsFontFamily,
+                                                fontWeight = FontWeight.Medium
+                                            )
+                                        )
                                     }
-                                    val ratio = width.toFloat() / height.toFloat()
-                                    Image(
-                                        bitmap = barcodeBitmap.asImageBitmap(),
-                                        contentDescription = "Código de barras",
+
+                                    IconButton(
+                                        onClick = { showQr = !showQr },
                                         modifier = Modifier
-                                            .fillMaxWidth(0.9f)
-                                            .aspectRatio(ratio)
-                                    )
-                                } else {
-                                    Text(
-                                        text = "Código no encontrado",
-                                        style = MaterialTheme.typography.headlineMedium.copy(
-                                            fontFamily = com.renova.mobile.ui.theme.PoppinsFontFamily,
-                                            fontWeight = FontWeight.Bold
-                                        ),
-                                        color = barColorCompose,
-                                        textAlign = TextAlign.Center
-                                    )
-                                }
-                            }
-                        }
-                    } else {
-                        // === Vista alternativa: Mostrar QR ===
-                        Column(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                        ) {
-                            // ==== Fila 1: usuario ====
-                            Row(
-                                modifier = Modifier.fillMaxWidth(),
-                                horizontalArrangement = Arrangement.SpaceBetween,
-                                verticalAlignment = Alignment.CenterVertically
-                            ) {
-                                Column {
-                                    Text(
-                                        text = nameUser,
-                                        color = if (isDark) Color.Black else Color.White,
-                                        style = MaterialTheme.typography.headlineSmall.copy(
-                                            fontFamily = com.renova.mobile.ui.theme.PoppinsFontFamily,
-                                            fontWeight = FontWeight.Bold
+                                            .size(56.dp)
+                                            .background(
+                                                color = Color.White.copy(alpha = 0.3f),
+                                                shape = RoundedCornerShape(16.dp)
+                                            )
+                                            // --- MODIFICADO: Añadir onGloballyPositioned (de v1) ---
+                                            .onGloballyPositioned { coords ->
+                                                tourState.registerTarget("qr_switch_button", coords)
+                                            }
+                                    ) {
+                                        Icon(
+                                            imageVector = if (showQr) Icons.Default.CreditCard else Icons.Default.QrCode,
+                                            contentDescription = if (showQr) "Mostrar código" else "Mostrar QR",
+                                            tint = if (isDark) Color.Black else Color.White,
+                                            modifier = Modifier.size(32.dp)
                                         )
-                                    )
-                                    Text(
-                                        text = "$currentPoints ${stringResource(id = R.string.points_unit)}",
-                                        color = if (isDark) Color.Black else Color.White,
-                                        style = MaterialTheme.typography.headlineSmall.copy(
-                                            fontFamily = com.renova.mobile.ui.theme.PoppinsFontFamily,
-                                            fontWeight = FontWeight.ExtraBold
-                                        )
-                                    )
-                                    Text(
-                                        text = stringResource(id = R.string.current_points),
-                                        color = if (isDark) Color.Black else Color.White,
-                                        style = MaterialTheme.typography.bodySmall.copy(
-                                            fontFamily = com.renova.mobile.ui.theme.PoppinsFontFamily,
-                                            fontWeight = FontWeight.Medium
-                                        )
-                                    )
+                                    }
                                 }
 
-                                IconButton(
-                                    onClick = { showQr = !showQr },
+                                Divider(
+                                    color = if (isDark) Color.Black.copy(alpha = 0.5f)
+                                    else Color.White.copy(alpha = 0.5f),
+                                    thickness = 1.dp,
+                                    modifier = Modifier.padding(vertical = 10.dp)
+                                )
+
+                                // ==== Contenido (Código de barras) ====
+                                Box(
                                     modifier = Modifier
-                                        .size(56.dp)
-                                        .background(
-                                            color = Color.White.copy(alpha = 0.3f),
-                                            shape = RoundedCornerShape(16.dp)
-                                        )
-                                        // --- MODIFICADO: Añadir onGloballyPositioned ---
-                                        .onGloballyPositioned { coords ->
-                                            tourState.registerTarget("qr_switch_button", coords)
-                                        }
+                                        .fillMaxWidth()
+                                        .padding(vertical = 12.dp)
+                                        .height(200.dp)
+                                        .clip(RoundedCornerShape(12.dp))
+                                        .background(Color.White), // fondo blanco mejora lectura
+                                    contentAlignment = Alignment.Center
                                 ) {
-                                    Icon(
-                                        imageVector = if (showQr) Icons.Default.CreditCard else Icons.Default.QrCode,
-                                        contentDescription = if (showQr) "Mostrar código" else "Mostrar QR",
-                                        tint = if (isDark) Color.Black else Color.White,
-                                        modifier = Modifier.size(32.dp)
+                                    // ... (Lógica de generación de código de barras v2) ...
+                                    val codeDigits = user?.code_identity ?: ""
+                                    val barcodeData: String? = if (codeDigits.length == 13) codeDigits else null
+                                    val configuration = LocalConfiguration.current
+                                    val density = LocalDensity.current
+                                    val screenWidthDp = configuration.screenWidthDp
+                                    val targetWidth = with(density) { (screenWidthDp * 0.9f).dp.toPx().toInt() }
+                                    val targetHeight = (targetWidth * 0.25f).toInt()
+                                    val hints = mapOf(
+                                        EncodeHintType.MARGIN to 10,
+                                        EncodeHintType.CHARACTER_SET to "UTF-8"
                                     )
+                                    val bitMatrix: BitMatrix? = if (barcodeData != null) {
+                                        try {
+                                            MultiFormatWriter().encode(
+                                                barcodeData,
+                                                BarcodeFormat.EAN_13,
+                                                targetWidth,
+                                                targetHeight,
+                                                hints
+                                            )
+                                        } catch (e: Exception) {
+                                            null
+                                        }
+                                    } else null
+                                    val backgroundAndroid = android.graphics.Color.WHITE
+                                    val barColorCompose = RenovaColors.Primary
+                                    val barColorInt = barColorCompose.toArgb()
+
+                                    if (bitMatrix != null) {
+                                        val width = bitMatrix.width
+                                        val height = bitMatrix.height
+                                        val barcodeBitmap = Bitmap.createBitmap(width, height, Bitmap.Config.ARGB_8888)
+                                        for (x in 0 until width) {
+                                            for (y in 0 until height) {
+                                                barcodeBitmap.setPixel(
+                                                    x,
+                                                    y,
+                                                    if (bitMatrix[x, y]) barColorInt else backgroundAndroid
+                                                )
+                                            }
+                                        }
+                                        val ratio = width.toFloat() / height.toFloat()
+                                        Image(
+                                            bitmap = barcodeBitmap.asImageBitmap(),
+                                            contentDescription = "Código de barras",
+                                            modifier = Modifier
+                                                .fillMaxWidth(0.9f)
+                                                .aspectRatio(ratio)
+                                        )
+                                    } else {
+                                        Text(
+                                            text = "Código no encontrado",
+                                            style = MaterialTheme.typography.headlineMedium.copy(
+                                                fontFamily = com.renova.mobile.ui.theme.PoppinsFontFamily,
+                                                fontWeight = FontWeight.Bold
+                                            ),
+                                            color = barColorCompose,
+                                            textAlign = TextAlign.Center
+                                        )
+                                    }
                                 }
                             }
-
-                            Divider(
-                                color = if (isDark) Color.Black.copy(alpha = 0.5f)
-                                else Color.White.copy(alpha = 0.5f),
-                                thickness = 1.dp,
-                                modifier = Modifier.padding(vertical = 10.dp)
-                            )
-
-                            // ==== Contenido (QR) ====
-                            Box(
+                        } else {
+                            // === Vista alternativa: Mostrar QR ===
+                            Column(
                                 modifier = Modifier
                                     .fillMaxWidth()
-                                    .padding(vertical = 12.dp),
-                                contentAlignment = Alignment.Center
                             ) {
-                                // ... (Lógica de generación de QR sin cambios)
-                                val qrEncoder = QRGEncoder(
-                                    qrCode, null, QRGContents.Type.TEXT, 500
-                                ).apply {
-                                    val primaryAndroidQR = android.graphics.Color.rgb(
-                                        (RenovaColors.Primary.red * 255).toInt(),
-                                        (RenovaColors.Primary.green * 255).toInt(),
-                                        (RenovaColors.Primary.blue * 255).toInt()
-                                    )
-                                    colorBlack = android.graphics.Color.WHITE
-                                    colorWhite = primaryAndroidQR
+                                // ==== Fila 1: usuario ====
+                                Row(
+                                    modifier = Modifier.fillMaxWidth(),
+                                    horizontalArrangement = Arrangement.SpaceBetween,
+                                    verticalAlignment = Alignment.CenterVertically
+                                ) {
+                                    Column {
+                                        Text(
+                                            text = nameUser,
+                                            color = if (isDark) Color.Black else Color.White,
+                                            style = MaterialTheme.typography.headlineSmall.copy(
+                                                fontFamily = com.renova.mobile.ui.theme.PoppinsFontFamily,
+                                                fontWeight = FontWeight.Bold
+                                            )
+                                        )
+                                        // --- Puntos animados (de v2) ---
+                                        val animatedPoints by animateIntAsState(
+                                            targetValue = uiState.points,
+                                            animationSpec = tween(durationMillis = 500),
+                                            label = "animatedPoints2"
+                                        )
+                                        val pointsFormatted2 = java.text.NumberFormat.getIntegerInstance(java.util.Locale.forLanguageTag("es-MX")).format(animatedPoints)
+                                        Text(
+                                            text = "$pointsFormatted2 ${stringResource(id = R.string.points_unit)}",
+                                            color = if (isDark) Color.Black else Color.White,
+                                            style = MaterialTheme.typography.headlineSmall.copy(
+                                                fontFamily = com.renova.mobile.ui.theme.PoppinsFontFamily,
+                                                fontWeight = FontWeight.ExtraBold
+                                            )
+                                        )
+                                        Text(
+                                            text = stringResource(id = R.string.current_points),
+                                            color = if (isDark) Color.Black else Color.White,
+                                            style = MaterialTheme.typography.bodySmall.copy(
+                                                fontFamily = com.renova.mobile.ui.theme.PoppinsFontFamily,
+                                                fontWeight = FontWeight.Medium
+                                            )
+                                        )
+                                    }
+
+                                    IconButton(
+                                        onClick = { showQr = !showQr },
+                                        modifier = Modifier
+                                            .size(56.dp)
+                                            .background(
+                                                color = Color.White.copy(alpha = 0.3f),
+                                                shape = RoundedCornerShape(16.dp)
+                                            )
+                                            // --- MODIFICADO: Añadir onGloballyPositioned (de v1) ---
+                                            .onGloballyPositioned { coords ->
+                                                tourState.registerTarget("qr_switch_button", coords)
+                                            }
+                                    ) {
+                                        Icon(
+                                            imageVector = if (showQr) Icons.Default.CreditCard else Icons.Default.QrCode,
+                                            contentDescription = if (showQr) "Mostrar código" else "Mostrar QR",
+                                            tint = if (isDark) Color.Black else Color.White,
+                                            modifier = Modifier.size(32.dp)
+                                        )
+                                    }
                                 }
 
-                                val qrBitmap: Bitmap = qrEncoder.bitmap
-                                Image(
-                                    bitmap = qrBitmap.asImageBitmap(),
-                                    contentDescription = "Código QR",
-                                    modifier = Modifier
-                                        .fillMaxWidth(0.7f)
-                                        .aspectRatio(1f)
+                                Divider(
+                                    color = if (isDark) Color.Black.copy(alpha = 0.5f)
+                                    else Color.White.copy(alpha = 0.5f),
+                                    thickness = 1.dp,
+                                    modifier = Modifier.padding(vertical = 10.dp)
                                 )
+
+                                // ==== Contenido (QR) ====
+                                Box(
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .padding(vertical = 12.dp),
+                                    contentAlignment = Alignment.Center
+                                ) {
+                                    val qrEncoder = QRGEncoder(
+                                        qrCode, null, QRGContents.Type.TEXT, 500
+                                    ).apply {
+                                        val primaryAndroidQR = android.graphics.Color.rgb(
+                                            (RenovaColors.Primary.red * 255).toInt(),
+                                            (RenovaColors.Primary.green * 255).toInt(),
+                                            (RenovaColors.Primary.blue * 255).toInt()
+                                        )
+                                        colorBlack = android.graphics.Color.WHITE
+                                        colorWhite = primaryAndroidQR
+                                    }
+
+                                    val qrBitmap: Bitmap = qrEncoder.bitmap
+                                    Image(
+                                        bitmap = qrBitmap.asImageBitmap(),
+                                        contentDescription = "Código QR",
+                                        modifier = Modifier
+                                            .fillMaxWidth(0.7f)
+                                            .aspectRatio(1f)
+                                    )
+                                }
                             }
                         }
                     }
                 }
             }
-        }
 
-        // --- NUEVO: DisposableEffects para limpiar los targets ---
-        DisposableEffect("qr_card") {
-            onDispose { tourState.unregisterTarget("qr_card") }
-        }
-        DisposableEffect("qr_switch_button") {
-            onDispose { tourState.unregisterTarget("qr_switch_button") }
-        }
-        // --- FIN DE BLOQUE NUEVO ---
+            // --- NUEVO: DisposableEffects para limpiar los targets (de v1) ---
+            DisposableEffect("qr_card") {
+                onDispose { tourState.unregisterTarget("qr_card") }
+            }
+            DisposableEffect("qr_switch_button") {
+                onDispose { tourState.unregisterTarget("qr_switch_button") }
+            }
+            // --- FIN DE BLOQUE NUEVO ---
 
-        Spacer(modifier = Modifier.height(20.dp))
+            Spacer(modifier = Modifier.height(20.dp))
 
-        // ===== SECCIÓN DE INSTRUCCIONES =====
-        InstructionSection(showQr)
+            // ===== SECCIÓN DE INSTRUCCIONES =====
+            InstructionSection(showQr)
+        }
     }
 }
 
 @Composable
 private fun InstructionSection(showQr: Boolean) {
-    // ... (Sin cambios)
+    // ... (Sin cambios, idéntico en ambas versiones)
     val scrollState = rememberScrollState()
 
     val isScrolledToStart by remember { derivedStateOf { scrollState.value == 0 } }
@@ -471,7 +511,7 @@ private fun InstructionSection(showQr: Boolean) {
 
 @Composable
 fun InstructionItem(
-    // ... (Sin cambios)
+    // ... (Sin cambios, idéntico en ambas versiones)
     text: String,
     icon: androidx.compose.ui.graphics.vector.ImageVector
 ) {
