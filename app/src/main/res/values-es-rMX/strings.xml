@@ -325,40 +325,51 @@
     <string name="quantity">Cantidad</string>
     <string name="no_activity_description">Tus actividades de reciclaje y canjes aparecerán aquí</string>
 
-    <string name="tour_title_nav_main">Navegación Principal</string>
-    <string name="tour_desc_nav_main">Bienvenido a Renova. Empecemos por la Tienda. Toca \'Sig.\' para continuar.</string>
-    <string name="tour_title_store_categories">Categorías</string>
-    <string name="tour_desc_store_categories">Aquí puedes filtrar las tiendas por categoría. Toca \'Todas\' para ver todas de nuevo.</string>
-    <string name="tour_title_store_alliances">Tiendas Aliadas</string>
-    <string name="tour_desc_store_alliances">Esta es la lista de nuestras tiendas aliadas donde puedes ganar puntos.</string>
-    <string name="tour_title_store_rewards">Ver Recompensas</string>
-    <string name="tour_desc_store_rewards">Toca una tienda (o \'Sig.\') para ver las recompensas exclusivas que ofrece por tus puntos.</string>
-    <string name="tour_title_qr_button">Tu Código QR</string>
-    <string name="tour_desc_qr_button">¡Genial! Ahora veamos tu código QR. Este es el botón principal.</string>
-    <string name="tour_title_qr_container">QR para Contenedor</string>
-    <string name="tour_desc_qr_container">Usa este código QR para identificarte en los contenedores inteligentes y sumar puntos.</string>
-    <string name="tour_title_qr_barcode">Código de Barras</string>
-    <string name="tour_desc_qr_barcode">También puedes tocar este botón para cambiar a tu código de barras. ¡Úsalo para canjear recompensas en tiendas!</string>
-    <string name="tour_title_profile_button">Tu Perfil</string>
-    <string name="tour_desc_profile_button">Casi terminamos. Por último, echemos un vistazo a tu perfil.</string>
-    <string name="tour_title_profile_language">Cambiar Idioma</string>
-    <string name="tour_desc_profile_language">Aquí puedes cambiar el idioma de la aplicación.</string>
-    <string name="tour_title_profile_info">Información Personal</string>
-    <string name="tour_desc_profile_info">Y aquí puedes ver y editar tu información personal y el estado de tu verificación.</string>
-    <string name="tour_title_activity_button">Tu Actividad</string>
-    <string name="tour_desc_activity_button">Finalmente, veamos tu historial de actividad. Este es el botón para acceder.</string>
-    <string name="tour_title_navigating">Navegando...</string>
-    <string name="tour_desc_navigating">Cargando tu historial...</string>
-    <string name="tour_title_activity_points">Puntos Totales</string>
-    <string name="tour_desc_activity_points">Esta tarjeta muestra el total de puntos que has acumulado.</string>
-    <string name="tour_title_activity_materials">Materiales Reciclados</string>
-    <string name="tour_desc_activity_materials">Aquí ves un resumen de cuánto plástico y aluminio has reciclado.</string>
-    <string name="tour_title_activity_history">Historial</string>
-    <string name="tour_desc_activity_history">Y debajo encontrarás el historial detallado de todos tus movimientos. ¡Eso es todo!</string>
-
     <string name="tour_button_exit">Salir</string>
     <string name="tour_button_prev">Ant.</string>
     <string name="tour_button_next">Sig.</string>
     <string name="tour_button_finish">Fin</string>
+    <string name="tour_title_navigating">Navegando...</string>
+    <string name="tour_desc_navigating">Cargando siguiente pantalla...</string>
+
+    <string name="tour_title_home_points">Tus Puntos Totales</string>
+    <string name="tour_desc_home_points">¡Bienvenido! Esta tarjeta muestra el total de puntos que has ganado reciclando. ¡Mira cómo crecen!</string>
+    <string name="tour_title_home_activity">Tu Actividad Reciente</string>
+    <string name="tour_desc_home_activity">Aquí verás un resumen de tus últimos movimientos, como reciclajes y recompensas. ¡Es un vistazo rápido a tu progreso!</string>
+    <string name="tour_title_home_achievements">Tus Logros</string>
+    <string name="tour_desc_home_achievements">¡Mientras más reciclas, más logros desbloqueas! Toca uno para ver los detalles.</string>
+
+    <string name="tour_title_nav_main">Vamos a la Tienda</string>
+    <string name="tour_desc_nav_main">Este es el menú principal. Toca \'Tienda\' (o \'Sig.\') para ver dónde canjear tus puntos.</string>
+    <string name="tour_title_qr_button">Tu Código de Acceso</string>
+    <string name="tour_desc_qr_button">Este es el botón de acceso. Toca aquí (o \'Sig.\') para ver tus códigos.</string>
+    <string name="tour_title_profile_button">Tu Perfil</string>
+    <string name="tour_desc_profile_button">Casi terminamos. Toca \'Perfil\' (o \'Sig.\') para ver tu información personal.</string>
+    <string name="tour_title_activity_button">Historial de Actividad</string>
+    <string name="tour_desc_activity_button">Finalmente, toca \'Actividad\' (o \'Sig.\') para ver el historial completo de tus movimientos.</string>
+
+    <string name="tour_title_store_categories">Filtra las Tiendas</string>
+    <string name="tour_desc_store_categories">Usa estos filtros para encontrar tiendas por categoría. Toca \'Todas\' para ver la lista completa.</string>
+    <string name="tour_title_store_alliances">Nuestros Aliados</string>
+    <string name="tour_desc_store_alliances">Aquí verás la lista de comercios donde puedes canjear tus puntos por recompensas.</string>
+    <string name="tour_title_store_rewards">Elige una Tienda</string>
+    <string name="tour_desc_store_rewards">Toca cualquier tienda (o \'Sig.\') para explorar las recompensas y descuentos exclusivos que ofrece.</string>
+
+    <string name="tour_title_qr_container">QR para Contenedor</string>
+    <string name="tour_desc_qr_container">Usa este código QR para identificarte en los contenedores inteligentes y sumar puntos por tu reciclaje.</string>
+    <string name="tour_title_qr_barcode">Código para Canjes</string>
+    <string name="tour_desc_qr_barcode">Toca este botón para cambiar a tu código de barras. ¡Muéstralo en la tienda para canjear tus recompensas!</string>
+
+    <string name="tour_title_profile_language">Cambia tu Idioma</string>
+    <string name="tour_desc_profile_language">Desde aquí puedes cambiar el idioma de la aplicación.</string>
+    <string name="tour_title_profile_info">Tu Información</string>
+    <string name="tour_desc_profile_info">Aquí puedes ver tus datos personales y el estado de tu verificación de identidad.</string>
+
+    <string name="tour_title_activity_points">Resumen de Puntos</string>
+    <string name="tour_desc_activity_points">Aquí tienes el total de puntos que has acumulado.</string>
+    <string name="tour_title_activity_materials">Tu Impacto</string>
+    <string name="tour_desc_activity_materials">Esta sección resume cuánto plástico y aluminio has ayudado a reciclar. ¡Buen trabajo!</string>
+    <string name="tour_title_activity_history">Historial Detallado</string>
+    <string name="tour_desc_activity_history">Y aquí encontrarás el registro completo de cada reciclaje y canje que has hecho. ¡Eso es todo!</string>
 
 </resources>

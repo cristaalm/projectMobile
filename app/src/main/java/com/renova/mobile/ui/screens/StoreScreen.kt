@@ -51,6 +51,7 @@ import com.renova.mobile.ui.screens.viewmodel.StoreViewModel
 import com.renova.mobile.ui.theme.*
 import kotlin.math.min
 import com.renova.mobile.ui.tour.LocalTourState
+import com.renova.mobile.ui.tour.HandleTourOnError
 import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.foundation.lazy.rememberLazyListState
@@ -71,10 +72,15 @@ fun StoreScreen(
     val tourState = LocalTourState.current
     val isTourActive by tourState.isTourActive.collectAsState()
 
-    // --- NUEVO: Estado para controlar la LazyColumn y el Scope para lanzar el scroll ---
+    HandleTourOnError(
+        error = uiState.error, // El mensaje de error del ViewModel
+        isTourActiveFlow = tourState.isTourActive, // El StateFlow del TourState
+        endTour = tourState::endTour // La función para terminar el tour
+    )
+
+    // Estado para controlar la LazyColumn y el Scope para lanzar el scroll
     val lazyListState = rememberLazyListState()
     val scope = rememberCoroutineScope()
-    // --- FIN DE BLOQUE NUEVO ---
 
     val activeCategories = remember(uiState.categories, uiState.alianzas) {
         uiState.categories.filter { category ->

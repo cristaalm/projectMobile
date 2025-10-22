@@ -322,7 +322,12 @@ fun AppNavigation(
         // El botón flotante para INICIAR el tour
         if (!isTourActive) {
             FloatingActionButton(
-                onClick = { tourState.startTour() },
+                onClick = {
+                    currentRoute?.let { route ->
+                        tourState.startTourForScreen(route)
+                    } ?: run {
+                    }
+                          },
                 modifier = Modifier
                     .align(Alignment.BottomEnd)
                     .padding(16.dp)
