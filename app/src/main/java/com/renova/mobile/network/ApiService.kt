@@ -12,6 +12,19 @@ import okhttp3.MultipartBody
 import retrofit2.http.*
 import java.util.concurrent.TimeUnit
 
+// Total puntos
+data class TotalPointsResponse(
+    val success: Boolean,
+    val message: String,
+    val data: TotalPointsData,
+    val errors: Any?,
+    val status: Int
+)
+
+data class TotalPointsData(
+    val total_points: Int
+)
+
 // ========== REGISTER ==========
 data class RegisterRequest(
     val name: String,
@@ -504,6 +517,13 @@ data class RegisterFcmTokenResponse(
 )
 
 interface ApiService {
+
+    @GET("api/history/totalPointsByShop/{alliance_id}")
+    suspend fun getTotalPointsByShop(
+        @Path("alliance_id") allianceId: Int,
+        @Query("date_start") dateStart: String,
+        @Query("date_end") dateEnd: String
+    ): Response<TotalPointsResponse>
 
     @POST("api/users/register")
     suspend fun register(@Body request: RegisterRequest): Response<RegisterResponse>

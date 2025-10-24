@@ -150,7 +150,7 @@ fun HomeScreen(
                     )
                 }
 
-                // Lista de actividades (solo 3) - EXACTAMENTE como BusinessHomeScreen
+                // Lista de actividades (solo 3)
                 val recentActivities = state.activities.take(3)
 
                 if (recentActivities.isEmpty() && !state.isLoading) {
@@ -180,7 +180,7 @@ fun HomeScreen(
                         }
                     }
                 } else {
-                    // Tabla de actividades EXACTA como BusinessHomeScreen
+                    // Tabla de actividades
                     Column(
                         modifier = Modifier
                             .fillMaxWidth()
@@ -368,7 +368,7 @@ private fun AchievementsSection(
     ) {
         // Título de la sección
         Column(
-            modifier = Modifier.padding(start = 24.dp, end = 24.dp, top = 10.dp, bottom = 10.dp)
+            modifier = Modifier.padding(start = 24.dp, end = 24.dp, top = 0.dp, bottom = 10.dp)
         ) {
             Text(
                 text = stringResource(R.string.unlocked_achievements),
@@ -519,7 +519,7 @@ private fun AchievementCard(
                     contentDescription = achievement.title,
                     modifier = Modifier.size(28.dp),
                     colorFilter = androidx.compose.ui.graphics.ColorFilter.tint(
-                        if (isUnlocked) Color(0xFF000000) else Color(0xFF7A7A7A)
+                        if (isUnlocked) Color(0xFFFFFFFF) else Color(0xFF7A7A7A)
                     ),
                     alpha = if (isUnlocked) 0.8f else 0.5f
                 )
@@ -533,7 +533,7 @@ private fun AchievementCard(
                 style = MaterialTheme.typography.titleSmall,
                 color = if (isUnlocked) achievement.color else Color(0xFF5A5A5A),
                 fontWeight = FontWeight.Bold,
-                fontSize = 9.5.sp,
+                fontSize = 12.sp,
                 textAlign = TextAlign.Center,
                 maxLines = 2,
                 overflow = TextOverflow.Ellipsis,
@@ -548,7 +548,7 @@ private fun AchievementCard(
                 text = "${achievement.requiredPoints} pts",
                 style = MaterialTheme.typography.bodySmall,
                 color = if (isUnlocked) achievement.color.copy(alpha = 0.7f) else Color(0xFF7A7A7A),
-                fontSize = 8.5.sp,
+                fontSize = 12.sp,
                 fontFamily = PoppinsFontFamily
             )
         }
