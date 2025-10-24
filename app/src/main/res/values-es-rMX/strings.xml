@@ -356,6 +356,35 @@
     <string name="manual_adjustment">Ajuste manual</string>
     <string name="quantity">Cantidad</string>
     <string name="no_activity_description">Tus actividades de reciclaje y canjes aparecerán aquí</string>
+    <string name="address">Dirección</string>
+    <string name="business_profile_title">Perfil del Negocio</string>
+    <string name="business_information">Información del Negocio</string>
+    <string name="business_name">Nombre del Negocio</string>
+    <string name="available_rewards">Recompensas Disponibles</string>
+    <string name="business_phone_number">Teléfono del Negocio</string>
+    <string name="rewards_title">Recompensas Disponibles</string>
+    <string name="more_rewards_available">+%d recompensas más</string>
+    <string name="rewards_available">Recompensas disponibles</string>
+    <string name="authentication_error">Error de Autenticación</string>
+    <string name="session_error">Error de Sesión</string>
+    <string name="business_info">Información del Negocio</string>
+    <string name="business_address">Dirección del Negocio</string>
+    <string name="profile_picture">Foto de Perfil</string>
+    <string name="category">Categoría</string>
+
+    <string name="status_label">Estado</string>
+    <string name="status_active">Activo</string>
+    <string name="status_pending">Pendiente</string>
+    <string name="status_rejected">Rechazado</string>
+    <string name="status_inactive">Inactivo</string>
+
+    <!-- User Type Labels -->
+    <string name="user_type_label">Tipo de Usuario</string>
+    <string name="user_type_citizen">Ciudadano</string>
+    <string name="user_type_admin">Administrador</string>
+    <string name="user_type_business">Negocio</string>
+    <string name="user_type_unknown">Desconocido</string>
+
 
 
 

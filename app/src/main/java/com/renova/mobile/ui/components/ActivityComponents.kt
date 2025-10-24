@@ -398,7 +398,7 @@ fun DetailSheet(activity: ActivityItem) {
         }
 
         // Cantidad si existe (para canjeos)
-        if (activity.quantity != null) {
+        if (activity.quantity != null && activity.type_history == 1) {
             Spacer(modifier = Modifier.height(10.dp))
             Text(
                 text = "${context.getString(R.string.quantity)}: ${activity.quantity}",
@@ -541,7 +541,7 @@ fun AnimatedPointsCardActivity(
                         painter = painterResource(id = R.drawable.leaf),
                         contentDescription = null,
                         modifier = Modifier
-                            .size(45.dp)
+                            .size(80.dp)
                             .padding(start = 8.dp, bottom = 8.dp),
                         colorFilter = androidx.compose.ui.graphics.ColorFilter.tint(
                             Color.White.copy(alpha = 0.9f)

@@ -73,6 +73,7 @@ import com.renova.mobile.ui.components.formatFriendlyDate
 @OptIn(ExperimentalMaterial3Api::class)
 fun BusinessHomeScreen(
     onLogout: () -> Unit,
+    onNavigateToProfile: () -> Unit = {},
     vm: BusinessSaleViewModel = viewModel(),
     onNavigateToCashout: () -> Unit = {}
 ) {
@@ -147,7 +148,7 @@ fun BusinessHomeScreen(
                             shape = RoundedCornerShape(16.dp),
                             spotColor = RenovaColors.Light.ActivityShadowColor
                         )
-                        .clickable { showUserProfile = true },
+                        .clickable { onNavigateToProfile() },
                     colors = CardDefaults.cardColors(containerColor = colors.cardBackground),
                     shape = RoundedCornerShape(16.dp),
                     elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)

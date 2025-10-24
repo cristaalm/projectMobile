@@ -149,7 +149,7 @@ fun RewardScreen(navController: NavController, allianceId: Int) {
 }
 
 @Composable
-private fun RewardDetailSheet(reward: Reward) {
+fun RewardDetailSheet(reward: Reward) {
     val colors = LocalRenovaColors.current
 
     Column(
@@ -213,7 +213,7 @@ private fun RewardDetailSheet(reward: Reward) {
 }
 
 @Composable
-private fun RewardCard(reward: Reward, backgroundColor: Color, onClick: () -> Unit) {
+fun RewardCard(reward: Reward, backgroundColor: Color, onClick: () -> Unit) {
     Card(
         modifier = Modifier
             .fillMaxWidth()

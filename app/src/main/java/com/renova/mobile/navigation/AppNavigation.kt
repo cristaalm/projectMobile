@@ -21,6 +21,7 @@ import com.renova.mobile.ui.components.CustomTopBar
 import com.renova.mobile.ui.screens.business.BusinessHomeScreen
 import com.renova.mobile.ui.screens.business.BusinessStoreScreen
 import com.renova.mobile.ui.screens.business.BusinessQRScreen
+import com.renova.mobile.ui.screens.business.BusinessProfile
 import com.renova.mobile.ui.screens.business.payments.PointsCashoutScreen
 import com.renova.mobile.navigation.NavigationItemBusiness
 import androidx.compose.animation.core.tween
@@ -138,8 +139,13 @@ fun AppNavigation(
                     ) {
                         BusinessHomeScreen(
                             onLogout = onLogout,
+                            onNavigateToProfile = {
+                                navController.navigate("business/profile")
+                            },
                             vm = businessSaleVM,
-                            onNavigateToCashout = { navController.navigate("business/cashout") }
+                            onNavigateToCashout = {
+                                navController.navigate("business/cashout")
+                            }
                         )
                     }
 
@@ -150,7 +156,11 @@ fun AppNavigation(
                         popEnterTransition = { popEnterAnimation },
                         popExitTransition = { popExitAnimation }
                     ) {
-                        BusinessStoreScreen(onLogout = onLogout, vm = businessSaleVM, navController = navController)
+                        BusinessStoreScreen(
+                            onLogout = onLogout,
+                            vm = businessSaleVM,
+                            navController = navController
+                        )
                     }
 
                     composable(
@@ -160,7 +170,27 @@ fun AppNavigation(
                         popEnterTransition = { popEnterAnimation },
                         popExitTransition = { popExitAnimation }
                     ) {
-                        BusinessQRScreen(onLogout = onLogout, vm = businessSaleVM, navController = navController)
+                        BusinessQRScreen(
+                            onLogout = onLogout,
+                            vm = businessSaleVM,
+                            navController = navController
+                        )
+                    }
+
+                    // Nueva ruta: Perfil del comercio
+                    composable(
+                        route = "business/profile",
+                        enterTransition = { enterAnimation },
+                        exitTransition = { exitAnimation },
+                        popEnterTransition = { popEnterAnimation },
+                        popExitTransition = { popExitAnimation }
+                    ) {
+                        BusinessProfile(
+                            languageViewModel = languageViewModel,
+                            onNavigateBack = {
+                                navController.popBackStack()
+                            }
+                        )
                     }
 
                     composable(

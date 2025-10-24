@@ -4,6 +4,7 @@ import android.content.Context
 import android.content.SharedPreferences
 import com.renova.mobile.network.User
 import com.google.gson.Gson
+import android.util.Log
 
 class SessionManager(context: Context) {
     private val sharedPreferences: SharedPreferences =
@@ -75,6 +76,7 @@ class SessionManager(context: Context) {
     // Obtener token completo para headers HTTP
     fun getAuthToken(): String? {
         val token = getAccessToken()
+        Log.d("SessionManager", "getAuthToken: token = $token")
         val type = getTokenType()
         return if (token != null && type != null) {
             "$type $token"

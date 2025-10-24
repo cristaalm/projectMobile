@@ -27,6 +27,19 @@
             </GhostTextMetaData>
           </value>
         </entry>
+        <entry key="For the following code:&#10;```&#10;                        BusinessProfile(&#10;                            onNavigateBack = {&#10;                                navController.popBackStack()&#10;```&#10;We have the error: No value passed for parameter 'languageViewModel'.&#10;Please fix this. If needed, you can use the get_errors tool on this file.">
+          <value>
+            <GhostTextMetaData>
+              <option name="count" value="2.0" />
+              <option name="timestamps">
+                <list>
+                  <option value="1761266748340" />
+                  <option value="1761266040320" />
+                </list>
+              </option>
+            </GhostTextMetaData>
+          </value>
+        </entry>
         <entry key="For the following code:&#10;```&#10;                isSpanish = isSpanish,&#10;                viewModel = profileViewModel&#10;            )&#10;```&#10;We have the error: Unresolved reference 'profileViewModel'.&#10;Please fix this. If needed, you can use the get_errors tool on this file.">
           <value>
             <GhostTextMetaData>
@@ -94,6 +107,82 @@
             </GhostTextMetaData>
           </value>
         </entry>
+        <entry key="For the following code:&#10;```&#10;package com.renova.mobile.repository&#10;&#10;```&#10;We have the error: ';' expected&#10;Please fix this. If needed, you can use the get_errors tool on this file.">
+          <value>
+            <GhostTextMetaData>
+              <option name="count" value="1.0" />
+              <option name="timestamps">
+                <list>
+                  <option value="1761112088945" />
+                </list>
+              </option>
+            </GhostTextMetaData>
+          </value>
+        </entry>
+        <entry key="can you checj fir errors">
+          <value>
+            <GhostTextMetaData>
+              <option name="count" value="1.0" />
+              <option name="timestamps">
+                <list>
+                  <option value="1761112488202" />
+                </list>
+              </option>
+            </GhostTextMetaData>
+          </value>
+        </entry>
+        <entry key="check my code for errors&#10;&#10;@&lt;file_name&gt;">
+          <value>
+            <GhostTextMetaData>
+              <option name="count" value="3.0" />
+              <option name="timestamps">
+                <list>
+                  <option value="1761240803980" />
+                  <option value="1761240791137" />
+                  <option value="1761240741540" />
+                </list>
+              </option>
+            </GhostTextMetaData>
+          </value>
+        </entry>
+        <entry key="check my code for errors&#10;&#10;@&lt;file_name&gt; &#10;@&lt;file_name&gt;">
+          <value>
+            <GhostTextMetaData>
+              <option name="count" value="2.0" />
+              <option name="timestamps">
+                <list>
+                  <option value="1761240902343" />
+                  <option value="1761240863491" />
+                </list>
+              </option>
+            </GhostTextMetaData>
+          </value>
+        </entry>
+        <entry key="check my code for errors@&lt;file_name&gt;">
+          <value>
+            <GhostTextMetaData>
+              <option name="count" value="2.0" />
+              <option name="timestamps">
+                <list>
+                  <option value="1761239661659" />
+                  <option value="1761239578320" />
+                </list>
+              </option>
+            </GhostTextMetaData>
+          </value>
+        </entry>
+        <entry key="check my errors">
+          <value>
+            <GhostTextMetaData>
+              <option name="count" value="1.0" />
+              <option name="timestamps">
+                <list>
+                  <option value="1761176748294" />
+                </list>
+              </option>
+            </GhostTextMetaData>
+          </value>
+        </entry>
         <entry key="hay muchos errores en las strings y no se porque">
           <value>
             <GhostTextMetaData>
@@ -113,6 +202,18 @@
               <option name="timestamps">
                 <list>
                   <option value="1761007030016" />
+                </list>
+              </option>
+            </GhostTextMetaData>
+          </value>
+        </entry>
+        <entry key="look at my errors">
+          <value>
+            <GhostTextMetaData>
+              <option name="count" value="1.0" />
+              <option name="timestamps">
+                <list>
+                  <option value="1761283382226" />
                 </list>
               </option>
             </GhostTextMetaData>

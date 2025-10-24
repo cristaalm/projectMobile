@@ -346,4 +346,32 @@
     <string name="quantity">Quantity</string>
     <string name="default_notification_channel_id" translatable="false">fcm_default_channel</string>
     <string name="no_activity_description">Your recycling and reward activities will appear here</string>
+    <string name="address">Address</string>
+    <string name="business_profile_title">Business Profile</string>
+    <string name="business_information">Business Information</string>
+    <string name="business_name">Business Name</string>
+    <string name="available_rewards">Available Rewards</string>
+    <string name="business_phone_number">Business Phone Number</string>
+    <string name="rewards_title">Available Rewards</string>
+    <string name="more_rewards_available">+%d more rewards</string>
+    <string name="rewards_available">Available Rewards</string>
+    <string name="authentication_error">Authentication Error</string>
+    <string name="session_error">Session Error</string>
+    <string name="business_address">Business Adress</string>
+    <string name="profile_picture">Profile Picture</string>
+    <string name="business_info">Business Information</string>
+    <string name="category">Category</string>
+    <string name="status_label">Status</string>
+    <string name="status_active">Active</string>
+    <string name="status_pending">Pending</string>
+    <string name="status_rejected">Rejected</string>
+    <string name="status_inactive">Inactive</string>
+
+    <!-- User Type Labels -->
+    <string name="user_type_label">User Type</string>
+    <string name="user_type_citizen">Citizen</string>
+    <string name="user_type_admin">Administrator</string>
+    <string name="user_type_business">Business</string>
+    <string name="user_type_unknown">Unknown</string>
+
 </resources>

@@ -306,6 +306,7 @@ data class Alliance(
     val address: String?,
     val logo: Boolean,
     val type_shop_id: Int?,
+    val type_shop: TypeShop?,
     val ext: String?,
     val status: Int,
     val created_at: String?,
@@ -391,7 +392,7 @@ data class UserData(
     val two_factor_status: Boolean,
     val code_identity: String,
     val status: Int,
-    val alliance_id: Int?,
+    val alliance: Alliance?,
     val created_at: String,
     val updated_at: String,
     val role: RoleData
