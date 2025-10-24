@@ -35,7 +35,7 @@ import androidx.navigation.NavType
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.navArgument
 import androidx.navigation.navigation
-import com.renova.mobile.utils.SessionManager
+import com.renova.mobile.utils.SessionManager // Import SessionManager
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.renova.mobile.viewmodel.BusinessSaleViewModel
 import com.renova.mobile.ui.viewmodels.LanguageViewModel
@@ -50,24 +50,30 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.setValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.animation.AnimatedVisibility
-import androidx.compose.material.icons.Icons // <-- IMPORTAR
-import androidx.compose.material.icons.outlined.HelpOutline // <-- IMPORTAR
-import androidx.compose.material3.FloatingActionButton // <-- IMPORTAR
-import androidx.compose.material3.Icon // <-- IMPORTAR
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.outlined.HelpOutline
+import androidx.compose.material3.FloatingActionButton
+import androidx.compose.material3.Icon
 import androidx.compose.runtime.collectAsState
 import androidx.compose.ui.unit.dp
-import com.renova.mobile.ui.tour.LocalTourState // <-- IMPORTAR
+import com.renova.mobile.ui.tour.LocalTourState
 import com.renova.mobile.ui.tour.TourOverlay
+import android.util.Log // Import Log
+
+import androidx.compose.runtime.derivedStateOf
+import com.renova.mobile.ui.theme.LocalRenovaColors
+import androidx.compose.ui.graphics.Color
 
 
 object StoreGraph {
     const val ROUTE = "store_graph"
     const val STORE_LIST = "store_list"
-    const val REWARDS = "reward_screen/{allianceId}"
+    const val REWARDS = "reward_screen/{allianceId}" // Ruta base para recompensas
 }
 
 @Composable
 fun AppNavigation(
+    sessionManager: SessionManager, // Recibe SessionManager
     onLogout: () -> Unit,
     languageViewModel: LanguageViewModel,
     isUpdatingLanguage: Boolean
@@ -75,25 +81,49 @@ fun AppNavigation(
     val navController = rememberNavController()
     val businessSaleVM: BusinessSaleViewModel = viewModel()
 
-    val context = LocalContext.current
-    val sessionManager = remember(context) { SessionManager(context) }
+    // Ya no necesitamos obtener el sessionManager del contexto, lo recibimos como parámetro
+    // val context = LocalContext.current
+    // val sessionManager = remember(context) { SessionManager(context) }
     val user = sessionManager.getUser()
     val isBusiness = (user?.role?.id ?: 0) == 4
 
     var contentVisible by remember { mutableStateOf(false) }
 
-    LaunchedEffect(Unit) {
-        kotlinx.coroutines.delay(100)
-        contentVisible = true
-    }
-
-    // 1. Obtener el estado del tour desde CompositionLocal
     val tourState = LocalTourState.current
     val isTourActive by tourState.isTourActive.collectAsState()
 
-    // 2. Obtener la ruta actual para que el tour sepa en qué pantalla está
+    // LaunchedEffect que se ejecuta UNA VEZ cuando AppNavigation se compone
+    LaunchedEffect(Unit) {
+        contentVisible = true // Muestra contenido principal
+
+        // Verificar si es el primer login y si el tour NO está ya activo
+        if (sessionManager.isFirstLogin() && !isTourActive) {
+            Log.d("AppNavigation", "Detectado primer login, iniciando tour...")
+            // sessionManager.setFirstLoginComplete() // Se marca en MainActivity
+            // Espera un poco más para asegurar que todo esté listo
+            delay(500) // Aumentamos el delay por si acaso
+            tourState.startTour()
+        } else {
+            Log.d("AppNavigation", "No es primer login o tour ya activo, no se inicia automáticamente.")
+        }
+    }
+
+
     val navBackStackEntry by navController.currentBackStackEntryAsState()
     val currentRoute = navBackStackEntry?.destination?.route
+
+    val renovaColors = LocalRenovaColors.current
+
+    // --- LÓGICA MÁS ESTRICTA PARA currentRouteHasSteps ---
+    val currentRouteHasSteps by remember(currentRoute, tourState.tourSteps) {
+        derivedStateOf {
+            currentRoute?.let { route ->
+                // Busca si existe algún TourStep cuya screenRoute coincida EXACTAMENTE con la ruta actual
+                tourState.tourSteps.any { step -> step.screenRoute == route }
+            } ?: false // Si currentRoute es nulo, no tiene pasos
+        }
+    }
+
     Box(modifier = Modifier.fillMaxSize()) {
         Scaffold(
             topBar = {
@@ -116,7 +146,6 @@ fun AppNavigation(
                 }
             }
         ) { innerPadding ->
-            // Usar AnimatedVisibility para un fade-in suave
             AnimatedVisibility(
                 visible = contentVisible,
                 enter = fadeIn(animationSpec = tween(durationMillis = 500)),
@@ -179,8 +208,6 @@ fun AppNavigation(
                         BusinessQRScreen(onLogout = onLogout, vm = businessSaleVM, navController = navController)
                     }
 
-
-
                     composable(
                         route = "business/cashout",
                         enterTransition = { enterAnimation },
@@ -191,6 +218,7 @@ fun AppNavigation(
                         PointsCashoutScreen(onLogout = onLogout)
                     }
 
+                    // Rutas de usuario normal
                     composable(
                         route = NavigationItem.Home.route,
                         enterTransition = { enterAnimation },
@@ -216,7 +244,7 @@ fun AppNavigation(
                         }
 
                         composable(
-                            route = StoreGraph.REWARDS,
+                            route = StoreGraph.REWARDS, // "reward_screen/{allianceId}"
                             arguments = listOf(navArgument("allianceId") {
                                 type = NavType.IntType
                             }),
@@ -272,7 +300,7 @@ fun AppNavigation(
                 }
             }
 
-            // Loading inicial mientras contentVisible es false
+            // Loading inicial
             if (!contentVisible) {
                 Box(
                     modifier = Modifier
@@ -286,7 +314,7 @@ fun AppNavigation(
             }
         }
 
-        // Overlay de loading global para cambio de idioma
+        // Overlay de loading para cambio de idioma
         AnimatedVisibility(
             visible = isUpdatingLanguage,
             enter = fadeIn(animationSpec = tween(durationMillis = 300)),
@@ -301,6 +329,8 @@ fun AppNavigation(
                 CircularProgressIndicator(color = MaterialTheme.colorScheme.primary)
             }
         }
+
+        // Overlay del Tour
         if (isTourActive) {
             TourOverlay(
                 tourState = tourState,
@@ -319,23 +349,25 @@ fun AppNavigation(
             )
         }
 
-        // El botón flotante para INICIAR el tour
-        if (!isTourActive) {
+        // Botón flotante para iniciar el tour manualmente
+        if (!isTourActive && currentRouteHasSteps) {
             FloatingActionButton(
                 onClick = {
                     currentRoute?.let { route ->
                         tourState.startTourForScreen(route)
                     } ?: run {
                     }
-                          },
+                },
                 modifier = Modifier
                     .align(Alignment.BottomEnd)
                     .padding(16.dp)
-                    // Añadimos padding extra para que no se solape con la CustomBottomBar
-                    .padding(bottom = 80.dp)
+                    .padding(bottom = 80.dp), // Espacio para la barra inferior
+                containerColor = renovaColors.primaryColor,
+                contentColor = Color.White
             ) {
                 Icon(Icons.Outlined.HelpOutline, "Iniciar Tour")
             }
         }
     }
 }
+

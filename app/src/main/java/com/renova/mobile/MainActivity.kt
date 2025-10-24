@@ -18,18 +18,31 @@ import com.renova.mobile.network.ApiClient
 import com.renova.mobile.utils.SessionManager
 import com.renova.mobile.utils.LocaleHelper
 import android.content.Context
-import android.content.pm.ActivityInfo // <-- de la v2
+import android.content.pm.ActivityInfo
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.renova.mobile.ui.viewmodels.LanguageViewModel
 import com.renova.mobile.ui.viewmodels.RegisterViewModel
 import androidx.compose.runtime.LaunchedEffect
-import android.util.Log // <-- de la v2
-import android.view.WindowManager // <-- de la v2
-import com.renova.mobile.ui.tour.LocalTourState // <-- de la v1
-import com.renova.mobile.ui.tour.TourState // <-- de la v1
-import kotlinx.coroutines.Dispatchers // <-- de la v2
-import kotlinx.coroutines.withContext // <-- de la v2
-import com.renova.mobile.network.RegisterFcmTokenRequest // <-- de la v2
+import android.util.Log
+import android.view.WindowManager
+import com.renova.mobile.ui.tour.LocalTourState
+import com.renova.mobile.ui.tour.TourState
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
+import com.renova.mobile.network.RegisterFcmTokenRequest
+
+// Importa la clase User que tu SessionManager espera
+import com.renova.mobile.network.User
+// Importa las clases de Auth (si no están ya importadas globalmente en screens.*)
+import com.renova.mobile.screens.LoginScreen
+import com.renova.mobile.screens.ForgotPasswordScreen
+import com.renova.mobile.screens.RegisterScreen
+import com.renova.mobile.screens.DocumentsScreen
+import com.renova.mobile.screens.VerificationScreen
+import com.renova.mobile.screens.RegisterData
+import com.renova.mobile.screens.DocumentsData
+// kotlinx.coroutines.delay ya no es necesario aquí
+
 
 class MainActivity : ComponentActivity() {
     override fun attachBaseContext(newBase: Context) {
@@ -40,7 +53,7 @@ class MainActivity : ComponentActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        // Añadido de la v2
+
         requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_PORTRAIT
         window.setFlags(
             WindowManager.LayoutParams.FLAG_SECURE,
@@ -50,7 +63,7 @@ class MainActivity : ComponentActivity() {
         enableEdgeToEdge()
         setContent {
             RenovaTheme {
-                val sessionManager = SessionManager(this)
+                val sessionManager = remember { SessionManager(this) } // remember sessionManager
                 val languageViewModel: LanguageViewModel = viewModel()
 
                 LaunchedEffect(Unit) {
@@ -62,8 +75,8 @@ class MainActivity : ComponentActivity() {
                 HideSystemNavigation()
 
                 var isLoggedIn by remember { mutableStateOf(sessionManager.isLoggedIn()) }
+                // Ya no necesitamos 'triggerFirstLoginTour' aquí
 
-                // Añadido de la v2 (Registro de FCM Token)
                 LaunchedEffect(isLoggedIn) {
                     if (isLoggedIn) {
                         val fcmToken = sessionManager.getFcmToken()
@@ -89,29 +102,17 @@ class MainActivity : ComponentActivity() {
                 }
 
                 val tourState = remember { TourState() }
-                // Estado auxiliar para saber si ACABA de iniciar sesión
-                var didJustLogin by remember { mutableStateOf(false) }
 
-                // Efecto que se ejecuta cuando 'isLoggedIn' cambia
-                LaunchedEffect(isLoggedIn) {
-                    // Usamos snapshotFlow para observar el cambio de forma fiable
-                    snapshotFlow { isLoggedIn }
-                        .collect { loggedInStatus ->
-                            // Si el nuevo estado es 'logueado' Y marcamos que acaba de iniciar sesión
-                            if (loggedInStatus && didJustLogin) {
-                                // Inicia el tour
-                                tourState.startTour()
-                                // Resetea la bandera para que no se inicie de nuevo en recomposiciones
-                                didJustLogin = false
-                            }
-                        }
-                }
+                // Ya no necesitamos el LaunchedEffect para 'triggerFirstLoginTour'
+
                 CompositionLocalProvider(LocalTourState provides tourState) {
                     if (isLoggedIn) {
                         AppNavigation(
+                            sessionManager = sessionManager, // Pasamos sessionManager a AppNavigation
                             onLogout = {
                                 sessionManager.logout()
                                 isLoggedIn = false
+                                // shouldStartTour = false // Ya no existe
                             },
                             languageViewModel = languageViewModel,
                             isUpdatingLanguage = isUpdatingLanguage
@@ -120,8 +121,14 @@ class MainActivity : ComponentActivity() {
                         AuthNavigation(
                             sessionManager = sessionManager,
                             onLoginSuccess = {
-                                didJustLogin = true
+                                // Esta lambda se llama DESPUÉS de saveSession()
+                                // 1. Marcamos si es necesario (ya no iniciamos el tour aquí)
+                                if (sessionManager.isFirstLogin()) {
+                                    sessionManager.setFirstLoginComplete()
+                                }
+                                // 2. Actualizamos el estado para navegar
                                 isLoggedIn = true
+                                // 3. El tour se iniciará desde AppNavigation si corresponde
                             }
                         )
                     }
@@ -149,7 +156,7 @@ private fun HideSystemNavigation() {
 @Composable
 fun AuthNavigation(
     sessionManager: SessionManager,
-    onLoginSuccess: () -> Unit
+    onLoginSuccess: () -> Unit // Esta lambda se llama desde LoginScreen
 ) {
     var currentScreen by remember { mutableStateOf("login") }
     var registerData by remember { mutableStateOf<RegisterData?>(null) }
@@ -205,12 +212,14 @@ fun AuthNavigation(
                         currentScreen = "register"
                     },
                     onLoginSuccess = { user, token, tokenType, expiresAt ->
+                        // 1. Guardar la sesión (usando tu tipo 'User')
                         sessionManager.saveSession(
                             accessToken = token,
                             tokenType = tokenType,
                             expiresAt = expiresAt,
                             user = user
                         )
+                        // 2. Llamar al callback de MainActivity (que contiene la lógica del tour y el cambio de isLoggedIn)
                         onLoginSuccess()
                     }
                 )
@@ -266,3 +275,4 @@ fun AuthNavigation(
         }
     }
 }
+
