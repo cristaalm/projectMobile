@@ -24,8 +24,6 @@ import android.Manifest
 import android.content.pm.PackageManager
 import android.os.Build
 import androidx.activity.result.contract.ActivityResultContracts
-import androidx.core.app.NotificationCompat
-import androidx.core.app.NotificationManagerCompat
 import androidx.core.content.ContextCompat
 import com.renova.mobile.ui.components.SectionHeader
 import com.renova.mobile.R
@@ -43,8 +41,10 @@ import kotlinx.coroutines.launch
 import com.renova.mobile.ui.components.PrinterSelectionModal
 import com.renova.mobile.utils.TicketPrinter
 import com.renova.mobile.utils.PrinterModel
-import com.renova.mobile.network.SendNotificationRequest
+
 import com.renova.mobile.utils.SessionManager
+import com.renova.mobile.network.ApiClient
+import com.renova.mobile.network.RegisterFcmTokenRequest
 
 @Composable
 fun BusinessStoreScreen(onLogout: () -> Unit, vm: BusinessSaleViewModel = viewModel(), navController: NavController) {
@@ -115,7 +115,7 @@ fun BusinessStoreScreen(onLogout: () -> Unit, vm: BusinessSaleViewModel = viewMo
             val channel = android.app.NotificationChannel(
                 channelId,
                 "Ventas",
-                android.app.NotificationManager.IMPORTANCE_DEFAULT
+                android.app.NotificationManager.IMPORTANCE_HIGH
             ).apply {
                 enableVibration(true)
                 setShowBadge(true)
@@ -142,40 +142,42 @@ fun BusinessStoreScreen(onLogout: () -> Unit, vm: BusinessSaleViewModel = viewMo
         isSubmitting = true
         Toast.makeText(context, "Finalizando la compra...", Toast.LENGTH_SHORT).show()
 
+        // Asegurar registro del token FCM del comercio justo antes del claim
+        val merchantId = userCommerce?.id
+        val fcmToken = sessionManager.getFcmToken()
+        if (merchantId != null && !fcmToken.isNullOrBlank()) {
+            scope.launch(kotlinx.coroutines.Dispatchers.IO) {
+                try {
+                    ApiClient.init(context)
+                    ApiClient.apiService.registerFcmToken(
+                        RegisterFcmTokenRequest(userId = merchantId, token = fcmToken!!)
+                    )
+                } catch (_: Exception) {
+                    // no-op: no bloquear la venta por fallo de registro
+                }
+            }
+        }
+
         // Llamar API reward/claim
         vm.claimRewards(
             merchantUserId = userCommerce?.id,
+            fcmToken = null, // El backend maneja las notificaciones usando tokens registrados
             onSuccess = { message ->
-                // Notificación local para el comerciante con más detalle
-                val title = "Venta finalizada - ${user?.name ?: "Consumidor"}"
-                val notification = NotificationCompat.Builder(context, channelId)
-                    .setSmallIcon(android.R.drawable.ic_dialog_info)
-                    .setContentTitle(title)
-                    .setStyle(NotificationCompat.BigTextStyle().bigText(message))
-                    .setAutoCancel(true)
-                    .build()
-                NotificationManagerCompat.from(context).notify(1001, notification)
-
-                // Feedback inmediato
-                Toast.makeText(context, "Venta registrada", Toast.LENGTH_SHORT).show()
                 isSubmitting = false
-                showSaleDetail = true
+                // Limpiar estado local y mover al Home para visualizar última venta
+                vm.finalizeSale()
+                navController.navigate(NavigationItemBusiness.Home.route)
+                Toast.makeText(context, "Venta finalizada", Toast.LENGTH_SHORT).show()
             },
-            onError = { errorMessage ->
-                // Enviar notificación push con mensaje de error
-                val notification = NotificationCompat.Builder(context, channelId)
-                    .setSmallIcon(android.R.drawable.ic_dialog_alert)
-                    .setContentTitle("Error en venta")
-                    .setContentText(errorMessage)
-                    .setAutoCancel(true)
-                    .build()
-                NotificationManagerCompat.from(context).notify(1002, notification)
-                vm.setError(errorMessage)
+            onError = { err ->
                 isSubmitting = false
-                Toast.makeText(context, "Error al enviar la venta", Toast.LENGTH_SHORT).show()
+                Toast.makeText(context, err, Toast.LENGTH_LONG).show()
             },
-            onPushFeedback = { feedbackMsg ->
-                Toast.makeText(context, feedbackMsg, Toast.LENGTH_SHORT).show()
+            onPushFeedback = { feedback ->
+                // Mostrar resultado de push si aplica (ya no se envía desde cliente)
+                if (feedback.isNotBlank()) {
+                    Toast.makeText(context, feedback, Toast.LENGTH_SHORT).show()
+                }
             }
         )
     }
@@ -245,7 +247,7 @@ fun BusinessStoreScreen(onLogout: () -> Unit, vm: BusinessSaleViewModel = viewMo
                             color = Color.Black
                         )
                         Text(
-                            text = "Puntos disponibles: ${user!!.total_points}",
+                            text = "Puntos disponibles: " + java.text.NumberFormat.getIntegerInstance(java.util.Locale("es","MX")).format(user!!.total_points),
                             style = MaterialTheme.typography.bodyMedium.copy(fontFamily = PoppinsFontFamily),
                             color = Color.Black
                         )
@@ -371,7 +373,7 @@ fun BusinessStoreScreen(onLogout: () -> Unit, vm: BusinessSaleViewModel = viewMo
                                     color = Color.DarkGray
                                 )
                                 Text(
-                                    text = "$subtotalPoints",
+                                    text = java.text.NumberFormat.getIntegerInstance(java.util.Locale("es","MX")).format(subtotalPoints),
                                     style = MaterialTheme.typography.titleSmall.copy(
                                         fontFamily = PoppinsFontFamily,
                                         fontWeight = FontWeight.Bold
@@ -403,7 +405,7 @@ fun BusinessStoreScreen(onLogout: () -> Unit, vm: BusinessSaleViewModel = viewMo
                             color = Color.DarkGray
                         )
                         Text(
-                            text = "$totalPoints",
+                            text = java.text.NumberFormat.getIntegerInstance(java.util.Locale("es","MX")).format(totalPoints),
                             style = MaterialTheme.typography.titleMedium.copy(
                                 fontFamily = PoppinsFontFamily,
                                 fontWeight = FontWeight.Bold

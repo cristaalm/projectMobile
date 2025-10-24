@@ -28,6 +28,10 @@ import android.view.WindowManager
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import com.renova.mobile.network.RegisterFcmTokenRequest
+import com.google.firebase.messaging.FirebaseMessaging
+import androidx.lifecycle.lifecycleScope
+import kotlinx.coroutines.launch
+import android.widget.Toast
 
 class MainActivity : ComponentActivity() {
     override fun attachBaseContext(newBase: Context) {
@@ -44,6 +48,22 @@ class MainActivity : ComponentActivity() {
             WindowManager.LayoutParams.FLAG_SECURE
         )
         ApiClient.init(this)
+
+        // Request notification permission on Android 13+
+        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.TIRAMISU) {
+            val hasPermission = androidx.core.content.ContextCompat.checkSelfPermission(
+                this,
+                android.Manifest.permission.POST_NOTIFICATIONS
+            ) == android.content.pm.PackageManager.PERMISSION_GRANTED
+            if (!hasPermission) {
+                androidx.core.app.ActivityCompat.requestPermissions(
+                    this,
+                    arrayOf(android.Manifest.permission.POST_NOTIFICATIONS),
+                    1001
+                )
+            }
+        }
+
         enableEdgeToEdge()
         setContent {
             RenovaTheme {
@@ -63,23 +83,47 @@ class MainActivity : ComponentActivity() {
                 // Registrar token FCM almacenado tras login
                 LaunchedEffect(isLoggedIn) {
                     if (isLoggedIn) {
-                        val fcmToken = sessionManager.getFcmToken()
                         val userId = sessionManager.getUser()?.id
-                        if (!fcmToken.isNullOrBlank() && userId != null) {
-                            try {
-                                ApiClient.init(this@MainActivity)
-                                withContext(Dispatchers.IO) {
+
+                        // Obtener el token FCM (prefiere fresco) y registrarlo una sola vez con el userId actual
+                        try {
+                            ApiClient.init(this@MainActivity)
+                        } catch (e: Exception) {
+                            Log.e("FCM", "Error inicializando ApiClient", e)
+                        }
+
+                        FirebaseMessaging.getInstance().token.addOnCompleteListener { task ->
+                            val candidate = if (task.isSuccessful) task.result else null
+                            val cached = sessionManager.getFcmToken()
+                            val token = if (!candidate.isNullOrBlank()) candidate else cached
+
+                            if (token.isNullOrBlank() || userId == null) {
+                                Log.w("FCM", "No se obtuvo token o userId para registrar tras login")
+                                return@addOnCompleteListener
+                            }
+
+                            // Guardar sólo si cambia respecto al cache
+                            if (token != cached) {
+                                sessionManager.saveFcmToken(token)
+                            }
+
+                            // Un solo Toast con el token efectivo
+                            Toast.makeText(this@MainActivity, "FCM Token fresco: ${token}", Toast.LENGTH_LONG).show()
+
+                            // Registrar/actualizar el token para el userId actual (evita duplicados)
+                            this@MainActivity.lifecycleScope.launch(Dispatchers.IO) {
+                                try {
                                     val resp = ApiClient.apiService.registerFcmToken(
-                                        RegisterFcmTokenRequest(userId = userId, token = fcmToken)
+                                        RegisterFcmTokenRequest(userId = userId, token = token)
                                     )
                                     if (resp.isSuccessful && resp.body()?.success == true) {
-                                        Log.d("FCM", "Token registrado tras login para userId=$userId")
+                                        Log.d("FCM", "Token FCM registrado/actualizado para userId=$userId")
                                     } else {
-                                        Log.e("FCM", "Error registrando token tras login: ${resp.code()} ${resp.body()?.message}")
+                                        Log.e("FCM", "Error registrando token FCM: ${resp.code()} ${resp.body()?.message}")
                                     }
+                                } catch (e: Exception) {
+                                    Log.e("FCM", "Excepción registrando token FCM", e)
                                 }
-                            } catch (e: Exception) {
-                                Log.e("FCM", "Excepción registrando token tras login", e)
                             }
                         }
                     }
@@ -88,6 +132,29 @@ class MainActivity : ComponentActivity() {
                 if (isLoggedIn) {
                     AppNavigation(
                         onLogout = {
+                            val userId = sessionManager.getUser()?.id
+                            val token = sessionManager.getFcmToken()
+                            try {
+                                ApiClient.init(this@MainActivity)
+                            } catch (_: Exception) {}
+                            this@MainActivity.lifecycleScope.launch(Dispatchers.IO) {
+                                try {
+                                    if (userId != null && !token.isNullOrBlank()) {
+                                        val resp = ApiClient.apiService.unregisterFcmToken(
+                                            com.renova.mobile.network.UnregisterFcmTokenRequest(userId = userId, token = token!!)
+                                        )
+                                        android.util.Log.d(
+                                            "FCM",
+                                            "Unregister token: HTTP ${resp.code()}, success=${resp.body()?.success}, message='${resp.body()?.message}'"
+                                        )
+                                    } else {
+                                        android.util.Log.w("FCM", "No userId/token to unregister on logout")
+                                    }
+                                } catch (e: Exception) {
+                                    android.util.Log.e("FCM", "Error unregistering FCM token", e)
+                                }
+                            }
+                            sessionManager.clearFcmToken()
                             sessionManager.logout()
                             isLoggedIn = false
                         },

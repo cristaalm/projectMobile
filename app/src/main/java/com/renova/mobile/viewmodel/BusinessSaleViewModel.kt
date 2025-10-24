@@ -159,8 +159,9 @@ class BusinessSaleViewModel : ViewModel() {
                 return@launch
             }
 
-            val stock = reward.stock ?: 0
-            if (stock <= 0) {
+            // Stock: si es null, se considera ilimitado (permitir agregar)
+            val stock = reward.stock
+            if (stock != null && stock <= 0) {
                 _error.value = "No hay stock disponible para esta recompensa."
                 return@launch
             }
@@ -195,9 +196,47 @@ class BusinessSaleViewModel : ViewModel() {
         // Mantener la alianza y el último resumen para continuidad del flujo
     }
 
+    // Envío de notificación al cliente después de la venta (ya no se usa; backend envía push)
+    fun sendClientNotificationAfterSale(
+        userId: Int,
+        title: String,
+        message: String,
+        authOverride: String? = null,
+        onFeedback: (String) -> Unit
+    ) {
+        viewModelScope.launch {
+            try {
+                val req = com.renova.mobile.network.SendNotificationRequest(
+                    userId = userId,
+                    title = title,
+                    message = message
+                )
+                android.util.Log.d("PushClient", "Request sendNotification: userId=${userId}, title='${title}', message='${message}'")
+                val resp = com.renova.mobile.network.ApiClient.apiService.sendNotification(req)
+                android.util.Log.d(
+                    "PushClient",
+                    "Response sendNotification: HTTP ${resp.code()}, isSuccessful=${resp.isSuccessful}, message='${resp.message()}', body=${resp.body()}, headers=${resp.headers()}"
+                )
+                if (resp.isSuccessful && resp.body()?.success == true) {
+                    onFeedback("Notificación enviada al cliente")
+                } else {
+                    val errBody = resp.errorBody()?.string()
+                    val errMsg = resp.body()?.message ?: resp.message() ?: "No se pudo enviar notificación al cliente"
+                    android.util.Log.w("PushClient", "Error body: ${errBody}")
+                    onFeedback("Notificación al cliente falló: ${errMsg} (HTTP ${resp.code()})${if (errBody != null) ": ${errBody}" else ""}")
+                    // No romper el flujo de venta: evitar setear _error por fallas de push
+                }
+            } catch (e: Exception) {
+                android.util.Log.e("PushClient", "Excepción en sendNotification", e)
+                onFeedback("Error al enviar notificación al cliente: ${e.message}")
+            }
+        }
+    }
+
     // Función para reclamar recompensas via API
     fun claimRewards(
         merchantUserId: Int?,
+        fcmToken: String?,
         onSuccess: (String) -> Unit,
         onError: (String) -> Unit,
         onPushFeedback: (String) -> Unit
@@ -216,23 +255,87 @@ class BusinessSaleViewModel : ViewModel() {
                 // Agrupar por id de recompensa para obtener cantidades
                 val grouped = currentTicket.groupBy { it.id }
                 val results = mutableListOf<String>()
+                val backendMessages = mutableListOf<String>()
+                val summaryItems = mutableListOf<com.renova.mobile.ui.components.SaleItem>()
+                var totalPointsSum = 0
+
+                android.util.Log.d(
+                    "ClaimReward",
+                    "Iniciando claim para cliente user_id=${currentUser.id}, comerciante=${merchantUserId}, alianza=${currentAllianceId}"
+                )
 
                 for ((rewardId, group) in grouped) {
+                    // El backend debe usar los tokens registrados por user_id en lugar del token enviado
+                    // ya que la app no tiene acceso al token FCM del cliente escaneado
                     val req = ClaimRewardRequest(
                         user_id = currentUser.id,
                         reward_id = rewardId,
-                        quantity = group.size
+                        quantity = group.size,
+                        token = null // El backend debe obtener el token del cliente por user_id
+                    )
+                    android.util.Log.d(
+                        "ClaimReward",
+                        "Request: user_id=${req.user_id}, reward_id=${req.reward_id}, quantity=${req.quantity}, token=null (backend debe usar tokens registrados)"
                     )
                     val resp = ApiClient.apiService.claimReward(req)
+                    android.util.Log.d(
+                        "ClaimReward",
+                        "Response: HTTP ${resp.code()}, isSuccessful=${resp.isSuccessful}, message='${resp.message()}'"
+                    )
+                    
+                    // Log detallado de la respuesta para monitorear notificaciones
+                    resp.body()?.let { body ->
+                        android.util.Log.d("ClaimReward", "Response body: success=${body.success}, message='${body.message}'")
+                        body.data?.let { data ->
+                            android.util.Log.d("ClaimReward", "Reward data: id=${data.reward?.id}, user_id=${data.reward?.user_id}, quantity=${data.reward?.quantity}")
+                            
+                            // Log de notificaciones enviadas
+                            data.notifications?.let { notifications ->
+                                notifications.client?.let { client ->
+                                    android.util.Log.d("ClaimReward", "Cliente - Intentos: ${client.attempted}, Enviados: ${client.sent?.size ?: 0}, Errores: ${client.errors?.size ?: 0}")
+                                    client.payload?.let { payload ->
+                                        android.util.Log.d("ClaimReward", "Cliente - Título: '${payload.title}', Mensaje: '${payload.body}'")
+                                    }
+                                    if (!client.errors.isNullOrEmpty()) {
+                                        android.util.Log.w("ClaimReward", "Errores de notificación cliente: ${client.errors}")
+                                    }
+                                }
+                                notifications.merchant?.let { merchant ->
+                                    android.util.Log.d("ClaimReward", "Comerciante - Intentos: ${merchant.attempted}, Enviados: ${merchant.sent?.size ?: 0}, Errores: ${merchant.errors?.size ?: 0}")
+                                    merchant.payload?.let { payload ->
+                                        android.util.Log.d("ClaimReward", "Comerciante - Título: '${payload.title}', Mensaje: '${payload.body}'")
+                                    }
+                                    if (!merchant.errors.isNullOrEmpty()) {
+                                        android.util.Log.w("ClaimReward", "Errores de notificación comerciante: ${merchant.errors}")
+                                    }
+                                }
+                            }
+                        }
+                    }
+                    
                     if (!resp.isSuccessful || resp.body()?.success != true) {
+                        val errBody = resp.errorBody()?.string()
                         val err = resp.body()?.message ?: resp.message() ?: "Error al reclamar recompensa"
-                        onError(err)
+                        val fullErr = "${err} (HTTP ${resp.code()})${if (errBody != null) ": ${errBody}" else ""}"
+                        android.util.Log.w("ClaimReward", "Error body: ${errBody}")
+                        onError(fullErr)
                         return@launch
                     } else {
                         val data = resp.body()?.data
-                        val redeemedQty = data?.quantity ?: group.size
+                        val redeemedQty = ((data?.reward?.quantity ?: -1).takeIf { it > 0 } ?: group.size)
                         val rewardName = group.first().name
                         results.add("${redeemedQty} x ${rewardName}")
+                        // Construir resumen con cantidades reales del backend
+                        val pointsEach = group.first().pointsRequired
+                        summaryItems.add(
+                            com.renova.mobile.ui.components.SaleItem(
+                                name = rewardName,
+                                quantity = redeemedQty,
+                                pointsRequired = pointsEach
+                            )
+                        )
+                        totalPointsSum += redeemedQty * pointsEach
+                        resp.body()?.message?.let { backendMessages.add(it) }
                     }
                 }
 
@@ -248,59 +351,19 @@ class BusinessSaleViewModel : ViewModel() {
                     append(": ")
                     append(results.joinToString(", "))
                 }
+                val backendMessageJoined = backendMessages.joinToString(" | ")
 
-                // Enviar push al cliente comprador
-                try {
-                    val clientTitle = "Compra finalizada"
-                    val clientMessage = buildString {
-                        append("Has canjeado: ")
-                        append(results.joinToString(", "))
-                        append(". ¡Gracias por tu compra!")
-                    }
-                    val pushReq = SendNotificationRequest(
-                        userId = currentUser.id,
-                        title = clientTitle,
-                        message = clientMessage
-                    )
-                    val pushResp = ApiClient.apiService.sendNotification(pushReq)
-                    if (pushResp.isSuccessful && pushResp.body()?.success == true) {
-                        onPushFeedback("Notificación enviada al cliente")
-                    } else {
-                        val errMsg = pushResp.body()?.message ?: pushResp.message() ?: "No se pudo enviar notificación al cliente"
-                        _error.value = errMsg
-                    }
-                } catch (e: Exception) {
-                    _error.value = e.message ?: "Error al enviar notificación al cliente"
-                }
+                // No enviar push desde el cliente (evita 403 y duplicados). El backend se encarga.
 
-                // Enviar push al comercio (si tenemos su user_id)
-                if (merchantUserId != null) {
-                    try {
-                        val title = "Venta finalizada"
-                        val merchantMessage = buildString {
-                            append("Se registró una venta para ")
-                            append(consumerName)
-                            append(": ")
-                            append(results.joinToString(", "))
-                        }
-                        val mReq = SendNotificationRequest(
-                            userId = merchantUserId,
-                            title = title,
-                            message = merchantMessage
-                        )
-                        val mResp = ApiClient.apiService.sendNotification(mReq)
-                        if (mResp.isSuccessful && mResp.body()?.success == true) {
-                            onPushFeedback("Notificación enviada al comercio")
-                        } else {
-                            val errMsg = mResp.body()?.message ?: mResp.message() ?: "No se pudo enviar notificación al comercio"
-                            _error.value = errMsg
-                        }
-                    } catch (e: Exception) {
-                        _error.value = e.message ?: "Error al enviar notificación al comercio"
-                    }
-                }
-
-                onSuccess(msg)
+                // Actualizar último resumen de venta con cantidades del backend
+                _lastSaleSummary.value = com.renova.mobile.ui.components.SaleSummary(
+                    id = System.currentTimeMillis().toString(),
+                    allianceName = allianceName ?: "N/A",
+                    consumerName = consumerName,
+                    totalPoints = totalPointsSum,
+                    items = summaryItems
+                )
+                onSuccess(backendMessageJoined.ifBlank { msg })
             } catch (e: Exception) {
                 onError("Error de conexión: ${e.message}")
             }

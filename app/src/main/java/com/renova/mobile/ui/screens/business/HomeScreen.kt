@@ -33,6 +33,7 @@ import com.renova.mobile.utils.TicketPrinter
 import com.renova.mobile.utils.PrinterModel
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.History
@@ -40,6 +41,7 @@ import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material.icons.filled.Analytics
 import androidx.compose.material.icons.filled.AttachMoney
 import androidx.compose.material.icons.filled.CreditCard
+import androidx.compose.material.icons.filled.Close
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.ui.text.style.TextAlign
@@ -100,18 +102,18 @@ fun BusinessHomeScreen(
                 val trimmed = part.trim()
                 val match = Regex("(\\d+)\\s*x\\s*(.+)").find(trimmed)
                 if (match != null) {
-                    val q = match.groupValues[1].toIntOrNull() ?: 1
+                    val q = match.groupValues[1].toIntOrNull() ?: (activity.quantity ?: 1)
                     val name = match.groupValues[2]
                     items.add(SaleItem(name = name, quantity = q, pointsRequired = 0))
                 }
             }
             if (items.isEmpty()) {
                 val name = activity.reward?.name ?: "Recompensa"
-                items.add(SaleItem(name = name, quantity = 1, pointsRequired = 0))
+                items.add(SaleItem(name = name, quantity = activity.quantity ?: 1, pointsRequired = 0))
             }
         } else {
             val name = activity.reward?.name ?: activity.material_type?.name ?: "Item"
-            items.add(SaleItem(name = name, quantity = 1, pointsRequired = 0))
+            items.add(SaleItem(name = name, quantity = activity.quantity ?: 1, pointsRequired = 0))
         }
         return SaleSummary(
             id = activity.id.toString(),
@@ -261,7 +263,11 @@ fun BusinessHomeScreen(
                                 )
                                 Spacer(modifier = Modifier.width(12.dp))
                                 Text(
-                                    text = "Última Venta",
+                                    text = (runCatching {
+                                        val millis = lastSaleSummary!!.id.toLong()
+                                        val fmt = java.text.SimpleDateFormat("HH:mm", java.util.Locale.getDefault())
+                                        "${fmt.format(java.util.Date(millis))} · Última Venta"
+                                    }.getOrNull()) ?: "Última Venta",
                                     style = MaterialTheme.typography.titleLarge.copy(
                                         fontFamily = PoppinsFontFamily,
                                         fontWeight = FontWeight.Bold
@@ -269,7 +275,6 @@ fun BusinessHomeScreen(
                                     color = colors.textPrimary
                                 )
                             }
-                            
                             Spacer(modifier = Modifier.height(16.dp))
 
                             // Detalles de producto y totales
@@ -531,16 +536,12 @@ fun BusinessHomeScreen(
                             .height(400.dp),
                         verticalArrangement = Arrangement.spacedBy(0.dp)
                     ) {
-                        itemsIndexed(historyState.activities) { index, activity ->
+                        itemsIndexed(historyState.activities.filter { it.reward != null }.take(3)) { index, activity ->
                             HistoryActivityCard(
                                 activity = activity,
-                                colors = colors,
-                                onClick = {
-                                    selectedSummary = toSaleSummary(activity)
-                                    showDetail = true
-                                }
+                                colors = colors
                             )
-                            if (index < historyState.activities.size - 1) {
+                            if (index < historyState.activities.filter { it.reward != null }.take(3).size - 1) {
                                  Divider(
                                      color = RenovaColors.PrimaryColor,
                                      thickness = 1.dp,
@@ -549,7 +550,7 @@ fun BusinessHomeScreen(
                              }
                         }
                          
-                         if (historyState.activities.isEmpty()) {
+                         if (historyState.activities.filter { it.reward != null }.isEmpty()) {
                               item {
                                   Card(
                                       modifier = Modifier.fillMaxWidth(),
@@ -584,20 +585,7 @@ fun BusinessHomeScreen(
                               }
                           }
                      }
-                    // Controles de paginación (si hay más de 1 página)
-                    if (historyState.totalPages > 1) {
-                        com.renova.mobile.ui.components.PaginationControls(
-                            currentPage = historyState.currentPage,
-                            totalPages = historyState.totalPages,
-                            isLoading = historyState.isLoading,
-                            renovaColors = colors.copy(
-                                buttonEnabled = RenovaColors.SecondaryHoverColor,
-                                buttonDisabled = RenovaColors.SecondaryColor
-                            ),
-                            onPreviousPage = { historyViewModel.previousPage() },
-                            onNextPage = { historyViewModel.nextPage() }
-                        )
-                    }
+
                 }
             }
         }
@@ -612,51 +600,66 @@ fun BusinessHomeScreen(
         ) {
             val summary = selectedSummary ?: lastSaleSummary!!
             Column(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(16.dp),
-                verticalArrangement = Arrangement.spacedBy(12.dp)
-            ) {
-                Text(
-                    text = "Detalle de compra",
-                    style = MaterialTheme.typography.titleLarge.copy(
-                        fontFamily = PoppinsFontFamily,
-                        fontWeight = FontWeight.Bold
-                    ),
-                    color = colors.textPrimary
-                )
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    val alliance = summary.allianceName ?: "Sin especificar"
-                    Text(
-                        text = "Comercio: $alliance",
-                        style = MaterialTheme.typography.bodyMedium.copy(fontFamily = PoppinsFontFamily),
-                        color = colors.textPrimary
-                    )
-                    Column(horizontalAlignment = Alignment.End) {
-                        Text(
-                            text = "Total Puntos",
-                            style = MaterialTheme.typography.bodySmall.copy(fontFamily = PoppinsFontFamily),
-                            color = colors.textSecondary
-                        )
-                        Text(
-                            text = "${summary.totalPoints}",
-                            style = MaterialTheme.typography.headlineSmall.copy(
-                                fontFamily = PoppinsFontFamily,
-                                fontWeight = FontWeight.Bold
-                            ),
-                            color = RenovaColors.Primary
-                        )
-                    }
-                }
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(16.dp),
+                        verticalArrangement = Arrangement.spacedBy(12.dp),
+                        horizontalAlignment = Alignment.CenterHorizontally
+                    ) {
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Text(
+                                text = "Detalle de compra",
+                                style = MaterialTheme.typography.titleLarge.copy(
+                                    fontFamily = PoppinsFontFamily,
+                                    fontWeight = FontWeight.Bold
+                                ),
+                                color = colors.textPrimary
+                            )
+                            IconButton(onClick = { showDetail = false }) {
+                                Icon(
+                                    imageVector = Icons.Default.Close,
+                                    contentDescription = "Cerrar",
+                                    tint = colors.textSecondary
+                                )
+                            }
+                        }
+                        Column(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalAlignment = Alignment.CenterHorizontally,
+                            verticalArrangement = Arrangement.spacedBy(6.dp)
+                        ) {
+                            val alliance = summary.allianceName ?: "Sin especificar"
+                            Text(
+                                text = "Comercio: $alliance",
+                                style = MaterialTheme.typography.bodyMedium.copy(fontFamily = PoppinsFontFamily),
+                                color = colors.textPrimary,
+                                textAlign = TextAlign.Center
+                            )
+                            Text(
+                                text = "Total Puntos",
+                                style = MaterialTheme.typography.bodySmall.copy(fontFamily = PoppinsFontFamily),
+                                color = colors.textSecondary
+                            )
+                            Text(
+                                text = "${summary.totalPoints}",
+                                style = MaterialTheme.typography.headlineSmall.copy(
+                                    fontFamily = PoppinsFontFamily,
+                                    fontWeight = FontWeight.Bold
+                                ),
+                                color = RenovaColors.Primary
+                            )
+                        }
                 val mxn = NumberFormat.getCurrencyInstance(Locale("es", "MX")).format(summary.totalPoints * 0.10)
                 Text(
                     text = "Equivalente MXN: $mxn",
                     style = MaterialTheme.typography.bodyMedium.copy(fontFamily = PoppinsFontFamily),
-                    color = RenovaColors.Primary
+                    color = RenovaColors.Primary,
+                    modifier = Modifier.fillMaxWidth(),
+                    textAlign = TextAlign.Center
                 )
                 Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
                     summary.items.forEach { item ->
@@ -667,33 +670,19 @@ fun BusinessHomeScreen(
                         )
                     }
                 }
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.spacedBy(12.dp)
+                Button(
+                    onClick = {
+                        showDetail = false
+                        showPrinterSelection = true
+                    },
+                    colors = androidx.compose.material3.ButtonDefaults.buttonColors(
+                        containerColor = RenovaColors.Primary
+                    ),
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 24.dp)
                 ) {
-                    androidx.compose.material3.OutlinedButton(
-                        onClick = {
-                            showDetail = false
-                            showPrinterSelection = true
-                        },
-                        colors = androidx.compose.material3.ButtonDefaults.outlinedButtonColors(
-                            contentColor = RenovaColors.Primary
-                        ),
-                        modifier = Modifier.weight(1f)
-                    ) {
-                        Icon(imageVector = Icons.Default.CreditCard, contentDescription = null)
-                        Spacer(modifier = Modifier.width(8.dp))
-                        Text("Cobrar (Ticket)")
-                    }
-                    Button(
-                        onClick = { showDetail = false },
-                        colors = androidx.compose.material3.ButtonDefaults.buttonColors(
-                            containerColor = RenovaColors.Primary
-                        ),
-                        modifier = Modifier.weight(1f)
-                    ) {
-                        Text("Cerrar", color = Color.White)
-                    }
+                    Text("Cobrar", color = Color.White)
                 }
             }
         }
@@ -773,7 +762,8 @@ fun HistoryActivityCard(
                       2 -> activity.material_type?.name ?: ""
                       1 -> {
                           val name = activity.reward?.name ?: "Recompensa"
-                          "1 x $name"
+                          val q = activity.quantity ?: 1
+                          "$q x $name"
                       }
                       else -> activity.alliance?.name ?: ""
                   }

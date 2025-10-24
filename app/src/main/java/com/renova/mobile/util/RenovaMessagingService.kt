@@ -23,19 +23,26 @@ import kotlinx.coroutines.launch
 class RenovaMessagingService : FirebaseMessagingService() {
 
     override fun onMessageReceived(remoteMessage: RemoteMessage) {
-        // Handle FCM messages here.
         Log.d(TAG, "From: ${remoteMessage.from}")
 
-        // Check if message contains a data payload.
-        remoteMessage.data.isNotEmpty().let {
-            Log.d(TAG, "Message data payload: " + remoteMessage.data)
-            sendNotification(remoteMessage.data["title"], remoteMessage.data["body"])
+        val hasData = remoteMessage.data.isNotEmpty()
+        val hasNotification = remoteMessage.notification != null
+
+        if (hasData) {
+            Log.d(TAG, "Message data payload: ${remoteMessage.data}")
+            val data = remoteMessage.data
+            val title = data["title"] ?: data["notification_title"] ?: remoteMessage.notification?.title ?: "Renova"
+            val body = data["message"] ?: data["body"] ?: data["notification_body"] ?: remoteMessage.notification?.body ?: "Tienes una nueva notificación"
+            sendNotification(title, body)
+            return
         }
 
-        // Check if message contains a notification payload.
-        remoteMessage.notification?.let {
-            Log.d(TAG, "Message Notification Body: ${it.body}")
-            sendNotification(it.title, it.body)
+        if (hasNotification) {
+            val notif = remoteMessage.notification
+            Log.d(TAG, "Message Notification Body: ${notif?.body}")
+            val title = notif?.title ?: "Renova"
+            val body = notif?.body ?: "Tienes una nueva notificación"
+            sendNotification(title, body)
         }
     }
 
@@ -56,7 +63,7 @@ class RenovaMessagingService : FirebaseMessagingService() {
         if (token.isNullOrBlank()) {
             Log.w(TAG, "Token FCM vacío, no se envía")
             return
-        }
+    }
         val context = applicationContext
         val sessionManager = SessionManager(context)
         val userId = sessionManager.getUser()?.id
@@ -98,24 +105,27 @@ class RenovaMessagingService : FirebaseMessagingService() {
         val channelId = getString(R.string.default_notification_channel_id)
         val defaultSoundUri = RingtoneManager.getDefaultUri(RingtoneManager.TYPE_NOTIFICATION)
         val notificationBuilder = NotificationCompat.Builder(this, channelId)
-            .setSmallIcon(R.drawable.ic_notification)
+            .setSmallIcon(R.mipmap.ic_launcher)
             .setContentTitle(title)
             .setContentText(messageBody)
             .setAutoCancel(true)
             .setSound(defaultSoundUri)
+            .setPriority(NotificationCompat.PRIORITY_HIGH)
             .setContentIntent(pendingIntent)
 
         val notificationManager = getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
 
         // Since android Oreo notification channel is needed.
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            val channel = NotificationChannel(channelId,
-                "Channel human readable title",
-                NotificationManager.IMPORTANCE_DEFAULT)
+            val channel = NotificationChannel(
+                channelId,
+                "Renova notifications",
+                NotificationManager.IMPORTANCE_HIGH
+            )
             notificationManager.createNotificationChannel(channel)
         }
 
-        notificationManager.notify(0 /* ID of notification */, notificationBuilder.build())
+        notificationManager.notify(System.currentTimeMillis().toInt(), notificationBuilder.build())
     }
 
     companion object {

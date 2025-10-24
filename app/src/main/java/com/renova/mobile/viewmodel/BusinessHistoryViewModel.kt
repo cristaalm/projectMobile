@@ -145,7 +145,7 @@ class BusinessHistoryViewModel : ViewModel() {
                 scan_id = null,
                 comerciant_id = null,
                 description = null,
-                quantity = currentGroup.size,
+                quantity = currentGroup.sumOf { it.quantity ?: 1 },
                 alliance = lastItem.alliance,
                 material_type = null,
                 reward = aggregatedReward ?: firstItem.reward,

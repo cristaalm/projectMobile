@@ -124,7 +124,7 @@ fun QRScreen(
                         .clip(RoundedCornerShape(20.dp))
                         .background(Color.Transparent)
                         .paint(
-                            painter = painterResource(id = R.drawable.fondo_chico),
+                            painter = painterResource(id = R.drawable.fondo_verde),
                             contentScale = ContentScale.Crop
                         )
                         .padding(15.dp)

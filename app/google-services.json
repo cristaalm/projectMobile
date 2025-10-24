@@ -1,37 +1,26 @@
 {
   "project_info": {
-    "project_number": "YOUR_PROJECT_NUMBER",
-    "firebase_url": "https://renova-ia.firebaseio.com",
+    "project_number": "129007165281",
     "project_id": "renova-ia",
-    "storage_bucket": "renova-ia.appspot.com"
+    "storage_bucket": "renova-ia.firebasestorage.app"
   },
   "client": [
     {
       "client_info": {
-        "mobilesdk_app_id": "YOUR_APP_ID",
+        "mobilesdk_app_id": "1:129007165281:android:e76be98a2e2af0c579ef20",
         "android_client_info": {
           "package_name": "com.renova.mobile"
         }
       },
-      "oauth_client": [
-        {
-          "client_id": "YOUR_CLIENT_ID",
-          "client_type": 3
-        }
-      ],
+      "oauth_client": [],
       "api_key": [
         {
-          "current_key": "YOUR_API_KEY"
+          "current_key": "AIzaSyBIPxorke-D1Ruoar98xInB4r49L8xPMzs"
         }
       ],
       "services": {
         "appinvite_service": {
-          "other_platform_oauth_client": [
-            {
-              "client_id": "YOUR_CLIENT_ID",
-              "client_type": 3
-            }
-          ]
+          "other_platform_oauth_client": []
         }
       }
     }

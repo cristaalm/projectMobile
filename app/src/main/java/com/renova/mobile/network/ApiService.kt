@@ -424,19 +424,12 @@ data class IdentityVerification(
 data class IdentifyUserByCodeRequest(
     val code: String
 )
-
-
-// ========== REWARD CLAIM ==========
-@Deprecated("Use single-item ClaimRewardRequest with quantity")
-data class RewardClaim(
-    val reward_id: Int,
-    val quantity: Int
-)
-
+    
 data class ClaimRewardRequest(
     @SerializedName("user_id") val user_id: Int,
     @SerializedName("reward_id") val reward_id: Int,
-    @SerializedName("quantity") val quantity: Int
+    @SerializedName("quantity") val quantity: Int,
+    @SerializedName("token") val token: String? = null
 )
 
 data class ClaimRewardResponse(
@@ -448,11 +441,44 @@ data class ClaimRewardResponse(
 )
 
 data class ClaimRewardData(
+    val reward: ClaimRewardInfo?,
+    val notifications: ClaimNotifications?
+)
+
+data class ClaimRewardInfo(
     val id: Int,
     val user_id: Int,
     val reward_id: Int,
-    val quantity: Int,
-    val redeemed_at: String
+    val quantity: Int
+)
+
+data class ClaimNotifications(
+    val client: NotificationResult?,
+    val merchant: NotificationResult?
+)
+
+data class NotificationResult(
+    val attempted: Int,
+    val errors: List<String>?,
+    val payload: NotificationPayload?,
+    val tokens: List<String>?,
+    val sent: List<SentNotification>?
+)
+
+data class NotificationPayload(
+    val title: String,
+    val body: String,
+    val type: String,
+    val reward_id: String
+)
+
+data class SentNotification(
+    val token: String,
+    val message_id: MessageId
+)
+
+data class MessageId(
+    val name: String
 )
 
 data class UpdateFieldRequest(
@@ -514,6 +540,13 @@ data class RegisterFcmTokenRequest(
 data class RegisterFcmTokenResponse(
     val success: Boolean,
     val message: String
+)
+
+// New: FCM token unregistration request
+data class UnregisterFcmTokenRequest(
+    @SerializedName("user_id") val userId: Int,
+    @SerializedName("token") val token: String,
+    @SerializedName("platform") val platform: String = "android"
 )
 
 interface ApiService {
@@ -633,6 +666,10 @@ interface ApiService {
 
     @POST("api/notifications/registerToken")
     suspend fun registerFcmToken(@Body request: RegisterFcmTokenRequest): Response<RegisterFcmTokenResponse>
+
+    // New: unregister FCM token on logout
+    @POST("api/notifications/unregisterToken")
+    suspend fun unregisterFcmToken(@Body request: UnregisterFcmTokenRequest): Response<RegisterFcmTokenResponse>
 }
 
 // ========== API CLIENT ==========

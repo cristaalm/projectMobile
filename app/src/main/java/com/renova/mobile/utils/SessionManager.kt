@@ -140,7 +140,20 @@ class SessionManager(context: Context) {
     }
 
     fun getFcmToken(): String? {
-        return sharedPreferences.getString(KEY_FCM_TOKEN, null)
+        val t = sharedPreferences.getString(KEY_FCM_TOKEN, null)
+        if (t.isNullOrBlank() || t == "fcm_token") {
+            try {
+                com.google.firebase.messaging.FirebaseMessaging.getInstance().token.addOnCompleteListener { task ->
+                    if (task.isSuccessful) {
+                        val fresh = task.result
+                        if (!fresh.isNullOrBlank()) {
+                            saveFcmToken(fresh)
+                        }
+                    }
+                }
+            } catch (_: Exception) { /* no-op */ }
+        }
+        return t
     }
 
     fun clearFcmToken() {

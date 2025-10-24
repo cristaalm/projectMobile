@@ -56,6 +56,21 @@ fun SaleDetailModal(
                     }
                 }
 
+                // Hora de la venta debajo del título
+                val timeText = runCatching {
+                    val millis = summary.id.toLong()
+                    val fmt = java.text.SimpleDateFormat("HH:mm:ss", java.util.Locale.getDefault())
+                    fmt.format(java.util.Date(millis))
+                }.getOrNull()
+                if (timeText != null) {
+                    Spacer(modifier = Modifier.height(4.dp))
+                    Text(
+                        text = "Hora: $timeText",
+                        style = MaterialTheme.typography.bodySmall.copy(fontFamily = PoppinsFontFamily),
+                        color = Color.DarkGray
+                    )
+                }
+
                 // Resumen general
                 Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
                     // Eliminado: ID de la venta
