@@ -241,14 +241,6 @@ private fun RewardCard(reward: Reward, backgroundColor: Color, onClick: () -> Un
                     color = Color.Black,
                     fontFamily = PoppinsFontFamily
                 )
-                Text(
-                    text = reward.description,
-                    fontSize = 14.sp,
-                    color = Color.Black.copy(alpha = 0.7f),
-                    maxLines = 2,
-                    overflow = TextOverflow.Ellipsis,
-                    fontFamily = PoppinsFontFamily
-                )
             }
 
             Box(

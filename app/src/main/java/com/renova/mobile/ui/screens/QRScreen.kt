@@ -423,7 +423,6 @@ fun QRScreen(
 
 @Composable
 private fun InstructionSection(showQr: Boolean) {
-    // ... (Sin cambios, idéntico en ambas versiones)
     val scrollState = rememberScrollState()
 
     val isScrolledToStart by remember { derivedStateOf { scrollState.value == 0 } }

@@ -332,18 +332,15 @@ private fun ActivityContent(
                 Column(
                     modifier = Modifier
                         .padding(start = 20.dp, top = 12.dp, bottom = 8.dp)
-                        // --- MODIFICADO: Añadir hook del tour (v1) ---
-                        .onGloballyPositioned { coords ->
-                            tourState.registerTarget("activity_history_title", coords)
-                        }
+                    // --- MODIFICACIÓN 1: El .onGloballyPositioned se quitó de aquí ---
                 ) {
                     Text(
                         text = stringResource(R.string.history),
                         style = MaterialTheme.typography.titleLarge,
                         color = renovaColors.textPrimary,
-                        fontWeight = FontWeight.Bold, // <-- de v2
-                        fontSize = 21.sp, // <-- de v2
-                        fontFamily = PoppinsFontFamily // <-- de v2
+                        fontWeight = FontWeight.Bold,
+                        fontSize = 21.sp,
+                        fontFamily = PoppinsFontFamily
                     )
                     Text(
                         text = stringResource(R.string.activity_record),
@@ -356,7 +353,6 @@ private fun ActivityContent(
             }
         }
 
-        // --- NUEVO: DisposableEffects agrupados (de v1) ---
         item {
             DisposableEffect("activity_points_card") {
                 onDispose { tourState.unregisterTarget("activity_points_card") }
@@ -364,11 +360,11 @@ private fun ActivityContent(
             DisposableEffect("activity_materials_row") {
                 onDispose { tourState.unregisterTarget("activity_materials_row") }
             }
+            // --- MODIFICACIÓN 2: El ID "activity_history_title" se mantiene sin cambios ---
             DisposableEffect("activity_history_title") {
                 onDispose { tourState.unregisterTarget("activity_history_title") }
             }
         }
-        // --- FIN DE BLOQUE NUEVO ---
 
         // --- Lógica de lista de v2 (con estado vacío) ---
         if (state.activities.isEmpty()) {
@@ -380,7 +376,11 @@ private fun ActivityContent(
                 Column(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(horizontal = 24.dp),
+                        .padding(horizontal = 24.dp)
+                        // --- MODIFICACIÓN 3: El .onGloballyPositioned se movió aquí, con el ID original ---
+                        .onGloballyPositioned { coords ->
+                            tourState.registerTarget("activity_history_title", coords)
+                        },
                     verticalArrangement = Arrangement.spacedBy(0.dp)
                 ) {
                     state.activities.forEachIndexed { index, activity ->
@@ -548,7 +548,6 @@ fun ActivityHistoryCard(
     }
 }
 
-// --- Composable (idéntico en ambas versiones) ---
 @Composable
 private fun MaterialStatCard(
     title: String,
@@ -614,7 +613,6 @@ private fun MaterialStatCard(
     }
 }
 
-// --- Composable de v2 ---
 @Composable
 fun EmptyStateInline(
     renovaColors: RenovaColorScheme,

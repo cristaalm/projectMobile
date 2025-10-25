@@ -226,7 +226,6 @@ fun StoreScreen(
                 }
 
                 item { // Índice 4
-                    // --- MODIFICADO: Envuelto en un Box para un registro más estable ---
                     Box(modifier = Modifier.onGloballyPositioned { coords ->
                         tourState.registerTarget("store_categories", coords)
                     }) {
@@ -381,7 +380,7 @@ private fun PaginationControls(
             onClick = onPreviousPage,
             enabled = currentPage > 1 && !isLoading,
             colors = ButtonDefaults.buttonColors(
-                containerColor = if (currentPage > 1) renovaColors.buttonEnabled else renovaColors.buttonDisabled,
+                containerColor = if (currentPage > 1) RenovaColors.SecondaryColor else renovaColors.buttonDisabled,
                 contentColor = renovaColors.activityCardBackground
             ),
             shape = RoundedCornerShape(12.dp),
@@ -416,7 +415,7 @@ private fun PaginationControls(
             onClick = onNextPage,
             enabled = currentPage < totalPages && !isLoading,
             colors = ButtonDefaults.buttonColors(
-                containerColor = if (currentPage < totalPages) renovaColors.buttonEnabled else renovaColors.buttonDisabled,
+                containerColor = if (currentPage < totalPages) RenovaColors.SecondaryColor else renovaColors.buttonDisabled,
                 contentColor = renovaColors.activityCardBackground
             ),
             shape = RoundedCornerShape(12.dp),
@@ -484,7 +483,6 @@ private fun SearchBar(
 
 @Composable
 private fun DiscoverSection(
-    // ... (sin cambios)
     colors: RenovaColorScheme
 ) {
     val textColor = Color.Black
@@ -492,7 +490,7 @@ private fun DiscoverSection(
         modifier = Modifier
             .fillMaxWidth()
             .shadow(
-                elevation = 6.dp,
+                elevation = 3.dp,
                 shape = RoundedCornerShape(24.dp),
                 spotColor = RenovaColors.Light.ActivityShadowColor
             ),
@@ -553,7 +551,6 @@ private fun DiscoverSection(
 
 @Composable
 private fun GifPlayer(
-    // ... (sin cambios)
     modifier: Modifier = Modifier
 ) {
     val context = LocalContext.current

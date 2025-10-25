@@ -330,40 +330,40 @@
     <string name="tour_desc_navigating">Loading next screen...</string>
 
     <string name="tour_title_home_points">Your Total Points</string>
-    <string name="tour_desc_home_points">Welcome! This card shows the total points you\'ve earned by recycling. Watch them grow!</string>
+    <string name="tour_desc_home_points">Welcome! This card shows the total points you\'ve earned from recycling. Watch them grow!</string>
     <string name="tour_title_home_activity">Your Recent Activity</string>
-    <string name="tour_desc_home_activity">Here you\'ll see a summary of your latest movements, like recycling and rewards. It\'s a quick look at your progress!</string>
+    <string name="tour_desc_home_activity">Here you\'ll see a summary of your latest movements, like recycling and rewards.</string>
     <string name="tour_title_home_achievements">Your Achievements</string>
     <string name="tour_desc_home_achievements">The more you recycle, the more achievements you unlock! Tap one to see the details.</string>
 
     <string name="tour_title_nav_main">Let\'s go to the Store</string>
-    <string name="tour_desc_nav_main">This is the main menu. Tap \'Store\' (or \'Next\') to see where you can redeem your points.</string>
+    <string name="tour_desc_nav_main">This is the main menu. Tap "Store" (or "Next") to see where to redeem your points.</string>
     <string name="tour_title_qr_button">Your Access Code</string>
-    <string name="tour_desc_qr_button">This is the access button. Tap here (or \'Next\') to see your codes.</string>
+    <string name="tour_desc_qr_button">This is the access button. Tap here (or "Next") to see your codes.</string>
     <string name="tour_title_profile_button">Your Profile</string>
-    <string name="tour_desc_profile_button">Almost done. Tap \'Profile\' (or \'Next\') to view your personal information.</string>
+    <string name="tour_desc_profile_button">Almost done. Tap "Profile" (or "Next") to see your personal information.</string>
     <string name="tour_title_activity_button">Activity History</string>
-    <string name="tour_desc_activity_button">Finally, tap \'Activity\' (or \'Next\') to see the complete history of your movements.</string>
+    <string name="tour_desc_activity_button">Finally, tap "Activity" (or "Next") to see the full history of your movements.</string>
 
     <string name="tour_title_store_categories">Filter Stores</string>
-    <string name="tour_desc_store_categories">Use these filters to find stores by category. Tap \'All\' to see the full list again.</string>
+    <string name="tour_desc_store_categories">Use these filters to find stores by category. Tap "All" to see the full list.</string>
     <string name="tour_title_store_alliances">Our Partners</string>
     <string name="tour_desc_store_alliances">Here you\'ll see the list of businesses where you can redeem your points for rewards.</string>
     <string name="tour_title_store_rewards">Choose a Store</string>
-    <string name="tour_desc_store_rewards">Tap any store (or \'Next\') to explore the exclusive rewards and discounts it offers.</string>
+    <string name="tour_desc_store_rewards">Tap any store (or "Next") to explore the exclusive rewards and discounts it offers.</string>
 
-    <string name="tour_title_qr_container">QR for Container</string>
-    <string name="tour_desc_qr_container">Use this QR code to identify yourself at the smart containers and earn points for your recycling.</string>
-    <string name="tour_title_qr_barcode">Code for Redemptions</string>
-    <string name="tour_desc_qr_barcode">Tap this button to switch to your barcode. Show it at the store to redeem your rewards!</string>
+    <string name="tour_title_qr_container">Your Access Codes</string>
+    <string name="tour_desc_qr_container">This screen shows your codes. Use the QR code to identify yourself at containers and the barcode to redeem in stores.</string>
+    <string name="tour_title_qr_barcode">Swap between codes</string>
+    <string name="tour_desc_qr_barcode">Tap this button to switch between your QR code and your barcode.</string>
 
     <string name="tour_title_profile_language">Change Your Language</string>
-    <string name="tour_desc_profile_language">From here you can change the application language.</string>
+    <string name="tour_desc_profile_language">You can change the app\'s language from here.</string>
     <string name="tour_title_profile_info">Your Information</string>
-    <string name="tour_desc_profile_info">Here you can view your personal data and the status of your identity verification.</string>
+    <string name="tour_desc_profile_info">Here you can see your personal data and your identity verification status.</string>
 
     <string name="tour_title_activity_points">Points Summary</string>
-    <string name="tour_desc_activity_points">Here you have the total points you have accumulated.</string>
+    <string name="tour_desc_activity_points">Here is the total number of points you have accumulated.</string>
     <string name="tour_title_activity_materials">Your Impact</string>
     <string name="tour_desc_activity_materials">This section summarizes how much plastic and aluminum you\'ve helped recycle. Good job!</string>
     <string name="tour_title_activity_history">Detailed History</string>

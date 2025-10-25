@@ -458,15 +458,7 @@ class TourState {
         }
     }
 
-    // --- Funciones para Registrar Targets ---
 
-    /**
-     * Registra o actualiza la posición y tamaño de un elemento objetivo (target)
-     * en el mapa `_targets`. Llamado desde `Modifier.onGloballyPositioned`.
-     *
-     * @param id El `targetId` que coincide con un `TourStep`.
-     * @param coordinates Las `LayoutCoordinates` proporcionadas por `onGloballyPositioned`.
-     */
     fun registerTarget(id: String, coordinates: LayoutCoordinates?) {
         // Si las coordenadas son nulas o el elemento ya no está adjunto a la ventana, elimina el target.
         if (coordinates == null || !coordinates.isAttached) {
@@ -488,12 +480,6 @@ class TourState {
         }
     }
 
-    /**
-     * Elimina un target del mapa `_targets`.
-     * Llamado desde el `onDispose` de `DisposableEffect` asociado al `onGloballyPositioned`.
-     *
-     * @param id El `targetId` a eliminar.
-     */
     fun unregisterTarget(id: String) {
         _targets.update { currentTargets ->
             currentTargets - id
@@ -501,25 +487,6 @@ class TourState {
     }
 }
 
-/**
- * CompositionLocal que permite acceder a la instancia única de `TourState`
- * desde cualquier Composable descendiente en el árbol de composición.
- * Es necesario proveer una instancia de `TourState` en un nivel superior
- * (generalmente en `MainActivity` o cerca de la raíz) usando `CompositionLocalProvider`.
- *
- * Ejemplo de provisión:
- * ```kotlin
- * val tourState = remember { TourState() }
- * CompositionLocalProvider(LocalTourState provides tourState) {
- * // Resto de tu UI
- * }
- * ```
- * Ejemplo de uso:
- * ```kotlin
- * val tourState = LocalTourState.current
- * Button(onClick = { tourState.startTour() }) { /* ... */ }
- * ```
- */
 val LocalTourState = compositionLocalOf<TourState> {
     // Se lanza un error si se intenta acceder a `LocalTourState.current`
     // sin haber provisto una instancia de `TourState` previamente.
