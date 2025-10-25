@@ -41,7 +41,6 @@ import com.renova.mobile.screens.DocumentsScreen
 import com.renova.mobile.screens.VerificationScreen
 import com.renova.mobile.screens.RegisterData
 import com.renova.mobile.screens.DocumentsData
-// kotlinx.coroutines.delay ya no es necesario aquí
 
 
 class MainActivity : ComponentActivity() {
@@ -64,6 +63,10 @@ class MainActivity : ComponentActivity() {
         setContent {
             RenovaTheme {
                 val sessionManager = remember { SessionManager(this) } // remember sessionManager
+
+                // --- DEBUG: Descomenta esta línea SOLO para forzar el tour ---
+//                sessionManager.resetFirstLoginFlag()
+
                 val languageViewModel: LanguageViewModel = viewModel()
 
                 LaunchedEffect(Unit) {
@@ -75,7 +78,6 @@ class MainActivity : ComponentActivity() {
                 HideSystemNavigation()
 
                 var isLoggedIn by remember { mutableStateOf(sessionManager.isLoggedIn()) }
-                // Ya no necesitamos 'triggerFirstLoginTour' aquí
 
                 LaunchedEffect(isLoggedIn) {
                     if (isLoggedIn) {
@@ -121,14 +123,8 @@ class MainActivity : ComponentActivity() {
                         AuthNavigation(
                             sessionManager = sessionManager,
                             onLoginSuccess = {
-                                // Esta lambda se llama DESPUÉS de saveSession()
-                                // 1. Marcamos si es necesario (ya no iniciamos el tour aquí)
-                                if (sessionManager.isFirstLogin()) {
-                                    sessionManager.setFirstLoginComplete()
-                                }
-                                // 2. Actualizamos el estado para navegar
+
                                 isLoggedIn = true
-                                // 3. El tour se iniciará desde AppNavigation si corresponde
                             }
                         )
                     }
@@ -219,6 +215,7 @@ fun AuthNavigation(
                             expiresAt = expiresAt,
                             user = user
                         )
+
                         // 2. Llamar al callback de MainActivity (que contiene la lógica del tour y el cambio de isLoggedIn)
                         onLoginSuccess()
                     }
@@ -275,4 +272,3 @@ fun AuthNavigation(
         }
     }
 }
-

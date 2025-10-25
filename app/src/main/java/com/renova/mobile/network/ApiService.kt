@@ -503,6 +503,42 @@ data class RegisterFcmTokenResponse(
     val message: String
 )
 
+// ========== TOUR COMPLETE ==========
+data class TourCompleteRequest(
+    val user_id: Int
+)
+
+data class TourCompleteResponse(
+    val success: Boolean,
+    val message: String,
+    val data: TourCompleteData?,
+    val errors: Any?,
+    val status: Int
+)
+
+data class TourCompleteData(
+    val user: TourUser
+)
+
+data class TourUser(
+    val id: Int,
+    val alliance_id: Int?,
+    val name: String,
+    val last_name: String,
+    val email: String,
+    val phone: String?,
+    val curp: String?,
+    val email_verified_at: String?,
+    val role_id: Int,
+    val total_points: Int,
+    val verification_status: Int,
+    val two_factor_status: Boolean,
+    val code_identity: String?,
+    val status: String,
+    val created_at: String,
+    val updated_at: String
+)
+
 interface ApiService {
 
     @POST("api/users/register")
@@ -613,6 +649,12 @@ interface ApiService {
 
     @POST("api/notifications/registerToken")
     suspend fun registerFcmToken(@Body request: RegisterFcmTokenRequest): Response<RegisterFcmTokenResponse>
+
+    @POST("api/users/tourComplete/{userId}")
+    suspend fun completeTour(
+        @Path("userId") userId: Int,
+        @Body request: TourCompleteRequest
+    ): Response<TourCompleteResponse>
 }
 
 // ========== API CLIENT ==========

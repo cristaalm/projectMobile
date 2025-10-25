@@ -64,12 +64,35 @@ import androidx.compose.runtime.derivedStateOf
 import com.renova.mobile.ui.theme.LocalRenovaColors
 import androidx.compose.ui.graphics.Color
 
+// --- Imports añadidos ---
+import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.SideEffect
+import com.renova.mobile.network.ApiClient
+import com.renova.mobile.network.TourCompleteRequest
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
+// -----------------------
+
 
 object StoreGraph {
     const val ROUTE = "store_graph"
     const val STORE_LIST = "store_list"
     const val REWARDS = "reward_screen/{allianceId}" // Ruta base para recompensas
 }
+
+/**
+ * Un helper para recordar el valor anterior de un estado en Compose.
+ */
+@Composable
+private fun <T> rememberPrevious(current: T): T? {
+    val ref = remember { mutableStateOf<T?>(null) }
+    // SideEffect se ejecuta después de cada recomposición
+    SideEffect {
+        ref.value = current
+    }
+    return ref.value
+}
+
 
 @Composable
 fun AppNavigation(
@@ -81,9 +104,6 @@ fun AppNavigation(
     val navController = rememberNavController()
     val businessSaleVM: BusinessSaleViewModel = viewModel()
 
-    // Ya no necesitamos obtener el sessionManager del contexto, lo recibimos como parámetro
-    // val context = LocalContext.current
-    // val sessionManager = remember(context) { SessionManager(context) }
     val user = sessionManager.getUser()
     val isBusiness = (user?.role?.id ?: 0) == 4
 
@@ -92,19 +112,76 @@ fun AppNavigation(
     val tourState = LocalTourState.current
     val isTourActive by tourState.isTourActive.collectAsState()
 
-    // LaunchedEffect que se ejecuta UNA VEZ cuando AppNavigation se compone
+    // --- INICIO DE LA NUEVA LÓGICA DEL TOUR ---
+
+    // 1. Recordamos si esta sesión era "first login" DESDE EL INICIO.
+    val isFirstLoginSession = remember { sessionManager.isFirstLogin() }
+
+    // 2. Obtenemos scope y context para la llamada a la API
+    val scope = rememberCoroutineScope()
+    val context = LocalContext.current.applicationContext // Usar applicationContext
+
+    // 3. Recordamos el estado *anterior* de isTourActive usando el helper
+    val previousIsTourActive = rememberPrevious(isTourActive)
+
+    // 4. Efecto que reacciona al *cambio* de isTourActive (cuando se cierra el tour)
+    LaunchedEffect(isTourActive) {
+        // Detectar la transición de TRUE -> FALSE (el tour acaba de terminar/cerrarse)
+        if (previousIsTourActive == true && !isTourActive) {
+
+            // Si la transición ocurrió Y esta era una sesión de "first login"...
+            if (isFirstLoginSession) {
+                Log.d("AppNavigation", "Tour finalizado en sesión 'first login'. Marcando como completo (API y local).")
+
+                val userId = sessionManager.getUser()?.id
+                if (userId != null) {
+                    // A. Marcar como completo localmente (¡MUY IMPORTANTE!)
+                    // Lo hacemos primero para que, aunque falle la API,
+                    // no se le muestre el tour al usuario otra vez.
+                    sessionManager.setFirstLoginComplete()
+
+                    // B. Llamar a la API en un hilo de fondo
+                    scope.launch(Dispatchers.IO) {
+                        try {
+                            ApiClient.init(context) // Asegurar que esté inicializado
+                            val request = TourCompleteRequest(user_id = userId)
+                            val response = ApiClient.apiService.completeTour(userId, request)
+
+                            if (response.isSuccessful && response.body()?.success == true) {
+                                Log.i("AppNavigation", "API tourComplete exitosa para userId=$userId")
+                            } else {
+                                Log.w("AppNavigation", "API tourComplete falló: ${response.code()} - ${response.errorBody()?.string()}")
+                            }
+                        } catch (e: Exception) {
+                            Log.e("AppNavigation", "Excepción al llamar a API tourComplete", e)
+                        }
+                    }
+                } else {
+                    Log.w("AppNavigation", "Tour finalizado, pero userId es nulo. No se pudo llamar a API.")
+                    // Aún así, marcar localmente para no molestar al usuario
+                    sessionManager.setFirstLoginComplete()
+                }
+            } else {
+                Log.d("AppNavigation", "Tour finalizado (manual o no first-login), no se llama a API tourComplete.")
+            }
+        }
+    }
+    // --- FIN NUEVA LÓGICA DEL TOUR ---
+
+
+    // LaunchedEffect que se ejecuta UNA VEZ (¡CORREGIDO!)
     LaunchedEffect(Unit) {
         contentVisible = true // Muestra contenido principal
 
-        // Verificar si es el primer login y si el tour NO está ya activo
-        if (sessionManager.isFirstLogin() && !isTourActive) {
+        // --- ¡CORRECCIÓN AQUÍ! ---
+        // Usar la variable recordada 'isFirstLoginSession'
+        // en lugar de llamar a sessionManager.isFirstLogin() de nuevo.
+        if (isFirstLoginSession && !isTourActive) {
             Log.d("AppNavigation", "Detectado primer login, iniciando tour...")
-            // sessionManager.setFirstLoginComplete() // Se marca en MainActivity
-            // Espera un poco más para asegurar que todo esté listo
             delay(500) // Aumentamos el delay por si acaso
             tourState.startTour()
         } else {
-            Log.d("AppNavigation", "No es primer login o tour ya activo, no se inicia automáticamente.")
+            Log.d("AppNavigation", "No es primer login ('${isFirstLoginSession}'=false) o tour ya activo ('${isTourActive}'=true). No se inicia automáticamente.")
         }
     }
 
@@ -370,4 +447,3 @@ fun AppNavigation(
         }
     }
 }
-

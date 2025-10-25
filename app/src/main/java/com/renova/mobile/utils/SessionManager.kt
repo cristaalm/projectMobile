@@ -217,7 +217,6 @@ class SessionManager(context: Context) {
         Log.d("SessionManager", "setFirstLoginComplete: $KEY_FIRST_LOGIN_COMPLETE = true")
     }
 
-    // --- Función de DEBUG para resetear la bandera del tour ---
     fun resetFirstLoginFlag() {
         sharedPreferences.edit().remove(KEY_FIRST_LOGIN_COMPLETE).apply()
         Log.d("SessionManager", "DEBUG: Bandera $KEY_FIRST_LOGIN_COMPLETE reseteada.")
