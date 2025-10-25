@@ -8,6 +8,9 @@ import com.renova.mobile.network.*
 import com.renova.mobile.screens.DocumentsData
 import com.renova.mobile.screens.RegisterData
 import com.renova.mobile.utils.SessionManager
+import com.renova.mobile.utils.RegisterErrorMapper
+import com.renova.mobile.utils.DocumentsErrorMapper
+import com.renova.mobile.utils.SelfieErrorMapper
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
@@ -41,7 +44,6 @@ class RegisterViewModel : ViewModel() {
     private val _uploadSelfieState = MutableStateFlow<UploadState>(UploadState.Idle)
     val uploadSelfieState: StateFlow<UploadState> = _uploadSelfieState
 
-    // Guardar datos del registro para usarlos en pantallas siguientes
     var userId: Int = 0
         private set
     var authToken: String = ""
@@ -52,10 +54,12 @@ class RegisterViewModel : ViewModel() {
         private set
 
     private var sessionManager: SessionManager? = null
+    private var appContext: Context? = null
 
     fun setSessionManager(context: Context) {
         if (sessionManager == null) {
             sessionManager = SessionManager(context)
+            appContext = context.applicationContext
         }
     }
 
@@ -83,7 +87,6 @@ class RegisterViewModel : ViewModel() {
                         tokenType = data.token_type
                         expiresAt = data.expires_at
 
-                        // IMPORTANTE: Guardar el token temporalmente para las siguientes peticiones
                         sessionManager?.saveAuthToken(authToken, tokenType)
 
                         _registerState.value = RegisterState.Success(
@@ -93,14 +96,81 @@ class RegisterViewModel : ViewModel() {
                             expiresAt = expiresAt
                         )
                     } else {
-                        _registerState.value = RegisterState.Error("Error: datos de usuario no disponibles")
+                        val errorMsg = appContext?.let { ctx ->
+                            RegisterErrorMapper.mapRegisterError(
+                                "Error: datos de usuario no disponibles",
+                                -1,
+                                ctx
+                            )
+                        } ?: "Error: datos de usuario no disponibles"
+                        _registerState.value = RegisterState.Error(errorMsg)
                     }
                 } else {
-                    val errorMessage = response.body()?.message ?: "Error al registrar usuario"
-                    _registerState.value = RegisterState.Error(errorMessage)
+                    val responseBody = response.body()
+
+                    // 🔍 DEBUG: Ver qué está llegando
+                    android.util.Log.d("RegisterViewModel", "=== DEBUG REGISTER ERROR ===")
+                    android.util.Log.d("RegisterViewModel", "Status Code: ${response.code()}")
+                    android.util.Log.d("RegisterViewModel", "Response Body: $responseBody")
+                    android.util.Log.d("RegisterViewModel", "Message: ${responseBody?.message}")
+                    android.util.Log.d("RegisterViewModel", "Errors: ${responseBody?.errors}")
+                    android.util.Log.d("RegisterViewModel", "Errors Type: ${responseBody?.errors?.javaClass}")
+
+                    // 🌍 Mapear el error al idioma actual
+                    val backendMessage = responseBody?.message ?: "Error al registrar usuario"
+                    val statusCode = response.code()
+
+                    // Verificar si hay errores específicos de validación (422)
+                    val localizedMessage = if (statusCode == 422 && responseBody?.errors != null) {
+                        // Extraer el primer error específico del campo
+                        val errors = responseBody.errors
+                        android.util.Log.d("RegisterViewModel", "Errors is Map: ${errors is Map<*, *>}")
+
+                        if (errors is Map<*, *>) {
+                            val errorsMap = errors as? Map<String, List<String>>
+                            android.util.Log.d("RegisterViewModel", "Errors Map: $errorsMap")
+
+                            val firstError = errorsMap?.entries?.firstOrNull()
+                            android.util.Log.d("RegisterViewModel", "First Error: $firstError")
+
+                            if (firstError != null && firstError.value.isNotEmpty()) {
+                                val fieldName = firstError.key
+                                val errorMessage = firstError.value.first()
+
+                                android.util.Log.d("RegisterViewModel", "Field: $fieldName, Message: $errorMessage")
+
+                                appContext?.let { ctx ->
+                                    RegisterErrorMapper.mapValidationError(fieldName, errorMessage, ctx)
+                                } ?: errorMessage
+                            } else {
+                                appContext?.let { ctx ->
+                                    RegisterErrorMapper.mapRegisterError(backendMessage, statusCode, ctx)
+                                } ?: backendMessage
+                            }
+                        } else {
+                            appContext?.let { ctx ->
+                                RegisterErrorMapper.mapRegisterError(backendMessage, statusCode, ctx)
+                            } ?: backendMessage
+                        }
+                    } else {
+                        appContext?.let { ctx ->
+                            RegisterErrorMapper.mapRegisterError(backendMessage, statusCode, ctx)
+                        } ?: backendMessage
+                    }
+
+                    android.util.Log.d("RegisterViewModel", "Final Localized Message: $localizedMessage")
+
+                    _registerState.value = RegisterState.Error(localizedMessage)
                 }
             } catch (e: Exception) {
-                _registerState.value = RegisterState.Error("Error de conexión: ${e.message}")
+                val errorMsg = appContext?.let { ctx ->
+                    RegisterErrorMapper.mapRegisterError(
+                        "Error de conexión: ${e.message}",
+                        -1,
+                        ctx
+                    )
+                } ?: "Error de conexión: ${e.message}"
+                _registerState.value = RegisterState.Error(errorMsg)
             }
         }
     }
@@ -133,11 +203,40 @@ class RegisterViewModel : ViewModel() {
                 if (response.isSuccessful && response.body()?.success == true) {
                     _uploadDocumentsState.value = UploadState.Success
                 } else {
-                    val errorMessage = response.body()?.message ?: "Error al subir documentos"
-                    _uploadDocumentsState.value = UploadState.Error(errorMessage)
+                    // 🌍 Mapear el error al idioma actual
+                    val responseBody = response.body()
+                    val backendMessage = responseBody?.message ?: "Error al subir documentos"
+                    val statusCode = response.code()
+
+                    // Verificar si hay errores específicos de validación (422)
+                    val localizedMessage = if (statusCode == 422 && responseBody?.errors != null) {
+                        val errors = responseBody.errors
+                        if (errors is Map<*, *>) {
+                            val errorsMap = errors as? Map<String, List<String>>
+                            val firstError = errorsMap?.entries?.firstOrNull()
+
+                            if (firstError != null && firstError.value.isNotEmpty()) {
+                                val errorMessage = firstError.value.first()
+                                DocumentsErrorMapper.mapDocumentValidationError(errorMessage, context)
+                            } else {
+                                DocumentsErrorMapper.mapDocumentsError(backendMessage, statusCode, context)
+                            }
+                        } else {
+                            DocumentsErrorMapper.mapDocumentsError(backendMessage, statusCode, context)
+                        }
+                    } else {
+                        DocumentsErrorMapper.mapDocumentsError(backendMessage, statusCode, context)
+                    }
+
+                    _uploadDocumentsState.value = UploadState.Error(localizedMessage)
                 }
             } catch (e: Exception) {
-                _uploadDocumentsState.value = UploadState.Error("Error de conexión: ${e.message}")
+                val localizedMessage = DocumentsErrorMapper.mapDocumentsError(
+                    "Error de conexión: ${e.message}",
+                    -1,
+                    context
+                )
+                _uploadDocumentsState.value = UploadState.Error(localizedMessage)
             }
         }
     }
@@ -162,11 +261,40 @@ class RegisterViewModel : ViewModel() {
                 if (response.isSuccessful && response.body()?.success == true) {
                     _uploadSelfieState.value = UploadState.Success
                 } else {
-                    val errorMessage = response.body()?.message ?: "Error al subir selfie"
-                    _uploadSelfieState.value = UploadState.Error(errorMessage)
+                    // 🌍 Mapear el error al idioma actual
+                    val responseBody = response.body()
+                    val backendMessage = responseBody?.message ?: "Error al subir selfie"
+                    val statusCode = response.code()
+
+                    // Verificar si hay errores específicos de validación (422)
+                    val localizedMessage = if (statusCode == 422 && responseBody?.errors != null) {
+                        val errors = responseBody.errors
+                        if (errors is Map<*, *>) {
+                            val errorsMap = errors as? Map<String, List<String>>
+                            val firstError = errorsMap?.entries?.firstOrNull()
+
+                            if (firstError != null && firstError.value.isNotEmpty()) {
+                                val errorMessage = firstError.value.first()
+                                SelfieErrorMapper.mapSelfieValidationError(errorMessage, context)
+                            } else {
+                                SelfieErrorMapper.mapSelfieError(backendMessage, statusCode, context)
+                            }
+                        } else {
+                            SelfieErrorMapper.mapSelfieError(backendMessage, statusCode, context)
+                        }
+                    } else {
+                        SelfieErrorMapper.mapSelfieError(backendMessage, statusCode, context)
+                    }
+
+                    _uploadSelfieState.value = UploadState.Error(localizedMessage)
                 }
             } catch (e: Exception) {
-                _uploadSelfieState.value = UploadState.Error("Error de conexión: ${e.message}")
+                val localizedMessage = SelfieErrorMapper.mapSelfieError(
+                    "Error de conexión: ${e.message}",
+                    -1,
+                    context
+                )
+                _uploadSelfieState.value = UploadState.Error(localizedMessage)
             }
         }
     }

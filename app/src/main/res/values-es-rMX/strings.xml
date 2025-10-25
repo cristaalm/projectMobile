@@ -387,6 +387,40 @@
 
     <string name="remember_me">Recuérdame</string>
 
+    <!-- ===== REGISTER ERRORS (Step 1) ===== -->
+    <string name="error_register_user">Error al registrar el usuario.</string>
+    <string name="error_email_required">El campo correo electrónico es obligatorio.</string>
+    <string name="error_email_taken">El correo electrónico ya ha sido registrado.</string>
+    <string name="error_email_invalid">El correo electrónico debe ser una dirección válida.</string>
+    <string name="error_password_required">El campo contraseña es obligatorio.</string>
+    <string name="error_password_min_length">La contraseña debe tener al menos 8 caracteres.</string>
+    <string name="error_password_confirmation">Las contraseñas no coinciden.</string>
+    <string name="error_curp_required">El campo CURP es obligatorio.</string>
+    <string name="error_curp_taken">El CURP ya ha sido registrado.</string>
+    <string name="error_curp_invalid">El formato del CURP no es válido.</string>
+    <string name="error_phone_required">El campo teléfono es obligatorio.</string>
+    <string name="error_phone_invalid">El formato del teléfono no es válido.</string>
+    <string name="error_name_required">El campo nombre es obligatorio.</string>
+    <string name="error_lastname_required">El campo apellido es obligatorio.</string>
+    <string name="error_field_required">Este campo es obligatorio.</string>
+
+    <!-- ===== UPLOAD DOCUMENTS ERRORS (Step 2) ===== -->
+    <string name="error_auth_token_missing">Token de autenticación no proporcionado.</string>
+    <string name="error_no_permission_upload_docs">No tienes permiso para subir documentos.</string>
+    <string name="error_upload_documents">Error al subir los documentos.</string>
+    <string name="error_invalid_user_id">El ID de usuario seleccionado no es válido.</string>
+    <string name="error_document_front_must_be_image">El documento frontal debe ser una imagen.</string>
+    <string name="error_document_back_must_be_image">El documento trasero debe ser una imagen.</string>
+    <string name="error_document_front_required">El documento frontal es obligatorio.</string>
+    <string name="error_document_back_required">El documento trasero es obligatorio.</string>
+
+    <!-- ===== UPLOAD SELFIE ERRORS (Step 3) ===== -->
+    <string name="error_no_permission_upload_selfie">No tienes permiso para subir selfie.</string>
+    <string name="error_upload_selfie">Error al subir el selfie.</string>
+    <string name="error_selfie_must_be_image">La selfie debe ser una imagen.</string>
+    <string name="error_selfie_required">La selfie es obligatoria.</string>
+
+
 
 
 </resources>
