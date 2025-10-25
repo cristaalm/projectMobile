@@ -339,7 +339,8 @@ fun LoginScreen(
 
                                     if (!emailError && !passwordError) {
                                         isButtonLoading = true
-                                        viewModel.login(email, password)
+                                        //CAMBIO CRÍTICO: Pasar rememberMe al ViewModel
+                                        viewModel.login(email, password, rememberMe)
                                     }
                                 }
                             },

@@ -20,14 +20,17 @@ class SessionManager(context: Context) {
         private const val KEY_IS_LOGGED_IN = "is_logged_in"
         private const val KEY_FCM_TOKEN = "fcm_token"
         private const val KEY_USER_ID = "user_id"
+        // NUEVO: Para manejar remember me
+        private const val KEY_REMEMBER_ME = "remember_me"
     }
 
-    // Guardar sesión completa
+    // MODIFICADO: Guardar sesión con remember me
     fun saveSession(
         accessToken: String,
         tokenType: String?,
         expiresAt: String?,
         user: User?,
+        rememberMe: Boolean = false // NUEVO parámetro
     ) {
         sharedPreferences.edit().apply {
             putString(KEY_ACCESS_TOKEN, accessToken)
@@ -35,15 +38,40 @@ class SessionManager(context: Context) {
             putString(KEY_EXPIRES_AT, expiresAt)
             putString(KEY_USER, gson.toJson(user))
             putBoolean(KEY_IS_LOGGED_IN, true)
+            putBoolean(KEY_REMEMBER_ME, rememberMe) // NUEVO: Guardar preferencia
             user?.let { putInt(KEY_USER_ID, it.id) }
             apply()
         }
+        Log.d("SessionManager", "Sesión guardada con rememberMe=$rememberMe")
     }
 
-    // Verificar si hay sesión activa
+    //NUEVO: Verificar si tiene remember me activado
+    fun hasRememberMe(): Boolean {
+        return sharedPreferences.getBoolean(KEY_REMEMBER_ME, false)
+    }
+
+    //MODIFICADO: Verificar sesión considerando remember me y expiración
     fun isLoggedIn(): Boolean {
-        return sharedPreferences.getBoolean(KEY_IS_LOGGED_IN, false) &&
+        val hasSession = sharedPreferences.getBoolean(KEY_IS_LOGGED_IN, false) &&
                 !getAccessToken().isNullOrEmpty()
+
+        if (!hasSession) return false
+
+        // Si tiene remember me, no verificar expiración
+        if (hasRememberMe()) {
+            Log.d("SessionManager", "Sesión válida con Remember Me activo")
+            return true
+        }
+
+        // Si no tiene remember me, verificar si el token expiró
+        val isExpired = isTokenExpired()
+        if (isExpired) {
+            Log.d("SessionManager", "Token expirado sin Remember Me")
+            logout() // Limpiar sesión expirada
+            return false
+        }
+
+        return true
     }
 
     // Obtener token de acceso
@@ -91,18 +119,59 @@ class SessionManager(context: Context) {
         }
     }
 
-    // Verificar si el token está próximo a expirar (opcional)
-    fun isTokenExpiringSoon(): Boolean {
-        val expiresAt = getExpiresAt()
-        return if (expiresAt != null) {
+    //NUEVO: Verificar si el token expiró
+    fun isTokenExpired(): Boolean {
+        val expiresAt = getExpiresAt() ?: return false
+
+        return try {
+            // Formato esperado: "2025-10-24 12:00:00" o ISO 8601
+            val expiryDate = parseExpiryDate(expiresAt)
+            val currentTime = System.currentTimeMillis()
+            val isExpired = currentTime >= expiryDate
+
+            Log.d("SessionManager", "Token expiry check: expiresAt=$expiresAt, expired=$isExpired")
+            isExpired
+        } catch (e: Exception) {
+            Log.e("SessionManager", "Error parsing expiry date: ${e.message}")
+            false // En caso de error, asumir que no expiró
+        }
+    }
+
+    //NUEVO: Parsear fecha de expiración
+    private fun parseExpiryDate(expiresAt: String): Long {
+        return try {
+            // Intentar parsear ISO 8601
+            val formatter = java.text.SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'", java.util.Locale.US)
+            formatter.timeZone = java.util.TimeZone.getTimeZone("UTC")
+            formatter.parse(expiresAt)?.time ?: 0L
+        } catch (e: Exception) {
             try {
-                // Aquí puedes agregar lógica para verificar si expira pronto
-                // Por ejemplo, comparar con la fecha actual
-                false // Por ahora devolver false
-            } catch (e: Exception) {
-                false
+                // Intentar parsear formato alternativo "yyyy-MM-dd HH:mm:ss"
+                val formatter = java.text.SimpleDateFormat("yyyy-MM-dd HH:mm:ss", java.util.Locale.US)
+                formatter.parse(expiresAt)?.time ?: 0L
+            } catch (e2: Exception) {
+                Log.e("SessionManager", "No se pudo parsear fecha: $expiresAt")
+                Long.MAX_VALUE // Si no se puede parsear, asumir que nunca expira
             }
-        } else false
+        }
+    }
+
+    // MODIFICADO: Verificar si está próximo a expirar (30 minutos antes)
+    fun isTokenExpiringSoon(): Boolean {
+        if (hasRememberMe()) return false // No aplicar si tiene remember me
+
+        val expiresAt = getExpiresAt() ?: return false
+
+        return try {
+            val expiryDate = parseExpiryDate(expiresAt)
+            val currentTime = System.currentTimeMillis()
+            val thirtyMinutesInMillis = 30 * 60 * 1000
+            val timeUntilExpiry = expiryDate - currentTime
+
+            timeUntilExpiry in 1..thirtyMinutesInMillis
+        } catch (e: Exception) {
+            false
+        }
     }
 
     // Guardar solo el token (para registro temporal)
@@ -123,12 +192,13 @@ class SessionManager(context: Context) {
         sharedPreferences.edit().putInt(KEY_USER_ID, userId).apply()
     }
 
-    // Limpiar solo el token temporal (para cuando falla el registro o se completa)
+    // Limpiar solo el token temporal
     fun clearAuthToken() {
         sharedPreferences.edit().apply {
             remove(KEY_ACCESS_TOKEN)
             remove(KEY_TOKEN_TYPE)
             remove(KEY_IS_LOGGED_IN)
+            remove(KEY_REMEMBER_ME)
             apply()
         }
     }
