@@ -374,4 +374,6 @@
     <string name="user_type_business">Business</string>
     <string name="user_type_unknown">Unknown</string>
 
+    <string name="remember_me">Remember me</string>
+
 </resources>
