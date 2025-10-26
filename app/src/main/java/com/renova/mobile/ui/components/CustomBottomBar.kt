@@ -7,6 +7,11 @@ import androidx.compose.animation.fadeOut
 import androidx.compose.animation.slideInVertically
 import androidx.compose.animation.slideOutVertically
 import androidx.compose.animation.togetherWith
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.slideInHorizontally
+import androidx.compose.animation.slideOutHorizontally
+import androidx.compose.runtime.LaunchedEffect
+import kotlinx.coroutines.delay
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -19,12 +24,14 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -52,6 +59,21 @@ import com.renova.mobile.navigation.NavigationItem
 import com.renova.mobile.navigation.StoreGraph
 import com.renova.mobile.ui.screens.PoppinsFontFamily
 import com.renova.mobile.navigation.TopNavigationItem
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Close
+import androidx.compose.material.icons.filled.Dashboard
+import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.Divider
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.Surface
+import androidx.compose.material3.TextButton
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.window.Dialog
+import androidx.compose.ui.window.DialogProperties
+import android.content.Intent
+import com.renova.mobile.ui.activities.ManualGeneralActivity
+import com.renova.mobile.ui.activities.FaqActivity
 
 private val primaryColor = Color(0xFF08b662)
 private val qrBackgroundColor = Color(0xFF05D16E).copy(alpha = 0.5f)
@@ -136,6 +158,8 @@ fun CustomBottomBar(
     val navBackStackEntry by navController.currentBackStackEntryAsState()
     val currentDestination = navBackStackEntry?.destination
     var showLogoutModal by remember { mutableStateOf(false) }
+    val context = LocalContext.current
+    var showMenu by remember { mutableStateOf(false) }
 
     Box(
         modifier = Modifier
@@ -238,13 +262,13 @@ fun CustomBottomBar(
                         .clickable(
                             interactionSource = interactionSource,
                             indication = null
-                        ) { showLogoutModal = true },
+                        ) { showMenu = true },
                     contentAlignment = Alignment.Center
                 ) {
                     Icon(
-                        painter = painterResource(id = R.drawable.salida),
-                        contentDescription = "Logout",
-                        tint = Color.Unspecified,
+                        imageVector = Icons.Filled.Dashboard,
+                        contentDescription = "Menú",
+                        tint = Color(0xFF05D16E),
                         modifier = Modifier.size(28.dp)
                     )
                 }
@@ -294,6 +318,91 @@ fun CustomBottomBar(
                         modifier = Modifier.size(32.dp),
                         tint = Color.Unspecified
                     )
+                }
+            }
+        }
+
+        // Panel lateral derecho del menú
+        if (showMenu) {
+            Dialog(onDismissRequest = { showMenu = false }, properties = DialogProperties(usePlatformDefaultWidth = false)) {
+                var panelVisible by remember { mutableStateOf(false) }
+                LaunchedEffect(Unit) { panelVisible = true }
+                Box(modifier = Modifier.fillMaxSize()) {
+                    Box(
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .background(Color.Black.copy(alpha = 0.25f))
+                            .clickable { panelVisible = false }
+                    )
+                    AnimatedVisibility(
+                        visible = panelVisible,
+                        enter = slideInHorizontally(initialOffsetX = { it }) + fadeIn(),
+                        exit = slideOutHorizontally(targetOffsetX = { it }) + fadeOut(),
+                        modifier = Modifier.align(Alignment.CenterEnd)
+                    ) {
+                        Surface(
+                            modifier = Modifier
+                                .fillMaxHeight()
+                                .width(280.dp),
+                            shape = RoundedCornerShape(topStart = 12.dp, bottomStart = 12.dp),
+                            color = Color(0xFF05D16E)
+                        ) {
+                            Column(
+                                modifier = Modifier.padding(16.dp),
+                                verticalArrangement = Arrangement.spacedBy(12.dp)
+                            ) {
+                                Row(
+                                    modifier = Modifier.fillMaxWidth(),
+                                    verticalAlignment = Alignment.CenterVertically,
+                                    horizontalArrangement = Arrangement.SpaceBetween
+                                ) {
+                                    Text(
+                                        text = "Menú",
+                                        color = Color.White,
+                                        fontSize = 20.sp,
+                                        fontWeight = FontWeight.Bold
+                                    )
+                                    IconButton(onClick = { panelVisible = false }) {
+                                        Icon(imageVector = Icons.Filled.Close, contentDescription = "Cerrar", tint = Color.White)
+                                    }
+                                }
+                                TextButton(
+                                    onClick = {
+                                        panelVisible = false
+                                        context.startActivity(Intent(context, ManualGeneralActivity::class.java))
+                                    },
+                                    colors = ButtonDefaults.textButtonColors(contentColor = Color.White)
+                                ) {
+                                    Text("Manual general (PDF)")
+                                }
+                                TextButton(
+                                    onClick = {
+                                        panelVisible = false
+                                        context.startActivity(Intent(context, FaqActivity::class.java))
+                                    },
+                                    colors = ButtonDefaults.textButtonColors(contentColor = Color.White)
+                                ) {
+                                    Text("Preguntas frecuentes")
+                                }
+                                Divider(color = Color.White.copy(alpha = 0.3f))
+                                Button(
+                                    onClick = {
+                                        panelVisible = false
+                                        showLogoutModal = true
+                                    },
+                                    colors = ButtonDefaults.buttonColors(containerColor = Color.White, contentColor = Color(0xFF05D16E))
+                                ) {
+                                    Text("Cerrar sesión")
+                                }
+                            }
+                        }
+                    }
+                    LaunchedEffect(panelVisible) {
+                        if (!panelVisible) {
+                            delay(250)
+                            showMenu = false
+                        }
+                    }
                 }
             }
         }

@@ -43,6 +43,12 @@
             </intent-filter>
         </activity>
         <activity
+            android:name=".ui.activities.ManualGeneralActivity"
+            android:exported="false" />
+        <activity
+            android:name=".ui.activities.FaqActivity"
+            android:exported="false" />
+        <activity
             android:name=".scan.PortraitCaptureActivity"
             android:screenOrientation="portrait"
             tools:replace="screenOrientation" />
