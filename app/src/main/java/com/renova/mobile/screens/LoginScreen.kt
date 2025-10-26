@@ -37,6 +37,7 @@ import androidx.compose.runtime.collectAsState
 import com.renova.mobile.R
 import com.renova.mobile.viewmodel.LoginViewModel
 import androidx.compose.animation.core.*
+import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.ui.graphics.nativeCanvas
 import androidx.compose.ui.res.stringResource
 import com.renova.mobile.network.User
@@ -268,6 +269,57 @@ fun LoginScreen(
 
                         Spacer(modifier = Modifier.height(16.dp))
 
+                        // Remember Me Checkbox - Diseño circular mejorado
+                        var rememberMe by remember { mutableStateOf(false) }
+
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .clickable(
+                                    indication = null,
+                                    interactionSource = remember { MutableInteractionSource() }
+                                ) { rememberMe = !rememberMe },
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.Start
+                        ) {
+                            // Checkbox circular personalizado
+                            Box(
+                                modifier = Modifier
+                                    .size(24.dp)
+                                    .background(
+                                        color = if (rememberMe) CustomGreenColor else Color.Transparent,
+                                        shape = RoundedCornerShape(50)
+                                    )
+                                    .border(
+                                        width = 2.dp,
+                                        color = if (rememberMe) CustomGreenColor else colors.textSecondary.copy(alpha = 0.4f),
+                                        shape = RoundedCornerShape(50)
+                                    ),
+                                contentAlignment = Alignment.Center
+                            ) {
+                                if (rememberMe) {
+                                    Icon(
+                                        painter = painterResource(id = R.drawable.ic_check),
+                                        contentDescription = null,
+                                        tint = Color.White,
+                                        modifier = Modifier.size(14.dp)
+                                    )
+                                }
+                            }
+
+                            Spacer(modifier = Modifier.width(12.dp))
+
+                            Text(
+                                text = stringResource(id = R.string.remember_me),
+                                color = colors.textPrimary,
+                                fontSize = 14.sp,
+                                fontFamily = PoppinsFontFamily,
+                                fontWeight = FontWeight.Medium
+                            )
+                        }
+
+                        Spacer(modifier = Modifier.height(16.dp))
+
                         // Loading state
                         var isButtonLoading by remember { mutableStateOf(false) }
 
@@ -287,7 +339,8 @@ fun LoginScreen(
 
                                     if (!emailError && !passwordError) {
                                         isButtonLoading = true
-                                        viewModel.login(email, password)
+                                        //CAMBIO CRÍTICO: Pasar rememberMe al ViewModel
+                                        viewModel.login(email, password, rememberMe)
                                     }
                                 }
                             },

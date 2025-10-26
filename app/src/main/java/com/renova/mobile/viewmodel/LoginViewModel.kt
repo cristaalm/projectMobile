@@ -33,11 +33,13 @@ class LoginViewModel(application: Application) : AndroidViewModel(application) {
 
                         val user = response.data.user
 
+                        //MODIFICADO: Pasar rememberMe al guardar sesión
                         sessionManager.saveSession(
                             accessToken = response.data.access_token,
                             tokenType = response.data.token_type ?: "Bearer",
                             expiresAt = response.data.expires_at,
-                            user = user
+                            user = user,
+                            rememberMe = rememberMe //CRÍTICO: Pasar el valor
                         )
 
                         _loginState.value = LoginState(
@@ -49,7 +51,6 @@ class LoginViewModel(application: Application) : AndroidViewModel(application) {
                             message = "¡Bienvenido ${user.name}!"
                         )
                     } else {
-                        // Respuesta exitosa pero sin datos completos
                         _loginState.value = LoginState(
                             error = response.message ?: "Error de inicio de sesión",
                             errorType = ErrorType.UNKNOWN
@@ -60,12 +61,9 @@ class LoginViewModel(application: Application) : AndroidViewModel(application) {
                     val statusCode = (exception as? LoginException)?.statusCode ?: -1
                     val backendMessage = exception.message ?: "Error inesperado"
 
-                    // DEBUG: Imprimir información
                     android.util.Log.d("LoginViewModel", "Status Code: $statusCode")
                     android.util.Log.d("LoginViewModel", "Backend Message: $backendMessage")
-                    android.util.Log.d("LoginViewModel", "Current Locale: ${context.resources.configuration.locales[0]}")
 
-                    // 🌍 Mapear el mensaje del backend al idioma actual
                     val localizedMessage = ErrorMessageMapper.mapLoginError(
                         backendMessage = backendMessage,
                         statusCode = statusCode,
@@ -75,7 +73,7 @@ class LoginViewModel(application: Application) : AndroidViewModel(application) {
                     android.util.Log.d("LoginViewModel", "Localized Message: $localizedMessage")
 
                     _loginState.value = LoginState(
-                        error = localizedMessage, // ✅ Ahora está traducido
+                        error = localizedMessage,
                         errorType = getErrorType(statusCode)
                     )
                 }

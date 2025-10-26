@@ -374,4 +374,39 @@
     <string name="user_type_business">Business</string>
     <string name="user_type_unknown">Unknown</string>
 
+    <string name="remember_me">Remember me</string>
+
+    <!-- ===== REGISTER ERRORS (Step 1) ===== -->
+    <string name="error_register_user">Error registering user.</string>
+    <string name="error_email_required">The email field is required.</string>
+    <string name="error_email_taken">The email has already been taken.</string>
+    <string name="error_email_invalid">The email must be a valid email address.</string>
+    <string name="error_password_required">The password field is required.</string>
+    <string name="error_password_min_length">The password must be at least 8 characters.</string>
+    <string name="error_password_confirmation">The passwords do not match.</string>
+    <string name="error_curp_required">The CURP field is required.</string>
+    <string name="error_curp_taken">The CURP has already been taken.</string>
+    <string name="error_curp_invalid">The CURP format is not valid.</string>
+    <string name="error_phone_required">The phone field is required.</string>
+    <string name="error_phone_invalid">The phone format is not valid.</string>
+    <string name="error_name_required">The name field is required.</string>
+    <string name="error_lastname_required">The last name field is required.</string>
+    <string name="error_field_required">This field is required.</string>
+
+    <!-- ===== UPLOAD DOCUMENTS ERRORS (Step 2) ===== -->
+    <string name="error_auth_token_missing">Authentication token not provided.</string>
+    <string name="error_no_permission_upload_docs">You do not have permission to upload documents.</string>
+    <string name="error_upload_documents">Error uploading documents.</string>
+    <string name="error_invalid_user_id">The selected user id is invalid.</string>
+    <string name="error_document_front_must_be_image">The document front must be an image.</string>
+    <string name="error_document_back_must_be_image">The document back must be an image.</string>
+    <string name="error_document_front_required">The front document is required.</string>
+    <string name="error_document_back_required">The back document is required.</string>
+
+    <!-- ===== UPLOAD SELFIE ERRORS (Step 3) ===== -->
+    <string name="error_no_permission_upload_selfie">You do not have permission to upload selfie.</string>
+    <string name="error_upload_selfie">Error uploading selfie.</string>
+    <string name="error_selfie_must_be_image">The selfie must be an image.</string>
+    <string name="error_selfie_required">The selfie is required.</string>
+
 </resources>
