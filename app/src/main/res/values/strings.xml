@@ -1,8 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <!-- English -->
-
-    <!-- LoginScreen -->
     <string name="app_name">Renova</string>
     <string name="email">Email</string>
     <string name="email_required">Email is required</string>
@@ -30,7 +27,6 @@
     <string name="connection_timeout">Connection timed out. Try again.</string>
     <string name="error_unknown">Unknown error. Try again.</string>
 
-    <!-- ForgotPasswordScreen -->
     <string name="forgot_password_title">Recover Password</string>
     <string name="enter_email_password">Enter your email address and we\'ll send you a link to reset your password.</string>
     <string name="send_link">SEND LINK</string>
@@ -40,7 +36,6 @@
     <string name="entendido">OK</string>
     <string name="sending">SENDING...</string>
 
-    <!-- StoreScreen -->
     <string name="store_screen_title">Store</string>
     <string name="search_allied_stores">Allied Stores</string>
     <string name="search_icon">Search stores</string>
@@ -57,7 +52,6 @@
     <string name="address_icon_content_description">Address icon</string>
     <string name="view_details_content_description">View details</string>
 
-    <!-- Categories -->
     <string name="category_restaurant">Restaurant</string>
     <string name="category_supermarket">Supermarket</string>
     <string name="category_pharmacy">Pharmacy</string>
@@ -69,13 +63,11 @@
     <string name="category_toys">Toys</string>
     <string name="category_store">Store</string>
 
-    <!-- Loading states -->
     <string name="loading_stores">Loading stores...</string>
     <string name="error_loading_stores">Error loading stores</string>
     <string name="no_stores_available">No stores available</string>
     <string name="no_stores_found">No allied stores found at this moment</string>
 
-    <!--Screen QR-->
     <string name="mycode">My QR Code</string>
     <string name="current_points">Available points</string>
     <string name="points_unit">PTS</string>
@@ -86,7 +78,6 @@
     <string name="instruction_2">Press and hold the products to facilitate the process.</string>
     <string name="instruction_3">Place the recommended products to gain more points.</string>
 
-    <!-- ActivityScreen -->
     <string name="recycling_materials">Recycling Materials</string>
     <string name="earn_points_recycling">Accumulate points for recycling</string>
     <string name="plastic">Plastic</string>
@@ -99,17 +90,14 @@
     <string name="of">of</string>
     <string name="points">pts</string>
 
-    <!-- CustomTopBar -->
     <string name="profile">Profile</string>
     <string name="activity">Activity</string>
     <string name="streak">Streak</string>
 
-    <!-- Content descriptions -->
     <string name="logo_description">Renova Logo</string>
     <string name="bottle_description">Bottle</string>
     <string name="can_description">Can</string>
 
-    <!-- Activities -->
     <string name="points_exchange">Points Exchange</string>
     <string name="product_entry">Product Entry</string>
     <string name="unknown_material">Unknown Material</string>
@@ -117,43 +105,36 @@
     <string name="aluminum_can">Aluminum Can</string>
     <string name="crushed">Crushed</string>
 
-    <!-- Dates -->
     <string name="today">Today</string>
     <string name="yesterday">Yesterday</string>
 
-    <!-- Points -->
     <string name="total_points">Total Points</string>
     <string name="accumulated_points">Pts accumulated</string>
 
-    <!-- Code Mode -->
     <string name="points_code_title">Renova Points Code</string>
     <string name="code_instruction_1">Select your reward first.</string>
     <string name="code_instruction_2">Then choose to pay with Renova Points to display this code and be identified.</string>
     <string name="code_instruction_3">Present the barcode at checkout or to the scanner.</string>
 
-    <!-- Language Selector -->
     <string name="language_spanish_label">Language: Spanish (Mexico)</string>
     <string name="language_english_label">Language: English</string>
     <string name="choose_spanish">Spanish</string>
     <string name="choose_english">English</string>
 
-    <!-- Terms and Conditions -->
     <string name="terms_by_continuing">By continuing, you accept our </string>
     <string name="terms_of_service">Terms of Service</string>
     <string name="terms_and">and</string>
     <string name="privacy_policy">Privacy Policy</string>
 
-    <!-- Terms and Conditions Dialog -->
     <string name="terms_dialog_title">Terms and Conditions</string>
     <string name="terms_dialog_close">Close</string>
     <string name="terms_section_title">Terms of Service</string>
     <string name="privacy_section_title">Privacy Policy</string>
 
-    <string name="terms_content">RENOVA - Legal Framework and Data Protection\n\nWHO WE ARE\n\nRenova is a sustainable technology platform that promotes recycling through smart deposit machines, a mobile application, and a website. Our goal is to encourage the circular economy by rewarding users who actively participate in the proper disposal of recyclable materials.\n\nWe are committed to operating with transparency, social responsibility, and adherence to Mexican legislation regarding the protection of personal data.\n\nTERMS AND CONDITIONS OF SERVICE\n\nBy registering and using Renova (mobile application, website, or smart deposit machines), the user accepts the following terms:\n\n1. Proper use of the platform:\nThe user agrees to provide truthful information and to use the system only for authorized purposes (recycling, accumulating points, redeeming rewards).\n\n2. Account and credentials:\nThe user is responsible for the confidentiality of their access credentials. Renova is not responsible for unauthorized access caused by user negligence.\n\n3. Rewards and points:\nAccumulated points do not constitute cash, unless otherwise specified in active promotions. Renova may modify the accumulation and redemption rules with prior notice.\n\n4. Service availability:\nWhile Renova seeks to guarantee platform continuity, it is not responsible for interruptions caused by technical failures, scheduled maintenance, or external factors.\n\n5. Prohibitions:\nIt is prohibited to tamper with smart deposit machines, register false information, or engage in fraudulent activities that affect the system or other users.\n\n6. Policy acceptance:\nThe use of Renova implies full acceptance of this privacy and security policy, as well as future updates communicated to the user.\n\nPRIVACY POLICY AND DATA USE\n\nIntroduction:\nAt Renova, we protect the privacy of our users and treat their personal data responsibly. This policy explains how we collect, use, store, and share information.\n\nData we collect:\n- Identity data: copy of ID, selfie photo for validation.\n- Contact data: name, email, phone number.\n- Usage data: recycling history, accumulated points, transactions and rewards.\n- Technical data: IP address, device, app activity logs.\n- Location data: only when using a smart deposit machine.\n\nPurpose of processing:\n- Validate identity and access to services.\n- Allow use of smart deposit machines and application.\n- Manage points and rewards.\n- Issue environmental reports.\n- Improve user experience.\n- Comply with legal obligations.\n\nConsent:\nThe user gives express consent by registering and accepting this policy. Consent can be revoked at any time by request via email, which may result in service suspension.\n\nInformation security:\nRenova applies technical and organizational measures to protect data:\n- Encryption of data in transit and at rest.\n- Secure administrator authentication.\n- Periodic monitoring and audits.\n\nData transfer:\nData is not shared with third parties, except:\n- Service providers supporting operations (e.g., payments, cloud storage).\n- Legal or regulatory requirements.\n- Merger or business restructuring processes.\n\nUser rights (ARCO):\nAccording to the Federal Law on Protection of Personal Data Held by Private Parties (LFPDPPP), the user can:\n- Access their data.\n- Rectify it if incorrect.\n- Cancel it when desired.\n- Oppose its processing.\n\nRequests must be sent to: soyrenovaapp@gmail.com\n\nRetention:\nData will be retained only for the time necessary to fulfill the described purposes and in accordance with applicable legislation.\n\nPolicy changes:\nWe may update this policy at any time. Changes will be communicated in the app or to the registered email. Continued use implies acceptance of the current version.\n\nCONTACT US\n\nIf you have questions or wish to exercise your privacy rights, contact us at:\n\n📧 soyrenovaapp@gmail.com\n📍 Manzanillo, Colima, Mexico</string>
+    <string name="terms_content">RENOVA - Legal Framework and Data Protection\n\nWHO WE ARE\n\nRenova is a sustainable technology platform that promotes recycling through smart deposit machines, a mobile application, and a website. Our goal is to encourage the circular economy by rewarding users who actively participate in the proper disposal of recyclable materials.\n\nWe are committed to operating with transparency, social responsibility, and adherence to Mexican legislation regarding the protection of personal data.\n\nTERMS AND CONDITIONS OF SERVICE\n\nBy registering and using Renova (mobile application, website, or smart deposit machines), the user accepts the following terms:\n\n1. Proper use of the platform:\nThe user agrees to provide truthful information and to use the system only for authorized purposes (recycling, accumulating points, redeeming rewards).\n\n2. Account and credentials:\nThe user is responsible for the confidentiality of their access credentials. Renova is not responsible for unauthorized access caused by user negligence.\n\n3. Rewards and points:\nAccumulated points do not constitute cash, unless otherwise specified in active promotions. Renova may modify the accumulation and redemption rules with prior notice.\n\n4. Service availability:\nWhile Renova seeks to guarantee platform continuity, it is not responsible for interruptions caused by technical failures, scheduled maintenance, or external factors.\n\n5. Prohibitions:\nIt is prohibited to tamper with smart deposit machines, register false information, or engage in fraudulent activities that affect the system or other users.\n\n6. Policy acceptance:\nThe use of Renova implies full acceptance of this privacy and security policy, as well as future updates communicated to the user.\n\nPRIVACY POLICY AND DATA USE\n\nIntroduction:\nAt Renova, we protect the privacy of our users and treat their personal data responsibly. This policy explains how we collect, use, store, and share information.\n\nData we collect:\n- Identity data: copy of ID, selfie photo for validation.\n- Contact data: name, email, phone number.\n- Usage data: recycling history, accumulated points, transactions and rewards.\n- Technical data: IP address, device, app activity logs.\n- Location data: only when using a smart deposit machine.\n\nPurpose of processing:\n- Validate identity and access to services.\n- Allow use of smart deposit machines and application.\n- Manage points and rewards.\n- Issue environmental reports.\n- Improve user experience.\n- Comply with legal obligations.\n\nConsent:\nThe user gives express consent by registering and accepting this policy. Consent can be revoked at any time by request via email, which may result in service suspension.\n\nInformation security:\nRenova applies technical and organizational measures to protect data:\n- Encryption of data in transit and at rest.\n- Secure administrator authentication.\n- Periodic monitoring and audits.\n\nData transfer:\nData is not shared with third parties, except:\n- Service providers supporting operations (e.g., payments, cloud storage).\n- Legal or regulatory requirements.\n- Merger or business restructuring processes.\n\nUser rights (ARCO):\nAccording to the Federal Law on Protection of Personal Data Held by Private Parties (LFPDPPP), the user can:\n- Access their data.\n- Rectify it if incorrect.\n- Cancel it when desired.\n- Oppose its processing.\n\nRequests must be sent to: soyrenovaapp@gmail.com\n\nRetention:\nData will be retained only for the time necessary to fulfill the described purposes and in accordance with applicable legislation.\n\nPolicy changes:\nWe may update this policy at any time. Changes will be communicated in the app or to the registered email. Continued use implies acceptance of the current version.\n\Look CONTACT US\n\nIf you have questions or wish to exercise your privacy rights, contact us at:\n\n📧 soyrenovaapp@gmail.com\n📍 Manzanillo, Colima, Mexico</string>
 
     <string name="privacy_content">1. Information we collect\n\nWe collect information you provide directly to us, such as name, email, and application usage data.\n\n2. Use of information\n\nWe use the collected information to provide, maintain, and improve our services, as well as to communicate with you.\n\n3. Sharing information\n\nWe do not share your personal information with third parties without your consent, except when necessary to provide our services.\n\n4. Security\n\nWe implement security measures to protect your personal information against unauthorized access and misuse.\n\n5. Your rights\n\nYou have the right to access, correct, or delete your personal information at any time.</string>
 
-    <!-- RegisterScreen -->
     <string name="register_title">REGISTER</string>
     <string name="complete_information">Complete your information</string>
     <string name="step_1_of_3">Step 1 of 3</string>
@@ -170,14 +151,12 @@
     <string name="valid">Valid</string>
     <string name="error">Error</string>
 
-    <!-- Validation Errors -->
     <string name="error_name_min_length">Must contain at least 2 letters</string>
     <string name="error_phone_digits">Must contain 10 digits</string>
     <string name="error_password_requirements">Minimum 6 characters, letters and numbers</string>
     <string name="error_passwords_not_match">Passwords do not match</string>
     <string name="error_invalid_field">Invalid field</string>
 
-    <!-- DocumentsScreen -->
     <string name="documents_title">DOCUMENTS</string>
     <string name="upload_official_id">Upload your official ID</string>
     <string name="step_2_of_3">Step 2 of 3</string>
@@ -188,7 +167,6 @@
     <string name="document_curp_number">Document/ID Number</string>
     <string name="error_invalid_curp">Invalid ID. Must have 18 characters</string>
 
-    <!-- VerificationScreen -->
     <string name="verification_title">VERIFICATION</string>
     <string name="take_selfie_subtitle">Take a selfie to\nconfirm your identity</string>
     <string name="step_3_of_3">Step 3 of 3</string>
@@ -205,7 +183,6 @@
     <string name="success">Success</string>
     <string name="completed">Completed!</string>
 
-    <!-- Recompensas -->
     <string name="loading_rewards">Loading rewards...</string>
     <string name="reward_screen_title">Rewards</string>
     <string name="reward_screen_subtitle">Explore and choose the reward you like the most</string>
@@ -228,10 +205,8 @@
 
     <string name="close_button">Cerrar</string>
 
-    <!-- Venta -->
     <string name="sale">Sale</string>
 
-    <!-- modal de logout-->
     <string name="modal_logout_title">Log out</string>>
     <string name="modal_logout_message">Are you sure you want to log out?</string>>
     <string name="modal_logout_loading">Logging out…</string>>
@@ -241,7 +216,6 @@
     <string name="error_title">Error</string>
     <string name="error_file_too_large">The selected file exceeds the maximum allowed size of 5MB. Please select a smaller image.</string>
 
-    <!-- Profile -->
     <string name="profile_verified_badge">Verified</string>
     <string name="profile_pending_badge">Pending</string>
     <string name="profile_rejected_badge">Rejected</string>
@@ -292,23 +266,19 @@
     <string name="welcome_home">Welcome!</string>
     <string name="start_recycling_today">Start recycling today</string>
 
-    <!-- Achievements Section -->
     <string name="unlocked_achievements">Unlocked achievements</string>
     <string name="your_achievements_and_ranks">Your achievements and ranks obtained</string>
 
-    <!-- Achievement Titles -->
     <string name="achievement_eco_warrior">Eco Warrior</string>
     <string name="achievement_recycler_pro">Recycler Pro</string>
     <string name="achievement_green_hero">Green Hero</string>
     <string name="achievement_planet_saver">Planet Saver</string>
 
-    <!-- Achievement Descriptions -->
     <string name="achievement_eco_warrior_desc">Unlocks at 100 points. You\'re starting your eco-friendly journey!</string>
     <string name="achievement_recycler_pro_desc">Unlocks at 500 points. You\'re a recycling professional!</string>
     <string name="achievement_green_hero_desc">Unlocks at 1,000 points. A true environmental hero!</string>
     <string name="achievement_planet_saver_desc">Unlocks at 2,500 points. You\'re saving the planet!</string>
 
-    <!-- Achievement Dialog -->
     <string name="unlocked">UNLOCKED!</string>
     <string name="locked">LOCKED</string>
     <string name="progress_format">Progress: %1$d / %2$d pts</string>
@@ -346,6 +316,7 @@
     <string name="quantity">Quantity</string>
     <string name="default_notification_channel_id" translatable="false">fcm_default_channel</string>
     <string name="no_activity_description">Your recycling and reward activities will appear here</string>
+
     <string name="address">Address</string>
     <string name="business_profile_title">Business Profile</string>
     <string name="business_information">Business Information</string>
@@ -367,7 +338,6 @@
     <string name="status_rejected">Rejected</string>
     <string name="status_inactive">Inactive</string>
 
-    <!-- User Type Labels -->
     <string name="user_type_label">User Type</string>
     <string name="user_type_citizen">Citizen</string>
     <string name="user_type_admin">Administrator</string>
@@ -376,7 +346,6 @@
 
     <string name="remember_me">Remember me</string>
 
-    <!-- ===== REGISTER ERRORS (Step 1) ===== -->
     <string name="error_register_user">Error registering user.</string>
     <string name="error_email_required">The email field is required.</string>
     <string name="error_email_taken">The email has already been taken.</string>
@@ -393,7 +362,6 @@
     <string name="error_lastname_required">The last name field is required.</string>
     <string name="error_field_required">This field is required.</string>
 
-    <!-- ===== UPLOAD DOCUMENTS ERRORS (Step 2) ===== -->
     <string name="error_auth_token_missing">Authentication token not provided.</string>
     <string name="error_no_permission_upload_docs">You do not have permission to upload documents.</string>
     <string name="error_upload_documents">Error uploading documents.</string>
@@ -403,10 +371,59 @@
     <string name="error_document_front_required">The front document is required.</string>
     <string name="error_document_back_required">The back document is required.</string>
 
-    <!-- ===== UPLOAD SELFIE ERRORS (Step 3) ===== -->
     <string name="error_no_permission_upload_selfie">You do not have permission to upload selfie.</string>
     <string name="error_upload_selfie">Error uploading selfie.</string>
     <string name="error_selfie_must_be_image">The selfie must be an image.</string>
     <string name="error_selfie_required">The selfie is required.</string>
+    <string name="error_title2">¡Ocurrió un error!</string>
+    <string name="error_default_message">¡Oops! Sucedió un error, por favor reinicia o vuelve a iniciar sesión</string>
 
+    <string name="resubmit_documentation">Resubmit Documentation</string>
+
+    <string name="tour_button_exit">Exit</string>
+    <string name="tour_button_prev">Prev</string>
+    <string name="tour_button_next">Next</string>
+    <string name="tour_button_finish">Finish</string>
+    <string name="tour_title_navigating">Navigating...</string>
+    <string name="tour_desc_navigating">Loading next screen...</string>
+
+    <string name="tour_title_home_points">Your Total Points</string>
+    <string name="tour_desc_home_points">Welcome! This card shows the total points you\'ve earned from recycling. Watch them grow!</string>
+    <string name="tour_title_home_activity">Your Recent Activity</string>
+    <string name="tour_desc_home_activity">Here you\'ll see a summary of your latest movements, like recycling and rewards.</string>
+    <string name="tour_title_home_achievements">Your Achievements</string>
+    <string name="tour_desc_home_achievements">The more you recycle, the more achievements you unlock! Tap one to see the details.</string>
+
+    <string name="tour_title_nav_main">Let\'s go to the Store</string>
+    <string name="tour_desc_nav_main">This is the main menu. Tap "Store" (or "Next") to see where to redeem your points.</string>
+    <string name="tour_title_qr_button">Your Access Code</string>
+    <string name="tour_desc_qr_button">This is the access button. Tap here (or "Next") to see your codes.</string>
+    <string name="tour_title_profile_button">Your Profile</string>
+    <string name="tour_desc_profile_button">Almost done. Tap "Profile" (or "Next") to see your personal information.</string>
+    <string name="tour_title_activity_button">Activity History</string>
+    <string name="tour_desc_activity_button">Finally, tap "Activity" (or "Next") to see the full history of your movements.</string>
+
+    <string name="tour_title_store_categories">Filter Stores</string>
+    <string name="tour_desc_store_categories">Use these filters to find stores by category. Tap "All" to see the full list.</string>
+    <string name="tour_title_store_alliances">Our Partners</string>
+    <string name="tour_desc_store_alliances">Here you\'ll see the list of businesses where you can redeem your points for rewards.</string>
+    <string name="tour_title_store_rewards">Choose a Store</string>
+    <string name="tour_desc_store_rewards">Tap any store (or "Next") to explore the exclusive rewards and discounts it offers.</string>
+
+    <string name="tour_title_qr_container">Your Access Codes</string>
+    <string name="tour_desc_qr_container">This screen shows your codes. Use the QR code to identify yourself at containers and the barcode to redeem in stores.</string>
+    <string name="tour_title_qr_barcode">Swap between codes</string>
+    <string name="tour_desc_qr_barcode">Tap this button to switch between your QR code and your barcode.</string>
+
+    <string name="tour_title_profile_language">Change Your Language</string>
+    <string name="tour_desc_profile_language">You can change the app\'s language from here.</string>
+    <string name="tour_title_profile_info">Your Information</string>
+    <string name="tour_desc_profile_info">Here you can see your personal data and your identity verification status.</string>
+
+    <string name="tour_title_activity_points">Points Summary</string>
+    <string name="tour_desc_activity_points">Here is the total number of points you have accumulated.</string>
+    <string name="tour_title_activity_materials">Your Impact</string>
+    <string name="tour_desc_activity_materials">This section summarizes how much plastic and aluminum you\'ve helped recycle. Good job!</string>
+    <string name="tour_title_activity_history">Detailed History</string>
+    <string name="tour_desc_activity_history">And here you\'ll find the complete record of every recycling and redemption you\'ve made. That\'s all!</string>
 </resources>

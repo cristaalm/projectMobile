@@ -33,6 +33,11 @@ import androidx.lifecycle.lifecycleScope
 import kotlinx.coroutines.launch
 import android.widget.Toast
 
+// --- IMPORTS AÑADIDOS DE LA RAMA 'tour' ---
+import com.renova.mobile.ui.tour.LocalTourState
+import com.renova.mobile.ui.tour.TourState
+import com.renova.mobile.network.User // Import necesario para `saveSession`
+
 class MainActivity : ComponentActivity() {
     override fun attachBaseContext(newBase: Context) {
         val language = LocaleHelper.getLanguage(newBase)
@@ -49,7 +54,7 @@ class MainActivity : ComponentActivity() {
         )
         ApiClient.init(this)
 
-        // Request notification permission on Android 13+
+        // --- LÓGICA DE 'develop': Pedir permiso de notificaciones ---
         if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.TIRAMISU) {
             val hasPermission = androidx.core.content.ContextCompat.checkSelfPermission(
                 this,
@@ -63,11 +68,13 @@ class MainActivity : ComponentActivity() {
                 )
             }
         }
+        // --- FIN LÓGICA 'develop' ---
 
         enableEdgeToEdge()
         setContent {
             RenovaTheme {
-                val sessionManager = SessionManager(this)
+                // --- LÓGICA DE 'tour': Usar `remember` para el SessionManager ---
+                val sessionManager = remember { SessionManager(this) }
                 val languageViewModel: LanguageViewModel = viewModel()
 
                 LaunchedEffect(Unit) {
@@ -76,16 +83,18 @@ class MainActivity : ComponentActivity() {
 
                 val isUpdatingLanguage by languageViewModel.isUpdating.collectAsState()
 
+                // --- LÓGICA DE 'tour': Inicializar TourState ---
+                val tourState = remember { TourState() }
+
                 HideSystemNavigation()
 
                 var isLoggedIn by remember { mutableStateOf(sessionManager.isLoggedIn()) }
 
-                // Registrar token FCM almacenado tras login
+                // --- LÓGICA DE 'develop': Registro de token FCM robusto (con obtención de token fresco) ---
                 LaunchedEffect(isLoggedIn) {
                     if (isLoggedIn) {
                         val userId = sessionManager.getUser()?.id
 
-                        // Obtener el token FCM (prefiere fresco) y registrarlo una sola vez con el userId actual
                         try {
                             ApiClient.init(this@MainActivity)
                         } catch (e: Exception) {
@@ -102,15 +111,12 @@ class MainActivity : ComponentActivity() {
                                 return@addOnCompleteListener
                             }
 
-                            // Guardar sólo si cambia respecto al cache
                             if (token != cached) {
                                 sessionManager.saveFcmToken(token)
                             }
 
-                            // Un solo Toast con el token efectivo
-                            Toast.makeText(this@MainActivity, "FCM Token fresco: ${token}", Toast.LENGTH_LONG).show()
+                            // Toast.makeText(this@MainActivity, "FCM Token fresco: ${token}", Toast.LENGTH_LONG).show()
 
-                            // Registrar/actualizar el token para el userId actual (evita duplicados)
                             this@MainActivity.lifecycleScope.launch(Dispatchers.IO) {
                                 try {
                                     val resp = ApiClient.apiService.registerFcmToken(
@@ -128,44 +134,52 @@ class MainActivity : ComponentActivity() {
                         }
                     }
                 }
+                // --- FIN LÓGICA 'develop' ---
 
-                if (isLoggedIn) {
-                    AppNavigation(
-                        onLogout = {
-                            val userId = sessionManager.getUser()?.id
-                            val token = sessionManager.getFcmToken()
-                            try {
-                                ApiClient.init(this@MainActivity)
-                            } catch (_: Exception) {}
-                            this@MainActivity.lifecycleScope.launch(Dispatchers.IO) {
+                // --- LÓGICA DE 'tour': Proveedor de TourState ---
+                CompositionLocalProvider(LocalTourState provides tourState) {
+                    if (isLoggedIn) {
+                        AppNavigation(
+                            // --- LÓGICA DE 'tour': Pasar sessionManager ---
+                            sessionManager = sessionManager,
+                            // --- LÓGICA DE 'develop': Anular registro FCM en Logout ---
+                            onLogout = {
+                                val userId = sessionManager.getUser()?.id
+                                val token = sessionManager.getFcmToken()
                                 try {
-                                    if (userId != null && !token.isNullOrBlank()) {
-                                        val resp = ApiClient.apiService.unregisterFcmToken(
-                                            com.renova.mobile.network.UnregisterFcmTokenRequest(userId = userId, token = token!!)
-                                        )
-                                        android.util.Log.d(
-                                            "FCM",
-                                            "Unregister token: HTTP ${resp.code()}, success=${resp.body()?.success}, message='${resp.body()?.message}'"
-                                        )
-                                    } else {
-                                        android.util.Log.w("FCM", "No userId/token to unregister on logout")
+                                    ApiClient.init(this@MainActivity)
+                                } catch (_: Exception) {}
+                                this@MainActivity.lifecycleScope.launch(Dispatchers.IO) {
+                                    try {
+                                        if (userId != null && !token.isNullOrBlank()) {
+                                            val resp = ApiClient.apiService.unregisterFcmToken(
+                                                com.renova.mobile.network.UnregisterFcmTokenRequest(userId = userId, token = token!!)
+                                            )
+                                            android.util.Log.d(
+                                                "FCM",
+                                                "Unregister token: HTTP ${resp.code()}, success=${resp.body()?.success}, message='${resp.body()?.message}'"
+                                            )
+                                        } else {
+                                            android.util.Log.w("FCM", "No userId/token to unregister on logout")
+                                        }
+                                    } catch (e: Exception) {
+                                        android.util.Log.e("FCM", "Error unregistering FCM token", e)
                                     }
-                                } catch (e: Exception) {
-                                    android.util.Log.e("FCM", "Error unregistering FCM token", e)
                                 }
-                            }
-                            sessionManager.clearFcmToken()
-                            sessionManager.logout()
-                            isLoggedIn = false
-                        },
-                        languageViewModel = languageViewModel,
-                        isUpdatingLanguage = isUpdatingLanguage
-                    )
-                } else {
-                    AuthNavigation(
-                        sessionManager = sessionManager,
-                        onLoginSuccess = { isLoggedIn = true }
-                    )
+                                sessionManager.clearFcmToken()
+                                sessionManager.logout()
+                                isLoggedIn = false
+                            },
+                            // --- FIN LÓGICA 'develop' ---
+                            languageViewModel = languageViewModel,
+                            isUpdatingLanguage = isUpdatingLanguage
+                        )
+                    } else {
+                        AuthNavigation(
+                            sessionManager = sessionManager,
+                            onLoginSuccess = { isLoggedIn = true }
+                        )
+                    }
                 }
             }
         }

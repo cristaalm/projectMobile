@@ -35,6 +35,7 @@ import com.renova.mobile.ui.theme.RenovaColors
 
 @Composable
 fun AlianzaCard(
+    modifier: Modifier = Modifier, // <-- AÑADIR ESTO
     alianza: Alianza,
     categories: List<TypeShop>,
     colors: RenovaColorScheme,

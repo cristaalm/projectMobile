@@ -20,17 +20,19 @@ class SessionManager(context: Context) {
         private const val KEY_IS_LOGGED_IN = "is_logged_in"
         private const val KEY_FCM_TOKEN = "fcm_token"
         private const val KEY_USER_ID = "user_id"
-        // NUEVO: Para manejar remember me
+        // DE 'develop'
         private const val KEY_REMEMBER_ME = "remember_me"
+        // DE 'tour'
+        private const val KEY_FIRST_LOGIN_PREFIX = "first_login_complete_user_"
     }
 
-    // MODIFICADO: Guardar sesión con remember me
+    // FUSIONADO: Guardar sesión con remember me y user.id
     fun saveSession(
         accessToken: String,
         tokenType: String?,
         expiresAt: String?,
         user: User?,
-        rememberMe: Boolean = false // NUEVO parámetro
+        rememberMe: Boolean = false // Parámetro de 'develop'
     ) {
         sharedPreferences.edit().apply {
             putString(KEY_ACCESS_TOKEN, accessToken)
@@ -38,19 +40,19 @@ class SessionManager(context: Context) {
             putString(KEY_EXPIRES_AT, expiresAt)
             putString(KEY_USER, gson.toJson(user))
             putBoolean(KEY_IS_LOGGED_IN, true)
-            putBoolean(KEY_REMEMBER_ME, rememberMe) // NUEVO: Guardar preferencia
-            user?.let { putInt(KEY_USER_ID, it.id) }
+            putBoolean(KEY_REMEMBER_ME, rememberMe) // Lógica de 'develop'
+            user?.let { putInt(KEY_USER_ID, it.id) } // Lógica de 'tour'
             apply()
         }
         Log.d("SessionManager", "Sesión guardada con rememberMe=$rememberMe")
     }
 
-    //NUEVO: Verificar si tiene remember me activado
+    //NUEVO: (de 'develop') Verificar si tiene remember me activado
     fun hasRememberMe(): Boolean {
         return sharedPreferences.getBoolean(KEY_REMEMBER_ME, false)
     }
 
-    //MODIFICADO: Verificar sesión considerando remember me y expiración
+    // FUSIONADO: (de 'develop') Verificar sesión considerando remember me y expiración
     fun isLoggedIn(): Boolean {
         val hasSession = sharedPreferences.getBoolean(KEY_IS_LOGGED_IN, false) &&
                 !getAccessToken().isNullOrEmpty()
@@ -67,7 +69,8 @@ class SessionManager(context: Context) {
         val isExpired = isTokenExpired()
         if (isExpired) {
             Log.d("SessionManager", "Token expirado sin Remember Me")
-            logout() // Limpiar sesión expirada
+            // No llamar a logout() aquí, eso podría causar bucles.
+            // La sesión se limpiará en el próximo inicio de sesión o reinicio.
             return false
         }
 
@@ -96,36 +99,57 @@ class SessionManager(context: Context) {
             try {
                 gson.fromJson(userJson, User::class.java)
             } catch (e: Exception) {
+                Log.e("SessionManager", "Error parsing User JSON", e)
                 null
             }
-        } else null
+        } else {
+            Log.w("SessionManager", "User JSON is null")
+            null
+        }
     }
 
-    // Obtener token completo para headers HTTP
+    // FUSIONADO: (de 'tour') Obtener token completo para headers HTTP (con chequeo de prefijo)
     fun getAuthToken(): String? {
         val token = getAccessToken()
         Log.d("SessionManager", "getAuthToken: token = $token")
         val type = getTokenType()
         return if (token != null && type != null) {
-            "$type $token"
-        } else null
-    }
-
-    // Cerrar sesión
-    fun logout() {
-        sharedPreferences.edit().apply {
-            clear()
-            apply()
+            if (token.startsWith("$type ", ignoreCase = true)) {
+                token
+            } else {
+                "$type $token"
+            }
+        } else {
+            null
         }
     }
 
-    //NUEVO: Verificar si el token expiró
+    // FUSIONADO: (de 'tour') Cerrar sesión sin borrar banderas de tour
+    fun logout() {
+        Log.d("SessionManager", "Cerrando sesión...")
+        sharedPreferences.edit().apply {
+            remove(KEY_ACCESS_TOKEN)
+            remove(KEY_TOKEN_TYPE)
+            remove(KEY_EXPIRES_AT)
+            remove(KEY_USER)
+            remove(KEY_IS_LOGGED_IN)
+            remove(KEY_USER_ID)
+            remove(KEY_FCM_TOKEN)
+            remove(KEY_REMEMBER_ME) // Añadido de la lógica de 'develop'
+            // NO borramos las banderas de tour (KEY_FIRST_LOGIN_PREFIX)
+            apply()
+        }
+        Log.d("SessionManager", "Sesión cerrada. isLoggedIn: ${isLoggedIn()}")
+    }
+
+    //NUEVO: (de 'develop') Verificar si el token expiró
     fun isTokenExpired(): Boolean {
-        val expiresAt = getExpiresAt() ?: return false
+        val expiresAt = getExpiresAt() ?: return false // Si no hay fecha, no se puede expirar
 
         return try {
-            // Formato esperado: "2025-10-24 12:00:00" o ISO 8601
             val expiryDate = parseExpiryDate(expiresAt)
+            if (expiryDate == Long.MAX_VALUE) return false // No se pudo parsear, asumir que no expira
+
             val currentTime = System.currentTimeMillis()
             val isExpired = currentTime >= expiryDate
 
@@ -137,18 +161,18 @@ class SessionManager(context: Context) {
         }
     }
 
-    //NUEVO: Parsear fecha de expiración
+    //NUEVO: (de 'develop') Parsear fecha de expiración
     private fun parseExpiryDate(expiresAt: String): Long {
         return try {
-            // Intentar parsear ISO 8601
+            // Intentar parsear ISO 8601 (Formato común de API)
             val formatter = java.text.SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'", java.util.Locale.US)
             formatter.timeZone = java.util.TimeZone.getTimeZone("UTC")
-            formatter.parse(expiresAt)?.time ?: 0L
+            formatter.parse(expiresAt)?.time ?: Long.MAX_VALUE
         } catch (e: Exception) {
             try {
                 // Intentar parsear formato alternativo "yyyy-MM-dd HH:mm:ss"
                 val formatter = java.text.SimpleDateFormat("yyyy-MM-dd HH:mm:ss", java.util.Locale.US)
-                formatter.parse(expiresAt)?.time ?: 0L
+                formatter.parse(expiresAt)?.time ?: Long.MAX_VALUE
             } catch (e2: Exception) {
                 Log.e("SessionManager", "No se pudo parsear fecha: $expiresAt")
                 Long.MAX_VALUE // Si no se puede parsear, asumir que nunca expira
@@ -156,7 +180,7 @@ class SessionManager(context: Context) {
         }
     }
 
-    // MODIFICADO: Verificar si está próximo a expirar (30 minutos antes)
+    // FUSIONADO: (de 'develop') Verificar si está próximo a expirar (con lógica de remember me)
     fun isTokenExpiringSoon(): Boolean {
         if (hasRememberMe()) return false // No aplicar si tiene remember me
 
@@ -164,6 +188,8 @@ class SessionManager(context: Context) {
 
         return try {
             val expiryDate = parseExpiryDate(expiresAt)
+            if (expiryDate == Long.MAX_VALUE) return false // No se pudo parsear
+
             val currentTime = System.currentTimeMillis()
             val thirtyMinutesInMillis = 30 * 60 * 1000
             val timeUntilExpiry = expiryDate - currentTime
@@ -183,16 +209,21 @@ class SessionManager(context: Context) {
         }
     }
 
+    // FUSIONADO: (de 'tour') Getter de UserID más robusto
     fun getUserId(): Int? {
-        val userId = sharedPreferences.getInt(KEY_USER_ID, -1)
-        return if (userId != -1) { userId } else { null }
+        val user = getUser()
+        if (user != null) {
+            return user.id
+        }
+        val userIdFromPref = sharedPreferences.getInt(KEY_USER_ID, -1)
+        return if (userIdFromPref != -1) userIdFromPref else null
     }
 
     fun saveUserId(userId: Int) {
         sharedPreferences.edit().putInt(KEY_USER_ID, userId).apply()
     }
 
-    // Limpiar solo el token temporal
+    // FUSIONADO: (de 'develop') Limpiar token temporal (incluye flags de login)
     fun clearAuthToken() {
         sharedPreferences.edit().apply {
             remove(KEY_ACCESS_TOKEN)
@@ -209,10 +240,13 @@ class SessionManager(context: Context) {
             putString(KEY_FCM_TOKEN, token)
             apply()
         }
+        Log.d("SessionManager", "FCM Token guardado: ${token.substring(0, minOf(10, token.length))}...")
     }
 
+    // FUSIONADO: (de 'develop') Getter de FCM Token más robusto
     fun getFcmToken(): String? {
         val t = sharedPreferences.getString(KEY_FCM_TOKEN, null)
+        // Si está vacío o es un placeholder, intentar obtener uno nuevo
         if (t.isNullOrBlank() || t == "fcm_token") {
             try {
                 com.google.firebase.messaging.FirebaseMessaging.getInstance().token.addOnCompleteListener { task ->
@@ -225,7 +259,7 @@ class SessionManager(context: Context) {
                 }
             } catch (_: Exception) { /* no-op */ }
         }
-        return t
+        return sharedPreferences.getString(KEY_FCM_TOKEN, null) // Leer de nuevo por si se actualizó
     }
 
     fun clearFcmToken() {
@@ -233,5 +267,77 @@ class SessionManager(context: Context) {
             remove(KEY_FCM_TOKEN)
             apply()
         }
+        Log.d("SessionManager", "FCM Token limpiado.")
+    }
+
+    // --- FUNCIONES PARA EL TOUR (POR USUARIO) (de 'tour') ---
+
+    /**
+     * Genera la clave única para este usuario
+     */
+    private fun getTourKeyForUser(userId: Int): String {
+        return "$KEY_FIRST_LOGIN_PREFIX$userId"
+    }
+
+    /**
+     * Verifica si es la primera vez que ESTE USUARIO inicia sesión.
+     * Requiere que ya haya un usuario logueado (getUser() != null)
+     * @return `true` si este usuario NO ha completado el tour
+     */
+    fun isFirstLogin(): Boolean {
+        val userId = getUserId()
+        if (userId == null) {
+            Log.w("SessionManager", "isFirstLogin: No hay userId, retornando false")
+            return false
+        }
+
+        val tourKey = getTourKeyForUser(userId)
+        val isComplete = sharedPreferences.getBoolean(tourKey, false)
+        Log.d("SessionManager", "isFirstLogin para userId=$userId: $tourKey = $isComplete. Returning: ${!isComplete}")
+        return !isComplete
+    }
+
+    /**
+     * Marca que ESTE USUARIO ya completó el tour.
+     * Requiere que ya haya un usuario logueado.
+     */
+    fun setFirstLoginComplete() {
+        val userId = getUserId()
+        if (userId == null) {
+            Log.w("SessionManager", "setFirstLoginComplete: No hay userId, no se puede marcar")
+            return
+        }
+
+        val tourKey = getTourKeyForUser(userId)
+        sharedPreferences.edit().putBoolean(tourKey, true).apply()
+        Log.d("SessionManager", "setFirstLoginComplete para userId=$userId: $tourKey = true")
+    }
+
+    /**
+     * SOLO PARA DEBUG: Resetea la bandera del usuario actual
+     */
+    fun resetFirstLoginFlag() {
+        val userId = getUserId()
+        if (userId == null) {
+            Log.w("SessionManager", "resetFirstLoginFlag: No hay userId")
+            return
+        }
+
+        val tourKey = getTourKeyForUser(userId)
+        sharedPreferences.edit().remove(tourKey).apply()
+        Log.d("SessionManager", "DEBUG: Bandera $tourKey reseteada para userId=$userId")
+    }
+
+    /**
+     * OPCIONAL: Limpia las banderas de tour de TODOS los usuarios
+     * (útil si quieres hacer limpieza general)
+     */
+    fun clearAllTourFlags() {
+        val editor = sharedPreferences.edit()
+        sharedPreferences.all.keys
+            .filter { it.startsWith(KEY_FIRST_LOGIN_PREFIX) }
+            .forEach { editor.remove(it) }
+        editor.apply()
+        Log.d("SessionManager", "DEBUG: Todas las banderas de tour limpiadas")
     }
 }

@@ -45,6 +45,13 @@ import androidx.compose.ui.graphics.asImageBitmap
 import android.graphics.BitmapFactory
 import coil.compose.rememberAsyncImagePainter
 
+// --- IMPORTS AÑADIDOS DE LA RAMA 'tour' ---
+import androidx.compose.ui.layout.onGloballyPositioned
+import com.renova.mobile.ui.tour.LocalTourState
+import androidx.compose.runtime.DisposableEffect
+// --- FIN DE IMPORTS ---
+
+
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ProfileScreen(
@@ -57,6 +64,7 @@ fun ProfileScreen(
     val isRefreshing by profileViewModel.isRefreshing.collectAsState()
     val colors = LocalRenovaColors.current
 
+    // Lógica de ErrorModal de 'develop'
     var showMainErrorModal by remember { mutableStateOf(false) }
     var mainErrorMessage by remember { mutableStateOf("") }
     var canRetryMainError by remember { mutableStateOf(true) }
@@ -98,8 +106,8 @@ fun ProfileScreen(
                 }
             }
 
+            // Lógica de Error avanzada de 'develop'
             is ProfileUiState.Error -> {
-                // Determinar si el error es recuperable
                 val errorState = uiState as ProfileUiState.Error
                 val isAuthError = errorState.message.contains("token", ignoreCase = true) ||
                         errorState.message.contains("autenticación", ignoreCase = true) ||
@@ -115,7 +123,7 @@ fun ProfileScreen(
         }
     }
 
-    // Error modal principal
+    // Error modal principal (de 'develop')
     ErrorModal(
         isVisible = showMainErrorModal,
         errorMessage = mainErrorMessage,
@@ -145,6 +153,11 @@ private fun ProfileContent(
     val verificationStatus = VerificationStatus.fromCode(user.verification_status)
     val colors = LocalRenovaColors.current
 
+    // --- AÑADIDO: Obtener estado del Tour (de 'tour') ---
+    val tourState = LocalTourState.current
+    // --- FIN ---
+
+    // Toda la lógica de ViewModel de 'develop'
     val documentImages by profileViewModel.documentImages.collectAsState()
     val verificationRequestState by profileViewModel.verificationRequestState.collectAsState()
     val documentUploadState by profileViewModel.documentUploadState.collectAsState()
@@ -155,12 +168,10 @@ private fun ProfileContent(
     var showUploadSuccessDialog by remember { mutableStateOf(false) }
     var uploadedDocumentName by remember { mutableStateOf("") }
 
-    // Solo cargar imágenes una vez al inicio
     LaunchedEffect(Unit) {
         profileViewModel.loadDocumentImages(user.id, identityVerification)
     }
 
-    // Observar cambios en el estado de solicitud de verificación
     LaunchedEffect(verificationRequestState) {
         when (verificationRequestState) {
             is ProfileViewModel.VerificationRequestState.Success -> {
@@ -176,7 +187,6 @@ private fun ProfileContent(
         }
     }
 
-    // Observar cambios en el estado de subida de documentos
     LaunchedEffect(documentUploadState) {
         when (documentUploadState) {
             is ProfileViewModel.DocumentUploadState.Success -> {
@@ -199,7 +209,6 @@ private fun ProfileContent(
         }
     }
 
-    // Actualizar documentos cuando cambien las imágenes cargadas
     val editDocuments = remember(documentImages) {
         listOf(
             DocumentCardData(
@@ -219,6 +228,7 @@ private fun ProfileContent(
             )
         )
     }
+    // Fin de la lógica de 'develop'
 
     Column(
         modifier = Modifier
@@ -229,7 +239,7 @@ private fun ProfileContent(
             user = user,
             verificationStatus = verificationStatus,
             languageViewModel = languageViewModel,
-            selfieBytes = documentImages["selfie"]
+            selfieBytes = documentImages["selfie"] // <-- Se pasa la selfie de 'develop'
         )
         Spacer(modifier = Modifier.height(12.dp))
 
@@ -244,15 +254,25 @@ private fun ProfileContent(
             )
             Spacer(modifier = Modifier.height(12.dp))
 
-            PersonalInfoCard(
-                user = user,
-                verificationStatus = verificationStatus,
-                isSpanish = isSpanish,
-                viewModel = profileViewModel
-            )
+            // --- MODIFICADO: Añadir wrapper del Tour (de 'tour') ---
+            Box(modifier = Modifier.onGloballyPositioned { coords ->
+                tourState.registerTarget("profile_info_card", coords)
+            }) {
+                PersonalInfoCard(
+                    user = user,
+                    verificationStatus = verificationStatus,
+                    isSpanish = isSpanish,
+                    viewModel = profileViewModel
+                )
+            }
+            DisposableEffect("profile_info_card") {
+                onDispose { tourState.unregisterTarget("profile_info_card") }
+            }
+            // --- FIN DE MODIFICACIÓN ---
 
             Spacer(modifier = Modifier.height(12.dp))
 
+            // --- Toda la sección de documentos de 'develop' ---
             if (identityVerification != null) {
                 DocumentsUploadSection(
                     documents = editDocuments,
@@ -330,10 +350,11 @@ private fun ProfileContent(
 
                 Spacer(modifier = Modifier.height(12.dp))
             }
+            // --- Fin de la sección de documentos ---
         }
     }
 
-    // Diálogo de éxito para verificación
+    // --- Diálogos de 'develop' ---
     if (showSuccessDialog) {
         AlertDialog(
             onDismissRequest = { showSuccessDialog = false },
@@ -372,7 +393,6 @@ private fun ProfileContent(
         )
     }
 
-    // Diálogo de éxito para subida de documento
     if (showUploadSuccessDialog) {
         AlertDialog(
             onDismissRequest = { showUploadSuccessDialog = false },
@@ -411,7 +431,6 @@ private fun ProfileContent(
         )
     }
 
-    // Diálogo de error usando ErrorModal
     ErrorModal(
         isVisible = showErrorDialog,
         errorMessage = errorMessage,
@@ -435,16 +454,19 @@ fun ProfileHeader(
     val context = LocalContext.current
     val colors = LocalRenovaColors.current
 
-    // Estado para controlar el zoom de la imagen
+    // --- AÑADIDO: Obtener estado del Tour (de 'tour') ---
+    val tourState = LocalTourState.current
+    // --- FIN ---
+
     var showImageZoom by remember { mutableStateOf(false) }
 
-    // Convertir ByteArray a Bitmap
     val selfieBitmap = remember(selfieBytes) {
         selfieBytes?.let { bytes ->
             BitmapFactory.decodeByteArray(bytes, 0, bytes.size)
         }
     }
 
+    // Se usa el layout de 'develop'
     Box(
         modifier = Modifier
             .fillMaxWidth()
@@ -468,7 +490,6 @@ fun ProfileHeader(
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                // Siempre mostrar el badge de verificación o un Spacer
                 if (verificationStatus != null) {
                     Surface(
                         shape = RoundedCornerShape(22.dp),
@@ -508,18 +529,26 @@ fun ProfileHeader(
                         }
                     }
                 } else {
-                    // Spacer para mantener el balance visual
                     Spacer(modifier = Modifier.width(1.dp))
                 }
 
-                LanguageToggle(
-                    isSpanish = isSpanish,
-                    onLanguageChange = { newLang ->
-                        languageViewModel.changeLanguage(newLang) {
-                            (context as? Activity)?.recreate()
+                // --- MODIFICADO: Añadir wrapper del Tour (de 'tour') ---
+                Box(modifier = Modifier.onGloballyPositioned { coords ->
+                    tourState.registerTarget("profile_language_toggle", coords)
+                }) {
+                    LanguageToggle(
+                        isSpanish = isSpanish,
+                        onLanguageChange = { newLang ->
+                            languageViewModel.changeLanguage(newLang) {
+                                (context as? Activity)?.recreate()
+                            }
                         }
-                    }
-                )
+                    )
+                }
+                DisposableEffect("profile_language_toggle") {
+                    onDispose { tourState.unregisterTarget("profile_language_toggle") }
+                }
+                // --- FIN DE MODIFICACIÓN ---
             }
 
             Spacer(modifier = Modifier.height(10.dp))
@@ -528,7 +557,7 @@ fun ProfileHeader(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
-                // Imagen de perfil con click para zoom
+                // Lógica de selfie y zoom de 'develop'
                 Box(
                     modifier = Modifier
                         .size(96.dp)
@@ -579,11 +608,46 @@ fun ProfileHeader(
                 )
                 Spacer(modifier = Modifier.height(6.dp))
 
+                // --- AÑADIDO: Sección de Puntos (de 'tour') ---
+                Surface(
+                    shape = RoundedCornerShape(20.dp),
+                    color = colors.surface.copy(alpha = 0.2f)
+                ) {
+                    Row(
+                        modifier = Modifier
+                            .wrapContentWidth()
+                            .padding(horizontal = 16.dp, vertical = 8.dp),
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(6.dp)
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.Star,
+                            contentDescription = null,
+                            tint = colors.surface,
+                            modifier = Modifier.size(20.dp)
+                        )
+                        Text(
+                            text = "${user.total_points}",
+                            color = colors.surface,
+                            style = MaterialTheme.typography.headlineMedium,
+                            fontWeight = FontWeight.W700
+                        )
+                        Text(
+                            text = stringResource(R.string.points_unit),
+                            color = colors.surface.copy(alpha = 0.9f),
+                            style = MaterialTheme.typography.labelSmall,
+                            fontWeight = FontWeight.W600
+                        )
+                    }
+                }
+                // --- Fin de Sección de Puntos ---
+
+                Spacer(modifier = Modifier.height(6.dp)) // <-- Spacer extra para dar aire
             }
         }
     }
 
-    // Diálogo de zoom de imagen
+    // Diálogo de zoom de imagen (de 'develop')
     if (showImageZoom && selfieBitmap != null) {
         Dialog(
             onDismissRequest = { showImageZoom = false }
@@ -603,7 +667,6 @@ fun ProfileHeader(
                         modifier = Modifier.padding(16.dp),
                         horizontalAlignment = Alignment.CenterHorizontally
                     ) {
-                        // Header con botón de cerrar
                         Row(
                             modifier = Modifier.fillMaxWidth(),
                             horizontalArrangement = Arrangement.SpaceBetween,
@@ -628,7 +691,6 @@ fun ProfileHeader(
 
                         Spacer(modifier = Modifier.height(16.dp))
 
-                        // Imagen ampliada
                         Surface(
                             modifier = Modifier
                                 .fillMaxWidth()
@@ -738,29 +800,29 @@ fun VerificationBanner(
             ) {
                 Icon(
                     imageVector = icon,
-                        contentDescription = null,
-                        tint = when (verificationStatus) {
-                            VerificationStatus.REJECTED -> RenovaColors.Error
-                            VerificationStatus.VERIFIED -> colors.primaryColor
-                            VerificationStatus.PENDING -> RenovaColors.Warning
-                            else -> colors.textSecondary
-                        },
-                        modifier = Modifier.size(24.dp)
+                    contentDescription = null,
+                    tint = when (verificationStatus) {
+                        VerificationStatus.REJECTED -> RenovaColors.Error
+                        VerificationStatus.VERIFIED -> colors.primaryColor
+                        VerificationStatus.PENDING -> RenovaColors.Warning
+                        else -> colors.textSecondary
+                    },
+                    modifier = Modifier.size(24.dp)
+                )
+                Column(modifier = Modifier.weight(1f)) {
+                    Text(
+                        text = title,
+                        color = colors.textPrimary,
+                        style = MaterialTheme.typography.titleSmall
                     )
-                    Column(modifier = Modifier.weight(1f)) {
-                        Text(
-                            text = title,
-                            color = colors.textPrimary,
-                            style = MaterialTheme.typography.titleSmall
-                        )
-                        Spacer(modifier = Modifier.height(6.dp))
-                        Text(
-                            text = description,
-                            color = colors.textSecondary.copy(alpha = 0.95f),
-                            style = MaterialTheme.typography.bodySmall
-                        )
-                    }
+                    Spacer(modifier = Modifier.height(6.dp))
+                    Text(
+                        text = description,
+                        color = colors.textSecondary.copy(alpha = 0.95f),
+                        style = MaterialTheme.typography.bodySmall
+                    )
                 }
             }
         }
     }
+}

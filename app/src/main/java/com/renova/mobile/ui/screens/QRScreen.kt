@@ -32,7 +32,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.renova.mobile.R
-import com.renova.mobile.repository.LoginRepository
+// import com.renova.mobile.repository.LoginRepository // <-- Comentado en v1, se mantiene así
 import com.renova.mobile.ui.components.SectionHeader
 import com.renova.mobile.ui.theme.RenovaColors
 import com.renova.mobile.utils.SessionManager
@@ -50,24 +50,37 @@ import com.google.zxing.common.BitMatrix
 import com.google.zxing.EncodeHintType
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalDensity
-import com.renova.mobile.ui.viewmodels.QRViewModel
-import com.renova.mobile.ui.viewmodels.QRState
-import com.renova.mobile.ui.components.CustomRefreshIndicator
-import androidx.compose.material3.pulltorefresh.PullToRefreshBox
-import androidx.compose.material3.pulltorefresh.rememberPullToRefreshState
-import androidx.compose.material.icons.filled.Star
-import androidx.compose.animation.core.animateIntAsState
+import com.renova.mobile.ui.viewmodels.QRViewModel // <-- de v2
+import com.renova.mobile.ui.viewmodels.QRState // <-- de v2
+import com.renova.mobile.ui.components.CustomRefreshIndicator // <-- de v2
+import androidx.compose.material3.pulltorefresh.PullToRefreshBox // <-- de v2
+import androidx.compose.material3.pulltorefresh.rememberPullToRefreshState // <-- de v2
+import androidx.compose.material.icons.filled.Star // <-- de v2
+import androidx.compose.animation.core.animateIntAsState // <-- de v2
+
+// --- NUEVO: Imports para el Tour (de v1) ---
+import androidx.compose.ui.layout.onGloballyPositioned
+import com.renova.mobile.ui.tour.LocalTourState
+// --- FIN DE IMPORTS ---
+
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun QRScreen(
-    viewModel: QRViewModel = androidx.lifecycle.viewmodel.compose.viewModel()
+    viewModel: QRViewModel = androidx.lifecycle.viewmodel.compose.viewModel() // <-- de v2
 ) {
     val context = LocalContext.current
     val sessionManager = remember { SessionManager(context) }
+    // val loginRepository = remember { LoginRepository() } // <-- de v1
 
+    // --- NUEVO: Obtener estado del Tour (de v1) ---
+    val tourState = LocalTourState.current
+    // --- FIN ---
+
+    // --- Lógica de ViewModel y PullToRefresh (de v2) ---
     val uiState by viewModel.state.collectAsState()
     val pullToRefreshState = rememberPullToRefreshState()
+    // --- Fin lógica v2 ---
 
     val user = sessionManager.getUser()
     val accessToken = sessionManager.getAccessToken()
@@ -81,6 +94,7 @@ fun QRScreen(
 
     var showQr by remember { mutableStateOf(true) }
 
+    // --- PullToRefreshBox (de v2) ---
     PullToRefreshBox(
         isRefreshing = uiState.isLoading,
         onRefresh = { viewModel.loadPoints() },
@@ -113,7 +127,11 @@ fun QRScreen(
                         elevation = 3.dp,
                         shape = RoundedCornerShape(16.dp),
                         spotColor = RenovaColors.Light.ActivityShadowColor
-                    ),
+                    )
+                    // --- MODIFICADO: Añadir onGloballyPositioned (de v1) ---
+                    .onGloballyPositioned { coords ->
+                        tourState.registerTarget("qr_card", coords)
+                    },
                 shape = RoundedCornerShape(20.dp),
                 colors = CardDefaults.cardColors(containerColor = Color.Transparent)
             ) {
@@ -150,7 +168,7 @@ fun QRScreen(
                                                 fontWeight = FontWeight.Bold
                                             )
                                         )
-                                        // Puntos: estilo diferente y animado
+                                        // --- Puntos animados (de v2) ---
                                         val animatedPoints by animateIntAsState(
                                             targetValue = uiState.points,
                                             animationSpec = tween(durationMillis = 500),
@@ -183,6 +201,10 @@ fun QRScreen(
                                                 color = Color.White.copy(alpha = 0.3f),
                                                 shape = RoundedCornerShape(16.dp)
                                             )
+                                            // --- MODIFICADO: Añadir onGloballyPositioned (de v1) ---
+                                            .onGloballyPositioned { coords ->
+                                                tourState.registerTarget("qr_switch_button", coords)
+                                            }
                                     ) {
                                         Icon(
                                             imageVector = if (showQr) Icons.Default.CreditCard else Icons.Default.QrCode,
@@ -210,24 +232,18 @@ fun QRScreen(
                                         .background(Color.White), // fondo blanco mejora lectura
                                     contentAlignment = Alignment.Center
                                 ) {
-                                    // Datos del código de barras: validar que el código tenga exactamente 13 dígitos
+                                    // ... (Lógica de generación de código de barras v2) ...
                                     val codeDigits = user?.code_identity ?: ""
                                     val barcodeData: String? = if (codeDigits.length == 13) codeDigits else null
-
-                                    // Ajustar tamaño objetivo según ancho de pantalla
                                     val configuration = LocalConfiguration.current
                                     val density = LocalDensity.current
                                     val screenWidthDp = configuration.screenWidthDp
                                     val targetWidth = with(density) { (screenWidthDp * 0.9f).dp.toPx().toInt() }
                                     val targetHeight = (targetWidth * 0.25f).toInt()
-
-                                    // Hints para mejorar la calidad del código de barras
                                     val hints = mapOf(
-                                        EncodeHintType.MARGIN to 10, // zona tranquila alrededor
-                                        EncodeHintType.CHARACTER_SET to "UTF-8" // codificación estándar de texto
+                                        EncodeHintType.MARGIN to 10,
+                                        EncodeHintType.CHARACTER_SET to "UTF-8"
                                     )
-
-                                    // Generar código EAN-13 sólo si el código es válido (13 dígitos)
                                     val bitMatrix: BitMatrix? = if (barcodeData != null) {
                                         try {
                                             MultiFormatWriter().encode(
@@ -241,8 +257,6 @@ fun QRScreen(
                                             null
                                         }
                                     } else null
-
-                                    // Colores estándar: barras negras sobre fondo blanco
                                     val backgroundAndroid = android.graphics.Color.WHITE
                                     val barColorCompose = RenovaColors.Primary
                                     val barColorInt = barColorCompose.toArgb()
@@ -302,6 +316,7 @@ fun QRScreen(
                                                 fontWeight = FontWeight.Bold
                                             )
                                         )
+                                        // --- Puntos animados (de v2) ---
                                         val animatedPoints by animateIntAsState(
                                             targetValue = uiState.points,
                                             animationSpec = tween(durationMillis = 500),
@@ -334,6 +349,10 @@ fun QRScreen(
                                                 color = Color.White.copy(alpha = 0.3f),
                                                 shape = RoundedCornerShape(16.dp)
                                             )
+                                            // --- MODIFICADO: Añadir onGloballyPositioned (de v1) ---
+                                            .onGloballyPositioned { coords ->
+                                                tourState.registerTarget("qr_switch_button", coords)
+                                            }
                                     ) {
                                         Icon(
                                             imageVector = if (showQr) Icons.Default.CreditCard else Icons.Default.QrCode,
@@ -384,6 +403,15 @@ fun QRScreen(
                     }
                 }
             }
+
+            // --- NUEVO: DisposableEffects para limpiar los targets (de v1) ---
+            DisposableEffect("qr_card") {
+                onDispose { tourState.unregisterTarget("qr_card") }
+            }
+            DisposableEffect("qr_switch_button") {
+                onDispose { tourState.unregisterTarget("qr_switch_button") }
+            }
+            // --- FIN DE BLOQUE NUEVO ---
 
             Spacer(modifier = Modifier.height(20.dp))
 
@@ -440,7 +468,7 @@ private fun InstructionSection(showQr: Boolean) {
                 modifier = Modifier
                     .padding(20.dp)
                     .verticalScroll(scrollState),
-            verticalArrangement = Arrangement.spacedBy(12.dp)
+                verticalArrangement = Arrangement.spacedBy(12.dp)
             ) {
                 Text(
                     text = stringResource(id = R.string.instructions_title),
@@ -482,6 +510,7 @@ private fun InstructionSection(showQr: Boolean) {
 
 @Composable
 fun InstructionItem(
+    // ... (Sin cambios, idéntico en ambas versiones)
     text: String,
     icon: androidx.compose.ui.graphics.vector.ImageVector
 ) {

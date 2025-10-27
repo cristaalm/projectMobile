@@ -1,46 +1,98 @@
 package com.renova.mobile.ui.screens
 
+import androidx.compose.animation.Crossfade // <-- de v1
+import androidx.compose.animation.core.tween // <-- de v1
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
+import androidx.compose.foundation.clickable // <-- de v2
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.ShoppingCart
-import androidx.compose.material.icons.filled.Recycling
-import androidx.compose.material.icons.filled.History
-import androidx.compose.material.icons.filled.Person
+import androidx.compose.material.icons.filled.Refresh // <-- de v1
+import androidx.compose.material.icons.filled.ShoppingCart // <-- de v2
+import androidx.compose.material.icons.filled.Recycling // <-- de v2
+import androidx.compose.material.icons.filled.History // <-- de v2
+import androidx.compose.material.icons.filled.Person // <-- de v2
 import androidx.compose.material3.*
 import androidx.compose.material3.pulltorefresh.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.drawBehind // <-- de v1
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.Paint // <-- de v1
+import androidx.compose.ui.graphics.drawscope.drawIntoCanvas // <-- de v1
+import androidx.compose.ui.graphics.graphicsLayer // <-- de v1
+import androidx.compose.ui.graphics.toArgb // <-- de v1
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.text.style.TextOverflow // <-- de v2
+import androidx.compose.ui.unit.Dp // <-- de v1
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.renova.mobile.R
 import com.renova.mobile.network.ActivityItem
 import com.renova.mobile.ui.theme.LocalRenovaColors
-import com.renova.mobile.ui.theme.PoppinsFontFamily
+import com.renova.mobile.ui.theme.PoppinsFontFamily // <-- de v2
 import com.renova.mobile.ui.theme.RenovaColorScheme
-import com.renova.mobile.ui.theme.RenovaColors
+import com.renova.mobile.ui.theme.RenovaColors // <-- de v2
 import com.renova.mobile.ui.viewmodels.ActivityViewModel
+import java.text.SimpleDateFormat // <-- de v1
+import java.util.* // <-- de v1
 import com.renova.mobile.ui.components.*
+
+// --- NUEVO: Imports para el Tour (de v1) ---
+import androidx.compose.ui.layout.onGloballyPositioned
+import com.renova.mobile.ui.tour.LocalTourState
+// --- FIN DE IMPORTS ---
+
+
+// --- Modifier de v1 ---
+fun Modifier.greenShadow(
+    color: Color = Color(0xFF4CAF50),
+    alpha: Float = 0.15f,
+    borderRadius: Dp = 16.dp,
+    shadowRadius: Dp = 8.dp,
+    offsetX: Dp = 0.dp,
+    offsetY: Dp = 4.dp
+) = this.drawBehind {
+    val shadowColor = color.copy(alpha = alpha).toArgb()
+    val transparent = color.copy(alpha = 0f).toArgb()
+
+    drawIntoCanvas {
+        val paint = Paint()
+        val frameworkPaint = paint.asFrameworkPaint()
+        frameworkPaint.color = transparent
+        frameworkPaint.setShadowLayer(
+            shadowRadius.toPx(),
+            offsetX.toPx(),
+            offsetY.toPx(),
+            shadowColor
+        )
+        it.drawRoundRect(
+            0f,
+            0f,
+            size.width,
+            size.height,
+            borderRadius.toPx(),
+            borderRadius.toPx(),
+            paint
+        )
+    }
+}
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ActivityScreen(
     viewModel: ActivityViewModel = androidx.lifecycle.viewmodel.compose.viewModel()
 ) {
+    // --- Lógica de v2 (más avanzada) ---
     val renovaColors = LocalRenovaColors.current
     val state by viewModel.state.collectAsState()
     val pullToRefreshState = rememberPullToRefreshState()
@@ -119,7 +171,7 @@ fun ActivityScreen(
         }
     }
 
-    // Modal de detalle de actividad
+    // Modal de detalle de actividad (de v2)
     selectedActivity?.let { activity ->
         ModalBottomSheet(
             onDismissRequest = { selectedActivity = null },
@@ -131,7 +183,7 @@ fun ActivityScreen(
         }
     }
 
-    // Modal de error con opción de reintentar
+    // Modal de error con opción de reintentar (de v2)
     RetryableErrorModal(
         isVisible = showErrorModal,
         errorMessage = state.error ?: stringResource(R.string.unknown_error),
@@ -156,6 +208,10 @@ private fun ActivityContent(
     shouldAnimatePoints: Boolean = false,
     onActivityClick: (ActivityItem) -> Unit
 ) {
+    // --- NUEVO: Obtener estado del Tour (de v1) ---
+    val tourState = LocalTourState.current
+    // --- FIN ---
+
     LazyColumn(
         modifier = Modifier
             .fillMaxSize()
@@ -172,11 +228,16 @@ private fun ActivityContent(
                     animationSpec = androidx.compose.animation.core.tween(durationMillis = 600)
                 )
             ) {
-                AnimatedPointsCardActivity(
-                    totalPoints = state.totalPoints,
-                    renovaColors = renovaColors,
-                    shouldAnimate = shouldAnimatePoints
-                )
+                // --- MODIFICADO: Añadir Box con hook del tour (v1) alrededor de la llamada de v2 ---
+                Box(modifier = Modifier.onGloballyPositioned { coords ->
+                    tourState.registerTarget("activity_points_card", coords)
+                }) {
+                    AnimatedPointsCardActivity(
+                        totalPoints = state.totalPoints,
+                        renovaColors = renovaColors,
+                        shouldAnimate = shouldAnimatePoints
+                    )
+                }
             }
         }
 
@@ -197,16 +258,16 @@ private fun ActivityContent(
                         text = stringResource(R.string.recycling_materials),
                         style = MaterialTheme.typography.titleLarge,
                         color = renovaColors.textPrimary,
-                        fontWeight = FontWeight.Bold,
-                        fontSize = 21.sp,
-                        fontFamily = PoppinsFontFamily
+                        fontWeight = FontWeight.Bold, // <-- de v2
+                        fontSize = 21.sp, // <-- de v2
+                        fontFamily = PoppinsFontFamily // <-- de v2
                     )
                     Text(
                         text = stringResource(R.string.earn_points_recycling),
                         style = MaterialTheme.typography.bodyMedium,
                         color = renovaColors.textSecondary,
-                        fontSize = 14.sp,
-                        fontFamily = PoppinsFontFamily
+                        fontSize = 14.sp, // <-- de v2
+                        fontFamily = PoppinsFontFamily // <-- de v2
                     )
                 }
             }
@@ -225,7 +286,11 @@ private fun ActivityContent(
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(horizontal = 20.dp, vertical = 8.dp),
+                        .padding(horizontal = 20.dp, vertical = 8.dp)
+                        // --- MODIFICADO: Añadir hook del tour (v1) ---
+                        .onGloballyPositioned { coords ->
+                            tourState.registerTarget("activity_materials_row", coords)
+                        },
                     horizontalArrangement = Arrangement.spacedBy(12.dp)
                 ) {
                     MaterialStatCard(
@@ -265,7 +330,9 @@ private fun ActivityContent(
                 )
             ) {
                 Column(
-                    modifier = Modifier.padding(start = 20.dp, top = 12.dp, bottom = 8.dp)
+                    modifier = Modifier
+                        .padding(start = 20.dp, top = 12.dp, bottom = 8.dp)
+                    // --- MODIFICACIÓN 1: El .onGloballyPositioned se quitó de aquí ---
                 ) {
                     Text(
                         text = stringResource(R.string.history),
@@ -279,14 +346,27 @@ private fun ActivityContent(
                         text = stringResource(R.string.activity_record),
                         style = MaterialTheme.typography.bodyMedium,
                         color = renovaColors.textSecondary,
-                        fontSize = 14.sp,
-                        fontFamily = PoppinsFontFamily
+                        fontSize = 14.sp, // <-- de v2
+                        fontFamily = PoppinsFontFamily // <-- de v2
                     )
                 }
             }
         }
 
-        // Aquí va el contenido de registros o el estado vacío
+        item {
+            DisposableEffect("activity_points_card") {
+                onDispose { tourState.unregisterTarget("activity_points_card") }
+            }
+            DisposableEffect("activity_materials_row") {
+                onDispose { tourState.unregisterTarget("activity_materials_row") }
+            }
+            // --- MODIFICACIÓN 2: El ID "activity_history_title" se mantiene sin cambios ---
+            DisposableEffect("activity_history_title") {
+                onDispose { tourState.unregisterTarget("activity_history_title") }
+            }
+        }
+
+        // --- Lógica de lista de v2 (con estado vacío) ---
         if (state.activities.isEmpty()) {
             item {
                 EmptyStateInline(renovaColors = renovaColors)
@@ -296,7 +376,11 @@ private fun ActivityContent(
                 Column(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(horizontal = 24.dp),
+                        .padding(horizontal = 24.dp)
+                        // --- MODIFICACIÓN 3: El .onGloballyPositioned se movió aquí, con el ID original ---
+                        .onGloballyPositioned { coords ->
+                            tourState.registerTarget("activity_history_title", coords)
+                        },
                     verticalArrangement = Arrangement.spacedBy(0.dp)
                 ) {
                     state.activities.forEachIndexed { index, activity ->
@@ -342,6 +426,7 @@ private fun ActivityContent(
     }
 }
 
+// --- Composable de v2 ---
 @Composable
 fun ActivityHistoryCard(
     activity: ActivityItem,

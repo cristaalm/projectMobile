@@ -1,0 +1,12 @@
+stash@{0}: WIP on tour: 7d06281 feat: implementar tour en vista home y separar por vistas
+stash@{1}: WIP on tour: 08d41ed fix: solucionar tour no iniciaba
+stash@{2}: WIP on tour: cf5fd99 feat: tour animado en app
+stash@{3}: WIP on tour: 560f628 Feat: Pantalla del perfil, pura visualización
+stash@{4}: WIP on tour: 560f628 Feat: Pantalla del perfil, pura visualización
+stash@{5}: WIP on develop: becd862 feat: comercios layout and hotfix: qr
+stash@{6}: WIP on develop: 75d8ff7 Fix: Correción de interfaz
+stash@{7}: WIP on develop: a172182 style: nuevo diseño de vista de comercio y recompensa
+stash@{8}: WIP on CommerceView: 6f7829d feat: vista de alianzas y recompensas
+stash@{9}: WIP on CommerceView: 7ecc575 Feat: Archivo para tema de colores
+stash@{10}: WIP on AppBar: 7ecc575 Feat: Archivo para tema de colores
+stash@{11}: WIP on BottomBar: bb096c5 feat: barra de navegacion inferior

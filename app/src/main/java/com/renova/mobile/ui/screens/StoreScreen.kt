@@ -50,6 +50,14 @@ import com.renova.mobile.ui.components.SectionHeader
 import com.renova.mobile.ui.screens.viewmodel.StoreViewModel
 import com.renova.mobile.ui.theme.*
 import kotlin.math.min
+import com.renova.mobile.ui.tour.LocalTourState
+import com.renova.mobile.ui.tour.HandleTourOnError
+import androidx.compose.ui.layout.onGloballyPositioned
+import androidx.compose.runtime.DisposableEffect
+import androidx.compose.foundation.lazy.rememberLazyListState
+import androidx.compose.runtime.rememberCoroutineScope
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.delay
 
 
 @Composable
@@ -61,6 +69,19 @@ fun StoreScreen(
     var searchQuery by remember { mutableStateOf("") }
     val uiState = viewModel.uiState
     var selectedCategoryId by remember { mutableStateOf<Int?>(null) }
+
+    val tourState = LocalTourState.current
+    val isTourActive by tourState.isTourActive.collectAsState()
+    val currentStepIndex by tourState.currentStepIndex.collectAsState()
+
+    HandleTourOnError(
+        error = uiState.error,
+        isTourActiveFlow = tourState.isTourActive,
+        endTour = tourState::endTour
+    )
+
+    val lazyListState = rememberLazyListState()
+    val scope = rememberCoroutineScope()
 
     val activeCategories = remember(uiState.categories, uiState.alianzas) {
         uiState.categories.filter { category ->
@@ -79,15 +100,11 @@ fun StoreScreen(
             categoryFiltered
         } else {
             categoryFiltered.filter { alianza ->
-                // Buscamos el nombre de la categoría correspondiente a la alianza
                 val categoryName = uiState.categories
                     .find { it.id == alianza.type_shop_id }?.name ?: ""
-
-                // Comprobamos si el texto de búsqueda está en el nombre, la categoría o la dirección
                 val nameMatches = alianza.name.contains(searchQuery, ignoreCase = true)
                 val categoryMatches = categoryName.contains(searchQuery, ignoreCase = true)
                 val addressMatches = alianza.address?.contains(searchQuery, ignoreCase = true) ?: false
-
                 nameMatches || categoryMatches || addressMatches
             }
         }
@@ -95,14 +112,63 @@ fun StoreScreen(
 
     val totalPages = (filteredAlianzas.size + uiState.itemsPerPage - 1) / uiState.itemsPerPage
     val currentPage = uiState.currentPage.coerceIn(1, if (totalPages > 0) totalPages else 1)
-
     val startIndex = (currentPage - 1) * uiState.itemsPerPage
     val endIndex = min(startIndex + uiState.itemsPerPage, filteredAlianzas.size)
-
     val paginatedAlianzas = if (filteredAlianzas.isNotEmpty()) {
         filteredAlianzas.subList(startIndex, endIndex)
     } else {
         emptyList()
+    }
+
+    val currentStepTargetId by remember(tourState) {
+        derivedStateOf { tourState.currentStep?.targetId }
+    }
+
+    // MODIFICACIÓN: Ahora observamos currentStepIndex directamente en lugar de solo el targetId
+    LaunchedEffect(isTourActive, currentStepIndex, activeCategories.isNotEmpty(), paginatedAlianzas.isNotEmpty()) {
+        if (isTourActive && currentStepTargetId != null) {
+            // Pequeño delay para asegurar que el target se haya registrado
+            delay(100)
+
+            // Cálculo de índices
+            var categoriesGridIndex = -1
+            var alliancesTitleIndex = 3
+            var firstAllianceIndex = 4
+
+            if (activeCategories.isNotEmpty()) {
+                categoriesGridIndex = 4
+                alliancesTitleIndex = 5
+                firstAllianceIndex = 6
+            }
+
+            // Ejecutar scroll según el target actual
+            when (currentStepTargetId) {
+                "store_categories" -> {
+                    if (categoriesGridIndex != -1) {
+                        lazyListState.animateScrollToItem(
+                            index = categoriesGridIndex,
+                            scrollOffset = -50
+                        )
+                    }
+                }
+
+                "store_alliances_title" -> {
+                    lazyListState.animateScrollToItem(
+                        index = alliancesTitleIndex,
+                        scrollOffset = -50
+                    )
+                }
+
+                "store_first_alliance" -> {
+                    if (paginatedAlianzas.isNotEmpty()) {
+                        lazyListState.animateScrollToItem(
+                            index = firstAllianceIndex,
+                            scrollOffset = -50
+                        )
+                    }
+                }
+            }
+        }
     }
 
     Column(
@@ -113,6 +179,7 @@ fun StoreScreen(
         SectionHeader(title = stringResource(id = R.string.store_screen_title))
 
         LazyColumn(
+            state = lazyListState,
             modifier = Modifier
                 .padding(horizontal = 16.dp)
                 .imePadding(),
@@ -150,39 +217,53 @@ fun StoreScreen(
                 }
 
                 item {
-                    LazyVerticalGrid(
-                        columns = GridCells.Fixed(4),
-                        modifier = Modifier.height(200.dp),
-                        horizontalArrangement = Arrangement.spacedBy(8.dp),
-                        verticalArrangement = Arrangement.spacedBy(8.dp)
-                    ) {
-                        item {
-                            val cardColor = RenovaColors.Primary
-                            CategoryCard(
-                                category = TypeShop(id = -1, name = stringResource(R.string.all_categories)),
-                                isSelected = selectedCategoryId == null,
-                                onClick = { selectedCategoryId = null },
-                                cardColor = cardColor
-                            )
-                        }
+                    Box(modifier = Modifier.onGloballyPositioned { coords ->
+                        tourState.registerTarget("store_categories", coords)
+                    }) {
+                        LazyVerticalGrid(
+                            columns = GridCells.Fixed(4),
+                            modifier = Modifier
+                                .height(200.dp),
+                            horizontalArrangement = Arrangement.spacedBy(8.dp),
+                            verticalArrangement = Arrangement.spacedBy(8.dp)
+                        ) {
+                            item {
+                                val cardColor = RenovaColors.Primary
+                                CategoryCard(
+                                    category = TypeShop(id = -1, name = stringResource(R.string.all_categories)),
+                                    isSelected = selectedCategoryId == null,
+                                    onClick = { selectedCategoryId = null },
+                                    cardColor = cardColor
+                                )
+                            }
 
-                        items(activeCategories.take(7)) { category ->
-                            val cardColor = colors.categoryCardBackgrounds[category.id % colors.categoryCardBackgrounds.size]
-                            CategoryCard(
-                                category = category,
-                                isSelected = selectedCategoryId == category.id,
-                                onClick = {
-                                    selectedCategoryId = if (selectedCategoryId == category.id) null else category.id
-                                },
-                                cardColor = cardColor
-                            )
+                            items(activeCategories.take(7)) { category ->
+                                val cardColor = colors.categoryCardBackgrounds[category.id % colors.categoryCardBackgrounds.size]
+                                CategoryCard(
+                                    category = category,
+                                    isSelected = selectedCategoryId == category.id,
+                                    onClick = {
+                                        selectedCategoryId = if (selectedCategoryId == category.id) null else category.id
+                                    },
+                                    cardColor = cardColor
+                                )
+                            }
+                        }
+                    }
+                    DisposableEffect(Unit) {
+                        onDispose {
+                            tourState.unregisterTarget("store_categories")
                         }
                     }
                 }
             }
 
             item {
-                Column {
+                Column (
+                    modifier = Modifier.onGloballyPositioned { coords ->
+                        tourState.registerTarget("store_alliances_title", coords)
+                    }
+                ){
                     Text(
                         text = stringResource(R.string.featured_stores),
                         fontSize = 20.sp,
@@ -198,6 +279,11 @@ fun StoreScreen(
                         modifier = Modifier.padding(top = 4.dp)
                     )
                 }
+                DisposableEffect(Unit) {
+                    onDispose {
+                        tourState.unregisterTarget("store_alliances_title")
+                    }
+                }
             }
 
             when {
@@ -207,7 +293,23 @@ fun StoreScreen(
                 else -> {
                     itemsIndexed(paginatedAlianzas, key = { _, alianza -> alianza.id }) { index, alianza ->
                         val logoColor = colors.allianceLogoBackgrounds[alianza.id % colors.allianceLogoBackgrounds.size]
-                        Column {
+
+                        val itemModifier = if (index == 0) {
+                            Modifier.onGloballyPositioned { coords ->
+                                tourState.registerTarget("store_first_alliance", coords)
+                            }
+                        } else {
+                            Modifier
+                        }
+
+                        if (index == 0) {
+                            DisposableEffect(Unit) {
+                                onDispose {
+                                    tourState.unregisterTarget("store_first_alliance")
+                                }
+                            }
+                        }
+                        Column (modifier = itemModifier){
                             AlianzaCard(
                                 alianza = alianza,
                                 categories = uiState.categories,
@@ -216,7 +318,6 @@ fun StoreScreen(
                                 onClick = { navController.navigate("reward_screen/${alianza.id}") }
                             )
 
-                            // El divisor ahora se basa en el tamaño de la lista paginada
                             if (index < paginatedAlianzas.size - 1) {
                                 Divider(
                                     color = RenovaColors.PrimaryColor,
@@ -227,13 +328,12 @@ fun StoreScreen(
                         }
                     }
 
-                    // ✨ CAMBIO 3: Se añaden los controles de paginación al final de la lista ✨
                     if (totalPages > 1) {
                         item {
                             PaginationControls(
                                 currentPage = currentPage,
                                 totalPages = totalPages,
-                                isLoading = uiState.isLoading, // Se añade el estado de carga
+                                isLoading = uiState.isLoading,
                                 onPreviousPage = { viewModel.previousPage() },
                                 onNextPage = { viewModel.nextPage() }
                             )
@@ -258,18 +358,15 @@ private fun PaginationControls(
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            // CAMBIO 1: Padding vertical aumentado a 16.dp para coincidir con ActivityScreen
             .padding(horizontal = 16.dp, vertical = 16.dp),
         horizontalArrangement = Arrangement.SpaceBetween,
         verticalAlignment = Alignment.CenterVertically
     ) {
-        // Botón Anterior
         Button(
             onClick = onPreviousPage,
             enabled = currentPage > 1 && !isLoading,
             colors = ButtonDefaults.buttonColors(
-                containerColor = if (currentPage > 1) renovaColors.buttonEnabled else renovaColors.buttonDisabled,
-                // CAMBIO 2: Se usa el color de ActivityScreen en lugar de Color.White
+                containerColor = if (currentPage > 1) RenovaColors.SecondaryColor else renovaColors.buttonDisabled,
                 contentColor = renovaColors.activityCardBackground
             ),
             shape = RoundedCornerShape(12.dp),
@@ -280,7 +377,6 @@ private fun PaginationControls(
             Icon(
                 painter = painterResource(id = R.drawable.back),
                 contentDescription = stringResource(R.string.previous),
-                // CAMBIO 3: Se usa el color de ActivityScreen
                 tint = renovaColors.activityCardBackground,
                 modifier = Modifier.size(20.dp)
             )
@@ -290,7 +386,6 @@ private fun PaginationControls(
 
         Spacer(modifier = Modifier.width(12.dp))
 
-        // Indicador de página
         Text(
             text = "$currentPage ${stringResource(R.string.of)} $totalPages",
             style = MaterialTheme.typography.titleSmall,
@@ -300,13 +395,11 @@ private fun PaginationControls(
 
         Spacer(modifier = Modifier.width(12.dp))
 
-        // Botón Siguiente
         Button(
             onClick = onNextPage,
             enabled = currentPage < totalPages && !isLoading,
             colors = ButtonDefaults.buttonColors(
-                containerColor = if (currentPage < totalPages) renovaColors.buttonEnabled else renovaColors.buttonDisabled,
-                // CAMBIO 4: Se usa el color de ActivityScreen
+                containerColor = if (currentPage < totalPages) RenovaColors.SecondaryColor else renovaColors.buttonDisabled,
                 contentColor = renovaColors.activityCardBackground
             ),
             shape = RoundedCornerShape(12.dp),
@@ -319,7 +412,6 @@ private fun PaginationControls(
             Icon(
                 painter = painterResource(id = R.drawable.next),
                 contentDescription = stringResource(R.string.next),
-                // CAMBIO 5: Se usa el color de ActivityScreen
                 tint = renovaColors.activityCardBackground,
                 modifier = Modifier.size(20.dp)
             )
@@ -328,14 +420,18 @@ private fun PaginationControls(
 }
 
 @Composable
-private fun SearchBar(query: String, onQueryChange: (String) -> Unit, colors: RenovaColorScheme) {
+private fun SearchBar(
+    query: String,
+    onQueryChange: (String) -> Unit,
+    colors: RenovaColorScheme
+) {
     OutlinedTextField(
         value = query,
         onValueChange = onQueryChange,
         modifier = Modifier
             .fillMaxWidth()
             .border(
-                width = 2.dp, // grosor de borde search
+                width = 2.dp,
                 color = Color(0xFF07B460),
                 shape = RoundedCornerShape(16.dp)
             ),
@@ -369,13 +465,15 @@ private fun SearchBar(query: String, onQueryChange: (String) -> Unit, colors: Re
 
 
 @Composable
-private fun DiscoverSection(colors: RenovaColorScheme) {
+private fun DiscoverSection(
+    colors: RenovaColorScheme
+) {
     val textColor = Color.Black
     Card(
         modifier = Modifier
             .fillMaxWidth()
             .shadow(
-                elevation = 6.dp,
+                elevation = 3.dp,
                 shape = RoundedCornerShape(24.dp),
                 spotColor = RenovaColors.Light.ActivityShadowColor
             ),
@@ -435,7 +533,9 @@ private fun DiscoverSection(colors: RenovaColorScheme) {
 }
 
 @Composable
-private fun GifPlayer(modifier: Modifier = Modifier) {
+private fun GifPlayer(
+    modifier: Modifier = Modifier
+) {
     val context = LocalContext.current
     val imageLoader = ImageLoader.Builder(context)
         .components {
@@ -458,7 +558,9 @@ private fun GifPlayer(modifier: Modifier = Modifier) {
 }
 
 @Composable
-fun LoadingSection(colors: RenovaColorScheme) {
+fun LoadingSection(
+    colors: RenovaColorScheme
+) {
     Box(
         modifier = Modifier
             .fillMaxWidth()
@@ -478,7 +580,11 @@ fun LoadingSection(colors: RenovaColorScheme) {
 }
 
 @Composable
-fun ErrorSection(message: String, onRetry: () -> Unit, colors: RenovaColorScheme) {
+fun ErrorSection(
+    message: String,
+    onRetry: () -> Unit,
+    colors: RenovaColorScheme
+) {
     Card(
         modifier = Modifier.fillMaxWidth(),
         shape = RoundedCornerShape(12.dp),
@@ -519,7 +625,9 @@ fun ErrorSection(message: String, onRetry: () -> Unit, colors: RenovaColorScheme
 }
 
 @Composable
-fun EmptySection(colors: RenovaColorScheme) {
+fun EmptySection(
+    colors: RenovaColorScheme
+) {
     Box(
         modifier = Modifier
             .fillMaxWidth()

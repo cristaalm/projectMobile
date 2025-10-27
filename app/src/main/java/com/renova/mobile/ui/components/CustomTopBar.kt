@@ -32,12 +32,16 @@ import androidx.compose.animation.fadeOut
 import androidx.compose.animation.slideInVertically
 import androidx.compose.animation.slideOutVertically
 import androidx.compose.animation.togetherWith
+import androidx.compose.ui.layout.onGloballyPositioned
+import androidx.compose.runtime.DisposableEffect
+import com.renova.mobile.ui.tour.LocalTourState
 
 @Composable
 fun CustomTopBar(
     navController: NavController,
     isLoading: Boolean = false
 ) {
+    val tourState = LocalTourState.current
     val systemUiController = rememberSystemUiController()
     val navBackStackEntry by navController.currentBackStackEntryAsState()
     val currentRoute = navBackStackEntry?.destination?.route
@@ -82,8 +86,15 @@ fun CustomTopBar(
                 title = stringResource(R.string.activity),
                 isSelected = currentRoute == TopNavigationItem.Activity.route,
                 onClick = { navController.navigate(TopNavigationItem.Activity.route) },
-                modifier = Modifier.weight(1f)
+                modifier = Modifier
+                    .weight(1f)
+                    .onGloballyPositioned { coords ->
+                        tourState.registerTarget("top_bar_activity_button", coords)
+                    }
             )
+            DisposableEffect("top_bar_activity_button") {
+                onDispose { tourState.unregisterTarget("top_bar_activity_button") }
+            }
 
             /*Spacer(modifier = Modifier.width(8.dp))
 

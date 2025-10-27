@@ -12,7 +12,7 @@ import okhttp3.MultipartBody
 import retrofit2.http.*
 import java.util.concurrent.TimeUnit
 
-// Total puntos
+// Total puntos (DE DEVELOP)
 data class TotalPointsResponse(
     val success: Boolean,
     val message: String,
@@ -283,7 +283,7 @@ data class ActivityItem(
     val type_history: Int,
     val material_type_id: Int?,
     val points: Int,
-    val reward_id: Int?,   
+    val reward_id: Int?,
     val alliance_id: Int?,
     val created_at: String,
     val updated_at: String,
@@ -291,13 +291,13 @@ data class ActivityItem(
     val comerciant_id: Int?,
     val description: String?,
     val quantity: Int?,
-    val alliance: Alliance?,
+    val alliance: Alliance?, // Versión de DEVELOP (más completa)
     val material_type: MaterialType?,
     val reward: HistoryReward?,
     val scan: Scan?
 )
 
-data class Alliance(
+data class Alliance( // Versión de DEVELOP (más completa)
     val id: Int,
     val name: String,
     val contact_name: String?,
@@ -306,7 +306,7 @@ data class Alliance(
     val address: String?,
     val logo: Boolean,
     val type_shop_id: Int?,
-    val type_shop: TypeShop?,
+    val type_shop: TypeShop?, // Esta línea es la diferencia
     val ext: String?,
     val status: Int,
     val created_at: String?,
@@ -380,7 +380,7 @@ data class IdentifyUserData(
 )
 
 // Usuario completo (usado en perfil y otras llamadas)
-data class UserData(
+data class UserData( // Versión de DEVELOP (más completa)
     val id: Int,
     val name: String,
     val last_name: String,
@@ -392,7 +392,7 @@ data class UserData(
     val two_factor_status: Boolean,
     val code_identity: String,
     val status: Int,
-    val alliance: Alliance?,
+    val alliance: Alliance?, // Esta línea es la diferencia (objeto vs id)
     val created_at: String,
     val updated_at: String,
     val role: RoleData
@@ -425,7 +425,8 @@ data class IdentityVerification(
 data class IdentifyUserByCodeRequest(
     val code: String
 )
-    
+
+// ========== REWARD CLAIM (Versión de DEVELOP) ==========
 data class ClaimRewardRequest(
     @SerializedName("user_id") val user_id: Int,
     @SerializedName("reward_id") val reward_id: Int,
@@ -481,6 +482,8 @@ data class SentNotification(
 data class MessageId(
     val name: String
 )
+// ========== FIN REWARD CLAIM (Versión de DEVELOP) ==========
+
 
 data class UpdateFieldRequest(
     val value: String
@@ -543,16 +546,53 @@ data class RegisterFcmTokenResponse(
     val message: String
 )
 
-// New: FCM token unregistration request
+// New: FCM token unregistration request (DE DEVELOP)
 data class UnregisterFcmTokenRequest(
     @SerializedName("user_id") val userId: Int,
     @SerializedName("token") val token: String,
     @SerializedName("platform") val platform: String = "android"
 )
 
+// ========== TOUR COMPLETE (DE TOUR) ==========
+data class TourCompleteRequest(
+    val user_id: Int
+)
+
+data class TourCompleteResponse(
+    val success: Boolean,
+    val message: String,
+    val data: TourCompleteData?,
+    val errors: Any?,
+    val status: Int
+)
+
+data class TourCompleteData(
+    val user: TourUser
+)
+
+data class TourUser(
+    val id: Int,
+    val alliance_id: Int?,
+    val name: String,
+    val last_name: String,
+    val email: String,
+    val phone: String?,
+    val curp: String?,
+    val email_verified_at: String?,
+    val role_id: Int,
+    val total_points: Int,
+    val verification_status: Int,
+    val two_factor_status: Boolean,
+    val code_identity: String?,
+    val status: String,
+    val created_at: String,
+    val updated_at: String
+)
+
+// ========== INTERFAZ ApiService (COMBINADA) ==========
 interface ApiService {
 
-    @GET("api/history/totalPointsByShop/{alliance_id}")
+    @GET("api/history/totalPointsByShop/{alliance_id}") // DE DEVELOP
     suspend fun getTotalPointsByShop(
         @Path("alliance_id") allianceId: Int,
         @Query("date_start") dateStart: String,
@@ -668,9 +708,15 @@ interface ApiService {
     @POST("api/notifications/registerToken")
     suspend fun registerFcmToken(@Body request: RegisterFcmTokenRequest): Response<RegisterFcmTokenResponse>
 
-    // New: unregister FCM token on logout
+    // New: unregister FCM token on logout (DE DEVELOP)
     @POST("api/notifications/unregisterToken")
     suspend fun unregisterFcmToken(@Body request: UnregisterFcmTokenRequest): Response<RegisterFcmTokenResponse>
+
+    @POST("api/users/tourComplete/{userId}") // DE TOUR
+    suspend fun completeTour(
+        @Path("userId") userId: Int,
+        @Body request: TourCompleteRequest
+    ): Response<TourCompleteResponse>
 }
 
 // ========== API CLIENT ==========
@@ -705,7 +751,7 @@ object ApiClient {
                 }
                 .connectTimeout(30, TimeUnit.SECONDS)
                 .readTimeout(30, TimeUnit.SECONDS)
-                .writeTimeout(60, TimeUnit.SECONDS)
+                .writeTimeout(60, TimeUnit.SECONDS) // Ambas ramas tenían 60s
                 .build()
         }
 

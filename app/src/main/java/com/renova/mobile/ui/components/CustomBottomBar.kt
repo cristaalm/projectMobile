@@ -75,16 +75,27 @@ import android.content.Intent
 import com.renova.mobile.ui.activities.ManualGeneralActivity
 import com.renova.mobile.ui.activities.FaqActivity
 
+// --- IMPORTS AÑADIDOS DE LA RAMA 'tour' ---
+import androidx.compose.ui.layout.onGloballyPositioned
+import androidx.compose.runtime.DisposableEffect
+import com.renova.mobile.ui.tour.LocalTourState
+// --- FIN DE IMPORTS ---
+
 private val primaryColor = Color(0xFF08b662)
 private val qrBackgroundColor = Color(0xFF05D16E).copy(alpha = 0.5f)
 
 @Composable
-fun NavItem(item: NavigationItem, isSelected: Boolean, onClick: () -> Unit) {
+fun NavItem(
+    item: NavigationItem,
+    isSelected: Boolean,
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier // <-- MODIFICADO: Se añade el modifier de la rama 'tour'
+) {
     val interactionSource = remember { MutableInteractionSource() }
     val isPressed by interactionSource.collectIsPressedAsState()
 
     Box(
-        modifier = Modifier
+        modifier = modifier // <-- MODIFICADO: Se aplica el modifier
             .size(72.dp)
             .padding(4.dp),
         contentAlignment = Alignment.Center
@@ -161,6 +172,10 @@ fun CustomBottomBar(
     val context = LocalContext.current
     var showMenu by remember { mutableStateOf(false) }
 
+    // --- AÑADIDO: Obtener el estado del Tour (de rama 'tour') ---
+    val tourState = LocalTourState.current
+    // --- FIN ---
+
     Box(
         modifier = Modifier
             .fillMaxWidth()
@@ -205,6 +220,7 @@ fun CustomBottomBar(
                 it.route == StoreGraph.ROUTE || it.route == StoreGraph.STORE_LIST
             } == true
 
+            // --- MODIFICADO: Añadir modifier y DisposableEffect (de rama 'tour') ---
             NavItem(
                 item = NavigationItem.Store,
                 isSelected = isStoreSelected,
@@ -216,12 +232,20 @@ fun CustomBottomBar(
                         launchSingleTop = true
                         restoreState = true
                     }
+                },
+                modifier = Modifier.onGloballyPositioned { coords ->
+                    tourState.registerTarget("bottom_bar_store", coords)
                 }
             )
+            DisposableEffect("bottom_bar_store") {
+                onDispose { tourState.unregisterTarget("bottom_bar_store") }
+            }
+            // --- FIN DE MODIFICACIÓN ---
 
             Spacer(modifier = Modifier.width(72.dp))
 
             // --- PERFIL ---
+            // --- MODIFICADO: Añadir modifier y DisposableEffect (de rama 'tour') ---
             NavItem(
                 item = NavigationItem.Profile,
                 isSelected = currentDestination?.route == NavigationItem.Profile.route ||
@@ -235,10 +259,17 @@ fun CustomBottomBar(
                         launchSingleTop = true
                         restoreState = true
                     }
+                },
+                modifier = Modifier.onGloballyPositioned { coords ->
+                    tourState.registerTarget("bottom_bar_profile", coords)
                 }
             )
+            DisposableEffect("bottom_bar_profile") {
+                onDispose { tourState.unregisterTarget("bottom_bar_profile") }
+            }
+            // --- FIN DE MODIFICACIÓN ---
 
-            // --- LOGOUT ---
+            // --- MENÚ (de rama 'develop') ---
             val interactionSource = remember { MutableInteractionSource() }
             val isPressed by interactionSource.collectIsPressedAsState()
             Box(
@@ -262,11 +293,11 @@ fun CustomBottomBar(
                         .clickable(
                             interactionSource = interactionSource,
                             indication = null
-                        ) { showMenu = true },
+                        ) { showMenu = true }, // <-- Mantenemos la lógica del menú
                     contentAlignment = Alignment.Center
                 ) {
                     Icon(
-                        imageVector = Icons.Filled.Dashboard,
+                        imageVector = Icons.Filled.Dashboard, // <-- Mantenemos el icono de Menú
                         contentDescription = "Menú",
                         tint = Color(0xFF05D16E),
                         modifier = Modifier.size(28.dp)
@@ -276,6 +307,7 @@ fun CustomBottomBar(
         }
 
         val isQrSelected = currentDestination?.route == NavigationItem.QR.route
+        // --- MODIFICADO: Añadir modifier y DisposableEffect (de rama 'tour') ---
         Box(
             modifier = Modifier
                 .size(64.dp)
@@ -291,6 +323,9 @@ fun CustomBottomBar(
                         launchSingleTop = true
                         restoreState = true
                     }
+                }
+                .onGloballyPositioned { coords -> // <-- Añadido
+                    tourState.registerTarget("bottom_bar_qr", coords)
                 },
             contentAlignment = Alignment.Center
         ) {
@@ -321,8 +356,12 @@ fun CustomBottomBar(
                 }
             }
         }
+        DisposableEffect("bottom_bar_qr") { // <-- Añadido
+            onDispose { tourState.unregisterTarget("bottom_bar_qr") }
+        }
+        // --- FIN DE MODIFICACIÓN ---
 
-        // Panel lateral derecho del menú
+        // --- Panel lateral derecho del menú (de rama 'develop') ---
         if (showMenu) {
             Dialog(onDismissRequest = { showMenu = false }, properties = DialogProperties(usePlatformDefaultWidth = false)) {
                 var panelVisible by remember { mutableStateOf(false) }

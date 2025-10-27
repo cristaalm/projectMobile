@@ -72,6 +72,12 @@ import java.util.Calendar
 import java.util.Locale
 import java.util.TimeZone
 
+// --- INICIO: IMPORTS DEL TOUR (de Archivo 2) ---
+import androidx.compose.runtime.DisposableEffect
+import androidx.compose.ui.layout.onGloballyPositioned
+import com.renova.mobile.ui.tour.LocalTourState
+// --- FIN: IMPORTS DEL TOUR ---
+
 data class Achievement(
     val id: Int,
     val title: String,
@@ -89,6 +95,9 @@ fun HomeScreen(
     val renovaColors = LocalRenovaColors.current
     val state by viewModel.state.collectAsState()
     val scrollState = rememberScrollState()
+
+    // --- OBTENER ESTADO DEL TOUR (de Archivo 2) ---
+    val tourState = LocalTourState.current
 
     LaunchedEffect(Unit) {
         viewModel.loadHistory(1)
@@ -117,100 +126,127 @@ fun HomeScreen(
                     .fillMaxSize()
                     .verticalScroll(scrollState)
             ) {
-                // Card de puntos totales con contador animado
-                AnimatedPointsCard(
-                    totalPoints = state.totalPoints,
-                    renovaColors = renovaColors
-                )
-
-                // Título de actividad reciente
-                Column(
-                    modifier = Modifier.padding(
-                        start = 24.dp,
-                        end = 24.dp,
-                        top = 6.dp,
-                        bottom = 10.dp
-                    )
-                ) {
-                    Text(
-                        text = stringResource(R.string.recent_activity),
-                        style = MaterialTheme.typography.titleLarge,
-                        color = renovaColors.textPrimary,
-                        fontWeight = FontWeight.Bold,
-                        fontSize = 21.sp,
-                        fontFamily = PoppinsFontFamily
-                    )
-                    Spacer(modifier = Modifier.height(3.dp))
-                    Text(
-                        text = stringResource(R.string.last_movements),
-                        style = MaterialTheme.typography.bodyMedium,
-                        color = renovaColors.textSecondary,
-                        fontSize = 14.sp,
-                        fontFamily = PoppinsFontFamily
+                // --- Card de puntos (MODIFICADA con wrapper de 'tour') ---
+                Box(modifier = Modifier.onGloballyPositioned { coords ->
+                    tourState.registerTarget("home_points_card", coords)
+                }) {
+                    AnimatedPointsCard(
+                        totalPoints = state.totalPoints,
+                        renovaColors = renovaColors
                     )
                 }
+                DisposableEffect("home_points_card") {
+                    onDispose { tourState.unregisterTarget("home_points_card") }
+                }
 
-                // Lista de actividades (solo 3)
-                val recentActivities = state.activities.take(3)
-
-                if (recentActivities.isEmpty() && !state.isLoading) {
-                    Box(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(horizontal = 24.dp, vertical = 32.dp),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        Column(
-                            horizontalAlignment = Alignment.CenterHorizontally,
-                            verticalArrangement = Arrangement.spacedBy(8.dp)
-                        ) {
-                            Icon(
-                                imageVector = Icons.Default.History,
-                                contentDescription = null,
-                                tint = renovaColors.textSecondary.copy(alpha = 0.3f),
-                                modifier = Modifier.size(64.dp)
-                            )
-                            Text(
-                                text = stringResource(R.string.no_activity_yet),
-                                style = MaterialTheme.typography.bodyLarge,
-                                color = renovaColors.textSecondary,
-                                textAlign = TextAlign.Center,
-                                fontFamily = PoppinsFontFamily
-                            )
-                        }
+                // --- INICIO: MODIFICACIÓN PARA ACTIVIDAD RECIENTE (Estructura de 'tour') ---
+                // Envolvemos el título y la lista en una sola columna para el tour
+                Column(
+                    modifier = Modifier.onGloballyPositioned { coords ->
+                        tourState.registerTarget("home_recent_activity", coords)
                     }
-                } else {
-                    // Tabla de actividades
+                ) {
+                    // Título de actividad reciente
                     Column(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(horizontal = 24.dp),
-                        verticalArrangement = Arrangement.spacedBy(0.dp)
+                        modifier = Modifier.padding(
+                            start = 24.dp,
+                            end = 24.dp,
+                            top = 6.dp, // <-- Se mantiene el padding de 'develop'
+                            bottom = 10.dp
+                        )
                     ) {
-                        recentActivities.forEachIndexed { index, activity ->
-                            HistoryActivityCard(
-                                activity = activity,
-                                colors = renovaColors,
-                                onClick = { /* Opcional: agregar acción de click */ }
-                            )
-                            if (index < recentActivities.size - 1) {
-                                Divider(
-                                    color = RenovaColors.PrimaryColor,
-                                    thickness = 1.dp,
-                                    modifier = Modifier.padding(vertical = 3.dp)
+                        Text(
+                            text = stringResource(R.string.recent_activity),
+                            style = MaterialTheme.typography.titleLarge,
+                            color = renovaColors.textPrimary,
+                            fontWeight = FontWeight.Bold,
+                            fontSize = 21.sp,
+                            fontFamily = PoppinsFontFamily
+                        )
+                        Spacer(modifier = Modifier.height(3.dp))
+                        Text(
+                            text = stringResource(R.string.last_movements),
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = renovaColors.textSecondary,
+                            fontSize = 14.sp,
+                            fontFamily = PoppinsFontFamily
+                        )
+                    }
+
+                    // Lista de actividades (solo 3)
+                    val recentActivities = state.activities.take(3)
+
+                    if (recentActivities.isEmpty() && !state.isLoading) {
+                        Box(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(horizontal = 24.dp, vertical = 32.dp),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Column(
+                                horizontalAlignment = Alignment.CenterHorizontally,
+                                verticalArrangement = Arrangement.spacedBy(8.dp)
+                            ) {
+                                Icon(
+                                    imageVector = Icons.Default.History,
+                                    contentDescription = null,
+                                    tint = renovaColors.textSecondary.copy(alpha = 0.3f),
+                                    modifier = Modifier.size(64.dp)
+                                )
+                                Text(
+                                    text = stringResource(R.string.no_activity_yet),
+                                    style = MaterialTheme.typography.bodyLarge,
+                                    color = renovaColors.textSecondary,
+                                    textAlign = TextAlign.Center,
+                                    fontFamily = PoppinsFontFamily
                                 )
                             }
                         }
+                    } else {
+                        // Tabla de actividades
+                        Column(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(horizontal = 24.dp),
+                            verticalArrangement = Arrangement.spacedBy(0.dp)
+                        ) {
+                            recentActivities.forEachIndexed { index, activity ->
+                                HistoryActivityCard(
+                                    activity = activity,
+                                    colors = renovaColors,
+                                    onClick = { /* Opcional: agregar acción de click */ }
+                                )
+                                if (index < recentActivities.size - 1) {
+                                    Divider(
+                                        color = RenovaColors.PrimaryColor,
+                                        thickness = 1.dp,
+                                        modifier = Modifier.padding(vertical = 3.dp)
+                                    )
+                                }
+                            }
+                        }
                     }
+                    // El spacer se incluye dentro del bloque para el tour
+                    Spacer(modifier = Modifier.height(16.dp))
                 }
+                DisposableEffect("home_recent_activity") {
+                    onDispose { tourState.unregisterTarget("home_recent_activity") }
+                }
+                // --- FIN: MODIFICACIÓN PARA ACTIVIDAD RECIENTE ---
 
-                Spacer(modifier = Modifier.height(16.dp))
 
-                // Sección de logros desbloqueados
-                AchievementsSection(
-                    totalPoints = state.totalPoints,
-                    renovaColors = renovaColors
-                )
+                // --- Sección de logros (MODIFICADA con wrapper de 'tour') ---
+                Box(modifier = Modifier.onGloballyPositioned { coords ->
+                    tourState.registerTarget("home_achievements_section", coords)
+                }) {
+                    AchievementsSection(
+                        totalPoints = state.totalPoints,
+                        renovaColors = renovaColors
+                    )
+                }
+                DisposableEffect("home_achievements_section") {
+                    onDispose { tourState.unregisterTarget("home_achievements_section") }
+                }
             }
         }
     }
@@ -368,7 +404,7 @@ private fun AchievementsSection(
     ) {
         // Título de la sección
         Column(
-            modifier = Modifier.padding(start = 24.dp, end = 24.dp, top = 0.dp, bottom = 10.dp)
+            modifier = Modifier.padding(start = 24.dp, end = 24.dp, top = 0.dp, bottom = 10.dp) // <-- Se mantiene el padding de 'develop'
         ) {
             Text(
                 text = stringResource(R.string.unlocked_achievements),
@@ -519,7 +555,7 @@ private fun AchievementCard(
                     contentDescription = achievement.title,
                     modifier = Modifier.size(28.dp),
                     colorFilter = androidx.compose.ui.graphics.ColorFilter.tint(
-                        if (isUnlocked) Color(0xFFFFFFFF) else Color(0xFF7A7A7A)
+                        if (isUnlocked) Color(0xFFFFFFFF) else Color(0xFF7A7A7A) // <-- Color de 'develop'
                     ),
                     alpha = if (isUnlocked) 0.8f else 0.5f
                 )
@@ -533,7 +569,7 @@ private fun AchievementCard(
                 style = MaterialTheme.typography.titleSmall,
                 color = if (isUnlocked) achievement.color else Color(0xFF5A5A5A),
                 fontWeight = FontWeight.Bold,
-                fontSize = 12.sp,
+                fontSize = 12.sp, // <-- Tamaño de 'develop'
                 textAlign = TextAlign.Center,
                 maxLines = 2,
                 overflow = TextOverflow.Ellipsis,
@@ -548,7 +584,7 @@ private fun AchievementCard(
                 text = "${achievement.requiredPoints} pts",
                 style = MaterialTheme.typography.bodySmall,
                 color = if (isUnlocked) achievement.color.copy(alpha = 0.7f) else Color(0xFF7A7A7A),
-                fontSize = 12.sp,
+                fontSize = 12.sp, // <-- Tamaño de 'develop'
                 fontFamily = PoppinsFontFamily
             )
         }
