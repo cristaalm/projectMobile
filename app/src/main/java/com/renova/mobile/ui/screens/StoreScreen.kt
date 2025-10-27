@@ -57,6 +57,7 @@ import androidx.compose.runtime.DisposableEffect
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.runtime.rememberCoroutineScope
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.delay
 
 
 @Composable
@@ -71,14 +72,14 @@ fun StoreScreen(
 
     val tourState = LocalTourState.current
     val isTourActive by tourState.isTourActive.collectAsState()
+    val currentStepIndex by tourState.currentStepIndex.collectAsState()
 
     HandleTourOnError(
-        error = uiState.error, // El mensaje de error del ViewModel
-        isTourActiveFlow = tourState.isTourActive, // El StateFlow del TourState
-        endTour = tourState::endTour // La función para terminar el tour
+        error = uiState.error,
+        isTourActiveFlow = tourState.isTourActive,
+        endTour = tourState::endTour
     )
 
-    // Estado para controlar la LazyColumn y el Scope para lanzar el scroll
     val lazyListState = rememberLazyListState()
     val scope = rememberCoroutineScope()
 
@@ -89,7 +90,6 @@ fun StoreScreen(
     }
 
     val filteredAlianzas = remember(selectedCategoryId, searchQuery, uiState.alianzas, uiState.categories) {
-        // ... (lógica de filtro sin cambios)
         val categoryFiltered = if (selectedCategoryId == null) {
             uiState.alianzas
         } else {
@@ -110,7 +110,6 @@ fun StoreScreen(
         }
     }
 
-    // ... (lógica de paginación sin cambios)
     val totalPages = (filteredAlianzas.size + uiState.itemsPerPage - 1) / uiState.itemsPerPage
     val currentPage = uiState.currentPage.coerceIn(1, if (totalPages > 0) totalPages else 1)
     val startIndex = (currentPage - 1) * uiState.itemsPerPage
@@ -121,64 +120,56 @@ fun StoreScreen(
         emptyList()
     }
 
-
     val currentStepTargetId by remember(tourState) {
         derivedStateOf { tourState.currentStep?.targetId }
     }
 
-    LaunchedEffect(isTourActive, currentStepTargetId, activeCategories.isNotEmpty(), paginatedAlianzas.isNotEmpty()) {        // Estos números de índice dependen del orden de tus 'item' en la LazyColumn.
-        // Si añades o quitas items, tendrás que ajustar estos índices.
-        if (isTourActive) {
-            // Cálculo de índices:
-            // 0: Spacer
-            // 1: SearchBar
-            // 2: DiscoverSection
+    // MODIFICACIÓN: Ahora observamos currentStepIndex directamente en lugar de solo el targetId
+    LaunchedEffect(isTourActive, currentStepIndex, activeCategories.isNotEmpty(), paginatedAlianzas.isNotEmpty()) {
+        if (isTourActive && currentStepTargetId != null) {
+            // Pequeño delay para asegurar que el target se haya registrado
+            delay(100)
+
+            // Cálculo de índices
             var categoriesGridIndex = -1
-            var alliancesTitleIndex = 3 // Por defecto (si no hay categorías)
-            var firstAllianceIndex = 4  // Por defecto
+            var alliancesTitleIndex = 3
+            var firstAllianceIndex = 4
 
             if (activeCategories.isNotEmpty()) {
-                // 3: Título Categorías
-                categoriesGridIndex = 4 // 4: Grid Categorías
-                alliancesTitleIndex = 5 // 5: Título Alianzas
-                firstAllianceIndex = 6  // 6: Inicio de Alianzas (el 'when')
+                categoriesGridIndex = 4
+                alliancesTitleIndex = 5
+                firstAllianceIndex = 6
             }
 
-            // Lanza la corrutina de scroll
-            scope.launch {
-                when (currentStepTargetId) {
-                    "store_categories" -> {
-                        if (categoriesGridIndex != -1) {
-                            // Hacemos scroll al grid de categorías
-                            lazyListState.animateScrollToItem(
-                                index = categoriesGridIndex,
-                                scrollOffset = -50
-                            )
-                        }
-                    }
-
-                    "store_alliances_title" -> {
-                        // Hacemos scroll al título de "Comercios Destacados"
+            // Ejecutar scroll según el target actual
+            when (currentStepTargetId) {
+                "store_categories" -> {
+                    if (categoriesGridIndex != -1) {
                         lazyListState.animateScrollToItem(
-                            index = alliancesTitleIndex,
+                            index = categoriesGridIndex,
                             scrollOffset = -50
                         )
                     }
+                }
 
-                    "store_first_alliance" -> {
-                        if (paginatedAlianzas.isNotEmpty()) {
-                            // Hacemos scroll a la primera alianza de la lista
-                            lazyListState.animateScrollToItem(
-                                index = firstAllianceIndex,
-                                scrollOffset = -50
-                            )
-                        }
+                "store_alliances_title" -> {
+                    lazyListState.animateScrollToItem(
+                        index = alliancesTitleIndex,
+                        scrollOffset = -50
+                    )
+                }
+
+                "store_first_alliance" -> {
+                    if (paginatedAlianzas.isNotEmpty()) {
+                        lazyListState.animateScrollToItem(
+                            index = firstAllianceIndex,
+                            scrollOffset = -50
+                        )
                     }
                 }
             }
         }
     }
-
 
     Column(
         modifier = Modifier
@@ -188,25 +179,25 @@ fun StoreScreen(
         SectionHeader(title = stringResource(id = R.string.store_screen_title))
 
         LazyColumn(
-            state = lazyListState, // <-- MODIFICADO: Asigna el estado a la LazyColumn
+            state = lazyListState,
             modifier = Modifier
                 .padding(horizontal = 16.dp)
                 .imePadding(),
             verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
-            item { Spacer(modifier = Modifier.height(8.dp)) } // Índice 0
+            item { Spacer(modifier = Modifier.height(8.dp)) }
 
-            item { // Índice 1
+            item {
                 SearchBar(
                     query = searchQuery,
                     onQueryChange = { searchQuery = it },
                     colors = colors
                 )
             }
-            item { DiscoverSection(colors = colors) } // Índice 2
+            item { DiscoverSection(colors = colors) }
 
             if (activeCategories.isNotEmpty()) {
-                item { // Índice 3
+                item {
                     Column {
                         Text(
                             text = stringResource(R.string.categories),
@@ -225,7 +216,7 @@ fun StoreScreen(
                     }
                 }
 
-                item { // Índice 4
+                item {
                     Box(modifier = Modifier.onGloballyPositioned { coords ->
                         tourState.registerTarget("store_categories", coords)
                     }) {
@@ -267,7 +258,7 @@ fun StoreScreen(
                 }
             }
 
-            item { // Índice 5 (o 3 si no hay categorías)
+            item {
                 Column (
                     modifier = Modifier.onGloballyPositioned { coords ->
                         tourState.registerTarget("store_alliances_title", coords)
@@ -295,7 +286,6 @@ fun StoreScreen(
                 }
             }
 
-            // Índice 6 (o 4 si no hay categorías)
             when {
                 uiState.isLoading -> item { LoadingSection(colors = colors) }
                 uiState.error != null -> item { ErrorSection(message = uiState.error, onRetry = { viewModel.retryLoading() }, colors = colors) }
@@ -312,7 +302,6 @@ fun StoreScreen(
                             Modifier
                         }
 
-                        // Limpiar el target si el item se va de la composición (scroll)
                         if (index == 0) {
                             DisposableEffect(Unit) {
                                 onDispose {
@@ -329,7 +318,6 @@ fun StoreScreen(
                                 onClick = { navController.navigate("reward_screen/${alianza.id}") }
                             )
 
-                            // El divisor ahora se basa en el tamaño de la lista paginada
                             if (index < paginatedAlianzas.size - 1) {
                                 Divider(
                                     color = RenovaColors.PrimaryColor,
@@ -360,7 +348,6 @@ fun StoreScreen(
 
 @Composable
 private fun PaginationControls(
-    // ... (sin cambios)
     currentPage: Int,
     totalPages: Int,
     isLoading: Boolean,
@@ -375,7 +362,6 @@ private fun PaginationControls(
         horizontalArrangement = Arrangement.SpaceBetween,
         verticalAlignment = Alignment.CenterVertically
     ) {
-        // Botón Anterior
         Button(
             onClick = onPreviousPage,
             enabled = currentPage > 1 && !isLoading,
@@ -400,7 +386,6 @@ private fun PaginationControls(
 
         Spacer(modifier = Modifier.width(12.dp))
 
-        // Indicador de página
         Text(
             text = "$currentPage ${stringResource(R.string.of)} $totalPages",
             style = MaterialTheme.typography.titleSmall,
@@ -410,7 +395,6 @@ private fun PaginationControls(
 
         Spacer(modifier = Modifier.width(12.dp))
 
-        // Botón Siguiente
         Button(
             onClick = onNextPage,
             enabled = currentPage < totalPages && !isLoading,
@@ -437,7 +421,6 @@ private fun PaginationControls(
 
 @Composable
 private fun SearchBar(
-    // ... (sin cambios)
     query: String,
     onQueryChange: (String) -> Unit,
     colors: RenovaColorScheme
@@ -448,7 +431,7 @@ private fun SearchBar(
         modifier = Modifier
             .fillMaxWidth()
             .border(
-                width = 2.dp, // grosor de borde search
+                width = 2.dp,
                 color = Color(0xFF07B460),
                 shape = RoundedCornerShape(16.dp)
             ),
@@ -576,7 +559,6 @@ private fun GifPlayer(
 
 @Composable
 fun LoadingSection(
-    // ... (sin cambios)
     colors: RenovaColorScheme
 ) {
     Box(
@@ -599,7 +581,6 @@ fun LoadingSection(
 
 @Composable
 fun ErrorSection(
-    // ... (sin cambios)
     message: String,
     onRetry: () -> Unit,
     colors: RenovaColorScheme
@@ -645,7 +626,6 @@ fun ErrorSection(
 
 @Composable
 fun EmptySection(
-    // ... (sin cambios)
     colors: RenovaColorScheme
 ) {
     Box(

@@ -4,7 +4,7 @@ import android.content.Context
 import android.content.SharedPreferences
 import com.renova.mobile.network.User
 import com.google.gson.Gson
-import android.util.Log // Asegúrate de tener este import
+import android.util.Log
 
 class SessionManager(context: Context) {
     private val sharedPreferences: SharedPreferences =
@@ -21,8 +21,8 @@ class SessionManager(context: Context) {
         private const val KEY_FCM_TOKEN = "fcm_token"
         private const val KEY_USER_ID = "user_id"
 
-        // --- CLAVE PARA EL TOUR (REQUERIMIENTO 1) ---
-        private const val KEY_FIRST_LOGIN_COMPLETE = "first_login_complete_v2" // v2 para asegurar que no haya datos viejos
+        // --- PREFIJO PARA EL TOUR POR USUARIO ---
+        private const val KEY_FIRST_LOGIN_PREFIX = "first_login_complete_user_"
     }
 
     // Guardar sesión completa
@@ -36,12 +36,11 @@ class SessionManager(context: Context) {
             putString(KEY_ACCESS_TOKEN, accessToken)
             putString(KEY_TOKEN_TYPE, tokenType ?: "Bearer")
             putString(KEY_EXPIRES_AT, expiresAt)
-            // Guardar usuario como JSON solo si no es nulo
             if (user != null) {
                 putString(KEY_USER, gson.toJson(user))
-                putInt(KEY_USER_ID, user.id) // Guardar ID también aquí
+                putInt(KEY_USER_ID, user.id)
             } else {
-                remove(KEY_USER) // Limpiar si el usuario es nulo
+                remove(KEY_USER)
                 remove(KEY_USER_ID)
             }
             putBoolean(KEY_IS_LOGGED_IN, true)
@@ -50,54 +49,43 @@ class SessionManager(context: Context) {
         Log.d("SessionManager", "Sesión guardada. AccessToken: ${accessToken.substring(0, minOf(10, accessToken.length))}...")
     }
 
-
-    // Verificar si hay sesión activa
     fun isLoggedIn(): Boolean {
         val loggedIn = sharedPreferences.getBoolean(KEY_IS_LOGGED_IN, false)
         val tokenExists = !getAccessToken().isNullOrEmpty()
-        // Log.d("SessionManager", "isLoggedIn Check: loggedIn=$loggedIn, tokenExists=$tokenExists")
         return loggedIn && tokenExists
     }
 
-    // Obtener token de acceso
     fun getAccessToken(): String? {
         return sharedPreferences.getString(KEY_ACCESS_TOKEN, null)
     }
 
-    // Obtener tipo de token
     fun getTokenType(): String? {
         return sharedPreferences.getString(KEY_TOKEN_TYPE, "Bearer")
     }
 
-    // Obtener fecha de expiración
     fun getExpiresAt(): String? {
         return sharedPreferences.getString(KEY_EXPIRES_AT, null)
     }
 
-    // Obtener usuario
     fun getUser(): User? {
         val userJson = sharedPreferences.getString(KEY_USER, null)
-        // Log.d("SessionManager", "getUser JSON: $userJson") // Log para depurar
         return if (userJson != null) {
             try {
                 gson.fromJson(userJson, User::class.java)
             } catch (e: Exception) {
                 Log.e("SessionManager", "Error parsing User JSON", e)
-                null // Error al parsear
+                null
             }
         } else {
             Log.w("SessionManager", "User JSON is null")
-            null // No hay JSON guardado
+            null
         }
     }
 
-
-    // Obtener token completo para headers HTTP
     fun getAuthToken(): String? {
         val token = getAccessToken()
         val type = getTokenType()
         return if (token != null && type != null) {
-            // Asegurarse de que el tipo no se duplique si ya viene incluido
             if (token.startsWith("$type ", ignoreCase = true)) {
                 token
             } else {
@@ -108,68 +96,51 @@ class SessionManager(context: Context) {
         }
     }
 
-
-    // Cerrar sesión
     fun logout() {
         Log.d("SessionManager", "Cerrando sesión...")
         sharedPreferences.edit().apply {
-            // Borrar claves específicas en lugar de clear()
             remove(KEY_ACCESS_TOKEN)
             remove(KEY_TOKEN_TYPE)
             remove(KEY_EXPIRES_AT)
             remove(KEY_USER)
             remove(KEY_IS_LOGGED_IN)
             remove(KEY_USER_ID)
-            // Mantenemos KEY_FIRST_LOGIN_COMPLETE
-            // Mantenemos KEY_FCM_TOKEN (quizás quieras limpiarlo también)
-            remove(KEY_FCM_TOKEN) // Limpiamos FCM token al cerrar sesión
+            remove(KEY_FCM_TOKEN)
+            // NO borramos las banderas de tour porque son por usuario
             apply()
         }
         Log.d("SessionManager", "Sesión cerrada. isLoggedIn: ${isLoggedIn()}")
     }
 
-
-    // Verificar si el token está próximo a expirar (opcional)
     fun isTokenExpiringSoon(): Boolean {
-        // Implementa lógica si necesitas verificar expiración
         return false
     }
 
-    // Guardar solo el token (para registro temporal)
     fun saveAuthToken(token: String, tokenType: String) {
         sharedPreferences.edit().apply {
             putString(KEY_ACCESS_TOKEN, token)
             putString(KEY_TOKEN_TYPE, tokenType)
-            // No marcamos como logged in aquí
             apply()
         }
     }
 
     fun getUserId(): Int? {
-        // Intenta obtenerlo primero del User object guardado
         val user = getUser()
         if (user != null) {
-            // Log.d("SessionManager", "getUserId from User object: ${user.id}")
             return user.id
         }
-        // Si no, intenta desde la clave separada (fallback)
         val userIdFromPref = sharedPreferences.getInt(KEY_USER_ID, -1)
-        // Log.d("SessionManager", "getUserId from KEY_USER_ID pref: $userIdFromPref")
         return if (userIdFromPref != -1) userIdFromPref else null
     }
 
-
     fun saveUserId(userId: Int) {
-        // Obsoleto si guardamos el User completo, pero lo mantenemos por si acaso
         sharedPreferences.edit().putInt(KEY_USER_ID, userId).apply()
     }
 
-    // Limpiar solo el token temporal (para registro)
     fun clearAuthToken() {
         sharedPreferences.edit().apply {
             remove(KEY_ACCESS_TOKEN)
             remove(KEY_TOKEN_TYPE)
-            // No tocamos KEY_IS_LOGGED_IN aquí
             apply()
         }
     }
@@ -195,31 +166,74 @@ class SessionManager(context: Context) {
         Log.d("SessionManager", "FCM Token limpiado.")
     }
 
-    // --- FUNCIONES PARA EL TOUR (REQUERIMIENTO 1) ---
+    // --- FUNCIONES PARA EL TOUR (POR USUARIO) ---
 
     /**
-     * Verifica si es la primera vez que el usuario inicia sesión DESPUÉS de instalar la app
-     * (o después de borrar datos).
-     * @return `true` si la bandera 'first_login_complete_v2' NO está marcada como 'true'.
+     * Genera la clave única para este usuario
+     */
+    private fun getTourKeyForUser(userId: Int): String {
+        return "$KEY_FIRST_LOGIN_PREFIX$userId"
+    }
+
+    /**
+     * Verifica si es la primera vez que ESTE USUARIO inicia sesión.
+     * Requiere que ya haya un usuario logueado (getUser() != null)
+     * @return `true` si este usuario NO ha completado el tour
      */
     fun isFirstLogin(): Boolean {
-        val isComplete = sharedPreferences.getBoolean(KEY_FIRST_LOGIN_COMPLETE, false)
-        Log.d("SessionManager", "isFirstLogin Check: $KEY_FIRST_LOGIN_COMPLETE = $isComplete. Returning: ${!isComplete}")
+        val userId = getUserId()
+        if (userId == null) {
+            Log.w("SessionManager", "isFirstLogin: No hay userId, retornando false")
+            return false
+        }
+
+        val tourKey = getTourKeyForUser(userId)
+        val isComplete = sharedPreferences.getBoolean(tourKey, false)
+        Log.d("SessionManager", "isFirstLogin para userId=$userId: $tourKey = $isComplete. Returning: ${!isComplete}")
         return !isComplete
     }
 
     /**
-     * Marca que el tour de bienvenida ya se ha mostrado (o se va a mostrar).
-     * Guarda 'true' en la bandera 'first_login_complete_v2'.
+     * Marca que ESTE USUARIO ya completó el tour.
+     * Requiere que ya haya un usuario logueado.
      */
     fun setFirstLoginComplete() {
-        sharedPreferences.edit().putBoolean(KEY_FIRST_LOGIN_COMPLETE, true).apply()
-        Log.d("SessionManager", "setFirstLoginComplete: $KEY_FIRST_LOGIN_COMPLETE = true")
+        val userId = getUserId()
+        if (userId == null) {
+            Log.w("SessionManager", "setFirstLoginComplete: No hay userId, no se puede marcar")
+            return
+        }
+
+        val tourKey = getTourKeyForUser(userId)
+        sharedPreferences.edit().putBoolean(tourKey, true).apply()
+        Log.d("SessionManager", "setFirstLoginComplete para userId=$userId: $tourKey = true")
     }
 
+    /**
+     * SOLO PARA DEBUG: Resetea la bandera del usuario actual
+     */
     fun resetFirstLoginFlag() {
-        sharedPreferences.edit().remove(KEY_FIRST_LOGIN_COMPLETE).apply()
-        Log.d("SessionManager", "DEBUG: Bandera $KEY_FIRST_LOGIN_COMPLETE reseteada.")
+        val userId = getUserId()
+        if (userId == null) {
+            Log.w("SessionManager", "resetFirstLoginFlag: No hay userId")
+            return
+        }
+
+        val tourKey = getTourKeyForUser(userId)
+        sharedPreferences.edit().remove(tourKey).apply()
+        Log.d("SessionManager", "DEBUG: Bandera $tourKey reseteada para userId=$userId")
+    }
+
+    /**
+     * OPCIONAL: Limpia las banderas de tour de TODOS los usuarios
+     * (útil si quieres hacer limpieza general)
+     */
+    fun clearAllTourFlags() {
+        val editor = sharedPreferences.edit()
+        sharedPreferences.all.keys
+            .filter { it.startsWith(KEY_FIRST_LOGIN_PREFIX) }
+            .forEach { editor.remove(it) }
+        editor.apply()
+        Log.d("SessionManager", "DEBUG: Todas las banderas de tour limpiadas")
     }
 }
-
