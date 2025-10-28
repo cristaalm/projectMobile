@@ -435,4 +435,91 @@
     <string name="tour_desc_activity_materials">Esta sección resume cuánto plástico y aluminio has ayudado a reciclar. ¡Buen trabajo!</string>
     <string name="tour_title_activity_history">Historial Detallado</string>
     <string name="tour_desc_activity_history">Y aquí encontrarás el registro completo de cada reciclaje y canje que has hecho. ¡Eso es todo!</string>
+
+    <!-- Payment Modal - Headers -->
+    <string name="payment_loading_info">Cargando información…</string>
+    <string name="payment_withdrawal_paypal">Retiro con PayPal</string>
+    <string name="payment_processing_request">Procesando solicitud</string>
+    <string name="payment_withdrawal_success">¡Retiro exitoso!</string>
+    <string name="payment_close">Cerrar</string>
+
+    <!-- Payment Modal - Loading Points -->
+    <string name="payment_getting_points">Obteniendo puntos disponibles…</string>
+    <string name="payment_connecting_server">Conectando con el servidor…</string>
+
+    <!-- Payment Modal - Amount Card -->
+    <string name="payment_amount_to_receive">Monto a recibir</string>
+    <string name="payment_points_redeemed">%s puntos canjeados</string>
+    <string name="payment_minimum_amount">⚠️ Monto mínimo: %s</string>
+
+    <!-- Payment Modal - PayPal Info -->
+    <string name="payment_paypal_secure">Transferencia segura y rápida</string>
+    <string name="payment_enter_account">Ingresa tu cuenta PayPal</string>
+    <string name="payment_paypal_email">Email de PayPal</string>
+    <string name="payment_email_placeholder">tu-email@example.com</string>
+    <string name="payment_transfer_info">El dinero será transferido directamente a tu cuenta de PayPal.</string>
+    <string name="payment_request_withdrawal">Solicitar retiro</string>
+
+    <!-- Payment Modal - Processing -->
+    <string name="payment_processing_withdrawal">Procesando solicitud de retiro…</string>
+    <string name="payment_connecting_paypal">Conectando con PayPal…</string>
+
+    <!-- Payment Modal - Success -->
+    <string name="payment_request_successful">¡Solicitud de retiro exitosa!</string>
+    <string name="payment_money_transferred_soon">Tu dinero será transferido pronto</string>
+    <string name="payment_transaction_id">ID Transacción:</string>
+    <string name="payment_paypal_batch_id">PayPal Batch ID:</string>
+    <string name="payment_date_time">Fecha y hora:</string>
+    <string name="payment_amount">Cantidad:</string>
+    <string name="payment_method">Método:</string>
+    <string name="payment_estimated_arrival">Llegada estimada:</string>
+    <string name="payment_arrival_time">1-2 días hábiles</string>
+    <string name="payment_notification_info">Recibirás una notificación cuando el dinero esté disponible en tu cuenta</string>
+    <string name="payment_understood">Entendido</string>
+
+    <!-- Payment Modal - Errors -->
+    <string name="payment_error_no_alliance">No se encontró el ID de alianza del usuario</string>
+    <string name="payment_error_getting_points">Error al obtener puntos</string>
+    <string name="payment_error_connection">Error de conexión: %s</string>
+    <string name="payment_warning_cut_error">Advertencia: El pago se procesó pero hubo un error al registrar el corte</string>
+    <string name="payment_error_permission_denied">Error: Permisos insuficientes. Verifica tu configuración de PayPal.</string>
+    <string name="payment_error_invalid_request">Error: Solicitud inválida. Verifica el formato del email.</string>
+    <string name="payment_error_insufficient_funds">Error: Fondos insuficientes en la cuenta de Renova.</string>
+    <string name="payment_error_paypal">Error PayPal: %s</string>
+    <string name="payment_error_unexpected">Error inesperado: %s</string>
+
+    <!-- Points Cashout Screen -->
+    <string name="cashout_title">Cobrar Puntos</string>
+    <string name="cashout_back">Atrás</string>
+    <string name="cashout_available_points">Puntos disponibles</string>
+    <string name="cashout_conversion_rate">Tasa de conversión: 1 punto = $0.01 MXN</string>
+    <string name="cashout_points_label">Puntos disponibles</string>
+    <string name="cashout_equivalent">Equivalente:</string>
+    <string name="cashout_no_points">No hay puntos disponibles para cobrar</string>
+    <string name="cashout_generate">Generar cobro</string>
+    <string name="cashout_error_loading">Error al cargar puntos</string>
+    <string name="cashout_no_points_available">No hay puntos disponibles</string>
+    <string name="cashout_sales_history">Historial de ventas</string>
+    <string name="cashout_loading_history">Cargando historial…</string>
+    <string name="cashout_error_history">Error al cargar historial</string>
+    <string name="cashout_retry">Reintentar</string>
+    <string name="cashout_no_activities">No hay actividades registradas</string>
+    <string name="cashout_no_history">Sin historial</string>
+    <string name="cashout_payment_completed">Pago completado exitosamente\nID: %s</string>
+
+    <!-- Activity Types -->
+    <string name="activity_settlement">Liquidación</string>
+    <string name="activity_recycling">Reciclaje</string>
+    <string name="activity_reward_redemption">Canjeo de recompensa</string>
+    <string name="activity_generic">Actividad</string>
+    <string name="activity_points_withdrawal">Retiro de puntos</string>
+    <string name="activity_quantity">%d x %s</string>
+    <string name="activity_equivalent_mxn">equivalente MXN</string>
+
+    <!-- Errors -->
+    <string name="error_no_alliance">No se encontró el ID de alianza</string>
+    <string name="error_user_no_alliance">Error: Usuario sin alianza asignada</string>
+    <string name="error_unknown2">Error desconocido</string>
+    <string name="error_connection">Error de conexión: %s</string>
+    <string name="error_api">Error: %s</string>
 </resources>

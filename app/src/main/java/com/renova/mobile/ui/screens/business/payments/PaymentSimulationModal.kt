@@ -13,11 +13,13 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import android.widget.Toast
+import com.renova.mobile.R
 import com.renova.mobile.ui.theme.PoppinsFontFamily
 import com.renova.mobile.ui.theme.RenovaColors
 import com.renova.mobile.ui.theme.LocalRenovaColors
@@ -84,7 +86,7 @@ fun PaymentSimulationModal(
         android.util.Log.d("PaymentModal", "Alliance ID: $allianceId")
 
         if (allianceId == null) {
-            loadingError = "No se encontró el ID de alianza del usuario"
+            loadingError = context.getString(R.string.payment_error_no_alliance)
             Toast.makeText(context, loadingError, Toast.LENGTH_LONG).show()
             onDismiss()
             return@LaunchedEffect
@@ -107,14 +109,16 @@ fun PaymentSimulationModal(
                 currentStep = WithdrawalStep.ACCOUNT_FORM
                 android.util.Log.d("PaymentModal", "Puntos obtenidos: $points")
             } else {
-                val errorMsg = response.body()?.message ?: response.errorBody()?.string() ?: "Error al obtener puntos"
+                val errorMsg = response.body()?.message
+                    ?: response.errorBody()?.string()
+                    ?: context.getString(R.string.payment_error_getting_points)
                 loadingError = errorMsg
                 android.util.Log.e("PaymentModal", "Error API: $errorMsg")
                 Toast.makeText(context, loadingError, Toast.LENGTH_LONG).show()
                 onDismiss()
             }
         } catch (e: Exception) {
-            loadingError = "Error de conexión: ${e.message}"
+            loadingError = context.getString(R.string.payment_error_connection, e.message ?: "")
             android.util.Log.e("PaymentModal", "Excepción: ${e.message}", e)
             Toast.makeText(context, loadingError, Toast.LENGTH_LONG).show()
             onDismiss()
@@ -142,10 +146,10 @@ fun PaymentSimulationModal(
             ) {
                 Text(
                     text = when (currentStep) {
-                        WithdrawalStep.LOADING_POINTS -> "Cargando información..."
-                        WithdrawalStep.ACCOUNT_FORM -> "Retiro con PayPal"
-                        WithdrawalStep.PROCESSING -> "Procesando solicitud"
-                        WithdrawalStep.SUCCESS -> "¡Retiro exitoso!"
+                        WithdrawalStep.LOADING_POINTS -> stringResource(R.string.payment_loading_info)
+                        WithdrawalStep.ACCOUNT_FORM -> stringResource(R.string.payment_withdrawal_paypal)
+                        WithdrawalStep.PROCESSING -> stringResource(R.string.payment_processing_request)
+                        WithdrawalStep.SUCCESS -> stringResource(R.string.payment_withdrawal_success)
                     },
                     style = MaterialTheme.typography.headlineSmall.copy(
                         fontFamily = PoppinsFontFamily,
@@ -157,7 +161,7 @@ fun PaymentSimulationModal(
                     IconButton(onClick = onDismiss) {
                         Icon(
                             imageVector = Icons.Default.Close,
-                            contentDescription = "Cerrar",
+                            contentDescription = stringResource(R.string.payment_close),
                             tint = colors.textSecondary
                         )
                     }
@@ -186,7 +190,7 @@ fun PaymentSimulationModal(
                             horizontalAlignment = Alignment.CenterHorizontally
                         ) {
                             Text(
-                                text = "Monto a recibir",
+                                text = stringResource(R.string.payment_amount_to_receive),
                                 style = MaterialTheme.typography.bodyMedium.copy(
                                     fontFamily = PoppinsFontFamily
                                 ),
@@ -201,7 +205,10 @@ fun PaymentSimulationModal(
                                 color = if (canWithdraw) RenovaColors.Primary else RenovaColors.Warning
                             )
                             Text(
-                                text = "${NumberFormat.getIntegerInstance(Locale("es","MX")).format(points)} puntos canjeados",
+                                text = stringResource(
+                                    R.string.payment_points_redeemed,
+                                    NumberFormat.getIntegerInstance(Locale("es","MX")).format(points)
+                                ),
                                 style = MaterialTheme.typography.bodySmall.copy(
                                     fontFamily = PoppinsFontFamily
                                 ),
@@ -211,7 +218,10 @@ fun PaymentSimulationModal(
                             if (!canWithdraw) {
                                 Spacer(modifier = Modifier.height(8.dp))
                                 Text(
-                                    text = "⚠️ Monto mínimo: ${NumberFormat.getCurrencyInstance(Locale("es", "MX")).format(minimumAmount)}",
+                                    text = stringResource(
+                                        R.string.payment_minimum_amount,
+                                        NumberFormat.getCurrencyInstance(Locale("es", "MX")).format(minimumAmount)
+                                    ),
                                     style = MaterialTheme.typography.bodySmall.copy(
                                         fontFamily = PoppinsFontFamily,
                                         fontWeight = FontWeight.Medium
@@ -259,7 +269,7 @@ fun PaymentSimulationModal(
                                                 android.util.Log.e("PaymentModal", "Error al hacer corte: ${cutResponse.errorBody()?.string()}")
                                                 Toast.makeText(
                                                     context,
-                                                    "Advertencia: El pago se procesó pero hubo un error al registrar el corte",
+                                                    context.getString(R.string.payment_warning_cut_error),
                                                     Toast.LENGTH_LONG
                                                 ).show()
                                             }
@@ -267,7 +277,7 @@ fun PaymentSimulationModal(
                                             android.util.Log.e("PaymentModal", "Excepción al hacer corte: ${e.message}")
                                             Toast.makeText(
                                                 context,
-                                                "Advertencia: El pago se procesó pero hubo un error al registrar el corte",
+                                                context.getString(R.string.payment_warning_cut_error),
                                                 Toast.LENGTH_LONG
                                             ).show()
                                         }
@@ -279,7 +289,7 @@ fun PaymentSimulationModal(
                                             dateTime = dateFormat.format(Date()),
                                             amount = amountMXN,
                                             method = "PayPal",
-                                            estimatedArrival = "1-2 días hábiles",
+                                            estimatedArrival = context.getString(R.string.payment_arrival_time),
                                             paypalBatchId = payoutResponse.batchHeader.payoutBatchId
                                         )
                                         currentStep = WithdrawalStep.SUCCESS
@@ -287,12 +297,12 @@ fun PaymentSimulationModal(
                                         val error = result.exceptionOrNull()
                                         val errorMessage = when {
                                             error?.message?.contains("PERMISSION_DENIED", ignoreCase = true) == true ->
-                                                "Error: Permisos insuficientes. Verifica tu configuración de PayPal."
+                                                context.getString(R.string.payment_error_permission_denied)
                                             error?.message?.contains("INVALID_REQUEST", ignoreCase = true) == true ->
-                                                "Error: Solicitud inválida. Verifica el formato del email."
+                                                context.getString(R.string.payment_error_invalid_request)
                                             error?.message?.contains("INSUFFICIENT_FUNDS", ignoreCase = true) == true ->
-                                                "Error: Fondos insuficientes en la cuenta de Renova."
-                                            else -> "Error PayPal: ${error?.message}"
+                                                context.getString(R.string.payment_error_insufficient_funds)
+                                            else -> context.getString(R.string.payment_error_paypal, error?.message ?: "")
                                         }
                                         Toast.makeText(context, errorMessage, Toast.LENGTH_LONG).show()
                                         currentStep = WithdrawalStep.ACCOUNT_FORM
@@ -301,7 +311,7 @@ fun PaymentSimulationModal(
                                 } catch (e: Exception) {
                                     Toast.makeText(
                                         context,
-                                        "Error inesperado: ${e.message}",
+                                        context.getString(R.string.payment_error_unexpected, e.message ?: ""),
                                         Toast.LENGTH_LONG
                                     ).show()
                                     currentStep = WithdrawalStep.ACCOUNT_FORM
@@ -352,7 +362,7 @@ private fun LoadingPoints(
         )
 
         Text(
-            text = "Obteniendo puntos disponibles...",
+            text = stringResource(R.string.payment_getting_points),
             style = MaterialTheme.typography.titleLarge.copy(
                 fontFamily = PoppinsFontFamily,
                 fontWeight = FontWeight.SemiBold
@@ -362,7 +372,7 @@ private fun LoadingPoints(
         )
 
         Text(
-            text = "Conectando con el servidor...",
+            text = stringResource(R.string.payment_connecting_server),
             style = MaterialTheme.typography.bodyMedium.copy(
                 fontFamily = PoppinsFontFamily
             ),
@@ -418,7 +428,7 @@ private fun WithdrawalAccountForm(
                         color = colors.textPrimary
                     )
                     Text(
-                        text = "Transferencia segura y rápida",
+                        text = stringResource(R.string.payment_paypal_secure),
                         style = MaterialTheme.typography.bodySmall.copy(
                             fontFamily = PoppinsFontFamily
                         ),
@@ -429,7 +439,7 @@ private fun WithdrawalAccountForm(
         }
 
         Text(
-            text = "Ingresa tu cuenta PayPal",
+            text = stringResource(R.string.payment_enter_account),
             style = MaterialTheme.typography.titleMedium.copy(
                 fontFamily = PoppinsFontFamily,
                 fontWeight = FontWeight.SemiBold
@@ -440,8 +450,18 @@ private fun WithdrawalAccountForm(
         OutlinedTextField(
             value = email,
             onValueChange = { email = it },
-            label = { Text("Email de PayPal", color = colors.textSecondary) },
-            placeholder = { Text("tu-email@example.com", color = colors.textSecondary.copy(alpha = 0.5f)) },
+            label = {
+                Text(
+                    stringResource(R.string.payment_paypal_email),
+                    color = colors.textSecondary
+                )
+            },
+            placeholder = {
+                Text(
+                    stringResource(R.string.payment_email_placeholder),
+                    color = colors.textSecondary.copy(alpha = 0.5f)
+                )
+            },
             modifier = Modifier.fillMaxWidth(),
             singleLine = true,
             leadingIcon = {
@@ -476,7 +496,7 @@ private fun WithdrawalAccountForm(
                     modifier = Modifier.size(24.dp)
                 )
                 Text(
-                    text = "El dinero será transferido directamente a tu cuenta de PayPal.",
+                    text = stringResource(R.string.payment_transfer_info),
                     style = MaterialTheme.typography.bodySmall.copy(
                         fontFamily = PoppinsFontFamily
                     ),
@@ -495,7 +515,7 @@ private fun WithdrawalAccountForm(
             shape = RoundedCornerShape(12.dp)
         ) {
             Text(
-                text = "Solicitar retiro",
+                text = stringResource(R.string.payment_request_withdrawal),
                 style = MaterialTheme.typography.bodyLarge.copy(
                     fontFamily = PoppinsFontFamily,
                     fontWeight = FontWeight.Medium
@@ -525,7 +545,7 @@ private fun ProcessingWithdrawal(
         )
 
         Text(
-            text = "Procesando solicitud de retiro...",
+            text = stringResource(R.string.payment_processing_withdrawal),
             style = MaterialTheme.typography.titleLarge.copy(
                 fontFamily = PoppinsFontFamily,
                 fontWeight = FontWeight.SemiBold
@@ -535,7 +555,7 @@ private fun ProcessingWithdrawal(
         )
 
         Text(
-            text = "Conectando con PayPal...",
+            text = stringResource(R.string.payment_connecting_paypal),
             style = MaterialTheme.typography.bodyMedium.copy(
                 fontFamily = PoppinsFontFamily
             ),
@@ -565,14 +585,14 @@ private fun WithdrawalSuccess(
         ) {
             Icon(
                 imageVector = Icons.Default.CheckCircle,
-                contentDescription = "Éxito",
+                contentDescription = stringResource(R.string.payment_withdrawal_success),
                 tint = RenovaColors.Success,
                 modifier = Modifier.size(56.dp)
             )
         }
 
         Text(
-            text = "¡Solicitud de retiro exitosa!",
+            text = stringResource(R.string.payment_request_successful),
             style = MaterialTheme.typography.titleLarge.copy(
                 fontFamily = PoppinsFontFamily,
                 fontWeight = FontWeight.Bold
@@ -582,7 +602,7 @@ private fun WithdrawalSuccess(
         )
 
         Text(
-            text = "Tu dinero será transferido pronto",
+            text = stringResource(R.string.payment_money_transferred_soon),
             style = MaterialTheme.typography.bodyMedium.copy(
                 fontFamily = PoppinsFontFamily
             ),
@@ -604,15 +624,35 @@ private fun WithdrawalSuccess(
                     .padding(20.dp),
                 verticalArrangement = Arrangement.spacedBy(12.dp)
             ) {
-                DetailRow("ID Transacción:", withdrawalDetails.transactionId, colors)
+                DetailRow(
+                    label = stringResource(R.string.payment_transaction_id),
+                    value = withdrawalDetails.transactionId,
+                    colors = colors
+                )
 
                 withdrawalDetails.paypalBatchId?.let { batchId ->
-                    DetailRow("PayPal Batch ID:", batchId, colors)
+                    DetailRow(
+                        label = stringResource(R.string.payment_paypal_batch_id),
+                        value = batchId,
+                        colors = colors
+                    )
                 }
 
-                DetailRow("Fecha y hora:", withdrawalDetails.dateTime, colors)
-                DetailRow("Cantidad:", amountFormatted, colors)
-                DetailRow("Método:", withdrawalDetails.method, colors)
+                DetailRow(
+                    label = stringResource(R.string.payment_date_time),
+                    value = withdrawalDetails.dateTime,
+                    colors = colors
+                )
+                DetailRow(
+                    label = stringResource(R.string.payment_amount),
+                    value = amountFormatted,
+                    colors = colors
+                )
+                DetailRow(
+                    label = stringResource(R.string.payment_method),
+                    value = withdrawalDetails.method,
+                    colors = colors
+                )
 
                 HorizontalDivider(
                     modifier = Modifier.padding(vertical = 8.dp),
@@ -625,7 +665,7 @@ private fun WithdrawalSuccess(
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     Text(
-                        text = "Llegada estimada:",
+                        text = stringResource(R.string.payment_estimated_arrival),
                         style = MaterialTheme.typography.bodyMedium.copy(
                             fontFamily = PoppinsFontFamily,
                             fontWeight = FontWeight.Medium
@@ -665,7 +705,7 @@ private fun WithdrawalSuccess(
                     modifier = Modifier.size(24.dp)
                 )
                 Text(
-                    text = "Recibirás una notificación cuando el dinero esté disponible en tu cuenta",
+                    text = stringResource(R.string.payment_notification_info),
                     style = MaterialTheme.typography.bodySmall.copy(
                         fontFamily = PoppinsFontFamily
                     ),
@@ -683,7 +723,7 @@ private fun WithdrawalSuccess(
             shape = RoundedCornerShape(12.dp)
         ) {
             Text(
-                text = "Entendido",
+                text = stringResource(R.string.payment_understood),
                 style = MaterialTheme.typography.bodyLarge.copy(
                     fontFamily = PoppinsFontFamily,
                     fontWeight = FontWeight.Medium

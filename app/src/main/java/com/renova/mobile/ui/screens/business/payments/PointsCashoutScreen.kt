@@ -30,6 +30,8 @@ import androidx.compose.ui.platform.LocalContext
 import android.widget.Toast
 import androidx.compose.material.icons.filled.AttachMoney
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
+import com.renova.mobile.R
 import com.renova.mobile.network.ApiClient
 import com.renova.mobile.utils.SessionManager
 import kotlinx.coroutines.launch
@@ -68,9 +70,13 @@ fun PointsCashoutScreen(
             android.util.Log.d("PointsCashout", "Alliance ID: $allianceId")
 
             if (allianceId == null) {
-                pointsError = "No se encontró el ID de alianza"
+                pointsError = context.getString(R.string.error_no_alliance)
                 isLoadingPoints = false
-                Toast.makeText(context, "Error: Usuario sin alianza asignada", Toast.LENGTH_LONG).show()
+                Toast.makeText(
+                    context,
+                    context.getString(R.string.error_user_no_alliance),
+                    Toast.LENGTH_LONG
+                ).show()
                 return@launch
             }
 
@@ -93,13 +99,19 @@ fun PointsCashoutScreen(
                     pointsError = null
                     android.util.Log.d("PointsCashout", "Puntos obtenidos: $currentMonthPoints")
                 } else {
-                    val errorMsg = response.body()?.message ?: response.errorBody()?.string() ?: "Error desconocido"
+                    val errorMsg = response.body()?.message
+                        ?: response.errorBody()?.string()
+                        ?: context.getString(R.string.error_unknown2)
                     pointsError = errorMsg
                     android.util.Log.e("PointsCashout", "Error API: $errorMsg")
-                    Toast.makeText(context, "Error: $errorMsg", Toast.LENGTH_LONG).show()
+                    Toast.makeText(
+                        context,
+                        context.getString(R.string.error_api, errorMsg),
+                        Toast.LENGTH_LONG
+                    ).show()
                 }
             } catch (e: Exception) {
-                pointsError = "Error de conexión: ${e.message}"
+                pointsError = context.getString(R.string.error_connection, e.message ?: "")
                 android.util.Log.e("PointsCashout", "Excepción: ${e.message}", e)
                 Toast.makeText(context, pointsError, Toast.LENGTH_LONG).show()
             } finally {
@@ -116,7 +128,7 @@ fun PointsCashoutScreen(
     Column(modifier = Modifier.fillMaxSize()) {
         Box {
             BusinessSectionHeader(
-                title = "     Cobrar Puntos",
+                title = "     ${stringResource(R.string.cashout_title)}",
                 onLogout = onLogout,
                 textColor = Color.White
             )
@@ -130,7 +142,7 @@ fun PointsCashoutScreen(
             ) {
                 Icon(
                     Icons.AutoMirrored.Filled.ArrowBack,
-                    contentDescription = "Atrás",
+                    contentDescription = stringResource(R.string.cashout_back),
                     tint = Color.White
                 )
             }
@@ -157,7 +169,7 @@ fun PointsCashoutScreen(
                         verticalArrangement = Arrangement.spacedBy(16.dp)
                     ) {
                         Text(
-                            text = "Puntos disponibles",
+                            text = stringResource(R.string.cashout_available_points),
                             style = MaterialTheme.typography.titleLarge.copy(
                                 fontFamily = PoppinsFontFamily,
                                 fontWeight = FontWeight.Bold
@@ -166,7 +178,7 @@ fun PointsCashoutScreen(
                         )
 
                         Text(
-                            text = "Tasa de conversión: 1 punto = $0.01 MXN",
+                            text = stringResource(R.string.cashout_conversion_rate),
                             style = MaterialTheme.typography.bodyMedium.copy(fontFamily = PoppinsFontFamily),
                             color = colors.textSecondary
                         )
@@ -192,7 +204,7 @@ fun PointsCashoutScreen(
                                 value = NumberFormat.getIntegerInstance(Locale("es", "MX"))
                                     .format(currentMonthPoints),
                                 onValueChange = { },
-                                label = { Text("Puntos disponibles") },
+                                label = { Text(stringResource(R.string.cashout_points_label)) },
                                 enabled = false,
                                 singleLine = true,
                                 modifier = Modifier.fillMaxWidth(),
@@ -222,7 +234,7 @@ fun PointsCashoutScreen(
                                     verticalAlignment = Alignment.CenterVertically
                                 ) {
                                     Text(
-                                        text = "Equivalente:",
+                                        text = stringResource(R.string.cashout_equivalent),
                                         style = MaterialTheme.typography.bodyLarge.copy(
                                             fontFamily = PoppinsFontFamily,
                                             fontWeight = FontWeight.Medium
@@ -243,7 +255,11 @@ fun PointsCashoutScreen(
                             Button(
                                 onClick = {
                                     if (currentMonthPoints <= 0) {
-                                        Toast.makeText(context, "No hay puntos disponibles para cobrar", Toast.LENGTH_SHORT).show()
+                                        Toast.makeText(
+                                            context,
+                                            context.getString(R.string.cashout_no_points),
+                                            Toast.LENGTH_SHORT
+                                        ).show()
                                     } else {
                                         showPaymentModal = true
                                     }
@@ -258,9 +274,9 @@ fun PointsCashoutScreen(
                             ) {
                                 Text(
                                     text = when {
-                                        pointsError != null -> "Error al cargar puntos"
-                                        currentMonthPoints > 0 -> "Generar cobro"
-                                        else -> "No hay puntos disponibles"
+                                        pointsError != null -> stringResource(R.string.cashout_error_loading)
+                                        currentMonthPoints > 0 -> stringResource(R.string.cashout_generate)
+                                        else -> stringResource(R.string.cashout_no_points_available)
                                     },
                                     style = MaterialTheme.typography.bodyLarge.copy(
                                         fontFamily = PoppinsFontFamily,
@@ -278,7 +294,7 @@ fun PointsCashoutScreen(
             // Título de historial
             item {
                 Text(
-                    text = "Historial de ventas",
+                    text = stringResource(R.string.cashout_sales_history),
                     style = MaterialTheme.typography.titleLarge.copy(
                         fontFamily = PoppinsFontFamily,
                         fontWeight = FontWeight.Bold
@@ -315,7 +331,7 @@ fun PointsCashoutScreen(
                             horizontalAlignment = Alignment.CenterHorizontally
                         ) {
                             Text(
-                                text = "Error al cargar historial",
+                                text = stringResource(R.string.cashout_error_history),
                                 style = MaterialTheme.typography.bodyMedium.copy(
                                     fontFamily = PoppinsFontFamily,
                                     fontWeight = FontWeight.Medium
@@ -338,7 +354,7 @@ fun PointsCashoutScreen(
                                 )
                             ) {
                                 Text(
-                                    text = "Reintentar",
+                                    text = stringResource(R.string.cashout_retry),
                                     style = MaterialTheme.typography.bodyMedium.copy(
                                         fontFamily = PoppinsFontFamily
                                     ),
@@ -364,13 +380,13 @@ fun PointsCashoutScreen(
                         ) {
                             Icon(
                                 imageVector = Icons.Default.History,
-                                contentDescription = "Sin historial",
+                                contentDescription = stringResource(R.string.cashout_no_history),
                                 tint = colors.textSecondary,
                                 modifier = Modifier.size(48.dp)
                             )
                             Spacer(modifier = Modifier.height(12.dp))
                             Text(
-                                text = "No hay actividades registradas",
+                                text = stringResource(R.string.cashout_no_activities),
                                 style = MaterialTheme.typography.bodyMedium.copy(
                                     fontFamily = PoppinsFontFamily,
                                     fontWeight = FontWeight.Medium
@@ -422,7 +438,7 @@ fun PointsCashoutScreen(
             onPaymentComplete = { transactionId ->
                 Toast.makeText(
                     context,
-                    "Pago completado exitosamente\nID: $transactionId",
+                    context.getString(R.string.cashout_payment_completed, transactionId),
                     Toast.LENGTH_LONG
                 ).show()
                 showPaymentModal = false
@@ -439,6 +455,8 @@ private fun HistorySaleItem(
     activity: com.renova.mobile.network.ActivityItem,
     colors: com.renova.mobile.ui.theme.RenovaColorScheme
 ) {
+    val context = LocalContext.current
+
     Row(
         modifier = Modifier
             .fillMaxWidth()
@@ -491,10 +509,10 @@ private fun HistorySaleItem(
         Column(modifier = Modifier.weight(1f)) {
             Text(
                 text = when (activity.type_history) {
-                    4 -> "Liquidación"
-                    2 -> "Reciclaje"
-                    1 -> "Canjeo de recompensa"
-                    else -> "Actividad"
+                    4 -> stringResource(R.string.activity_settlement)
+                    2 -> stringResource(R.string.activity_recycling)
+                    1 -> stringResource(R.string.activity_reward_redemption)
+                    else -> stringResource(R.string.activity_generic)
                 },
                 style = MaterialTheme.typography.bodyMedium.copy(
                     fontFamily = PoppinsFontFamily,
@@ -508,11 +526,11 @@ private fun HistorySaleItem(
             Spacer(modifier = Modifier.height(4.dp))
 
             val subtitleText = when (activity.type_history) {
-                4 -> "Retiro de puntos"
+                4 -> stringResource(R.string.activity_points_withdrawal)
                 2 -> activity.material_type?.name ?: ""
                 1 -> {
-                    val name = activity.reward?.name ?: "Recompensa"
-                    "1 x $name"
+                    val name = activity.reward?.name ?: context.getString(R.string.activity_reward_redemption)
+                    context.getString(R.string.activity_quantity, 1, name)
                 }
                 else -> activity.alliance?.name ?: ""
             }
@@ -550,7 +568,7 @@ private fun HistorySaleItem(
                 color = mxnColor
             )
             Text(
-                text = "equivalente MXN",
+                text = stringResource(R.string.activity_equivalent_mxn),
                 style = MaterialTheme.typography.bodySmall.copy(
                     fontFamily = PoppinsFontFamily
                 ),
@@ -559,4 +577,3 @@ private fun HistorySaleItem(
         }
     }
 }
-

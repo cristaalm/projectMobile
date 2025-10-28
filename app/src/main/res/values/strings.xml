@@ -426,4 +426,92 @@
     <string name="tour_desc_activity_materials">This section summarizes how much plastic and aluminum you\'ve helped recycle. Good job!</string>
     <string name="tour_title_activity_history">Detailed History</string>
     <string name="tour_desc_activity_history">And here you\'ll find the complete record of every recycling and redemption you\'ve made. That\'s all!</string>
+
+    <!-- Payment Modal - Headers -->
+    <string name="payment_loading_info">Loading information…</string>
+    <string name="payment_withdrawal_paypal">PayPal Withdrawal</string>
+    <string name="payment_processing_request">Processing request</string>
+    <string name="payment_withdrawal_success">Withdrawal successful!</string>
+    <string name="payment_close">Close</string>
+
+    <!-- Payment Modal - Loading Points -->
+    <string name="payment_getting_points">Getting available points…</string>
+    <string name="payment_connecting_server">Connecting to server…</string>
+
+    <!-- Payment Modal - Amount Card -->
+    <string name="payment_amount_to_receive">Amount to receive</string>
+    <string name="payment_points_redeemed">%s points redeemed</string>
+    <string name="payment_minimum_amount">⚠️ Minimum amount: %s</string>
+
+    <!-- Payment Modal - PayPal Info -->
+    <string name="payment_paypal_secure">Secure and fast transfer</string>
+    <string name="payment_enter_account">Enter your PayPal account</string>
+    <string name="payment_paypal_email">PayPal Email</string>
+    <string name="payment_email_placeholder">your-email@example.com</string>
+    <string name="payment_transfer_info">Money will be transferred directly to your PayPal account.</string>
+    <string name="payment_request_withdrawal">Request withdrawal</string>
+
+    <!-- Payment Modal - Processing -->
+    <string name="payment_processing_withdrawal">Processing withdrawal request…</string>
+    <string name="payment_connecting_paypal">Connecting to PayPal…</string>
+
+    <!-- Payment Modal - Success -->
+    <string name="payment_request_successful">Withdrawal request successful!</string>
+    <string name="payment_money_transferred_soon">Your money will be transferred soon</string>
+    <string name="payment_transaction_id">Transaction ID:</string>
+    <string name="payment_paypal_batch_id">PayPal Batch ID:</string>
+    <string name="payment_date_time">Date and time:</string>
+    <string name="payment_amount">Amount:</string>
+    <string name="payment_method">Method:</string>
+    <string name="payment_estimated_arrival">Estimated arrival:</string>
+    <string name="payment_arrival_time">1–2 business days</string>
+    <string name="payment_notification_info">You will receive a notification when the money is available in your account</string>
+    <string name="payment_understood">Got it</string>
+
+    <!-- Payment Modal - Errors -->
+    <string name="payment_error_no_alliance">Alliance ID not found for user</string>
+    <string name="payment_error_getting_points">Error getting points</string>
+    <string name="payment_error_connection">Connection error: %s</string>
+    <string name="payment_warning_cut_error">Warning: Payment processed but there was an error recording the cut</string>
+    <string name="payment_error_permission_denied">Error: Insufficient permissions. Check your PayPal configuration.</string>
+    <string name="payment_error_invalid_request">Error: Invalid request. Check the email format.</string>
+    <string name="payment_error_insufficient_funds">Error: Insufficient funds in Renova account.</string>
+    <string name="payment_error_paypal">PayPal Error: %s</string>
+    <string name="payment_error_unexpected">Unexpected error: %s</string>
+
+
+    <!-- Points Cashout Screen -->
+    <string name="cashout_title">Cash Out Points</string>
+    <string name="cashout_back">Back</string>
+    <string name="cashout_available_points">Available points</string>
+    <string name="cashout_conversion_rate">Conversion rate: 1 point = $0.01 MXN</string>
+    <string name="cashout_points_label">Available points</string>
+    <string name="cashout_equivalent">Equivalent:</string>
+    <string name="cashout_no_points">No points available to cash out</string>
+    <string name="cashout_generate">Generate payment</string>
+    <string name="cashout_error_loading">Error loading points</string>
+    <string name="cashout_no_points_available">No points available</string>
+    <string name="cashout_sales_history">Sales history</string>
+    <string name="cashout_loading_history">Loading history…</string>
+    <string name="cashout_error_history">Error loading history</string>
+    <string name="cashout_retry">Retry</string>
+    <string name="cashout_no_activities">No activities recorded</string>
+    <string name="cashout_no_history">No history</string>
+    <string name="cashout_payment_completed">Payment completed successfully\nID: %s</string>
+
+    <!-- Activity Types -->
+    <string name="activity_settlement">Settlement</string>
+    <string name="activity_recycling">Recycling</string>
+    <string name="activity_reward_redemption">Reward redemption</string>
+    <string name="activity_generic">Activity</string>
+    <string name="activity_points_withdrawal">Points withdrawal</string>
+    <string name="activity_quantity">%d x %s</string>
+    <string name="activity_equivalent_mxn">MXN equivalent</string>
+
+    <!-- Errors -->
+    <string name="error_no_alliance">Alliance ID not found</string>
+    <string name="error_user_no_alliance">Error: User without assigned alliance</string>
+    <string name="error_unknown2">Unknown error</string>
+    <string name="error_connection">Connection error: %s</string>
+    <string name="error_api">Error: %s</string>
 </resources>
