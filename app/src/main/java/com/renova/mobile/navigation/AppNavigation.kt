@@ -314,7 +314,12 @@ fun AppNavigation(
                         popEnterTransition = { popEnterAnimation },
                         popExitTransition = { popExitAnimation }
                     ) {
-                        PointsCashoutScreen(onLogout = onLogout)
+                        PointsCashoutScreen(
+                            onLogout = onLogout,
+                            onNavigateBack = {
+                                navController.popBackStack()
+                            }
+                        )
                     }
 
                     // Rutas de usuario normal

@@ -33,12 +33,15 @@ import androidx.compose.ui.res.painterResource
 import com.renova.mobile.network.ApiClient
 import com.renova.mobile.utils.SessionManager
 import kotlinx.coroutines.launch
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.ui.zIndex
 
 private const val POINT_TO_MXN = 0.01  // 1 centavo por punto
 
 @Composable
 fun PointsCashoutScreen(
     onLogout: () -> Unit,
+    onNavigateBack: () -> Unit = {},
     historyViewModel: BusinessHistoryViewModel = viewModel()
 ) {
     val colors = LocalRenovaColors.current
@@ -111,11 +114,27 @@ fun PointsCashoutScreen(
     }
 
     Column(modifier = Modifier.fillMaxSize()) {
-        BusinessSectionHeader(
-            title = "Cobrar Puntos",
-            onLogout = onLogout,
-            textColor = Color.White
-        )
+        Box {
+            BusinessSectionHeader(
+                title = "     Cobrar Puntos",
+                onLogout = onLogout,
+                textColor = Color.White
+            )
+
+            IconButton(
+                onClick = onNavigateBack,
+                modifier = Modifier
+                    .align(Alignment.CenterStart)
+                    .padding(start = 4.dp)
+                    .zIndex(1f)
+            ) {
+                Icon(
+                    Icons.AutoMirrored.Filled.ArrowBack,
+                    contentDescription = "Atrás",
+                    tint = Color.White
+                )
+            }
+        }
 
         LazyColumn(
             modifier = Modifier
@@ -540,3 +559,4 @@ private fun HistorySaleItem(
         }
     }
 }
+

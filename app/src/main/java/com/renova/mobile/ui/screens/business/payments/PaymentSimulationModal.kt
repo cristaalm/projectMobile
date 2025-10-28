@@ -2,6 +2,8 @@ package com.renova.mobile.ui.screens.business.payments
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
@@ -71,6 +73,8 @@ fun PaymentSimulationModal(
     val minimumAmount = 50.0
     val canWithdraw = amountMXN >= minimumAmount
 
+    val scrollState = rememberScrollState()
+
     // Obtener puntos disponibles desde la API
     LaunchedEffect(Unit) {
         val user = sessionManager.getUser()
@@ -125,6 +129,7 @@ fun PaymentSimulationModal(
         Column(
             modifier = Modifier
                 .fillMaxWidth()
+                .verticalScroll(scrollState)
                 .imePadding()
                 .padding(24.dp),
             verticalArrangement = Arrangement.spacedBy(20.dp)
