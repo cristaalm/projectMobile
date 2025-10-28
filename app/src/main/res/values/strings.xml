@@ -75,8 +75,7 @@
     <string name="qr_code_placeholder">QR Code</string>
     <string name="instructions_title">INSTRUCTIONS:</string>
     <string name="instruction_1">Align your QR code to scan to start entering the materials.</string>
-    <string name="instruction_2">Press and hold the products to facilitate the process.</string>
-    <string name="instruction_3">Place the recommended products to gain more points.</string>
+    <string name="instruction_2">Press and hold the products to facilitate the process.</string> <string name="instruction_3">Place the recommended products to gain more points.</string>
 
     <string name="recycling_materials">Recycling Materials</string>
     <string name="earn_points_recycling">Accumulate points for recycling</string>
@@ -188,7 +187,6 @@
     <string name="reward_screen_subtitle">Explore and choose the reward you like the most</string>
     <string name="content_description_back">Back</string>
     <string name="error_prefix">Error:\u0020</string>
-    <string name="unknown_error">Unknown Error</string>
     <string name="no_rewards_available">This merchant has no available rewards.</string>
     <string name="pointsR">points</string>
     <string name="reward_confirmation_dialog_title">Confirm Reward</string>
@@ -202,8 +200,6 @@
     <string name="bottom_nav_sale">Sale</string>
     <string name="bottom_nav_qr">Scan</string>
     <string name="bottom_nav_profile">Profile</string>
-
-    <string name="close_button">Cerrar</string>
 
     <string name="sale">Sale</string>
 
@@ -237,10 +233,8 @@
     <string name="documentation_submitted">Documentation Submitted</string>
     <string name="documentation_pending">Documentation Pending</string>
     <string name="documentation_empty">Empty Documentation</string>
-    <string name="ine_front">INE Front</string>
-    <string name="ine_back">INE Back</string>
-    <string name="curp_label">CURP</string>
-    <string name="edit_field">Edit</string>
+    <string name="ine_front">INE Front</string> <string name="ine_back">INE Back</string>
+    <string name="curp_label">CURP</string> <string name="edit_field">Edit</string>
     <string name="save_field">Save</string>
     <string name="cancel_field">Cancel</string>
     <string name="request_verification">Request Verification</string>
@@ -328,8 +322,7 @@
     <string name="rewards_available">Available Rewards</string>
     <string name="authentication_error">Authentication Error</string>
     <string name="session_error">Session Error</string>
-    <string name="business_address">Business Adress</string>
-    <string name="profile_picture">Profile Picture</string>
+    <string name="business_address">Business Address</string> <string name="profile_picture">Profile Picture</string>
     <string name="business_info">Business Information</string>
     <string name="category">Category</string>
     <string name="status_label">Status</string>
@@ -349,7 +342,6 @@
     <string name="error_register_user">Error registering user.</string>
     <string name="error_email_required">The email field is required.</string>
     <string name="error_email_taken">The email has already been taken.</string>
-    <string name="error_email_invalid">The email must be a valid email address.</string>
     <string name="error_password_required">The password field is required.</string>
     <string name="error_password_min_length">The password must be at least 8 characters.</string>
     <string name="error_password_confirmation">The passwords do not match.</string>
@@ -375,10 +367,7 @@
     <string name="error_upload_selfie">Error uploading selfie.</string>
     <string name="error_selfie_must_be_image">The selfie must be an image.</string>
     <string name="error_selfie_required">The selfie is required.</string>
-    <string name="error_title2">¡Ocurrió un error!</string>
-    <string name="error_default_message">¡Oops! Sucedió un error, por favor reinicia o vuelve a iniciar sesión</string>
-
-    <string name="resubmit_documentation">Resubmit Documentation</string>
+    <string name="error_title2">An error occurred!</string> <string name="error_default_message">Oops! An error occurred, please restart or log in again</string> <string name="resubmit_documentation">Resubmit Documentation</string>
 
     <string name="tour_button_exit">Exit</string>
     <string name="tour_button_prev">Prev</string>
@@ -427,23 +416,19 @@
     <string name="tour_title_activity_history">Detailed History</string>
     <string name="tour_desc_activity_history">And here you\'ll find the complete record of every recycling and redemption you\'ve made. That\'s all!</string>
 
-    <!-- Payment Modal - Headers -->
     <string name="payment_loading_info">Loading information…</string>
     <string name="payment_withdrawal_paypal">PayPal Withdrawal</string>
     <string name="payment_processing_request">Processing request</string>
     <string name="payment_withdrawal_success">Withdrawal successful!</string>
     <string name="payment_close">Close</string>
 
-    <!-- Payment Modal - Loading Points -->
     <string name="payment_getting_points">Getting available points…</string>
     <string name="payment_connecting_server">Connecting to server…</string>
 
-    <!-- Payment Modal - Amount Card -->
     <string name="payment_amount_to_receive">Amount to receive</string>
     <string name="payment_points_redeemed">%s points redeemed</string>
     <string name="payment_minimum_amount">⚠️ Minimum amount: %s</string>
 
-    <!-- Payment Modal - PayPal Info -->
     <string name="payment_paypal_secure">Secure and fast transfer</string>
     <string name="payment_enter_account">Enter your PayPal account</string>
     <string name="payment_paypal_email">PayPal Email</string>
@@ -451,11 +436,9 @@
     <string name="payment_transfer_info">Money will be transferred directly to your PayPal account.</string>
     <string name="payment_request_withdrawal">Request withdrawal</string>
 
-    <!-- Payment Modal - Processing -->
     <string name="payment_processing_withdrawal">Processing withdrawal request…</string>
     <string name="payment_connecting_paypal">Connecting to PayPal…</string>
 
-    <!-- Payment Modal - Success -->
     <string name="payment_request_successful">Withdrawal request successful!</string>
     <string name="payment_money_transferred_soon">Your money will be transferred soon</string>
     <string name="payment_transaction_id">Transaction ID:</string>
@@ -468,7 +451,6 @@
     <string name="payment_notification_info">You will receive a notification when the money is available in your account</string>
     <string name="payment_understood">Got it</string>
 
-    <!-- Payment Modal - Errors -->
     <string name="payment_error_no_alliance">Alliance ID not found for user</string>
     <string name="payment_error_getting_points">Error getting points</string>
     <string name="payment_error_connection">Connection error: %s</string>
@@ -480,7 +462,6 @@
     <string name="payment_error_unexpected">Unexpected error: %s</string>
 
 
-    <!-- Points Cashout Screen -->
     <string name="cashout_title">Cash Out Points</string>
     <string name="cashout_back">Back</string>
     <string name="cashout_available_points">Available points</string>
@@ -499,7 +480,6 @@
     <string name="cashout_no_history">No history</string>
     <string name="cashout_payment_completed">Payment completed successfully\nID: %s</string>
 
-    <!-- Activity Types -->
     <string name="activity_settlement">Settlement</string>
     <string name="activity_recycling">Recycling</string>
     <string name="activity_reward_redemption">Reward redemption</string>
@@ -508,10 +488,18 @@
     <string name="activity_quantity">%d x %s</string>
     <string name="activity_equivalent_mxn">MXN equivalent</string>
 
-    <!-- Errors -->
     <string name="error_no_alliance">Alliance ID not found</string>
     <string name="error_user_no_alliance">Error: User without assigned alliance</string>
-    <string name="error_unknown2">Unknown error</string>
-    <string name="error_connection">Connection error: %s</string>
+    <string name="error_unknown2">Unknown error</string> <string name="error_connection">Connection error: %s</string>
     <string name="error_api">Error: %s</string>
+
+    <string name="tour_title_welcome">Renova welcomes you!</string>
+    <string name="tour_desc_welcome">We\'re excited to have you here. We\'ll show you the main features so you can start recycling and earning rewards. Press \"Next\" to begin.</string>
+    <string name="tour_title_menu_button">Options Menu</string>
+    <string name="tour_desc_menu_button">Tap here to see more options, like help and logging out.</string>
+    <string name="tour_title_side_menu">Main Menu</string>
+    <string name="tour_desc_side_menu">Here you can log out and find frequently asked questions. This is the last step of the tour!</string>
+    <string name="tour_title_help_fab">Help Button</string>
+    <string name="tour_desc_help_fab_full">You\'ve completed the tour! Remember you can check it again here whenever you need.</string>
+    <string name="tour_desc_help_fab_home">Remember you can check the tour for this screen again here.</string>
 </resources>

@@ -346,7 +346,6 @@
     <string name="status_rejected">Rechazado</string>
     <string name="status_inactive">Inactivo</string>
 
-    <!-- User Type Labels -->
     <string name="user_type_label">Tipo de Usuario</string>
     <string name="user_type_citizen">Ciudadano</string>
     <string name="user_type_admin">Administrador</string>
@@ -355,7 +354,6 @@
 
     <string name="remember_me">Recuérdame</string>
 
-    <!-- ===== REGISTER ERRORS (Step 1) ===== -->
     <string name="error_register_user">Error al registrar el usuario.</string>
     <string name="error_email_required">El campo correo electrónico es obligatorio.</string>
     <string name="error_email_taken">El correo electrónico ya ha sido registrado.</string>
@@ -372,7 +370,6 @@
     <string name="error_lastname_required">El campo apellido es obligatorio.</string>
     <string name="error_field_required">Este campo es obligatorio.</string>
 
-    <!-- ===== UPLOAD DOCUMENTS ERRORS (Step 2) ===== -->
     <string name="error_auth_token_missing">Token de autenticación no proporcionado.</string>
     <string name="error_no_permission_upload_docs">No tienes permiso para subir documentos.</string>
     <string name="error_upload_documents">Error al subir los documentos.</string>
@@ -382,12 +379,10 @@
     <string name="error_document_front_required">El documento frontal es obligatorio.</string>
     <string name="error_document_back_required">El documento trasero es obligatorio.</string>
 
-    <!-- ===== UPLOAD SELFIE ERRORS (Step 3) ===== -->
     <string name="error_no_permission_upload_selfie">No tienes permiso para subir selfie.</string>
     <string name="error_upload_selfie">Error al subir el selfie.</string>
     <string name="error_selfie_must_be_image">La selfie debe ser una imagen.</string>
     <string name="error_selfie_required">La selfie es obligatoria.</string>
-
 
     <string name="tour_button_exit">Salir</string>
     <string name="tour_button_prev">Ant.</string>
@@ -436,23 +431,19 @@
     <string name="tour_title_activity_history">Historial Detallado</string>
     <string name="tour_desc_activity_history">Y aquí encontrarás el registro completo de cada reciclaje y canje que has hecho. ¡Eso es todo!</string>
 
-    <!-- Payment Modal - Headers -->
     <string name="payment_loading_info">Cargando información…</string>
     <string name="payment_withdrawal_paypal">Retiro con PayPal</string>
     <string name="payment_processing_request">Procesando solicitud</string>
     <string name="payment_withdrawal_success">¡Retiro exitoso!</string>
     <string name="payment_close">Cerrar</string>
 
-    <!-- Payment Modal - Loading Points -->
     <string name="payment_getting_points">Obteniendo puntos disponibles…</string>
     <string name="payment_connecting_server">Conectando con el servidor…</string>
 
-    <!-- Payment Modal - Amount Card -->
     <string name="payment_amount_to_receive">Monto a recibir</string>
     <string name="payment_points_redeemed">%s puntos canjeados</string>
     <string name="payment_minimum_amount">⚠️ Monto mínimo: %s</string>
 
-    <!-- Payment Modal - PayPal Info -->
     <string name="payment_paypal_secure">Transferencia segura y rápida</string>
     <string name="payment_enter_account">Ingresa tu cuenta PayPal</string>
     <string name="payment_paypal_email">Email de PayPal</string>
@@ -460,11 +451,9 @@
     <string name="payment_transfer_info">El dinero será transferido directamente a tu cuenta de PayPal.</string>
     <string name="payment_request_withdrawal">Solicitar retiro</string>
 
-    <!-- Payment Modal - Processing -->
     <string name="payment_processing_withdrawal">Procesando solicitud de retiro…</string>
     <string name="payment_connecting_paypal">Conectando con PayPal…</string>
 
-    <!-- Payment Modal - Success -->
     <string name="payment_request_successful">¡Solicitud de retiro exitosa!</string>
     <string name="payment_money_transferred_soon">Tu dinero será transferido pronto</string>
     <string name="payment_transaction_id">ID Transacción:</string>
@@ -477,7 +466,6 @@
     <string name="payment_notification_info">Recibirás una notificación cuando el dinero esté disponible en tu cuenta</string>
     <string name="payment_understood">Entendido</string>
 
-    <!-- Payment Modal - Errors -->
     <string name="payment_error_no_alliance">No se encontró el ID de alianza del usuario</string>
     <string name="payment_error_getting_points">Error al obtener puntos</string>
     <string name="payment_error_connection">Error de conexión: %s</string>
@@ -488,7 +476,6 @@
     <string name="payment_error_paypal">Error PayPal: %s</string>
     <string name="payment_error_unexpected">Error inesperado: %s</string>
 
-    <!-- Points Cashout Screen -->
     <string name="cashout_title">Cobrar Puntos</string>
     <string name="cashout_back">Atrás</string>
     <string name="cashout_available_points">Puntos disponibles</string>
@@ -507,7 +494,6 @@
     <string name="cashout_no_history">Sin historial</string>
     <string name="cashout_payment_completed">Pago completado exitosamente\nID: %s</string>
 
-    <!-- Activity Types -->
     <string name="activity_settlement">Liquidación</string>
     <string name="activity_recycling">Reciclaje</string>
     <string name="activity_reward_redemption">Canjeo de recompensa</string>
@@ -516,10 +502,20 @@
     <string name="activity_quantity">%d x %s</string>
     <string name="activity_equivalent_mxn">equivalente MXN</string>
 
-    <!-- Errors -->
+    TEST
     <string name="error_no_alliance">No se encontró el ID de alianza</string>
     <string name="error_user_no_alliance">Error: Usuario sin alianza asignada</string>
     <string name="error_unknown2">Error desconocido</string>
     <string name="error_connection">Error de conexión: %s</string>
     <string name="error_api">Error: %s</string>
+
+    <string name="tour_title_welcome">¡Renova te da la bienvenida!</string>
+    <string name="tour_desc_welcome">Estamos emocionados de tenerte aquí. Te mostraremos las funciones principales para que empieces a reciclar y ganar recompensas. Presiona \"Sig.\" para comenzar.</string>
+    <string name="tour_title_menu_button">Menú de Opciones</string>
+    <string name="tour_desc_menu_button">Toca aquí para ver más opciones, como la ayuda y el cierre de sesión.</string>
+    <string name="tour_title_side_menu">Menú Principal</string>
+    <string name="tour_desc_side_menu">Aquí puedes cerrar sesión y encontrar preguntas frecuentes. ¡Este es el último paso del tour!</string>
+    <string name="tour_title_help_fab">Botón de Ayuda</string>
+    <string name="tour_desc_help_fab_full">¡Has completado el tour! Recuerda que aquí puedes volver a consultarlo cuando lo necesites.</string>
+    <string name="tour_desc_help_fab_home">Recuerda que aquí puedes volver a consultar el tour de esta pantalla.</string>
 </resources>

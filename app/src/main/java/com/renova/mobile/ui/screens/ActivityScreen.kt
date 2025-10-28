@@ -366,42 +366,57 @@ private fun ActivityContent(
             }
         }
 
-        // --- Lógica de lista de v2 (con estado vacío) ---
-        if (state.activities.isEmpty()) {
-            item {
-                EmptyStateInline(renovaColors = renovaColors)
-            }
-        } else {
-            item {
-                Column(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(horizontal = 24.dp)
-                        // --- MODIFICACIÓN 3: El .onGloballyPositioned se movió aquí, con el ID original ---
-                        .onGloballyPositioned { coords ->
-                            tourState.registerTarget("activity_history_title", coords)
-                        },
-                    verticalArrangement = Arrangement.spacedBy(0.dp)
-                ) {
-                    state.activities.forEachIndexed { index, activity ->
-                        ActivityHistoryCard(
-                            activity = activity,
-                            colors = renovaColors,
-                            onClick = {
-                                onActivityClick(activity)
-                            }
-                        )
-                        if (index < state.activities.size - 1) {
-                            Divider(
-                                color = RenovaColors.PrimaryColor,
-                                thickness = 1.dp,
-                                modifier = Modifier.padding(vertical = 3.dp)
+        // --- MODIFICACIÓN: Inicia el bloque corregido para el tour ---
+        // 1. Creamos un 'item' que SIEMPRE existe.
+        item {
+            // 2. Creamos un Column contenedor que tendrá el hook del tour.
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    // 3. ¡Aquí está el hook! Ahora siempre se registrará.
+                    .onGloballyPositioned { coords ->
+                        tourState.registerTarget("activity_history_title", coords)
+                    }
+            ) {
+                // 4. Movemos el if/else DENTRO de este contenedor.
+                if (state.activities.isEmpty()) {
+                    // Si está vacío, mostramos el EmptyState.
+                    // EmptyStateInline ya tiene su propio padding.
+                    EmptyStateInline(renovaColors = renovaColors)
+                } else {
+                    // Si NO está vacío, mostramos la lista.
+                    // Usamos el Column que ya tenías para la lista.
+                    Column(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(horizontal = 24.dp), // Mantenemos el padding original
+                        verticalArrangement = Arrangement.spacedBy(0.dp)
+                    ) {
+                        state.activities.forEachIndexed { index, activity ->
+                            ActivityHistoryCard(
+                                activity = activity,
+                                colors = renovaColors,
+                                onClick = {
+                                    onActivityClick(activity)
+                                }
                             )
+                            if (index < state.activities.size - 1) {
+                                Divider(
+                                    color = RenovaColors.PrimaryColor,
+                                    thickness = 1.dp,
+                                    modifier = Modifier.padding(vertical = 3.dp)
+                                )
+                            }
                         }
                     }
                 }
             }
+        }
+        // --- MODIFICACIÓN: Fin del bloque corregido ---
 
+        // --- MODIFICACIÓN: La paginación debe estar fuera del 'else' anterior,
+        // pero seguir siendo condicional.
+        if (state.activities.isNotEmpty()) {
             item {
                 androidx.compose.animation.AnimatedVisibility(
                     visible = true,
@@ -425,7 +440,6 @@ private fun ActivityContent(
         }
     }
 }
-
 // --- Composable de v2 ---
 @Composable
 fun ActivityHistoryCard(

@@ -79,6 +79,7 @@ import com.renova.mobile.ui.activities.FaqActivity
 import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.runtime.DisposableEffect
 import com.renova.mobile.ui.tour.LocalTourState
+import androidx.compose.runtime.collectAsState // <-- *** AÑADE ESTE IMPORT ***
 // --- FIN DE IMPORTS ---
 
 private val primaryColor = Color(0xFF08b662)
@@ -174,7 +175,10 @@ fun CustomBottomBar(
 
     // --- AÑADIDO: Obtener el estado del Tour (de rama 'tour') ---
     val tourState = LocalTourState.current
+    val currentStepIndex by tourState.currentStepIndex.collectAsState() // <-- AÑADIDO
+    val isTourActive by tourState.isTourActive.collectAsState() // <-- AÑADIDO
     // --- FIN ---
+
 
     Box(
         modifier = Modifier
@@ -275,7 +279,10 @@ fun CustomBottomBar(
             Box(
                 modifier = Modifier
                     .size(72.dp)
-                    .padding(4.dp),
+                    .padding(4.dp)
+                    .onGloballyPositioned { coords -> // <-- MODIFICADO
+                        tourState.registerTarget("bottom_bar_menu", coords)
+                    },
                 contentAlignment = Alignment.Center
             ) {
                 if (isPressed) {
@@ -303,6 +310,10 @@ fun CustomBottomBar(
                         modifier = Modifier.size(28.dp)
                     )
                 }
+            }
+            // Añadimos el DisposableEffect para el nuevo target
+            DisposableEffect("bottom_bar_menu") { // <-- AÑADIDO
+                onDispose { tourState.unregisterTarget("bottom_bar_menu") }
             }
         }
 
@@ -382,7 +393,10 @@ fun CustomBottomBar(
                         Surface(
                             modifier = Modifier
                                 .fillMaxHeight()
-                                .width(280.dp),
+                                .width(280.dp)
+                                .onGloballyPositioned { coords -> // <-- MODIFICADO
+                                    tourState.registerTarget("side_menu_panel", coords)
+                                },
                             shape = RoundedCornerShape(topStart = 12.dp, bottomStart = 12.dp),
                             color = Color(0xFF05D16E)
                         ) {
@@ -444,6 +458,11 @@ fun CustomBottomBar(
                     }
                 }
             }
+        }
+
+        // Añadimos el DisposableEffect para el panel
+        DisposableEffect("side_menu_panel") { // <-- AÑADIDO
+            onDispose { tourState.unregisterTarget("side_menu_panel") }
         }
     }
 
