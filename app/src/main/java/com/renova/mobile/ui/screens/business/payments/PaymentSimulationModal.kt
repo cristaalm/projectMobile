@@ -66,12 +66,12 @@ fun PaymentSimulationModal(
     val paypalRepository = remember { PayPalRepository() }
     val sessionManager = remember { SessionManager(context) }
 
-    val amountMXN = points * 0.10
+    val amountMXN = points * 0.01
     val amountFormatted = NumberFormat.getCurrencyInstance(Locale("es", "MX")).format(amountMXN)
     val minimumAmount = 50.0
     val canWithdraw = amountMXN >= minimumAmount
 
-    // Obtener puntos del mes actual desde la API
+    // Obtener puntos disponibles desde la API
     LaunchedEffect(Unit) {
         val user = sessionManager.getUser()
         val allianceId = user?.alliance_id
@@ -87,32 +87,12 @@ fun PaymentSimulationModal(
         }
 
         try {
-            // Calcular fechas del mes actual
-            val calendar = Calendar.getInstance()
-            val year = calendar.get(Calendar.YEAR)
-            val month = calendar.get(Calendar.MONTH)
+            android.util.Log.d("PaymentModal", "Llamando API cashCut con Alliance ID: $allianceId (only_return=true)")
 
-            val firstDay = Calendar.getInstance().apply {
-                set(year, month, 1)
-            }
-            val lastDay = Calendar.getInstance().apply {
-                set(year, month, calendar.getActualMaximum(Calendar.DAY_OF_MONTH))
-            }
-
-            val dateFormat = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault())
-            val dateStart = dateFormat.format(firstDay.time)
-            val dateEnd = dateFormat.format(lastDay.time)
-
-            android.util.Log.d("PaymentModal", "Llamando API con:")
-            android.util.Log.d("PaymentModal", "  Alliance ID: $allianceId")
-            android.util.Log.d("PaymentModal", "  Date Start: $dateStart")
-            android.util.Log.d("PaymentModal", "  Date End: $dateEnd")
-
-            // Llamar al endpoint
-            val response = ApiClient.apiService.getTotalPointsByShop(
+            // Solo consultar puntos disponibles (NO hacer corte)
+            val response = ApiClient.apiService.getCashCut(
                 allianceId = allianceId,
-                dateStart = dateStart,
-                dateEnd = dateEnd
+                onlyReturn = true
             )
 
             android.util.Log.d("PaymentModal", "Response code: ${response.code()}")
@@ -258,6 +238,35 @@ fun PaymentSimulationModal(
 
                                     if (result.isSuccess) {
                                         val payoutResponse = result.getOrNull()!!
+
+                                        // 🎯 HACER EL CORTE DE CAJA REAL (only_return = false)
+                                        try {
+                                            android.util.Log.d("PaymentModal", "Haciendo corte de caja real (only_return=false)")
+
+                                            val cutResponse = ApiClient.apiService.getCashCut(
+                                                allianceId = sessionManager.getUser()?.alliance_id ?: 0,
+                                                onlyReturn = false  // ✅ Hace el corte real
+                                            )
+
+                                            if (cutResponse.isSuccessful) {
+                                                android.util.Log.d("PaymentModal", "Corte de caja exitoso: ${cutResponse.body()}")
+                                            } else {
+                                                android.util.Log.e("PaymentModal", "Error al hacer corte: ${cutResponse.errorBody()?.string()}")
+                                                Toast.makeText(
+                                                    context,
+                                                    "Advertencia: El pago se procesó pero hubo un error al registrar el corte",
+                                                    Toast.LENGTH_LONG
+                                                ).show()
+                                            }
+                                        } catch (e: Exception) {
+                                            android.util.Log.e("PaymentModal", "Excepción al hacer corte: ${e.message}")
+                                            Toast.makeText(
+                                                context,
+                                                "Advertencia: El pago se procesó pero hubo un error al registrar el corte",
+                                                Toast.LENGTH_LONG
+                                            ).show()
+                                        }
+
                                         withdrawalDetails = WithdrawalDetails(
                                             transactionId = transactionId,
                                             businessId = sessionManager.getUser()?.alliance_id ?: 0,
@@ -338,7 +347,7 @@ private fun LoadingPoints(
         )
 
         Text(
-            text = "Obteniendo puntos del mes...",
+            text = "Obteniendo puntos disponibles...",
             style = MaterialTheme.typography.titleLarge.copy(
                 fontFamily = PoppinsFontFamily,
                 fontWeight = FontWeight.SemiBold

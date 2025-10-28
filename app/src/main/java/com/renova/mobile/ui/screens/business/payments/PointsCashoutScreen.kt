@@ -22,22 +22,19 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ShoppingCart
 import androidx.compose.material.icons.filled.Recycling
 import androidx.compose.material.icons.filled.History
-import androidx.compose.material.icons.filled.Info
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.ui.text.style.TextOverflow
 import com.renova.mobile.ui.components.formatFriendlyDate
-import java.text.SimpleDateFormat
-import java.util.Calendar
 import androidx.compose.foundation.clickable
 import androidx.compose.ui.platform.LocalContext
 import android.widget.Toast
+import androidx.compose.material.icons.filled.AttachMoney
+import androidx.compose.ui.res.painterResource
 import com.renova.mobile.network.ApiClient
 import com.renova.mobile.utils.SessionManager
-import com.renova.mobile.utils.WithdrawalManager
 import kotlinx.coroutines.launch
-import androidx.compose.ui.draw.shadow
 
-private const val POINT_TO_MXN = 0.10
+private const val POINT_TO_MXN = 0.01  // 1 centavo por punto
 
 @Composable
 fun PointsCashoutScreen(
@@ -49,91 +46,68 @@ fun PointsCashoutScreen(
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
     val sessionManager = remember { SessionManager(context) }
-    val withdrawalManager = remember { WithdrawalManager(context) }
 
-    // Estados para los puntos del mes desde la API
+    // Estados para los puntos disponibles
     var currentMonthPoints by remember { mutableStateOf(0) }
     var isLoadingPoints by remember { mutableStateOf(true) }
     var pointsError by remember { mutableStateOf<String?>(null) }
 
-    // Estado de verificación de cobro
-    var withdrawalStatus by remember { mutableStateOf<com.renova.mobile.utils.WithdrawalStatus?>(null) }
-
     // Estado para el modal de pago
     var showPaymentModal by remember { mutableStateOf(false) }
 
-    // Obtener puntos del mes desde la API
+    // Función para cargar puntos
+    fun loadPoints() {
+        scope.launch {
+            val user = sessionManager.getUser()
+            val allianceId = user?.alliance_id
+
+            android.util.Log.d("PointsCashout", "Usuario: $user")
+            android.util.Log.d("PointsCashout", "Alliance ID: $allianceId")
+
+            if (allianceId == null) {
+                pointsError = "No se encontró el ID de alianza"
+                isLoadingPoints = false
+                Toast.makeText(context, "Error: Usuario sin alianza asignada", Toast.LENGTH_LONG).show()
+                return@launch
+            }
+
+            try {
+                isLoadingPoints = true
+
+                android.util.Log.d("PointsCashout", "Llamando API cashCut con Alliance ID: $allianceId (only_return=true)")
+
+                // Solo consultar puntos disponibles (NO hacer corte)
+                val response = ApiClient.apiService.getCashCut(
+                    allianceId = allianceId,
+                    onlyReturn = true
+                )
+
+                android.util.Log.d("PointsCashout", "Response code: ${response.code()}")
+                android.util.Log.d("PointsCashout", "Response body: ${response.body()}")
+
+                if (response.isSuccessful && response.body()?.success == true) {
+                    currentMonthPoints = response.body()?.data?.total_points ?: 0
+                    pointsError = null
+                    android.util.Log.d("PointsCashout", "Puntos obtenidos: $currentMonthPoints")
+                } else {
+                    val errorMsg = response.body()?.message ?: response.errorBody()?.string() ?: "Error desconocido"
+                    pointsError = errorMsg
+                    android.util.Log.e("PointsCashout", "Error API: $errorMsg")
+                    Toast.makeText(context, "Error: $errorMsg", Toast.LENGTH_LONG).show()
+                }
+            } catch (e: Exception) {
+                pointsError = "Error de conexión: ${e.message}"
+                android.util.Log.e("PointsCashout", "Excepción: ${e.message}", e)
+                Toast.makeText(context, pointsError, Toast.LENGTH_LONG).show()
+            } finally {
+                isLoadingPoints = false
+            }
+        }
+    }
+
+    // Cargar puntos al iniciar
     LaunchedEffect(Unit) {
-        val user = sessionManager.getUser()
-        val allianceId = user?.alliance_id
-
-        android.util.Log.d("PointsCashout", "Usuario: $user")
-        android.util.Log.d("PointsCashout", "Alliance ID: $allianceId")
-
-        if (allianceId == null) {
-            pointsError = "No se encontró el ID de alianza"
-            isLoadingPoints = false
-            Toast.makeText(context, "Error: Usuario sin alianza asignada", Toast.LENGTH_LONG).show()
-            return@LaunchedEffect
-        }
-
-        try {
-            isLoadingPoints = true
-
-            // Calcular fechas del mes actual
-            val calendar = Calendar.getInstance()
-            val year = calendar.get(Calendar.YEAR)
-            val month = calendar.get(Calendar.MONTH)
-
-            val firstDay = Calendar.getInstance().apply {
-                set(year, month, 1)
-            }
-            val lastDay = Calendar.getInstance().apply {
-                set(year, month, calendar.getActualMaximum(Calendar.DAY_OF_MONTH))
-            }
-
-            val dateFormat = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault())
-            val dateStart = dateFormat.format(firstDay.time)
-            val dateEnd = dateFormat.format(lastDay.time)
-
-            android.util.Log.d("PointsCashout", "Llamando API con:")
-            android.util.Log.d("PointsCashout", "  Alliance ID: $allianceId")
-            android.util.Log.d("PointsCashout", "  Date Start: $dateStart")
-            android.util.Log.d("PointsCashout", "  Date End: $dateEnd")
-
-            // Llamar al endpoint
-            val response = ApiClient.apiService.getTotalPointsByShop(
-                allianceId = allianceId,
-                dateStart = dateStart,
-                dateEnd = dateEnd
-            )
-
-            android.util.Log.d("PointsCashout", "Response code: ${response.code()}")
-            android.util.Log.d("PointsCashout", "Response body: ${response.body()}")
-            android.util.Log.d("PointsCashout", "Response error: ${response.errorBody()?.string()}")
-
-            if (response.isSuccessful && response.body()?.success == true) {
-                currentMonthPoints = response.body()?.data?.total_points ?: 0
-                pointsError = null
-
-                // Verificar si puede cobrar este mes
-                withdrawalStatus = withdrawalManager.getWithdrawalStatus(allianceId)
-
-                android.util.Log.d("PointsCashout", "Puntos obtenidos: $currentMonthPoints")
-                android.util.Log.d("PointsCashout", "Puede cobrar: ${withdrawalStatus?.canWithdraw}")
-            } else {
-                val errorMsg = response.body()?.message ?: response.errorBody()?.string() ?: "Error desconocido"
-                pointsError = errorMsg
-                android.util.Log.e("PointsCashout", "Error API: $errorMsg")
-                Toast.makeText(context, "Error: $errorMsg", Toast.LENGTH_LONG).show()
-            }
-        } catch (e: Exception) {
-            pointsError = "Error de conexión: ${e.message}"
-            android.util.Log.e("PointsCashout", "Excepción: ${e.message}", e)
-            Toast.makeText(context, pointsError, Toast.LENGTH_LONG).show()
-        } finally {
-            isLoadingPoints = false
-        }
+        loadPoints()
     }
 
     Column(modifier = Modifier.fillMaxSize()) {
@@ -152,13 +126,7 @@ fun PointsCashoutScreen(
             // Card de conversión y cobro
             item {
                 Card(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .shadow(
-                            elevation = 3.dp,
-                            shape = RoundedCornerShape(12.dp),
-                            spotColor = RenovaColors.Light.ActivityShadowColor
-                        ),
+                    modifier = Modifier.fillMaxWidth(),
                     colors = CardDefaults.cardColors(containerColor = colors.cardBackground),
                     shape = RoundedCornerShape(12.dp),
                     elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
@@ -170,7 +138,7 @@ fun PointsCashoutScreen(
                         verticalArrangement = Arrangement.spacedBy(16.dp)
                     ) {
                         Text(
-                            text = "Puntos acumulados del mes",
+                            text = "Puntos disponibles",
                             style = MaterialTheme.typography.titleLarge.copy(
                                 fontFamily = PoppinsFontFamily,
                                 fontWeight = FontWeight.Bold
@@ -178,42 +146,13 @@ fun PointsCashoutScreen(
                             color = RenovaColors.Primary
                         )
 
-                        // Indicador de fecha de cobro
-                        Row(
-                            modifier = Modifier.fillMaxWidth(),
-                            horizontalArrangement = Arrangement.SpaceBetween,
-                            verticalAlignment = Alignment.CenterVertically
-                        ) {
-                            Text(
-                                text = "Día de cobro mensual:",
-                                style = MaterialTheme.typography.bodyMedium.copy(
-                                    fontFamily = PoppinsFontFamily,
-                                    fontWeight = FontWeight.Medium
-                                ),
-                                color = colors.textSecondary
-                            )
-
-                            val calendar = Calendar.getInstance()
-                            val lastDay = calendar.getActualMaximum(Calendar.DAY_OF_MONTH)
-                            val monthName = SimpleDateFormat("MMMM", Locale("es", "MX")).format(calendar.time)
-
-                            Text(
-                                text = "$lastDay de $monthName",
-                                style = MaterialTheme.typography.bodyMedium.copy(
-                                    fontFamily = PoppinsFontFamily,
-                                    fontWeight = FontWeight.Bold
-                                ),
-                                color = RenovaColors.Warning
-                            )
-                        }
-
                         Text(
-                            text = "Tasa de conversión: 1 punto = $${POINT_TO_MXN} MXN",
+                            text = "Tasa de conversión: 1 punto = $0.01 MXN",
                             style = MaterialTheme.typography.bodyMedium.copy(fontFamily = PoppinsFontFamily),
                             color = colors.textSecondary
                         )
 
-                        Divider(color = colors.textSecondary.copy(alpha = 0.2f), thickness = 1.dp)
+                        HorizontalDivider(color = colors.textSecondary.copy(alpha = 0.2f), thickness = 1.dp)
 
                         // Mostrar loading o puntos
                         if (isLoadingPoints) {
@@ -234,7 +173,7 @@ fun PointsCashoutScreen(
                                 value = NumberFormat.getIntegerInstance(Locale("es", "MX"))
                                     .format(currentMonthPoints),
                                 onValueChange = { },
-                                label = { Text("Puntos del mes actual") },
+                                label = { Text("Puntos disponibles") },
                                 enabled = false,
                                 singleLine = true,
                                 modifier = Modifier.fillMaxWidth(),
@@ -252,11 +191,7 @@ fun PointsCashoutScreen(
                             Card(
                                 modifier = Modifier.fillMaxWidth(),
                                 colors = CardDefaults.cardColors(
-                                    containerColor = if (withdrawalStatus?.canWithdraw == false) {
-                                        colors.textSecondary.copy(alpha = 0.1f)
-                                    } else {
-                                        RenovaColors.Primary.copy(alpha = 0.1f)
-                                    }
+                                    containerColor = RenovaColors.Primary.copy(alpha = 0.1f)
                                 ),
                                 shape = RoundedCornerShape(8.dp)
                             ) {
@@ -281,25 +216,20 @@ fun PointsCashoutScreen(
                                             fontFamily = PoppinsFontFamily,
                                             fontWeight = FontWeight.Bold
                                         ),
-                                        color = if (withdrawalStatus?.canWithdraw == false) {
-                                            colors.textSecondary
-                                        } else {
-                                            RenovaColors.Primary
-                                        }
+                                        color = RenovaColors.Primary
                                     )
                                 }
                             }
 
                             Button(
                                 onClick = {
-                                    val status = withdrawalStatus
-                                    if (status != null && !status.canWithdraw) {
-                                        Toast.makeText(context, status.message, Toast.LENGTH_LONG).show()
+                                    if (currentMonthPoints <= 0) {
+                                        Toast.makeText(context, "No hay puntos disponibles para cobrar", Toast.LENGTH_SHORT).show()
                                     } else {
                                         showPaymentModal = true
                                     }
                                 },
-                                enabled = currentMonthPoints > 0 && pointsError == null && withdrawalStatus?.canWithdraw == true,
+                                enabled = currentMonthPoints > 0 && pointsError == null,
                                 colors = ButtonDefaults.buttonColors(
                                     containerColor = RenovaColors.Primary,
                                     disabledContainerColor = colors.textSecondary.copy(alpha = 0.3f)
@@ -310,9 +240,8 @@ fun PointsCashoutScreen(
                                 Text(
                                     text = when {
                                         pointsError != null -> "Error al cargar puntos"
-                                        withdrawalStatus?.canWithdraw == false -> "Cobro no disponible"
-                                        currentMonthPoints > 0 -> "Generar cobro del mes"
-                                        else -> "Sin puntos disponibles"
+                                        currentMonthPoints > 0 -> "Generar cobro"
+                                        else -> "No hay puntos disponibles"
                                     },
                                     style = MaterialTheme.typography.bodyLarge.copy(
                                         fontFamily = PoppinsFontFamily,
@@ -321,52 +250,6 @@ fun PointsCashoutScreen(
                                     color = Color.White,
                                     modifier = Modifier.padding(vertical = 8.dp)
                                 )
-                            }
-
-                            // Mensaje informativo si no puede cobrar
-                            if (withdrawalStatus?.canWithdraw == false) {
-                                Spacer(modifier = Modifier.height(8.dp))
-                                Card(
-                                    modifier = Modifier.fillMaxWidth(),
-                                    colors = CardDefaults.cardColors(
-                                        containerColor = RenovaColors.Info.copy(alpha = 0.15f)
-                                    ),
-                                    shape = RoundedCornerShape(12.dp),
-                                    elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
-                                ) {
-                                    Row(
-                                        modifier = Modifier
-                                            .fillMaxWidth()
-                                            .padding(16.dp),
-                                        horizontalArrangement = Arrangement.spacedBy(12.dp),
-                                        verticalAlignment = Alignment.Top
-                                    ) {
-                                        Icon(
-                                            imageVector = Icons.Default.Info,
-                                            contentDescription = null,
-                                            tint = RenovaColors.Info,
-                                            modifier = Modifier.size(24.dp)
-                                        )
-                                        Column {
-                                            Text(
-                                                text = "Cobro mensual programado",
-                                                style = MaterialTheme.typography.bodyMedium.copy(
-                                                    fontFamily = PoppinsFontFamily,
-                                                    fontWeight = FontWeight.Bold
-                                                ),
-                                                color = colors.textPrimary
-                                            )
-                                            Spacer(modifier = Modifier.height(4.dp))
-                                            Text(
-                                                text = withdrawalStatus?.message ?: "",
-                                                style = MaterialTheme.typography.bodySmall.copy(
-                                                    fontFamily = PoppinsFontFamily
-                                                ),
-                                                color = colors.textSecondary
-                                            )
-                                        }
-                                    }
-                                }
                             }
                         }
                     }
@@ -485,7 +368,7 @@ fun PointsCashoutScreen(
                         colors = colors
                     )
                     if (index < historyState.activities.size - 1) {
-                        Divider(
+                        HorizontalDivider(
                             color = RenovaColors.PrimaryColor,
                             thickness = 1.dp,
                             modifier = Modifier.padding(vertical = 3.dp)
@@ -518,20 +401,15 @@ fun PointsCashoutScreen(
         PaymentSimulationModal(
             onDismiss = { showPaymentModal = false },
             onPaymentComplete = { transactionId ->
-                // Registrar el cobro exitoso
-                val user = sessionManager.getUser()
-                user?.alliance_id?.let { allianceId ->
-                    withdrawalManager.registerWithdrawal(allianceId)
-                    // Actualizar el estado de withdrawal
-                    withdrawalStatus = withdrawalManager.getWithdrawalStatus(allianceId)
-                }
-
                 Toast.makeText(
                     context,
                     "Pago completado exitosamente\nID: $transactionId",
                     Toast.LENGTH_LONG
                 ).show()
                 showPaymentModal = false
+
+                // Recargar puntos después del cobro
+                loadPoints()
             }
         )
     }
@@ -549,24 +427,52 @@ private fun HistorySaleItem(
             .padding(horizontal = 16.dp, vertical = 12.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
-        val (icon, iconColor) = when (activity.type_history) {
-            2 -> Icons.Default.Recycling to RenovaColors.Success
-            1 -> Icons.Default.ShoppingCart to RenovaColors.Primary
-            else -> Icons.Default.History to RenovaColors.Warning
+        // Determinar ícono y color según el tipo de actividad
+        when (activity.type_history) {
+            4 -> {
+                // COBRO - Ícono personalizado
+                Icon(
+                    imageVector = Icons.Default.AttachMoney,
+                    contentDescription = null,
+                    tint = RenovaColors.Success,
+                    modifier = Modifier.size(32.dp)
+                )
+            }
+            2 -> {
+                // RECICLAJE
+                Icon(
+                    imageVector = Icons.Default.Recycling,
+                    contentDescription = null,
+                    tint = RenovaColors.Success,
+                    modifier = Modifier.size(32.dp)
+                )
+            }
+            1 -> {
+                // CANJEO
+                Icon(
+                    imageVector = Icons.Default.ShoppingCart,
+                    contentDescription = null,
+                    tint = RenovaColors.Primary,
+                    modifier = Modifier.size(32.dp)
+                )
+            }
+            else -> {
+                // OTROS
+                Icon(
+                    imageVector = Icons.Default.History,
+                    contentDescription = null,
+                    tint = RenovaColors.Warning,
+                    modifier = Modifier.size(32.dp)
+                )
+            }
         }
-
-        Icon(
-            imageVector = icon,
-            contentDescription = null,
-            tint = iconColor,
-            modifier = Modifier.size(32.dp)
-        )
 
         Spacer(modifier = Modifier.width(16.dp))
 
         Column(modifier = Modifier.weight(1f)) {
             Text(
                 text = when (activity.type_history) {
+                    4 -> "Liquidación"
                     2 -> "Reciclaje"
                     1 -> "Canjeo de recompensa"
                     else -> "Actividad"
@@ -583,6 +489,7 @@ private fun HistorySaleItem(
             Spacer(modifier = Modifier.height(4.dp))
 
             val subtitleText = when (activity.type_history) {
+                4 -> "Retiro de puntos"
                 2 -> activity.material_type?.name ?: ""
                 1 -> {
                     val name = activity.reward?.name ?: "Recompensa"
@@ -613,7 +520,7 @@ private fun HistorySaleItem(
         }
 
         Column(horizontalAlignment = Alignment.End) {
-            val mxnValue = activity.points * 0.10
+            val mxnValue = activity.points * POINT_TO_MXN
             val mxnColor = if (mxnValue < 0) colors.negativePoints else colors.primaryColor
             Text(
                 text = NumberFormat.getCurrencyInstance(Locale("es","MX")).format(mxnValue),

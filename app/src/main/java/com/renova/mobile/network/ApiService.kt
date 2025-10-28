@@ -12,6 +12,19 @@ import okhttp3.MultipartBody
 import retrofit2.http.*
 import java.util.concurrent.TimeUnit
 
+data class CashCutResponse(
+    val success: Boolean,
+    val message: String,
+    val data: CashCutData?,
+    val errors: Any?,
+    val code: Int
+)
+
+data class CashCutData(
+    val total_points: Int,
+    val cash_out: Double
+)
+
 // Total puntos (DE DEVELOP)
 data class TotalPointsResponse(
     val success: Boolean,
@@ -591,6 +604,12 @@ data class TourUser(
 
 // ========== INTERFAZ ApiService (COMBINADA) ==========
 interface ApiService {
+
+    @GET("api/alianzas/cashCut/{alliance_id}")
+    suspend fun getCashCut(
+        @Path("alliance_id") allianceId: Int,
+        @Query("only_return") onlyReturn: Boolean = true  // solo consulta
+    ): Response<CashCutResponse>
 
     @GET("api/history/totalPointsByShop/{alliance_id}") // DE DEVELOP
     suspend fun getTotalPointsByShop(
