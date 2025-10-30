@@ -239,14 +239,13 @@ private fun ProfileContent(
             user = user,
             verificationStatus = verificationStatus,
             languageViewModel = languageViewModel,
-            selfieBytes = documentImages["selfie"] // <-- Se pasa la selfie de 'develop'
+            selfieBytes = documentImages["selfie"]
         )
         Spacer(modifier = Modifier.height(12.dp))
 
         Column(
-            modifier = Modifier.padding(horizontal = 10.dp)
+            modifier = Modifier.padding(horizontal = 20.dp)
         ) {
-            Spacer(modifier = Modifier.height(1.dp))
             VerificationBanner(
                 verificationStatus = verificationStatus,
                 rejectionReason = identityVerification?.rejection_reason,
@@ -481,7 +480,7 @@ fun ProfileHeader(
             modifier = Modifier.matchParentSize()
         )
         Column(
-            modifier = Modifier.padding(horizontal = 16.dp)
+            modifier = Modifier.padding(horizontal = 20.dp)
         ) {
             Row(
                 modifier = Modifier
@@ -493,7 +492,7 @@ fun ProfileHeader(
                 if (verificationStatus != null) {
                     Surface(
                         shape = RoundedCornerShape(22.dp),
-                        color = colors.surface.copy(alpha = 0.3f),
+                        color = Color.White.copy(alpha = 0.3f),
                         modifier = Modifier
                             .wrapContentWidth()
                             .height(44.dp)
@@ -512,10 +511,10 @@ fun ProfileHeader(
                                     else -> Icons.Default.QuestionMark
                                 },
                                 contentDescription = null,
-                                tint = colors.surface,
+                                tint = Color.White,
                                 modifier = Modifier.size(16.dp)
                             )
-                            Spacer(modifier = Modifier.width(6.dp))
+                            Spacer(modifier = Modifier.width(8.dp))
                             Text(
                                 text = when (verificationStatus) {
                                     VerificationStatus.VERIFIED -> stringResource(R.string.profile_verified_badge)
@@ -523,7 +522,7 @@ fun ProfileHeader(
                                     VerificationStatus.REJECTED -> stringResource(R.string.profile_rejected_badge)
                                     else -> stringResource(R.string.profile_no_badge)
                                 },
-                                color = colors.surface,
+                                color = Color.White,
                                 style = MaterialTheme.typography.labelMedium
                             )
                         }
@@ -551,7 +550,7 @@ fun ProfileHeader(
                 // --- FIN DE MODIFICACIÓN ---
             }
 
-            Spacer(modifier = Modifier.height(10.dp))
+            Spacer(modifier = Modifier.height(8.dp))
 
             Column(
                 modifier = Modifier.fillMaxWidth(),
@@ -569,7 +568,7 @@ fun ProfileHeader(
                     Surface(
                         modifier = Modifier.size(96.dp),
                         shape = CircleShape,
-                        color = colors.surface,
+                        color = Color.White,
                         shadowElevation = 8.dp
                     ) {
                         Box(
@@ -595,46 +594,47 @@ fun ProfileHeader(
                     }
                 }
 
-                Spacer(modifier = Modifier.height(10.dp))
+                Spacer(modifier = Modifier.height(8.dp))
 
                 Text(
                     text = "${user.name} ${user.last_name}",
-                    color = colors.surface,
+                    color = Color.White,
                     style = MaterialTheme.typography.titleLarge,
                     fontWeight = FontWeight.W600,
                     textAlign = TextAlign.Center,
                     maxLines = 3,
+                    modifier = Modifier.padding(horizontal = 20.dp),
                     overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis
                 )
-                Spacer(modifier = Modifier.height(6.dp))
+                Spacer(modifier = Modifier.height(8.dp))
 
                 // --- AÑADIDO: Sección de Puntos (de 'tour') ---
                 Surface(
                     shape = RoundedCornerShape(20.dp),
-                    color = colors.surface.copy(alpha = 0.2f)
+                    color = Color.White.copy(alpha = 0.2f)
                 ) {
                     Row(
                         modifier = Modifier
                             .wrapContentWidth()
-                            .padding(horizontal = 16.dp, vertical = 8.dp),
+                            .padding(horizontal = 20.dp, vertical = 8.dp),
                         verticalAlignment = Alignment.CenterVertically,
                         horizontalArrangement = Arrangement.spacedBy(6.dp)
                     ) {
                         Icon(
                             imageVector = Icons.Default.Star,
                             contentDescription = null,
-                            tint = colors.surface,
+                            tint = Color.White,
                             modifier = Modifier.size(20.dp)
                         )
                         Text(
                             text = "${user.total_points}",
-                            color = colors.surface,
+                            color = Color.White,
                             style = MaterialTheme.typography.headlineMedium,
                             fontWeight = FontWeight.W700
                         )
                         Text(
                             text = stringResource(R.string.points_unit),
-                            color = colors.surface.copy(alpha = 0.9f),
+                            color = Color.White.copy(alpha = 0.9f),
                             style = MaterialTheme.typography.labelSmall,
                             fontWeight = FontWeight.W600
                         )
@@ -642,7 +642,7 @@ fun ProfileHeader(
                 }
                 // --- Fin de Sección de Puntos ---
 
-                Spacer(modifier = Modifier.height(6.dp)) // <-- Spacer extra para dar aire
+                Spacer(modifier = Modifier.height(8.dp)) // <-- Spacer extra para dar aire
             }
         }
     }
@@ -661,7 +661,7 @@ fun ProfileHeader(
                 Surface(
                     modifier = Modifier.fillMaxWidth(),
                     shape = RoundedCornerShape(16.dp),
-                    color = colors.surface
+                    color = Color.White
                 ) {
                     Column(
                         modifier = Modifier.padding(16.dp),
@@ -684,7 +684,7 @@ fun ProfileHeader(
                                 Icon(
                                     imageVector = Icons.Default.Close,
                                     contentDescription = stringResource(R.string.close),
-                                    tint = colors.textSecondary
+                                    tint = colors.textPrimary
                                 )
                             }
                         }

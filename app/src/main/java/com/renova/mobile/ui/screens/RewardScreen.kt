@@ -123,6 +123,7 @@ fun RewardScreen(navController: NavController, allianceId: Int) {
                             val cardBackgroundColor = colors.rewardCardBackgrounds[index % colors.rewardCardBackgrounds.size]
                             RewardCard(
                                 reward = reward,
+                                isBusiness = false,
                                 backgroundColor = cardBackgroundColor,
                                 onClick = {
                                     selectedReward = reward
@@ -213,7 +214,12 @@ fun RewardDetailSheet(reward: Reward) {
 }
 
 @Composable
-fun RewardCard(reward: Reward, backgroundColor: Color, onClick: () -> Unit) {
+fun RewardCard(
+    reward: Reward,
+    backgroundColor: Color,
+    isBusiness: Boolean = false,
+    onClick: () -> Unit
+) {
     Card(
         modifier = Modifier
             .fillMaxWidth()

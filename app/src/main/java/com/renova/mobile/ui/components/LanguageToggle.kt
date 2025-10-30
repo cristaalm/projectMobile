@@ -37,7 +37,7 @@ fun LanguageToggle(
             .width(90.dp)
             .height(44.dp)
             .clip(RoundedCornerShape(22.dp))
-            .background(color =  colors.surface.copy(alpha = 0.3f))
+            .background(color =  Color.White.copy(alpha = 0.3f))
             .clickable(
                 interactionSource = remember { MutableInteractionSource() },
                 indication = null
@@ -63,7 +63,7 @@ fun LanguageToggle(
                     style = MaterialTheme.typography.bodyLarge,
                     fontSize = 18.sp,
                     fontWeight = FontWeight.SemiBold,
-                    color = colors.surface
+                    color = Color.White
                 )
             }
             Box(
@@ -77,7 +77,7 @@ fun LanguageToggle(
                     style = MaterialTheme.typography.bodyLarge,
                     fontSize = 18.sp,
                     fontWeight = FontWeight.SemiBold,
-                    color = colors.surface
+                    color = Color.White
                 )
             }
         }
@@ -93,11 +93,11 @@ fun LanguageToggle(
                     .shadow(
                         elevation = 6.dp,
                         shape = CircleShape,
-                        ambientColor = colors.surface.copy(alpha = 0.3f),
-                        spotColor = colors.surface.copy(alpha = 0.3f)
+                        ambientColor = Color.White.copy(alpha = 0.3f),
+                        spotColor = Color.White.copy(alpha = 0.3f)
                     )
                     .clip(CircleShape)
-                    .background(color = colors.surface)
+                    .background(color = Color.White)
                     .border(
                         width = 2.dp,
                         color = MaterialTheme.colorScheme.primary,

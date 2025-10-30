@@ -426,7 +426,7 @@ fun DetailSheet(activity: ActivityItem) {
 
         // Equivalente en MXN
         Text(
-            text = "$${"%.2f".format(kotlin.math.abs(activity.points) * 0.1)} MXN",
+            text = "$${"%.2f".format(kotlin.math.abs(activity.points) * 0.01)} MXN",
             fontFamily = PoppinsFontFamily,
             fontWeight = FontWeight.SemiBold,
             fontSize = 20.sp,

@@ -1,5 +1,10 @@
 package com.renova.mobile.ui.components
 
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.tween
+import androidx.compose.animation.expandVertically
+import androidx.compose.animation.shrinkVertically
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
@@ -12,18 +17,16 @@ import com.renova.mobile.R
 import com.renova.mobile.network.UserData
 import com.renova.mobile.ui.theme.LocalRenovaColors
 import com.renova.mobile.ui.viewmodels.BusinessProfileViewModel
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.text.font.FontWeight
 import com.renova.mobile.ui.theme.RenovaColorScheme
 import com.renova.mobile.network.Reward
 import androidx.compose.ui.res.stringResource
 import com.renova.mobile.ui.screens.RewardCard
-import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
-import com.renova.mobile.ui.theme.RenovaColors
-import com.renova.mobile.ui.viewmodels.VerificationStatus
+import androidx.compose.ui.draw.rotate
 
 // Función helper para traducir categorías
 @Composable
@@ -341,7 +344,7 @@ fun BusinessInfoCard(
                 verticalArrangement = Arrangement.spacedBy(16.dp)
             ) {
                 BusinessProfileField(
-                    label = stringResource(R.string.business_name),
+                    label = stringResource(R.string.name),
                     value = user.alliance?.name,
                     icon = Icons.Default.Store
                 )
@@ -353,13 +356,13 @@ fun BusinessInfoCard(
                 )
 
                 BusinessProfileField(
-                    label = stringResource(R.string.business_phone_number),
+                    label = stringResource(R.string.phone_number),
                     value = user.alliance?.phone,
                     icon = Icons.Default.Phone
                 )
 
                 BusinessProfileField(
-                    label = stringResource(R.string.business_address),
+                    label = stringResource(R.string.address),
                     value = user.alliance?.address,
                     icon = Icons.Default.LocationOn
                 )
@@ -393,6 +396,14 @@ fun RewardsSection(
             emptyList()
         }
     }
+    var isExpanded by remember { mutableStateOf(false) }
+
+    // Animación de la flecha
+    val arrowRotation by animateFloatAsState(
+        targetValue = if (isExpanded) 180f else 0f,
+        animationSpec = tween(300),
+        label = "arrow"
+    )
 
     Surface(
         modifier = Modifier.fillMaxWidth(),
@@ -405,55 +416,78 @@ fun RewardsSection(
     ) {
         Column {
             Surface(
-                modifier = Modifier.fillMaxWidth(),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .clickable { isExpanded = !isExpanded },
                 color = colors.primaryColor.copy(alpha = 0.125f)
             ) {
-                Row(
-                    modifier = Modifier.padding(16.dp),
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                    Row(
+                        modifier = Modifier
+                            .padding(16.dp),
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(8.dp)
+                    ) {
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.spacedBy(8.dp),
+                            modifier = Modifier.weight(1f)
+                        ) {
+                            Icon(
+                                imageVector = Icons.Default.CardGiftcard,
+                                contentDescription = null,
+                                tint = colors.primaryColor,
+                                modifier = Modifier.size(16.dp)
+                            )
+                            Text(
+                                text = stringResource(R.string.rewards_available),
+                                style = MaterialTheme.typography.titleSmall,
+                                color = colors.textPrimary
+                            )
+                        }
+                        Icon(
+                            imageVector = Icons.Default.KeyboardArrowDown,
+                            contentDescription = "Toggle",
+                            tint = colors.primaryColor,
+                            modifier = Modifier
+                                .size(32.dp)
+                                .rotate(arrowRotation)
+                        )
+                    }
+                }
+                AnimatedVisibility(
+                    visible = isExpanded,
+                    enter = expandVertically(tween(300)),
+                    exit = shrinkVertically(tween(300))
                 ) {
-                    Icon(
-                        imageVector = Icons.Default.CardGiftcard,
-                        contentDescription = null,
-                        tint = colors.primaryColor,
-                        modifier = Modifier.size(16.dp)
-                    )
-                    Text(
-                        text = stringResource(R.string.rewards_available),
-                        style = MaterialTheme.typography.titleSmall,
-                        color = colors.textPrimary
-                    )
+                    Column(
+                        modifier = Modifier.padding(16.dp),
+                        verticalArrangement = Arrangement.spacedBy(16.dp)
+                    ) {
+                        currentPageRewards.forEachIndexed { index, reward ->
+                            val globalIndex = (currentPage - 1) * rewardsPerPage + index
+                            val cardBackgroundColor =
+                                colors.rewardCardBackgrounds[globalIndex % colors.rewardCardBackgrounds.size]
+                            RewardCard(
+                                reward = reward,
+                                backgroundColor = cardBackgroundColor,
+                                isBusiness = true,
+                                onClick = { onRewardClick(reward) }
+                            )
+                        }
+                        if (totalPages > 1) {
+                            Pagination(
+                                currentPage = currentPage,
+                                totalPages = totalPages,
+                                isLoading = false,
+                                RenovaColors = colors,
+                                onPreviousPage = { currentPage = maxOf(1, currentPage - 1) },
+                                onNextPage = { currentPage = minOf(totalPages, currentPage + 1) }
+                            )
+                        } else {
+                            Spacer(modifier = Modifier.height(16.dp))
+                        }
+                    }
                 }
-            }
-
-            Column(
-                modifier = Modifier.padding(16.dp),
-                verticalArrangement = Arrangement.spacedBy(16.dp)
-            ) {
-                currentPageRewards.forEachIndexed { index, reward ->
-                    val globalIndex = (currentPage - 1) * rewardsPerPage + index
-                    val cardBackgroundColor = colors.rewardCardBackgrounds[globalIndex % colors.rewardCardBackgrounds.size]
-                    RewardCard(
-                        reward = reward,
-                        backgroundColor = cardBackgroundColor,
-                        onClick = { onRewardClick(reward) }
-                    )
-                }
-            }
-
-            if (totalPages > 1) {
-                Pagination(
-                    currentPage = currentPage,
-                    totalPages = totalPages,
-                    isLoading = false,
-                    RenovaColors = colors,
-                    onPreviousPage = { currentPage = maxOf(1, currentPage - 1) },
-                    onNextPage = { currentPage = minOf(totalPages, currentPage + 1) }
-                )
-            } else {
-                Spacer(modifier = Modifier.height(16.dp))
-            }
         }
     }
 }

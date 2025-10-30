@@ -259,7 +259,7 @@ fun BusinessHeader(
 
         Column(
             modifier = Modifier
-                .padding(horizontal = 16.dp)
+                .padding(horizontal = 20.dp)
         ) {
             Row(
                 modifier = Modifier
@@ -271,7 +271,7 @@ fun BusinessHeader(
 
                 Surface(
                     shape = RoundedCornerShape(22.dp),
-                    color = colors.surface.copy(alpha = 0.3f),
+                    color = Color.White.copy(alpha = 0.3f),
                     modifier = Modifier
                         .wrapContentWidth()
                         .height(44.dp)
@@ -285,7 +285,7 @@ fun BusinessHeader(
                         Icon(
                             imageVector = Icons.Default.BusinessCenter,
                             contentDescription = null,
-                            tint = colors.surface,
+                            tint = Color.White,
                             modifier = Modifier.size(16.dp)
                         )
                         Spacer(modifier = Modifier.width(6.dp))
@@ -295,7 +295,7 @@ fun BusinessHeader(
                             } else {
                                 stringResource(R.string.status_inactive)
                             },
-                            color = colors.surface,
+                            color = Color.White,
                             style = MaterialTheme.typography.labelMedium
                         )
                     }
@@ -328,7 +328,7 @@ fun BusinessHeader(
                     Surface(
                         modifier = Modifier.size(96.dp),
                         shape = CircleShape,
-                        color = colors.surface,
+                        color = Color.White,
                         shadowElevation = 8.dp
                     ) {
                         Box(
@@ -358,7 +358,7 @@ fun BusinessHeader(
 
                 Text(
                     text = user.alliance?.name ?: user.name,
-                    color = colors.surface,
+                    color = Color.White,
                     style = MaterialTheme.typography.titleLarge,
                     fontWeight = FontWeight.Bold,
                     textAlign = TextAlign.Center,
@@ -372,7 +372,7 @@ fun BusinessHeader(
                 if (translatedCategory != "-") {
                     Surface(
                         shape = RoundedCornerShape(20.dp),
-                        color = colors.surface.copy(alpha = 0.3f)
+                        color = Color.White.copy(alpha = 0.3f)
                     ) {
                         Row(
                             modifier = Modifier.padding(horizontal = 14.dp, vertical = 8.dp),
@@ -382,20 +382,20 @@ fun BusinessHeader(
                             Icon(
                                 imageVector = categoryIcon,
                                 contentDescription = null,
-                                tint = colors.surface,
+                                tint = Color.White,
                                 modifier = Modifier.size(18.dp)
                             )
                             Text(
                                 text = translatedCategory,
                                 style = MaterialTheme.typography.labelLarge,
-                                color = colors.surface,
+                                color = Color.White,
                                 fontWeight = FontWeight.Medium
                             )
                         }
                     }
                 }
 
-                Spacer(modifier = Modifier.height(12.dp))
+                Spacer(modifier = Modifier.height(10.dp))
             }
         }
 
@@ -412,7 +412,7 @@ fun BusinessHeader(
                     Surface(
                         modifier = Modifier.fillMaxWidth(),
                         shape = RoundedCornerShape(16.dp),
-                        color = colors.surface
+                        color = Color.White
                     ) {
                         Column(
                             modifier = Modifier.padding(16.dp),

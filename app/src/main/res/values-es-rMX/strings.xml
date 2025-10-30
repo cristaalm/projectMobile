@@ -327,16 +327,14 @@
     <string name="address">Dirección</string>
     <string name="business_profile_title">Perfil del Negocio</string>
     <string name="business_information">Información del Negocio</string>
-    <string name="business_name">Nombre del Negocio</string>
+    <string name="name">Nombre</string>
     <string name="available_rewards">Recompensas Disponibles</string>
-    <string name="business_phone_number">Teléfono del Negocio</string>
     <string name="rewards_title">Recompensas Disponibles</string>
     <string name="more_rewards_available">+%d recompensas más</string>
     <string name="rewards_available">Recompensas disponibles</string>
     <string name="authentication_error">Error de Autenticación</string>
     <string name="session_error">Error de Sesión</string>
     <string name="business_info">Información del Negocio</string>
-    <string name="business_address">Dirección del Negocio</string>
     <string name="profile_picture">Foto de Perfil</string>
     <string name="category">Categoría</string>
 
@@ -431,12 +429,30 @@
     <string name="tour_title_activity_history">Historial Detallado</string>
     <string name="tour_desc_activity_history">Y aquí encontrarás el registro completo de cada reciclaje y canje que has hecho. ¡Eso es todo!</string>
 
+    <string name="current_streak">Racha Actual</string>
+    <string name="days">días</string>
+    <string name="best_streak">Mejor Racha</string>
+    <string name="total_days">Días Totales</string>
+
+    <string name="weekly_challenge">Desafío Semanal</string>
+    <string name="weekly_challenge_reset">Se renueva cada lunes</string>
+    <string name="reward">Recompensa</string>
+    <string name="progress">Progreso</string>
+    <string name="expires_in">Expira en</string>
+    <string name="days_remaining">días restantes</string>
+    <string name="accept_challenge">Aceptar Reto</string>
     <string name="payment_loading_info">Cargando información…</string>
     <string name="payment_withdrawal_paypal">Retiro con PayPal</string>
     <string name="payment_processing_request">Procesando solicitud</string>
     <string name="payment_withdrawal_success">¡Retiro exitoso!</string>
     <string name="payment_close">Cerrar</string>
 
+    <string name="monthly_badges">Badges Mensuales</string>
+    <string name="monthly_badges_subtitle">Acumula puntos este mes para desbloquear</string>
+    <string name="this_month_points">Puntos de este mes</string>
+    <string name="requirement">Requisito</string>
+    <string name="reward_bonus">Recompensa</string>
+    <string name="points_needed">Te faltan %d puntos</string>
     <string name="payment_getting_points">Obteniendo puntos disponibles…</string>
     <string name="payment_connecting_server">Conectando con el servidor…</string>
 
@@ -502,7 +518,6 @@
     <string name="activity_quantity">%d x %s</string>
     <string name="activity_equivalent_mxn">equivalente MXN</string>
 
-    TEST
     <string name="error_no_alliance">No se encontró el ID de alianza</string>
     <string name="error_user_no_alliance">Error: Usuario sin alianza asignada</string>
     <string name="error_unknown2">Error desconocido</string>
@@ -518,4 +533,11 @@
     <string name="tour_title_help_fab">Botón de Ayuda</string>
     <string name="tour_desc_help_fab_full">¡Has completado el tour! Recuerda que aquí puedes volver a consultarlo cuando lo necesites.</string>
     <string name="tour_desc_help_fab_home">Recuerda que aquí puedes volver a consultar el tour de esta pantalla.</string>
+
+    <string name="this_week">Esta Semana</string>
+    <string name="recycling_activities_per_day">Actividades de reciclaje por día</string>
+    <string name="points_format">%d puntos</string>
+    <string name="description">Descripción</string>
+    <string name="goal">Objetivo</string>
+    <string name="stock">Stock</string>
 </resources>

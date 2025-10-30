@@ -233,8 +233,10 @@
     <string name="documentation_submitted">Documentation Submitted</string>
     <string name="documentation_pending">Documentation Pending</string>
     <string name="documentation_empty">Empty Documentation</string>
-    <string name="ine_front">INE Front</string> <string name="ine_back">INE Back</string>
-    <string name="curp_label">CURP</string> <string name="edit_field">Edit</string>
+    <string name="ine_front">INE Front</string>
+    <string name="ine_back">INE Back</string>
+    <string name="curp_label">CURP</string>
+    <string name="edit_field">Edit</string>
     <string name="save_field">Save</string>
     <string name="cancel_field">Cancel</string>
     <string name="request_verification">Request Verification</string>
@@ -308,21 +310,22 @@
     <string name="points_adjustment">Points Adjustment</string>
     <string name="manual_adjustment">Manual Adjustment</string>
     <string name="quantity">Quantity</string>
+    <string name="unknown_error">Unknown Error</string>
+    <string name="error_email_invalid">Correo Inválido</string>
     <string name="default_notification_channel_id" translatable="false">fcm_default_channel</string>
     <string name="no_activity_description">Your recycling and reward activities will appear here</string>
 
-    <string name="address">Address</string>
     <string name="business_profile_title">Business Profile</string>
     <string name="business_information">Business Information</string>
-    <string name="business_name">Business Name</string>
+    <string name="name">Name</string>
     <string name="available_rewards">Available Rewards</string>
-    <string name="business_phone_number">Business Phone Number</string>
     <string name="rewards_title">Available Rewards</string>
     <string name="more_rewards_available">+%d more rewards</string>
     <string name="rewards_available">Available Rewards</string>
     <string name="authentication_error">Authentication Error</string>
     <string name="session_error">Session Error</string>
-    <string name="business_address">Business Address</string> <string name="profile_picture">Profile Picture</string>
+    <string name="address">Adress</string>
+    <string name="profile_picture">Profile Picture</string>
     <string name="business_info">Business Information</string>
     <string name="category">Category</string>
     <string name="status_label">Status</string>
@@ -502,4 +505,34 @@
     <string name="tour_title_help_fab">Help Button</string>
     <string name="tour_desc_help_fab_full">You\'ve completed the tour! Remember you can check it again here whenever you need.</string>
     <string name="tour_desc_help_fab_home">Remember you can check the tour for this screen again here.</string>
+    <!-- Streak Screen -->
+    <string name="current_streak">Current Streak</string>
+    <string name="days">days</string>
+    <string name="best_streak">Best Streak</string>
+    <string name="total_days">Total Days</string>
+
+    <!-- Weekly Challenge -->
+    <string name="weekly_challenge">Weekly Challenge</string>
+    <string name="weekly_challenge_reset">Resets every Monday</string>
+    <string name="reward">Reward</string>
+    <string name="progress">Progress</string>
+    <string name="expires_in">Expires in</string>
+    <string name="days_remaining">days remaining</string>
+    <string name="accept_challenge">Accept Challenge</string>
+
+    <!-- Monthly Badges -->
+    <string name="monthly_badges">Monthly Badges</string>
+    <string name="monthly_badges_subtitle">Accumulate points this month to unlock</string>
+    <string name="this_month_points">This month\'s points</string>
+    <string name="requirement">Requirement</string>
+    <string name="reward_bonus">Reward</string>
+    <string name="points_needed">You need %d more points</string>
+
+    <!-- Weekly Progress -->
+    <string name="this_week">This Week</string>
+    <string name="recycling_activities_per_day">Recycling activities per day</string>
+    <string name="points_format">%d points</string>
+    <string name="description">Description</string>
+    <string name="goal">Goal</string>
+    <string name="stock">Existencias</string>
 </resources>

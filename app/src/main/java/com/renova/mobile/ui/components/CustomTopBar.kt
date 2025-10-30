@@ -96,16 +96,16 @@ fun CustomTopBar(
                 onDispose { tourState.unregisterTarget("top_bar_activity_button") }
             }
 
-            /*Spacer(modifier = Modifier.width(8.dp))
+            Spacer(modifier = Modifier.width(8.dp))
 
-            // Opción 3: Racha
+             //Opción 3: Racha
             TopBarOption(
                 icon = R.drawable.flame_full,
                 title = stringResource(R.string.streak),
                 isSelected = currentRoute == TopNavigationItem.Streak.route,
                 onClick = { navController.navigate(TopNavigationItem.Streak.route) },
                 modifier = Modifier.weight(1f)
-            )*/
+            )
         }
     }
 }
@@ -137,7 +137,7 @@ private fun TopBarOption(
             if (selected) {
                 Text(
                     text = title,
-                    color = MaterialTheme.colorScheme.onPrimary,
+                    color = Color.White,
                     style = MaterialTheme.typography.labelLarge,
                     fontSize = 16.sp,
                     fontWeight = FontWeight.Bold,
@@ -152,12 +152,12 @@ private fun TopBarOption(
                     Icon(
                         painter = painterResource(id = icon),
                         contentDescription = title,
-                        tint = LocalRenovaColors.current.primaryHoverColor,
+                        tint = Color(0xFF08b662),
                         modifier = Modifier.size(18.dp)
                     )
                     Text(
                         text = title,
-                        color = LocalRenovaColors.current.primaryHoverColor,
+                        color = Color(0xFF08b662),
                         style = MaterialTheme.typography.labelLarge,
                         fontSize = 14.sp,
                         fontWeight = FontWeight.Normal,
@@ -174,7 +174,7 @@ private fun TopBarOption(
             modifier = Modifier
                 .fillMaxWidth(0.85f)
                 .height(3.dp)
-                .background(if (isSelected) MaterialTheme.colorScheme.onPrimary else LocalRenovaColors.current.primaryHoverColor)
+                .background(if (isSelected) MaterialTheme.colorScheme.onPrimary else Color(0xFF08b662))
         )
     }
 }
