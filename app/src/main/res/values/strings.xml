@@ -45,7 +45,8 @@
     <string name="all_categories">All</string>
     <string name="categories">Categories</string>
     <string name="discover_products">Redeem and apply</string>
-    <string name="discover_stores_description">We appreciate your contribution and reward you for it</string>    <string name="contact">Contact</string>
+    <string name="discover_stores_description">We appreciate your contribution and reward you for it</string>
+    <string name="contact">Contact</string>
     <string name="store_rewards_subtitle">Choose a store to discover its rewards</string>
     <string name="search_icon_content_description">Search icon</string>
     <string name="category_icon_content_description">Category icon</string>
@@ -75,7 +76,8 @@
     <string name="qr_code_placeholder">QR Code</string>
     <string name="instructions_title">INSTRUCTIONS:</string>
     <string name="instruction_1">Align your QR code to scan to start entering the materials.</string>
-    <string name="instruction_2">Press and hold the products to facilitate the process.</string> <string name="instruction_3">Place the recommended products to gain more points.</string>
+    <string name="instruction_2">Press and hold the products to facilitate the process.</string>
+    <string name="instruction_3">Place the recommended products to gain more points.</string>
 
     <string name="recycling_materials">Recycling Materials</string>
     <string name="earn_points_recycling">Accumulate points for recycling</string>
@@ -130,7 +132,7 @@
     <string name="terms_section_title">Terms of Service</string>
     <string name="privacy_section_title">Privacy Policy</string>
 
-    <string name="terms_content">RENOVA - Legal Framework and Data Protection\n\nWHO WE ARE\n\nRenova is a sustainable technology platform that promotes recycling through smart deposit machines, a mobile application, and a website. Our goal is to encourage the circular economy by rewarding users who actively participate in the proper disposal of recyclable materials.\n\nWe are committed to operating with transparency, social responsibility, and adherence to Mexican legislation regarding the protection of personal data.\n\nTERMS AND CONDITIONS OF SERVICE\n\nBy registering and using Renova (mobile application, website, or smart deposit machines), the user accepts the following terms:\n\n1. Proper use of the platform:\nThe user agrees to provide truthful information and to use the system only for authorized purposes (recycling, accumulating points, redeeming rewards).\n\n2. Account and credentials:\nThe user is responsible for the confidentiality of their access credentials. Renova is not responsible for unauthorized access caused by user negligence.\n\n3. Rewards and points:\nAccumulated points do not constitute cash, unless otherwise specified in active promotions. Renova may modify the accumulation and redemption rules with prior notice.\n\n4. Service availability:\nWhile Renova seeks to guarantee platform continuity, it is not responsible for interruptions caused by technical failures, scheduled maintenance, or external factors.\n\n5. Prohibitions:\nIt is prohibited to tamper with smart deposit machines, register false information, or engage in fraudulent activities that affect the system or other users.\n\n6. Policy acceptance:\nThe use of Renova implies full acceptance of this privacy and security policy, as well as future updates communicated to the user.\n\nPRIVACY POLICY AND DATA USE\n\nIntroduction:\nAt Renova, we protect the privacy of our users and treat their personal data responsibly. This policy explains how we collect, use, store, and share information.\n\nData we collect:\n- Identity data: copy of ID, selfie photo for validation.\n- Contact data: name, email, phone number.\n- Usage data: recycling history, accumulated points, transactions and rewards.\n- Technical data: IP address, device, app activity logs.\n- Location data: only when using a smart deposit machine.\n\nPurpose of processing:\n- Validate identity and access to services.\n- Allow use of smart deposit machines and application.\n- Manage points and rewards.\n- Issue environmental reports.\n- Improve user experience.\n- Comply with legal obligations.\n\nConsent:\nThe user gives express consent by registering and accepting this policy. Consent can be revoked at any time by request via email, which may result in service suspension.\n\nInformation security:\nRenova applies technical and organizational measures to protect data:\n- Encryption of data in transit and at rest.\n- Secure administrator authentication.\n- Periodic monitoring and audits.\n\nData transfer:\nData is not shared with third parties, except:\n- Service providers supporting operations (e.g., payments, cloud storage).\n- Legal or regulatory requirements.\n- Merger or business restructuring processes.\n\nUser rights (ARCO):\nAccording to the Federal Law on Protection of Personal Data Held by Private Parties (LFPDPPP), the user can:\n- Access their data.\n- Rectify it if incorrect.\n- Cancel it when desired.\n- Oppose its processing.\n\nRequests must be sent to: soyrenovaapp@gmail.com\n\nRetention:\nData will be retained only for the time necessary to fulfill the described purposes and in accordance with applicable legislation.\n\nPolicy changes:\nWe may update this policy at any time. Changes will be communicated in the app or to the registered email. Continued use implies acceptance of the current version.\n\Look CONTACT US\n\nIf you have questions or wish to exercise your privacy rights, contact us at:\n\n📧 soyrenovaapp@gmail.com\n📍 Manzanillo, Colima, Mexico</string>
+    <string name="terms_content">RENOVA - Legal Framework and Data Protection\n\nWHO WE ARE\n\nRenova is a sustainable technology platform that promotes recycling through smart deposit machines, a mobile application, and a website. Our goal is to encourage the circular economy by rewarding users who actively participate in the proper disposal of recyclable materials.\n\nWe are committed to operating with transparency, social responsibility, and adherence to Mexican legislation regarding the protection of personal data.\n\nTERMS AND CONDITIONS OF SERVICE\n\nBy registering and using Renova (mobile application, website, or smart deposit machines), the user accepts the following terms:\n\n1. Proper use of the platform:\nThe user agrees to provide truthful information and to use the system only for authorized purposes (recycling, accumulating points, redeeming rewards).\n\n2. Account and credentials:\nThe user is responsible for the confidentiality of their access credentials. Renova is not responsible for unauthorized access caused by user negligence.\n\n3. Rewards and points:\nAccumulated points do not constitute cash, unless otherwise specified in active promotions. Renova may modify the accumulation and redemption rules with prior notice.\n\n4. Service availability:\nWhile Renova seeks to guarantee platform continuity, it is not responsible for interruptions caused by technical failures, scheduled maintenance, or external factors.\n\n5. Prohibitions:\nIt is prohibited to tamper with smart deposit machines, register false information, or engage in fraudulent activities that affect the system or other users.\n\n6. Policy acceptance:\nThe use of Renova implies full acceptance of this privacy and security policy, as well as future updates communicated to the user.\n\nPRIVACY POLICY AND DATA USE\n\nIntroduction:\nAt Renova, we protect the privacy of our users and treat their personal data responsibly. This policy explains how we collect, use, store, and share information.\n\nData we collect:\n- Identity data: copy of ID, selfie photo for validation.\n- Contact data: name, email, phone number.\n- Usage data: recycling history, accumulated points, transactions and rewards.\n- Technical data: IP address, device, app activity logs.\n- Location data: only when using a smart deposit machine.\n\nPurpose of processing:\n- Validate identity and access to services.\n- Allow use of smart deposit machines and application.\n- Manage points and rewards.\n- Issue environmental reports.\n- Improve user experience.\n- Comply with legal obligations.\n\nConsent:\nThe user gives express consent by registering and accepting this policy. Consent can be revoked at any time by request via email, which may result in service suspension.\n\nInformation security:\nRenova applies technical and organizational measures to protect data:\n- Encryption of data in transit and at rest.\n- Secure administrator authentication.\n- Periodic monitoring and audits.\n\nData transfer:\nData is not shared with third parties, except:\n- Service providers supporting operations (e.g., payments, cloud storage).\n- Legal or regulatory requirements.\n- Merger or business restructuring processes.\n\nUser rights (ARCO):\nAccording to the Federal Law on Protection of Personal Data Held by Private Parties (LFPDPPP), the user can:\n- Access their data.\n- Rectify it if incorrect.\n- Cancel it when desired.\n- Oppose its processing.\n\nRequests must be sent to: soyrenovaapp@gmail.com\n\nRetention:\nData will be retained only for the time necessary to fulfill the described purposes and in accordance with applicable legislation.\n\nPolicy changes:\nWe may update this policy at any time. Changes will be communicated in the app or to the registered email. Continued use implies acceptance of the current version.\n\nCONTACT US\n\nIf you have questions or wish to exercise your privacy rights, contact us at:\n\n📧 soyrenovaapp@gmail.com\n📍 Manzanillo, Colima, Mexico</string>
 
     <string name="privacy_content">1. Information we collect\n\nWe collect information you provide directly to us, such as name, email, and application usage data.\n\n2. Use of information\n\nWe use the collected information to provide, maintain, and improve our services, as well as to communicate with you.\n\n3. Sharing information\n\nWe do not share your personal information with third parties without your consent, except when necessary to provide our services.\n\n4. Security\n\nWe implement security measures to protect your personal information against unauthorized access and misuse.\n\n5. Your rights\n\nYou have the right to access, correct, or delete your personal information at any time.</string>
 
@@ -203,11 +205,11 @@
 
     <string name="sale">Sale</string>
 
-    <string name="modal_logout_title">Log out</string>>
-    <string name="modal_logout_message">Are you sure you want to log out?</string>>
-    <string name="modal_logout_loading">Logging out…</string>>
-    <string name="modal_logout_cancel">Cancel</string>>
-    <string name="modal_logout_confirm">Log out</string>>
+    <string name="modal_logout_title">Log out</string>
+    <string name="modal_logout_message">Are you sure you want to log out?</string>
+    <string name="modal_logout_loading">Logging out…</string>
+    <string name="modal_logout_cancel">Cancel</string>
+    <string name="modal_logout_confirm">Log out</string>
 
     <string name="error_title">Error</string>
     <string name="error_file_too_large">The selected file exceeds the maximum allowed size of 5MB. Please select a smaller image.</string>
@@ -311,20 +313,21 @@
     <string name="manual_adjustment">Manual Adjustment</string>
     <string name="quantity">Quantity</string>
     <string name="unknown_error">Unknown Error</string>
-    <string name="error_email_invalid">Correo Inválido</string>
     <string name="default_notification_channel_id" translatable="false">fcm_default_channel</string>
     <string name="no_activity_description">Your recycling and reward activities will appear here</string>
 
+    <string name="address">Address</string>
     <string name="business_profile_title">Business Profile</string>
     <string name="business_information">Business Information</string>
-    <string name="name">Name</string>
+    <string name="business_name">Business Name</string>
     <string name="available_rewards">Available Rewards</string>
+    <string name="business_phone_number">Business Phone Number</string>
     <string name="rewards_title">Available Rewards</string>
     <string name="more_rewards_available">+%d more rewards</string>
     <string name="rewards_available">Available Rewards</string>
     <string name="authentication_error">Authentication Error</string>
     <string name="session_error">Session Error</string>
-    <string name="address">Adress</string>
+    <string name="business_address">Business Address</string>
     <string name="profile_picture">Profile Picture</string>
     <string name="business_info">Business Information</string>
     <string name="category">Category</string>
@@ -370,7 +373,9 @@
     <string name="error_upload_selfie">Error uploading selfie.</string>
     <string name="error_selfie_must_be_image">The selfie must be an image.</string>
     <string name="error_selfie_required">The selfie is required.</string>
-    <string name="error_title2">An error occurred!</string> <string name="error_default_message">Oops! An error occurred, please restart or log in again</string> <string name="resubmit_documentation">Resubmit Documentation</string>
+    <string name="error_title2">An error occurred!</string>
+    <string name="error_default_message">Oops! An error occurred, please restart or log in again</string>
+    <string name="resubmit_documentation">Resubmit Documentation</string>
 
     <string name="tour_button_exit">Exit</string>
     <string name="tour_button_prev">Prev</string>
@@ -464,7 +469,6 @@
     <string name="payment_error_paypal">PayPal Error: %s</string>
     <string name="payment_error_unexpected">Unexpected error: %s</string>
 
-
     <string name="cashout_title">Cash Out Points</string>
     <string name="cashout_back">Back</string>
     <string name="cashout_available_points">Available points</string>
@@ -493,7 +497,8 @@
 
     <string name="error_no_alliance">Alliance ID not found</string>
     <string name="error_user_no_alliance">Error: User without assigned alliance</string>
-    <string name="error_unknown2">Unknown error</string> <string name="error_connection">Connection error: %s</string>
+    <string name="error_unknown2">Unknown error</string>
+    <string name="error_connection">Connection error: %s</string>
     <string name="error_api">Error: %s</string>
 
     <string name="tour_title_welcome">Renova welcomes you!</string>
@@ -505,6 +510,7 @@
     <string name="tour_title_help_fab">Help Button</string>
     <string name="tour_desc_help_fab_full">You\'ve completed the tour! Remember you can check it again here whenever you need.</string>
     <string name="tour_desc_help_fab_home">Remember you can check the tour for this screen again here.</string>
+
     <!-- Streak Screen -->
     <string name="current_streak">Current Streak</string>
     <string name="days">days</string>
@@ -534,5 +540,66 @@
     <string name="points_format">%d points</string>
     <string name="description">Description</string>
     <string name="goal">Goal</string>
-    <string name="stock">Existencias</string>
+    <string name="stock">Stock</string>
+
+    <!-- FAQ Screen -->
+    <string name="faq_title">FaQ</string>
+    <string name="faq_back">Back</string>
+    <string name="faq_expand">Expand</string>
+    <string name="faq_collapse">Collapse</string>
+
+    <!-- FAQ Categories -->
+    <string name="faq_category_account">Account and Registration</string>
+    <string name="faq_category_recycling">Recycling and Points</string>
+    <string name="faq_category_rewards">Rewards and Redemptions</string>
+    <string name="faq_category_business">For Businesses</string>
+    <string name="faq_category_general">General</string>
+
+    <!-- FAQ Questions -->
+    <string name="faq_q1">How do I create an account in RENOVA?</string>
+    <string name="faq_q2">I forgot my password, what should I do?</string>
+    <string name="faq_q3">Can I change my personal information?</string>
+    <string name="faq_q4">How do RENOVA points work?</string>
+    <string name="faq_q5">What materials can I recycle?</string>
+    <string name="faq_q6">Where can I take my recyclable materials?</string>
+    <string name="faq_q7">How many points do I earn for each material?</string>
+    <string name="faq_q8">Do points expire?</string>
+    <string name="faq_q9">How can I redeem my points?</string>
+    <string name="faq_q10">What kind of rewards are available?</string>
+    <string name="faq_q11">Can I return a redeemed reward?</string>
+    <string name="faq_q12">What is a business partnership?</string>
+    <string name="faq_q13">How can I register my business as a partner?</string>
+    <string name="faq_q14">How does the point payment system work?</string>
+    <string name="faq_q15">When can I withdraw the money from my sales?</string>
+    <string name="faq_q16">Does RENOVA have any cost?</string>
+    <string name="faq_q17">How can I contact technical support?</string>
+    <string name="faq_q18">Is the app available in my city?</string>
+
+    <!-- FAQ Answers -->
+    <string name="faq_a1">To create an account, download the RENOVA app from your app store, open it, and select \'Sign Up\'. Fill in your personal details such as name, email, and password. You must upload a photo of your ID and a selfie to verify your identity. An administrator will review your information and activate your account.</string>
+    <string name="faq_a2">On the login screen, tap \'Forgot my password\'. Enter your registered email address and you\'ll receive a link to reset your password. Follow the instructions in the email to create a new secure password.</string>
+    <string name="faq_a3">You can update your personal information based on your account verification status:\n\n- Rejected account: You will be able to modify all your personal data.\n- Pending verification account: You will be able to update your email address and password.\n- Verified account: It will not be possible to modify your information.\n\nTo edit your information, access your profile in the application and edit the information you need.</string>
+    <string name="faq_a4">For every recyclable material you deposit in our smart containers, you earn RENOVA points. The container uses artificial intelligence (GPT-4o) to automatically identify whether you deposited PET plastic or aluminum. Points are instantly added to your account and can be redeemed for rewards at partner businesses (100 points = $1.00 MXN).</string>
+    <string name="faq_a5">We currently accept two materials: PET plastic bottles and aluminum cans. The container\'s AI system automatically identifies the material you deposit using computer vision. More recyclable materials will be supported soon.</string>
+    <string name="faq_a6">In the app, you\'ll find a map showing all nearby RENOVA smart containers. These containers are equipped with Raspberry Pi 4, cameras, and sensors for automatic classification. You can also check the fill level of each container before visiting.</string>
+    <string name="faq_a7">The point values are:\n• Regular PET plastic bottle: +10 points ($0.10 MXN)\n• Crushed PET plastic bottle: +15 points ($0.15 MXN)\n• Regular aluminum can: +30 points ($0.30 MXN)\n• Crushed aluminum can: +35 points ($0.35 MXN)\n\nEarn extra points by crushing your materials before depositing them.</string>
+    <string name="faq_a8">No, recycling points do not expire. You can use them whenever you want. However, some special rewards from partner businesses may have limited-time availability.</string>
+    <string name="faq_a9">Go to the \'Store\' section in the app, browse the catalog of partner businesses, and find the reward you want. If you have enough points, visit that business (you can see its address in the reward information), show your profile to the cashier, and select the product you wish to redeem.</string>
+    <string name="faq_a10">We offer a wide variety of rewards in partner businesses: discounts on products, food and beverage vouchers, cleaning products, access to services, and more. The catalog is constantly updated. You can also unlock special badges: Eco Warrior (100 pts), Recycler Pro (500 pts), Green Hero (1000 pts), and Planet Saver (2500 pts).</string>
+    <string name="faq_a11">Redeemed rewards are non-refundable. Once a reward is redeemed, the corresponding points are permanently deducted from your account. Be sure to review the reward details.</string>
+    <string name="faq_a12">A business partnership is a company or store that joins RENOVA to offer rewards to our users. As a partner, you gain environmentally conscious customers, increase your visibility in the app, and contribute to community sustainability. You can manage your earned points from the administrative web panel.</string>
+    <string name="faq_a13">Contact us via email at \'soyrenovaapp@gmail.com\'. Our team will guide you through the process of registering your business as a RENOVA partner.</string>
+    <string name="faq_a14">As a partner business, when a user redeems points at your establishment, those points are converted to Mexican pesos at a rate of 100 points = $1.00 MXN. You can check your balance and transactions anytime.</string>
+    <string name="faq_a15">You can check your accumulated balance at any time through your app. The withdrawal process is managed through the platform — you can withdraw whenever you like. Contact our team for more details about the payment process.</string>
+    <string name="faq_a16">No, RENOVA is completely free for recycling users. There are no registration or monthly fees. Business registration is also free.</string>
+    <string name="faq_a17">You can contact us via email at soyrenovaapp@gmail.com. Our team is available to help with any questions or issues.</string>
+    <string name="faq_a18">RENOVA is currently in a prototype phase as an applied technology development project. The system has been successfully validated with controlled tests, achieving a 98% communication success rate and a 4.2-second response time. Visit our website to learn about the project status and future implementations.</string>
+
+    <string name="close_button">Close</string>
+    <string name="scroll_down_2">Scroll down</string>
+    <string name="success_2">Success</string>
+    <string name="completed_2">Completed!</string>
+
+    <string name="name">Name</string>
+    <string name="error_email_invalid">The email must be a valid email.</string>
 </resources>

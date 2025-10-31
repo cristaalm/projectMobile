@@ -210,7 +210,7 @@ fun LoginScreen(
                             onValueChange = {
                                 if (it.length <= 14) {
                                     password = it
-                                    passwordError = it.isNotEmpty() && !validatePassword(it)
+                                    passwordError = false
                                     if (it.isNotEmpty()) passwordEmptyError = false
                                 }
                             },
