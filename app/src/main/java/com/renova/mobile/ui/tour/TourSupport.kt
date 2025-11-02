@@ -2,7 +2,11 @@ package com.renova.mobile.ui.tour
 
 import android.widget.Toast
 import androidx.annotation.StringRes
+// --- INICIO MODIFICACIÓN: Imports añadidos ---
+import androidx.compose.foundation.ScrollState
+import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.runtime.Composable
+// --- FIN MODIFICACIÓN ---
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.compositionLocalOf
@@ -15,6 +19,7 @@ import androidx.compose.ui.unit.toSize
 import com.renova.mobile.R
 import com.renova.mobile.navigation.NavigationItem
 import com.renova.mobile.navigation.TopNavigationItem
+import com.renova.mobile.utils.SessionManager
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -31,6 +36,7 @@ object TourRoutes {
     val QR = NavigationItem.QR.route
     val PROFILE = NavigationItem.Profile.route
     val ACTIVITY = TopNavigationItem.Activity.route
+    val STREAK = TopNavigationItem.Streak.route
 }
 
 /**
@@ -45,12 +51,27 @@ data class TourStep(
     val isWelcomeStep: Boolean = false
 )
 
+// --- INICIO MODIFICACIÓN: Data class para info del target ---
+/**
+ * Contiene la información de un elemento UI registrado para el tour,
+ * incluyendo su rectángulo (Rect) y el estado de scroll (ScrollState o LazyListState) de su contenedor.
+ */
+data class TargetInfo(
+    val rect: Rect,
+    val scrollState: ScrollState? = null,
+    val lazyListState: LazyListState? = null,
+    val itemIndex: Int? = null
+)
+// --- FIN MODIFICACIÓN ---
+
+
 @Composable
 fun HandleTourOnError(
     error: String?,
     isTourActiveFlow: StateFlow<Boolean>,
     endTour: () -> Unit
 ) {
+    // ... (Esta función no cambia) ...
     val isTourActive by isTourActiveFlow.collectAsState()
     val context = LocalContext.current
 
@@ -73,24 +94,22 @@ fun HandleTourOnError(
 /**
  * Clase principal que gestiona el estado y la lógica del tour guiado.
  */
-class TourState {
+class TourState(private val sessionManager: SessionManager) {
     private val _isTourActive = MutableStateFlow(false)
     val isTourActive = _isTourActive.asStateFlow()
 
     private val _currentStepIndex = MutableStateFlow(0)
     val currentStepIndex = _currentStepIndex.asStateFlow()
 
-    private val _targets = MutableStateFlow<Map<String, Rect>>(emptyMap())
+    private val _targets = MutableStateFlow<Map<String, TargetInfo>>(emptyMap())
     val targets = _targets.asStateFlow()
 
-    // --- INICIO DE MODIFICACIÓN: Lógica de listas separadas ---
-
-    // Esta lista contendrá los pasos del tour *actualmente en curso*
     private val _tourSteps = MutableStateFlow<List<TourStep>>(emptyList())
     val tourSteps = _tourSteps.asStateFlow()
 
     // Lista EXCLUSIVA para el tour completo de primera vez
     private val fullTourSteps: List<TourStep> = listOf(
+        // 1. BIENVENIDA
         TourStep(
             id = "step_welcome",
             titleResId = R.string.tour_title_welcome,
@@ -99,6 +118,7 @@ class TourState {
             targetId = "welcome_dummy",
             isWelcomeStep = true
         ),
+        // 2. HOME - PUNTOS
         TourStep(
             id = "step_home_points",
             titleResId = R.string.tour_title_home_points,
@@ -106,6 +126,7 @@ class TourState {
             screenRoute = TourRoutes.HOME,
             targetId = "home_points_card"
         ),
+        // 3. HOME - ACTIVIDAD
         TourStep(
             id = "step_home_activity",
             titleResId = R.string.tour_title_home_activity,
@@ -113,6 +134,7 @@ class TourState {
             screenRoute = TourRoutes.HOME,
             targetId = "home_recent_activity"
         ),
+        // 4. HOME - LOGROS
         TourStep(
             id = "step_home_achievements",
             titleResId = R.string.tour_title_home_achievements,
@@ -120,6 +142,7 @@ class TourState {
             screenRoute = TourRoutes.HOME,
             targetId = "home_achievements_section"
         ),
+        // 5. NAV (HOME -> TIENDA)
         TourStep(
             id = "step1_home_to_store",
             titleResId = R.string.tour_title_nav_main,
@@ -127,6 +150,7 @@ class TourState {
             screenRoute = TourRoutes.HOME,
             targetId = "bottom_bar_store"
         ),
+        // 6. TIENDA - CATEGORÍAS
         TourStep(
             id = "step2_store_categories",
             titleResId = R.string.tour_title_store_categories,
@@ -134,6 +158,7 @@ class TourState {
             screenRoute = TourRoutes.STORE_LIST,
             targetId = "store_categories"
         ),
+        // 7. TIENDA - TÍTULO
         TourStep(
             id = "step3_store_title",
             titleResId = R.string.tour_title_store_alliances,
@@ -141,6 +166,7 @@ class TourState {
             screenRoute = TourRoutes.STORE_LIST,
             targetId = "store_alliances_title"
         ),
+        // 8. TIENDA - ALIANZA
         TourStep(
             id = "step4_store_alliance",
             titleResId = R.string.tour_title_store_rewards,
@@ -148,6 +174,7 @@ class TourState {
             screenRoute = TourRoutes.STORE_LIST,
             targetId = "store_first_alliance"
         ),
+        // 9. NAV (TIENDA -> QR)
         TourStep(
             id = "step5_store_to_qr",
             titleResId = R.string.tour_title_qr_button,
@@ -155,6 +182,7 @@ class TourState {
             screenRoute = TourRoutes.STORE_LIST,
             targetId = "bottom_bar_qr"
         ),
+        // 10. QR - INFO
         TourStep(
             id = "step6_qr_info",
             titleResId = R.string.tour_title_qr_container,
@@ -162,6 +190,7 @@ class TourState {
             screenRoute = TourRoutes.QR,
             targetId = "qr_card"
         ),
+        // 11. QR - SWITCH
         TourStep(
             id = "step7_qr_switch",
             titleResId = R.string.tour_title_qr_barcode,
@@ -169,6 +198,7 @@ class TourState {
             screenRoute = TourRoutes.QR,
             targetId = "qr_switch_button"
         ),
+        // 12. NAV (QR -> PERFIL)
         TourStep(
             id = "step8_qr_to_profile",
             titleResId = R.string.tour_title_profile_button,
@@ -176,6 +206,7 @@ class TourState {
             screenRoute = TourRoutes.QR,
             targetId = "bottom_bar_profile"
         ),
+        // 13. PERFIL - IDIOMA
         TourStep(
             id = "step9_profile_language",
             titleResId = R.string.tour_title_profile_language,
@@ -183,6 +214,7 @@ class TourState {
             screenRoute = TourRoutes.PROFILE,
             targetId = "profile_language_toggle"
         ),
+        // 14. PERFIL - INFO
         TourStep(
             id = "step10_profile_info",
             titleResId = R.string.tour_title_profile_info,
@@ -190,6 +222,23 @@ class TourState {
             screenRoute = TourRoutes.PROFILE,
             targetId = "profile_info_card"
         ),
+        // 15. PERFIL - VERIFICACIÓN
+        TourStep(
+            id = "step_profile_verification",
+            titleResId = R.string.tour_title_profile_verification,
+            descriptionResId = R.string.tour_desc_profile_verification,
+            screenRoute = TourRoutes.PROFILE,
+            targetId = "profile_verification_banner"
+        ),
+        // 16. PERFIL - DOCUMENTOS
+        TourStep(
+            id = "step_profile_documents",
+            titleResId = R.string.tour_title_profile_documents,
+            descriptionResId = R.string.tour_desc_profile_documents,
+            screenRoute = TourRoutes.PROFILE,
+            targetId = "profile_documents_section"
+        ),
+        // 17. NAV (PERFIL -> ACTIVIDAD)
         TourStep(
             id = "step11_profile_to_topbar",
             titleResId = R.string.tour_title_activity_button,
@@ -197,6 +246,7 @@ class TourState {
             screenRoute = TourRoutes.PROFILE,
             targetId = "top_bar_activity_button"
         ),
+        // 18. ACTIVIDAD - PUNTOS
         TourStep(
             id = "step13_activity_points",
             titleResId = R.string.tour_title_activity_points,
@@ -204,6 +254,7 @@ class TourState {
             screenRoute = TourRoutes.ACTIVITY,
             targetId = "activity_points_card"
         ),
+        // 19. ACTIVIDAD - MATERIALES
         TourStep(
             id = "step14_activity_materials",
             titleResId = R.string.tour_title_activity_materials,
@@ -211,6 +262,7 @@ class TourState {
             screenRoute = TourRoutes.ACTIVITY,
             targetId = "activity_materials_row"
         ),
+        // 20. ACTIVIDAD - HISTORIAL
         TourStep(
             id = "step15_activity_history",
             titleResId = R.string.tour_title_activity_history,
@@ -218,25 +270,66 @@ class TourState {
             screenRoute = TourRoutes.ACTIVITY,
             targetId = "activity_history_title"
         ),
+        // 21. NAV (ACTIVIDAD -> RACHA)
+        TourStep(
+            id = "step_activity_to_streak",
+            titleResId = R.string.tour_title_streak_button,
+            descriptionResId = R.string.tour_desc_streak_button,
+            screenRoute = TourRoutes.ACTIVITY,
+            targetId = "top_bar_streak_button"
+        ),
+        // 22. RACHA - TARJETA
+        TourStep(
+            id = "step_streak_card",
+            titleResId = R.string.tour_title_streak_card,
+            descriptionResId = R.string.tour_desc_streak_card,
+            screenRoute = TourRoutes.STREAK,
+            targetId = "streak_card_main"
+        ),
+        // 23. RACHA - RETO
+        TourStep(
+            id = "step_streak_challenge",
+            titleResId = R.string.tour_title_streak_challenge,
+            descriptionResId = R.string.tour_desc_streak_challenge,
+            screenRoute = TourRoutes.STREAK,
+            targetId = "streak_weekly_challenge"
+        ),
+        // 24. RACHA - INSIGNIAS
+        TourStep(
+            id = "step_streak_badges",
+            titleResId = R.string.tour_title_streak_badges,
+            descriptionResId = R.string.tour_desc_streak_badges,
+            screenRoute = TourRoutes.STREAK,
+            targetId = "streak_monthly_badges"
+        ),
+        // 25. RACHA - PROGRESO
+        TourStep(
+            id = "step_streak_progress",
+            titleResId = R.string.tour_title_streak_progress,
+            descriptionResId = R.string.tour_desc_streak_progress,
+            screenRoute = TourRoutes.STREAK,
+            targetId = "streak_weekly_progress"
+        ),
+        // 26. NAV (RACHA -> MENÚ)
         TourStep(
             id = "step16_menu_button",
             titleResId = R.string.tour_title_menu_button,
             descriptionResId = R.string.tour_desc_menu_button,
-            screenRoute = TourRoutes.ACTIVITY,
+            screenRoute = TourRoutes.STREAK,
             targetId = "bottom_bar_menu"
         ),
-        // Último paso del tour COMPLETO
+        // 27. AYUDA (¡SE MANTIENE AQUÍ!)
         TourStep(
             id = "step17_full_tour_help",
             titleResId = R.string.tour_title_help_fab,
             descriptionResId = R.string.tour_desc_help_fab_full,
-            screenRoute = TourRoutes.ACTIVITY,
+            screenRoute = TourRoutes.STREAK,
             targetId = "help_fab"
         )
-        // NOTA: "step_home_help_fab" NO está en esta lista
     )
 
-    // Mapa de listas EXCLUSIVAS para tours por pantalla (manuales)
+    // --- INICIO MODIFICACIÓN: Lógica del botón de ayuda (FAB) ---
+    // Se eliminó el paso "help_fab" de todas las listas excepto la de HOME.
     val screenSpecificTourSteps: Map<String, List<TourStep>> = mapOf(
         TourRoutes.HOME to listOf(
             TourStep(
@@ -260,7 +353,7 @@ class TourState {
                 screenRoute = TourRoutes.HOME,
                 targetId = "home_achievements_section"
             ),
-            // Último paso del tour de HOME
+            // ¡EL PASO DE AYUDA SE QUEDA SOLO AQUÍ!
             TourStep(
                 id = "step_home_help_fab",
                 titleResId = R.string.tour_title_help_fab,
@@ -291,6 +384,7 @@ class TourState {
                 screenRoute = TourRoutes.STORE_LIST,
                 targetId = "store_first_alliance"
             )
+            // Se eliminó el "help_fab" de aquí
         ),
         TourRoutes.QR to listOf(
             TourStep(
@@ -307,6 +401,7 @@ class TourState {
                 screenRoute = TourRoutes.QR,
                 targetId = "qr_switch_button"
             )
+            // Se eliminó el "help_fab" de aquí
         ),
         TourRoutes.PROFILE to listOf(
             TourStep(
@@ -322,7 +417,22 @@ class TourState {
                 descriptionResId = R.string.tour_desc_profile_info,
                 screenRoute = TourRoutes.PROFILE,
                 targetId = "profile_info_card"
+            ),
+            TourStep(
+                id = "step_profile_verification",
+                titleResId = R.string.tour_title_profile_verification,
+                descriptionResId = R.string.tour_desc_profile_verification,
+                screenRoute = TourRoutes.PROFILE,
+                targetId = "profile_verification_banner"
+            ),
+            TourStep(
+                id = "step_profile_documents",
+                titleResId = R.string.tour_title_profile_documents,
+                descriptionResId = R.string.tour_desc_profile_documents,
+                screenRoute = TourRoutes.PROFILE,
+                targetId = "profile_documents_section"
             )
+            // Se eliminó el "help_fab" de aquí
         ),
         TourRoutes.ACTIVITY to listOf(
             TourStep(
@@ -345,42 +455,77 @@ class TourState {
                 descriptionResId = R.string.tour_desc_activity_history,
                 screenRoute = TourRoutes.ACTIVITY,
                 targetId = "activity_history_title"
+            )
+            // Se eliminó el "help_fab" de aquí
+        ),
+        TourRoutes.STREAK to listOf(
+            TourStep(
+                id = "step_streak_card",
+                titleResId = R.string.tour_title_streak_card,
+                descriptionResId = R.string.tour_desc_streak_card,
+                screenRoute = TourRoutes.STREAK,
+                targetId = "streak_card_main"
             ),
             TourStep(
-                id = "step16_menu_button",
-                titleResId = R.string.tour_title_menu_button,
-                descriptionResId = R.string.tour_desc_menu_button,
-                screenRoute = TourRoutes.ACTIVITY,
-                targetId = "bottom_bar_menu"
+                id = "step_streak_challenge",
+                titleResId = R.string.tour_title_streak_challenge,
+                descriptionResId = R.string.tour_desc_streak_challenge,
+                screenRoute = TourRoutes.STREAK,
+                targetId = "streak_weekly_challenge"
+            ),
+            TourStep(
+                id = "step_streak_badges",
+                titleResId = R.string.tour_title_streak_badges,
+                descriptionResId = R.string.tour_desc_streak_badges,
+                screenRoute = TourRoutes.STREAK,
+                targetId = "streak_monthly_badges"
+            ),
+            TourStep(
+                id = "step_streak_progress",
+                titleResId = R.string.tour_title_streak_progress,
+                descriptionResId = R.string.tour_desc_streak_progress,
+                screenRoute = TourRoutes.STREAK,
+                targetId = "streak_weekly_progress"
             )
+            // Se eliminó el "help_fab" de aquí
         )
     )
-
     // --- FIN DE MODIFICACIÓN ---
 
-    val currentStep: TourStep?
-        get() = _tourSteps.value.getOrNull(_currentStepIndex.value) // Modificado
+    private fun isCitizen(): Boolean {
+        // ... (Esta función no cambia) ...
+        val user = sessionManager.getUser()
+        val userRoleId = user?.role?.id ?: 0
+        val isBusiness = (userRoleId == 4)
+        return !isBusiness
+    }
 
-    val currentTargetRect: Rect?
+    val currentStep: TourStep?
+        get() = _tourSteps.value.getOrNull(_currentStepIndex.value)
+
+    val currentTargetInfo: TargetInfo?
         get() = currentStep?.let { _targets.value[it.targetId] }
 
-    /**
-     * Inicia el tour completo desde el primer paso (incluye bienvenida).
-     */
+    val currentTargetRect: Rect?
+        get() = currentTargetInfo?.rect
+
     fun startTour() {
-        _tourSteps.value = fullTourSteps // Modificado
+        // ... (Esta función no cambia) ...
+        if (!isCitizen()) return
+
+        _tourSteps.value = fullTourSteps
         _currentStepIndex.value = 0
         _isTourActive.value = true
     }
 
-    /**
-     * MODIFICADO: Inicia tour de pantalla específica
-     */
     fun startTourForScreen(currentScreenRoute: String) {
-        val stepsForScreen = screenSpecificTourSteps[currentScreenRoute] // Modificado
+        // ... (Esta función no cambia) ...
+        if (!isCitizen()) return
+
+        val stepsForScreen = screenSpecificTourSteps[currentScreenRoute]
 
         if (!stepsForScreen.isNullOrEmpty()) {
-            _tourSteps.value = stepsForScreen // Modificado
+            _tourSteps.value = stepsForScreen
             _currentStepIndex.value = 0
             _isTourActive.value = true
         } else {
@@ -390,9 +535,10 @@ class TourState {
     }
 
     fun nextStep() {
+        // ... (Esta función no cambia) ...
         if (!_isTourActive.value) return
 
-        if (_currentStepIndex.value < _tourSteps.value.size - 1) { // Modificado
+        if (_currentStepIndex.value < _tourSteps.value.size - 1) {
             _currentStepIndex.value++
         } else {
             endTour()
@@ -400,6 +546,7 @@ class TourState {
     }
 
     fun prevStep() {
+        // ... (Esta función no cambia) ...
         if (!_isTourActive.value) return
 
         if (_currentStepIndex.value > 0) {
@@ -408,37 +555,59 @@ class TourState {
     }
 
     fun endTour() {
+        // ... (Esta función no cambia) ...
         _isTourActive.value = false
         _currentStepIndex.value = 0
-        _tourSteps.value = emptyList() // Modificado
+        _tourSteps.value = emptyList()
         _targets.update { emptyMap() }
     }
 
     fun isFirstStepOfTour(): Boolean {
+        // ... (Esta función no cambia) ...
         if (!_isTourActive.value) return true
         return _currentStepIndex.value == 0
     }
 
     fun isLastStepOfTour(): Boolean {
+        // ... (Esta función no cambia) ...
         if (!_isTourActive.value) return true
-        return _currentStepIndex.value == _tourSteps.value.size - 1 // Modificado
+        return _currentStepIndex.value == _tourSteps.value.size - 1
     }
 
-    fun registerTarget(id: String, coordinates: LayoutCoordinates?) {
+    // --- INICIO MODIFICACIÓN: registerTarget ahora acepta ScrollState y LazyListState ---
+    fun registerTarget(
+        id: String,
+        coordinates: LayoutCoordinates?,
+        scrollState: ScrollState? = null,
+        lazyListState: LazyListState? = null,
+        itemIndex: Int? = null
+    ) {
         if (coordinates == null || !coordinates.isAttached) {
             _targets.update { it - id }
             return
         }
         val position = coordinates.positionInWindow()
         val size = coordinates.size.toSize()
-        val existingRect = _targets.value[id]
+        val newRect = Rect(position, size)
 
-        if (existingRect == null || existingRect.topLeft != position || existingRect.size != size) {
+        // Crea el TargetInfo con los estados de scroll correspondientes
+        val newTargetInfo = TargetInfo(
+            rect = newRect,
+            scrollState = scrollState,
+            lazyListState = lazyListState,
+            itemIndex = itemIndex
+        )
+
+        val existingInfo = _targets.value[id]
+
+        // Solo actualiza si la información es realmente nueva
+        if (existingInfo != newTargetInfo) {
             _targets.update { currentTargets ->
-                currentTargets + (id to Rect(position, size))
+                currentTargets + (id to newTargetInfo)
             }
         }
     }
+    // --- FIN MODIFICACIÓN ---
 
     fun unregisterTarget(id: String) {
         _targets.update { currentTargets ->

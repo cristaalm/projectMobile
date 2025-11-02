@@ -4,7 +4,10 @@ import android.app.Activity
 import android.net.Uri
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
+// --- INICIO MODIFICACIÓN: Imports añadidos ---
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.ScrollState
+// --- FIN MODIFICACIÓN ---
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
@@ -230,10 +233,14 @@ private fun ProfileContent(
     }
     // Fin de la lógica de 'develop'
 
+    // --- INICIO MODIFICACIÓN: Definir scrollState ---
+    val scrollState = rememberScrollState()
+    // --- FIN MODIFICACIÓN ---
+
     Column(
         modifier = Modifier
             .fillMaxSize()
-            .verticalScroll(rememberScrollState())
+            .verticalScroll(scrollState) // <-- Aplicar scrollState
     ) {
         ProfileHeader(
             user = user,
@@ -246,16 +253,36 @@ private fun ProfileContent(
         Column(
             modifier = Modifier.padding(horizontal = 20.dp)
         ) {
-            VerificationBanner(
-                verificationStatus = verificationStatus,
-                rejectionReason = identityVerification?.rejection_reason,
-                isSpanish = isSpanish
-            )
+            // --- INICIO MODIFICACIÓN ---
+            Box(modifier = Modifier.onGloballyPositioned { coords ->
+                // --- MODIFICADO: Pasar scrollState ---
+                tourState.registerTarget(
+                    id = "profile_verification_banner",
+                    coordinates = coords,
+                    scrollState = scrollState
+                )
+            }) {
+                VerificationBanner(
+                    verificationStatus = verificationStatus,
+                    rejectionReason = identityVerification?.rejection_reason,
+                    isSpanish = isSpanish
+                )
+            }
+            DisposableEffect("profile_verification_banner") {
+                onDispose { tourState.unregisterTarget("profile_verification_banner") }
+            }
+            // --- FIN MODIFICACIÓN ---
+
             Spacer(modifier = Modifier.height(12.dp))
 
             // --- MODIFICADO: Añadir wrapper del Tour (de 'tour') ---
             Box(modifier = Modifier.onGloballyPositioned { coords ->
-                tourState.registerTarget("profile_info_card", coords)
+                // --- MODIFICADO: Pasar scrollState ---
+                tourState.registerTarget(
+                    id = "profile_info_card",
+                    coordinates = coords,
+                    scrollState = scrollState
+                )
             }) {
                 PersonalInfoCard(
                     user = user,
@@ -273,15 +300,29 @@ private fun ProfileContent(
 
             // --- Toda la sección de documentos de 'develop' ---
             if (identityVerification != null) {
-                DocumentsUploadSection(
-                    documents = editDocuments,
-                    verificationStatus = verificationStatus,
-                    documentImages = documentImages,
-                    documentUploadState = documentUploadState,
-                    onImageSelected = { type: DocumentType, uri: Uri ->
-                        profileViewModel.uploadDocument(type, uri, context)
-                    }
-                )
+                // --- INICIO MODIFICACIÓN ---
+                Box(modifier = Modifier.onGloballyPositioned { coords ->
+                    // --- MODIFICADO: Pasar scrollState ---
+                    tourState.registerTarget(
+                        id = "profile_documents_section",
+                        coordinates = coords,
+                        scrollState = scrollState
+                    )
+                }) {
+                    DocumentsUploadSection(
+                        documents = editDocuments,
+                        verificationStatus = verificationStatus,
+                        documentImages = documentImages,
+                        documentUploadState = documentUploadState,
+                        onImageSelected = { type: DocumentType, uri: Uri ->
+                            profileViewModel.uploadDocument(type, uri, context)
+                        }
+                    )
+                }
+                DisposableEffect("profile_documents_section") {
+                    onDispose { tourState.unregisterTarget("profile_documents_section") }
+                }
+                // --- FIN MODIFICACIÓN ---
 
                 Spacer(modifier = Modifier.height(12.dp))
 
@@ -533,7 +574,12 @@ fun ProfileHeader(
 
                 // --- MODIFICADO: Añadir wrapper del Tour (de 'tour') ---
                 Box(modifier = Modifier.onGloballyPositioned { coords ->
-                    tourState.registerTarget("profile_language_toggle", coords)
+                    // --- MODIFICADO: Pasar null (Header no scrollea) ---
+                    tourState.registerTarget(
+                        id = "profile_language_toggle",
+                        coordinates = coords,
+                        scrollState = null
+                    )
                 }) {
                     LanguageToggle(
                         isSpanish = isSpanish,

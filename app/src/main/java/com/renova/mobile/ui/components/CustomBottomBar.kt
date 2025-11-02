@@ -80,6 +80,7 @@ import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.runtime.DisposableEffect
 import com.renova.mobile.ui.tour.LocalTourState
 import androidx.compose.runtime.collectAsState // <-- *** AÑADE ESTE IMPORT ***
+import androidx.compose.foundation.ScrollState // <-- AÑADIR ESTE IMPORT
 // --- FIN DE IMPORTS ---
 
 private val primaryColor = Color(0xFF08b662)
@@ -238,7 +239,9 @@ fun CustomBottomBar(
                     }
                 },
                 modifier = Modifier.onGloballyPositioned { coords ->
-                    tourState.registerTarget("bottom_bar_store", coords)
+                    // --- INICIO MODIFICACIÓN ---
+                    tourState.registerTarget("bottom_bar_store", coords, null)
+                    // --- FIN MODIFICACIÓN ---
                 }
             )
             DisposableEffect("bottom_bar_store") {
@@ -265,7 +268,9 @@ fun CustomBottomBar(
                     }
                 },
                 modifier = Modifier.onGloballyPositioned { coords ->
-                    tourState.registerTarget("bottom_bar_profile", coords)
+                    // --- INICIO MODIFICACIÓN ---
+                    tourState.registerTarget("bottom_bar_profile", coords, null)
+                    // --- FIN MODIFICACIÓN ---
                 }
             )
             DisposableEffect("bottom_bar_profile") {
@@ -281,7 +286,9 @@ fun CustomBottomBar(
                     .size(72.dp)
                     .padding(4.dp)
                     .onGloballyPositioned { coords -> // <-- MODIFICADO
-                        tourState.registerTarget("bottom_bar_menu", coords)
+                        // --- INICIO MODIFICACIÓN ---
+                        tourState.registerTarget("bottom_bar_menu", coords, null)
+                        // --- FIN MODIFICACIÓN ---
                     },
                 contentAlignment = Alignment.Center
             ) {
@@ -336,7 +343,9 @@ fun CustomBottomBar(
                     }
                 }
                 .onGloballyPositioned { coords -> // <-- Añadido
-                    tourState.registerTarget("bottom_bar_qr", coords)
+                    // --- INICIO MODIFICACIÓN ---
+                    tourState.registerTarget("bottom_bar_qr", coords, null)
+                    // --- FIN MODIFICACIÓN ---
                 },
             contentAlignment = Alignment.Center
         ) {
@@ -395,7 +404,9 @@ fun CustomBottomBar(
                                 .fillMaxHeight()
                                 .width(280.dp)
                                 .onGloballyPositioned { coords -> // <-- MODIFICADO
-                                    tourState.registerTarget("side_menu_panel", coords)
+                                    // --- INICIO MODIFICACIÓN ---
+                                    tourState.registerTarget("side_menu_panel", coords, null)
+                                    // --- FIN MODIFICACIÓN ---
                                 },
                             shape = RoundedCornerShape(topStart = 12.dp, bottomStart = 12.dp),
                             color = Color(0xFF05D16E)

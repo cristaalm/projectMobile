@@ -83,8 +83,8 @@ class MainActivity : ComponentActivity() {
 
                 val isUpdatingLanguage by languageViewModel.isUpdating.collectAsState()
 
-                // --- LÓGICA DE 'tour': Inicializar TourState ---
-                val tourState = remember { TourState() }
+                // --- MODIFICACIÓN: Pasar sessionManager a TourState ---
+                val tourState = remember(sessionManager) { TourState(sessionManager) }
 
                 HideSystemNavigation()
 

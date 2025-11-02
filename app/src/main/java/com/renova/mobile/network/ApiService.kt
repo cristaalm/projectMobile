@@ -147,6 +147,7 @@ data class User(
     val code_identity: String?,
     val role: Role?,
     val alliance_id: Int?,
+    val tour_completed: Boolean?,
     val created_at: String?,
     val updated_at: String?
 )

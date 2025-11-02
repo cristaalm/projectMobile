@@ -43,6 +43,10 @@ import com.renova.mobile.ui.viewmodels.LanguageViewModel
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.background
+// --- IMPORTS AÑADIDOS ---
+import androidx.compose.foundation.ScrollState
+import androidx.compose.foundation.rememberScrollState
+// --- FIN IMPORTS ---
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.ui.Alignment
@@ -462,7 +466,9 @@ fun AppNavigation(
                     .padding(16.dp)
                     .padding(bottom = 80.dp)
                     .onGloballyPositioned { coords ->
-                        tourState.registerTarget("help_fab", coords)
+                        // --- INICIO MODIFICACIÓN: Añadido null para scrollState ---
+                        tourState.registerTarget("help_fab", coords, null)
+                        // --- FIN MODIFICACIÓN ---
                     },
                 containerColor = renovaColors.primaryColor,
                 contentColor = Color.White

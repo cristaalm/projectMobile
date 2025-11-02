@@ -396,20 +396,20 @@
     <string name="tour_desc_home_achievements">¡Mientras más reciclas, más logros desbloqueas! Toca uno para ver los detalles.</string>
 
     <string name="tour_title_nav_main">Vamos a la Tienda</string>
-    <string name="tour_desc_nav_main">Este es el menú principal. Toca "Tienda" (o "Sig.") para ver dónde canjear tus puntos.</string>
+    <string name="tour_desc_nav_main">Este es el menú principal. Toca \"Sig.\" para ver dónde canjear tus puntos.</string>
     <string name="tour_title_qr_button">Tu Código de Acceso</string>
-    <string name="tour_desc_qr_button">Este es el botón de acceso. Toca aquí (o "Sig.") para ver tus códigos.</string>
+    <string name="tour_desc_qr_button">Este es el botón de acceso. Toca \"Sig.\" para ver tus códigos.</string>
     <string name="tour_title_profile_button">Tu Perfil</string>
-    <string name="tour_desc_profile_button">Casi terminamos. Toca "Perfil" (o "Sig.") para ver tu información personal.</string>
+    <string name="tour_desc_profile_button">Casi terminamos. Toca \"Sig.\" para ver tu información personal.</string>
     <string name="tour_title_activity_button">Historial de Actividad</string>
-    <string name="tour_desc_activity_button">Finalmente, toca "Actividad" (o "Sig.") para ver el historial completo de tus movimientos.</string>
+    <string name="tour_desc_activity_button">Ahora, toca \"Sig.\" para ver el historial completo de tus movimientos.</string>
 
     <string name="tour_title_store_categories">Filtra las Tiendas</string>
-    <string name="tour_desc_store_categories">Usa estos filtros para encontrar tiendas por categoría. Toca "Todas" para ver la lista completa.</string>
+    <string name="tour_desc_store_categories">Usa estos filtros para encontrar tiendas por categoría. Toca \"Todas\" para ver la lista completa.</string>
     <string name="tour_title_store_alliances">Nuestros Aliados</string>
     <string name="tour_desc_store_alliances">Aquí verás la lista de comercios donde puedes canjear tus puntos por recompensas.</string>
     <string name="tour_title_store_rewards">Elige una Tienda</string>
-    <string name="tour_desc_store_rewards">Toca cualquier tienda (o "Sig.") para explorar las recompensas y descuentos exclusivos que ofrece.</string>
+    <string name="tour_desc_store_rewards">Puedes tocar cualquier tienda para explorar las recompensas y descuentos exclusivos que ofrece.</string>
 
     <string name="tour_title_qr_container">Tus Códigos de Acceso</string>
     <string name="tour_desc_qr_container">Esta pantalla muestra tus códigos. Usa el QR para identificarte en contenedores y el código de barras para canjear en tiendas.</string>
@@ -426,7 +426,7 @@
     <string name="tour_title_activity_materials">Tu Impacto</string>
     <string name="tour_desc_activity_materials">Esta sección resume cuánto plástico y aluminio has ayudado a reciclar. ¡Buen trabajo!</string>
     <string name="tour_title_activity_history">Historial Detallado</string>
-    <string name="tour_desc_activity_history">Y aquí encontrarás el registro completo de cada reciclaje y canje que has hecho. ¡Eso es todo!</string>
+    <string name="tour_desc_activity_history">Y aquí encontrarás el registro completo de cada reciclaje y canje que has hecho.</string>
 
     <string name="payment_loading_info">Cargando información…</string>
     <string name="payment_withdrawal_paypal">Retiro con PayPal</string>
@@ -510,7 +510,7 @@
     <string name="tour_title_menu_button">Menú de Opciones</string>
     <string name="tour_desc_menu_button">Toca aquí para ver más opciones, como la ayuda y el cierre de sesión.</string>
     <string name="tour_title_side_menu">Menú Principal</string>
-    <string name="tour_desc_side_menu">Aquí puedes cerrar sesión y encontrar preguntas frecuentes. ¡Este es el último paso del tour!</string>
+    <string name="tour_desc_side_menu">Aquí puedes cerrar sesión y encontrar preguntas frecuentes.</string>
     <string name="tour_title_help_fab">Botón de Ayuda</string>
     <string name="tour_desc_help_fab_full">¡Has completado el tour! Recuerda que aquí puedes volver a consultarlo cuando lo necesites.</string>
     <string name="tour_desc_help_fab_home">Recuerda que aquí puedes volver a consultar el tour de esta pantalla.</string>
@@ -604,4 +604,19 @@
     <string name="business_name">Nombre del negocio</string>
     <string name="business_phone_number">Numero de teléfono del negocio</string>
     <string name="business_address">Dirección del negocio</string>
+
+    <string name="tour_title_profile_verification">Estado de Verificación</string>
+    <string name="tour_desc_profile_verification">Aquí verás si tu cuenta está verificada, pendiente o si fue rechazada (y por qué).</string>
+    <string name="tour_title_profile_documents">Tus Documentos</string>
+    <string name="tour_desc_profile_documents">Desde esta sección puedes subir o actualizar los documentos necesarios para verificar tu identidad.</string>
+    <string name="tour_title_streak_button">Sección de Racha</string>
+    <string name="tour_desc_streak_button">¡Genial! Ahora toca \"Sig.\" para ver tu progreso y rachas.</string>
+    <string name="tour_title_streak_card">Tu Racha Actual</string>
+    <string name="tour_desc_streak_card">¡Mantén el ritmo! Esta tarjeta muestra tus días consecutivos reciclando y tu mejor racha.</string>
+    <string name="tour_title_streak_challenge">Reto Semanal</string>
+    <string name="tour_desc_streak_challenge">¡Acepta retos semanales para ganar recompensas adicionales! Toca aquí para ver los detalles.</string>
+    <string name="tour_title_streak_badges">Insignias Mensuales</string>
+    <string name="tour_desc_streak_badges">Acumula puntos durante el mes para desbloquear estas insignias y ganar puntos de bonificación.</string>
+    <string name="tour_title_streak_progress">Progreso Semanal</string>
+    <string name="tour_desc_streak_progress">Finalmente, aquí puedes ver un gráfico de tus actividades de reciclaje durante la semana.</string>
 </resources>

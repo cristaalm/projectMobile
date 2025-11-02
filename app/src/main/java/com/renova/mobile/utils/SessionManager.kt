@@ -45,6 +45,10 @@ class SessionManager(context: Context) {
             apply()
         }
         Log.d("SessionManager", "Sesión guardada con rememberMe=$rememberMe")
+        if (user?.tour_completed == true) {
+            Log.d("SessionManager", "API dice que el tour ya estaba completo. Sincronizando bandera local.")
+            setFirstLoginComplete() // Esto creará el "Post-it" local
+        }
     }
 
     //NUEVO: (de 'develop') Verificar si tiene remember me activado

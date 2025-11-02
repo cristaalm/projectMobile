@@ -89,7 +89,8 @@ fun CustomTopBar(
                 modifier = Modifier
                     .weight(1f)
                     .onGloballyPositioned { coords ->
-                        tourState.registerTarget("top_bar_activity_button", coords)
+                        // --- MODIFICADO: Añadido null para scrollState ---
+                        tourState.registerTarget("top_bar_activity_button", coords, null)
                     }
             )
             DisposableEffect("top_bar_activity_button") {
@@ -98,14 +99,25 @@ fun CustomTopBar(
 
             Spacer(modifier = Modifier.width(8.dp))
 
-             //Opción 3: Racha
+            //Opción 3: Racha
             TopBarOption(
                 icon = R.drawable.flame_full,
                 title = stringResource(R.string.streak),
                 isSelected = currentRoute == TopNavigationItem.Streak.route,
                 onClick = { navController.navigate(TopNavigationItem.Streak.route) },
-                modifier = Modifier.weight(1f)
+                // --- INICIO MODIFICACIÓN: Hook para el tour ---
+                modifier = Modifier
+                    .weight(1f)
+                    .onGloballyPositioned { coords ->
+                        tourState.registerTarget("top_bar_streak_button", coords, null)
+                    }
+                // --- FIN MODIFICACIÓN ---
             )
+            // --- INICIO MODIFICACIÓN: DisposableEffect para Racha ---
+            DisposableEffect("top_bar_streak_button") {
+                onDispose { tourState.unregisterTarget("top_bar_streak_button") }
+            }
+            // --- FIN MODIFICACIÓN ---
         }
     }
 }

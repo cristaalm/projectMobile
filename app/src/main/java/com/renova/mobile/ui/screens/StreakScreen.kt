@@ -6,7 +6,10 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.*
+// --- INICIO MODIFICACIÓN: Imports añadidos ---
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.ScrollState
+// --- FIN MODIFICACIÓN ---
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
@@ -39,7 +42,12 @@ import com.renova.mobile.ui.theme.PoppinsFontFamily
 import com.renova.mobile.ui.theme.RenovaColors
 import com.renova.mobile.ui.theme.RenovaColorScheme
 
+import androidx.compose.ui.layout.onGloballyPositioned
+import com.renova.mobile.ui.tour.LocalTourState
+import androidx.compose.runtime.DisposableEffect
+
 data class WeeklyChallenge(
+    // ... (Data class no cambia) ...
     val id: Int,
     val title: String,
     val titleEn: String,
@@ -54,6 +62,7 @@ data class WeeklyChallenge(
 )
 
 data class MonthlyBadge(
+    // ... (Data class no cambia) ...
     val id: Int,
     val title: String,
     val titleEn: String,
@@ -69,8 +78,10 @@ data class MonthlyBadge(
 @Composable
 fun StreakScreen() {
     val renovaColors = LocalRenovaColors.current
-    val scrollState = rememberScrollState()
+    val scrollState = rememberScrollState() // <-- ScrollState definido aquí
+    val tourState = LocalTourState.current
 
+    // ... (Lógica de variables (currentStreak, weeklyChallenge, etc) no cambia) ...
     val currentStreak = 7
     val longestStreak = 15
     val totalRecyclingDays = 42
@@ -145,6 +156,7 @@ fun StreakScreen() {
         )
     )
 
+
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -153,45 +165,94 @@ fun StreakScreen() {
         Column(
             modifier = Modifier
                 .fillMaxSize()
-                .verticalScroll(scrollState)
+                .verticalScroll(scrollState) // <-- Aplicar scrollState
                 .padding(bottom = 16.dp)
         ) {
-            StreakCard(
-                currentStreak = currentStreak,
-                longestStreak = longestStreak,
-                totalDays = totalRecyclingDays,
-                renovaColors = renovaColors
-            )
+            Box(modifier = Modifier.onGloballyPositioned { coords ->
+                // --- MODIFICADO: Pasar scrollState ---
+                tourState.registerTarget(
+                    id = "streak_card_main",
+                    coordinates = coords,
+                    scrollState = scrollState
+                )
+            }) {
+                StreakCard(
+                    currentStreak = currentStreak,
+                    longestStreak = longestStreak,
+                    totalDays = totalRecyclingDays,
+                    renovaColors = renovaColors
+                )
+            }
 
             Spacer(modifier = Modifier.height(16.dp))
 
-            WeeklyChallengeCard(
-                challenge = weeklyChallenge,
-                isAccepted = isChallengeAccepted,
-                onAccept = { isChallengeAccepted = true },
-                onClick = { showChallengeDialog = true },
-                renovaColors = renovaColors
-            )
+            Box(modifier = Modifier.onGloballyPositioned { coords ->
+                // --- MODIFICADO: Pasar scrollState ---
+                tourState.registerTarget(
+                    id = "streak_weekly_challenge",
+                    coordinates = coords,
+                    scrollState = scrollState
+                )
+            }) {
+                WeeklyChallengeCard(
+                    challenge = weeklyChallenge,
+                    isAccepted = isChallengeAccepted,
+                    onAccept = { isChallengeAccepted = true },
+                    onClick = { showChallengeDialog = true },
+                    renovaColors = renovaColors
+                )
+            }
 
             Spacer(modifier = Modifier.height(16.dp))
 
-            MonthlyBadgesSection(
-                badges = monthlyBadges,
-                currentMonthPoints = currentMonthPoints,
-                renovaColors = renovaColors,
-                onBadgeClick = { selectedBadge = it }
-            )
+            Box(modifier = Modifier.onGloballyPositioned { coords ->
+                // --- MODIFICADO: Pasar scrollState ---
+                tourState.registerTarget(
+                    id = "streak_monthly_badges",
+                    coordinates = coords,
+                    scrollState = scrollState
+                )
+            }) {
+                MonthlyBadgesSection(
+                    badges = monthlyBadges,
+                    currentMonthPoints = currentMonthPoints,
+                    renovaColors = renovaColors,
+                    onBadgeClick = { selectedBadge = it }
+                )
+            }
 
             Spacer(modifier = Modifier.height(16.dp))
 
-            WeeklyProgressChart(
-                weekData = listOf(2, 3, 1, 4, 3, 2, 1),
-                renovaColors = renovaColors
-            )
+            Box(modifier = Modifier.onGloballyPositioned { coords ->
+                // --- MODIFICADO: Pasar scrollState ---
+                tourState.registerTarget(
+                    id = "streak_weekly_progress",
+                    coordinates = coords,
+                    scrollState = scrollState
+                )
+            }) {
+                WeeklyProgressChart(
+                    weekData = listOf(2, 3, 1, 4, 3, 2, 1),
+                    renovaColors = renovaColors
+                )
+            }
         }
     }
 
-    // Dialog del badge
+    DisposableEffect("streak_card_main") {
+        onDispose { tourState.unregisterTarget("streak_card_main") }
+    }
+    DisposableEffect("streak_weekly_challenge") {
+        onDispose { tourState.unregisterTarget("streak_weekly_challenge") }
+    }
+    DisposableEffect("streak_monthly_badges") {
+        onDispose { tourState.unregisterTarget("streak_monthly_badges") }
+    }
+    DisposableEffect("streak_weekly_progress") {
+        onDispose { tourState.unregisterTarget("streak_weekly_progress") }
+    }
+
+    // ... (Diálogos (Badge, Challenge) no cambian) ...
     selectedBadge?.let { badge ->
         BadgeDialog(
             badge = badge,
@@ -200,7 +261,6 @@ fun StreakScreen() {
         )
     }
 
-    // Dialog del challenge
     if (showChallengeDialog) {
         WeeklyChallengeDialog(
             challenge = weeklyChallenge,
@@ -215,9 +275,9 @@ fun StreakScreen() {
     }
 }
 
-// WeeklyChallengeCard
 @Composable
 private fun WeeklyChallengeCard(
+    // ... (Este Composable no cambia) ...
     challenge: WeeklyChallenge,
     isAccepted: Boolean,
     onAccept: () -> Unit,
@@ -382,6 +442,7 @@ private fun WeeklyChallengeCard(
 
 @Composable
 private fun StreakCard(
+    // ... (Este Composable no cambia) ...
     currentStreak: Int,
     longestStreak: Int,
     totalDays: Int,
@@ -516,6 +577,7 @@ private fun StreakCard(
 
 @Composable
 private fun GifPlayer(modifier: Modifier = Modifier) {
+    // ... (Este Composable no cambia) ...
     val context = LocalContext.current
     val imageLoader = ImageLoader.Builder(context)
         .components {

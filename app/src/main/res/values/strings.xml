@@ -385,7 +385,7 @@
     <string name="tour_desc_navigating">Loading next screen...</string>
 
     <string name="tour_title_home_points">Your Total Points</string>
-    <string name="tour_desc_home_points">Welcome! This card shows the total points you\'ve earned from recycling. Watch them grow!</string>
+    <string name="tour_desc_home_points">This card shows the total points you\'ve earned from recycling. Watch them grow!</string>
     <string name="tour_title_home_activity">Your Recent Activity</string>
     <string name="tour_desc_home_activity">Here you\'ll see a summary of your latest movements, like recycling and rewards.</string>
     <string name="tour_title_home_achievements">Your Achievements</string>
@@ -422,7 +422,7 @@
     <string name="tour_title_activity_materials">Your Impact</string>
     <string name="tour_desc_activity_materials">This section summarizes how much plastic and aluminum you\'ve helped recycle. Good job!</string>
     <string name="tour_title_activity_history">Detailed History</string>
-    <string name="tour_desc_activity_history">And here you\'ll find the complete record of every recycling and redemption you\'ve made. That\'s all!</string>
+    <string name="tour_desc_activity_history">And here you\'ll find the complete record of every recycling and redemption you\'ve made.</string>
 
     <string name="payment_loading_info">Loading information…</string>
     <string name="payment_withdrawal_paypal">PayPal Withdrawal</string>
@@ -602,4 +602,19 @@
 
     <string name="name">Name</string>
     <string name="error_email_invalid">The email must be a valid email.</string>
+
+    <string name="tour_title_profile_verification">Verification Status</string>
+    <string name="tour_desc_profile_verification">Here you will see if your account is verified, pending, or if it was rejected (and why).</string>
+    <string name="tour_title_profile_documents">Your Documents</string>
+    <string name="tour_desc_profile_documents">From this section, you can upload or update the documents needed to verify your identity.</string>
+    <string name="tour_title_streak_button">Streak Section</string>
+    <string name="tour_desc_streak_button">Great! Now tap "Next" to see your progress and streaks.</string>
+    <string name="tour_title_streak_card">Your Current Streak</string>
+    <string name="tour_desc_streak_card">Keep it up! This card shows your consecutive recycling days and your best streak.</string>
+    <string name="tour_title_streak_challenge">Weekly Challenge</string>
+    <string name="tour_desc_streak_challenge">Accept weekly challenges to earn additional rewards! Tap here to see the details.</string>
+    <string name="tour_title_streak_badges">Monthly Badges</string>
+    <string name="tour_desc_streak_badges">Accumulate points during the month to unlock these badges and earn bonus points.</string>
+    <string name="tour_title_streak_progress">Weekly Progress</string>
+    <string name="tour_desc_streak_progress">Finally, here you can see a graph of your recycling activities during the week.</string>
 </resources>

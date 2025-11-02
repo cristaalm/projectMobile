@@ -1,60 +1,64 @@
 package com.renova.mobile.ui.screens
 
-import androidx.compose.animation.Crossfade // <-- de v1
-import androidx.compose.animation.core.tween // <-- de v1
+import androidx.compose.animation.Crossfade
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable // <-- de v2
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
+// --- INICIO MODIFICACIÓN: Imports añadidos ---
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.LazyListState
+import androidx.compose.foundation.lazy.rememberLazyListState
+// --- FIN MODIFICACIÓN ---
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Refresh // <-- de v1
-import androidx.compose.material.icons.filled.ShoppingCart // <-- de v2
-import androidx.compose.material.icons.filled.Recycling // <-- de v2
-import androidx.compose.material.icons.filled.History // <-- de v2
-import androidx.compose.material.icons.filled.Person // <-- de v2
+import androidx.compose.material.icons.filled.Refresh
+import androidx.compose.material.icons.filled.ShoppingCart
+import androidx.compose.material.icons.filled.Recycling
+import androidx.compose.material.icons.filled.History
+import androidx.compose.material.icons.filled.Person
 import androidx.compose.material3.*
 import androidx.compose.material3.pulltorefresh.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.draw.drawBehind // <-- de v1
+import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.Paint // <-- de v1
-import androidx.compose.ui.graphics.drawscope.drawIntoCanvas // <-- de v1
-import androidx.compose.ui.graphics.graphicsLayer // <-- de v1
-import androidx.compose.ui.graphics.toArgb // <-- de v1
+import androidx.compose.ui.graphics.Paint
+import androidx.compose.ui.graphics.drawscope.drawIntoCanvas
+import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.text.style.TextOverflow // <-- de v2
-import androidx.compose.ui.unit.Dp // <-- de v1
+import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.renova.mobile.R
 import com.renova.mobile.network.ActivityItem
 import com.renova.mobile.ui.theme.LocalRenovaColors
-import com.renova.mobile.ui.theme.PoppinsFontFamily // <-- de v2
+import com.renova.mobile.ui.theme.PoppinsFontFamily
 import com.renova.mobile.ui.theme.RenovaColorScheme
-import com.renova.mobile.ui.theme.RenovaColors // <-- de v2
+import com.renova.mobile.ui.theme.RenovaColors
 import com.renova.mobile.ui.viewmodels.ActivityViewModel
-import java.text.SimpleDateFormat // <-- de v1
-import java.util.* // <-- de v1
+import java.text.SimpleDateFormat
+import java.util.*
 import com.renova.mobile.ui.components.*
 
-// --- NUEVO: Imports para el Tour (de v1) ---
 import androidx.compose.ui.layout.onGloballyPositioned
 import com.renova.mobile.ui.tour.LocalTourState
-// --- FIN DE IMPORTS ---
+import androidx.compose.foundation.ScrollState
+import androidx.compose.runtime.DisposableEffect
 
 
-// --- Modifier de v1 ---
 fun Modifier.greenShadow(
+    // ... (Esta función no cambia) ...
     color: Color = Color(0xFF4CAF50),
     alpha: Float = 0.15f,
     borderRadius: Dp = 16.dp,
@@ -92,7 +96,7 @@ fun Modifier.greenShadow(
 fun ActivityScreen(
     viewModel: ActivityViewModel = androidx.lifecycle.viewmodel.compose.viewModel()
 ) {
-    // --- Lógica de v2 (más avanzada) ---
+    // ... (La lógica de ActivityScreen (states, modals, etc) no cambia) ...
     val renovaColors = LocalRenovaColors.current
     val state by viewModel.state.collectAsState()
     val pullToRefreshState = rememberPullToRefreshState()
@@ -171,7 +175,6 @@ fun ActivityScreen(
         }
     }
 
-    // Modal de detalle de actividad (de v2)
     selectedActivity?.let { activity ->
         ModalBottomSheet(
             onDismissRequest = { selectedActivity = null },
@@ -183,7 +186,6 @@ fun ActivityScreen(
         }
     }
 
-    // Modal de error con opción de reintentar (de v2)
     RetryableErrorModal(
         isVisible = showErrorModal,
         errorMessage = state.error ?: stringResource(R.string.unknown_error),
@@ -208,17 +210,21 @@ private fun ActivityContent(
     shouldAnimatePoints: Boolean = false,
     onActivityClick: (ActivityItem) -> Unit
 ) {
-    // --- NUEVO: Obtener estado del Tour (de v1) ---
     val tourState = LocalTourState.current
-    // --- FIN ---
+    // --- INICIO MODIFICACIÓN: Añadir LazyListState ---
+    val lazyListState = rememberLazyListState()
+    // --- FIN MODIFICACIÓN ---
 
     LazyColumn(
+        // --- INICIO MODIFICACIÓN: Pasar el estado ---
+        state = lazyListState,
+        // --- FIN MODIFICACIÓN ---
         modifier = Modifier
             .fillMaxSize()
             .background(Color.Transparent),
         contentPadding = PaddingValues(bottom = 16.dp)
     ) {
-        item {
+        item { // <-- ÍNDICE 0
             androidx.compose.animation.AnimatedVisibility(
                 visible = true,
                 enter = androidx.compose.animation.fadeIn(
@@ -228,9 +234,15 @@ private fun ActivityContent(
                     animationSpec = androidx.compose.animation.core.tween(durationMillis = 600)
                 )
             ) {
-                // --- MODIFICADO: Añadir Box con hook del tour (v1) alrededor de la llamada de v2 ---
                 Box(modifier = Modifier.onGloballyPositioned { coords ->
-                    tourState.registerTarget("activity_points_card", coords)
+                    // --- INICIO MODIFICACIÓN ---
+                    tourState.registerTarget(
+                        id = "activity_points_card",
+                        coordinates = coords,
+                        lazyListState = lazyListState,
+                        itemIndex = 0
+                    )
+                    // --- FIN MODIFICACIÓN ---
                 }) {
                     AnimatedPointsCardActivity(
                         totalPoints = state.totalPoints,
@@ -241,7 +253,7 @@ private fun ActivityContent(
             }
         }
 
-        item {
+        item { // <-- ÍNDICE 1
             androidx.compose.animation.AnimatedVisibility(
                 visible = true,
                 enter = androidx.compose.animation.fadeIn(
@@ -258,22 +270,22 @@ private fun ActivityContent(
                         text = stringResource(R.string.recycling_materials),
                         style = MaterialTheme.typography.titleLarge,
                         color = renovaColors.textPrimary,
-                        fontWeight = FontWeight.Bold, // <-- de v2
-                        fontSize = 21.sp, // <-- de v2
-                        fontFamily = PoppinsFontFamily // <-- de v2
+                        fontWeight = FontWeight.Bold,
+                        fontSize = 21.sp,
+                        fontFamily = PoppinsFontFamily
                     )
                     Text(
                         text = stringResource(R.string.earn_points_recycling),
                         style = MaterialTheme.typography.bodyMedium,
                         color = renovaColors.textSecondary,
-                        fontSize = 14.sp, // <-- de v2
-                        fontFamily = PoppinsFontFamily // <-- de v2
+                        fontSize = 14.sp,
+                        fontFamily = PoppinsFontFamily
                     )
                 }
             }
         }
 
-        item {
+        item { // <-- ÍNDICE 2
             androidx.compose.animation.AnimatedVisibility(
                 visible = true,
                 enter = androidx.compose.animation.fadeIn(
@@ -287,9 +299,15 @@ private fun ActivityContent(
                     modifier = Modifier
                         .fillMaxWidth()
                         .padding(horizontal = 20.dp, vertical = 8.dp)
-                        // --- MODIFICADO: Añadir hook del tour (v1) ---
                         .onGloballyPositioned { coords ->
-                            tourState.registerTarget("activity_materials_row", coords)
+                            // --- INICIO MODIFICACIÓN ---
+                            tourState.registerTarget(
+                                id = "activity_materials_row",
+                                coordinates = coords,
+                                lazyListState = lazyListState,
+                                itemIndex = 2
+                            )
+                            // --- FIN MODIFICACIÓN ---
                         },
                     horizontalArrangement = Arrangement.spacedBy(12.dp)
                 ) {
@@ -319,7 +337,7 @@ private fun ActivityContent(
             }
         }
 
-        item {
+        item { // <-- ÍNDICE 3
             androidx.compose.animation.AnimatedVisibility(
                 visible = true,
                 enter = androidx.compose.animation.fadeIn(
@@ -332,7 +350,6 @@ private fun ActivityContent(
                 Column(
                     modifier = Modifier
                         .padding(start = 20.dp, top = 12.dp, bottom = 8.dp)
-                    // --- MODIFICACIÓN 1: El .onGloballyPositioned se quitó de aquí ---
                 ) {
                     Text(
                         text = stringResource(R.string.history),
@@ -346,50 +363,47 @@ private fun ActivityContent(
                         text = stringResource(R.string.activity_record),
                         style = MaterialTheme.typography.bodyMedium,
                         color = renovaColors.textSecondary,
-                        fontSize = 14.sp, // <-- de v2
-                        fontFamily = PoppinsFontFamily // <-- de v2
+                        fontSize = 14.sp,
+                        fontFamily = PoppinsFontFamily
                     )
                 }
             }
         }
 
-        item {
+        item { // <-- ÍNDICE 4
             DisposableEffect("activity_points_card") {
                 onDispose { tourState.unregisterTarget("activity_points_card") }
             }
             DisposableEffect("activity_materials_row") {
                 onDispose { tourState.unregisterTarget("activity_materials_row") }
             }
-            // --- MODIFICACIÓN 2: El ID "activity_history_title" se mantiene sin cambios ---
             DisposableEffect("activity_history_title") {
                 onDispose { tourState.unregisterTarget("activity_history_title") }
             }
         }
 
-        // --- MODIFICACIÓN: Inicia el bloque corregido para el tour ---
-        // 1. Creamos un 'item' que SIEMPRE existe.
-        item {
-            // 2. Creamos un Column contenedor que tendrá el hook del tour.
+        item { // <-- ÍNDICE 5
             Column(
                 modifier = Modifier
                     .fillMaxWidth()
-                    // 3. ¡Aquí está el hook! Ahora siempre se registrará.
                     .onGloballyPositioned { coords ->
-                        tourState.registerTarget("activity_history_title", coords)
+                        // --- INICIO MODIFICACIÓN ---
+                        tourState.registerTarget(
+                            id = "activity_history_title",
+                            coordinates = coords,
+                            lazyListState = lazyListState,
+                            itemIndex = 5
+                        )
+                        // --- FIN MODIFICACIÓN ---
                     }
             ) {
-                // 4. Movemos el if/else DENTRO de este contenedor.
                 if (state.activities.isEmpty()) {
-                    // Si está vacío, mostramos el EmptyState.
-                    // EmptyStateInline ya tiene su propio padding.
                     EmptyStateInline(renovaColors = renovaColors)
                 } else {
-                    // Si NO está vacío, mostramos la lista.
-                    // Usamos el Column que ya tenías para la lista.
                     Column(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .padding(horizontal = 24.dp), // Mantenemos el padding original
+                            .padding(horizontal = 24.dp),
                         verticalArrangement = Arrangement.spacedBy(0.dp)
                     ) {
                         state.activities.forEachIndexed { index, activity ->
@@ -412,12 +426,9 @@ private fun ActivityContent(
                 }
             }
         }
-        // --- MODIFICACIÓN: Fin del bloque corregido ---
 
-        // --- MODIFICACIÓN: La paginación debe estar fuera del 'else' anterior,
-        // pero seguir siendo condicional.
         if (state.activities.isNotEmpty()) {
-            item {
+            item { // <-- ÍNDICE 6 (condicional)
                 androidx.compose.animation.AnimatedVisibility(
                     visible = true,
                     enter = androidx.compose.animation.fadeIn(
@@ -440,9 +451,10 @@ private fun ActivityContent(
         }
     }
 }
-// --- Composable de v2 ---
+
 @Composable
 fun ActivityHistoryCard(
+    // ... (Este Composable no cambia) ...
     activity: ActivityItem,
     colors: RenovaColorScheme,
     onClick: () -> Unit = {}
@@ -507,7 +519,6 @@ fun ActivityHistoryCard(
                             context.getString(R.string.aluminum)
                         else -> materialName
                     }
-                    // Agregar "- Aplastada" si es plástico y está aplastada
                     if (activity.scan?.is_crushed == true) "$baseName - ${context.getString(R.string.crushed)}" else baseName
                 }
                 3 -> context.getString(R.string.manual_adjustment)
@@ -564,6 +575,7 @@ fun ActivityHistoryCard(
 
 @Composable
 private fun MaterialStatCard(
+    // ... (Este Composable no cambia) ...
     title: String,
     count: Int,
     icon: Int,
@@ -629,6 +641,7 @@ private fun MaterialStatCard(
 
 @Composable
 fun EmptyStateInline(
+    // ... (Este Composable no cambia) ...
     renovaColors: RenovaColorScheme,
     modifier: Modifier = Modifier
 ) {
@@ -639,7 +652,6 @@ fun EmptyStateInline(
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Center
     ) {
-        // Icono decorativo
         Box(
             modifier = Modifier
                 .size(100.dp)
@@ -659,7 +671,6 @@ fun EmptyStateInline(
 
         Spacer(modifier = Modifier.height(20.dp))
 
-        // Título
         Text(
             text = stringResource(R.string.no_activity_yet),
             fontFamily = PoppinsFontFamily,
@@ -671,7 +682,6 @@ fun EmptyStateInline(
 
         Spacer(modifier = Modifier.height(8.dp))
 
-        // Descripción
         Text(
             text = stringResource(R.string.no_activity_description),
             fontFamily = PoppinsFontFamily,

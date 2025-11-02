@@ -2,6 +2,10 @@ package com.renova.mobile.ui.tour
 
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.tween
+// --- INICIO MODIFICACIÓN: Imports añadidos ---
+import androidx.compose.foundation.ScrollState
+import androidx.compose.foundation.lazy.LazyListState
+// --- FIN MODIFICACIÓN ---
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
@@ -40,18 +44,22 @@ fun TourOverlay(
     val targets by tourState.targets.collectAsState()
     val isTourActive by tourState.isTourActive.collectAsState()
 
-    // --- INICIO MODIFICACIÓN ---
-    // Lee la lista de pasos activa desde el StateFlow
     val tourSteps by tourState.tourSteps.collectAsState()
 
-    val currentStep by remember(currentStepIndex, tourSteps) { // Se actualiza si 'tourSteps' cambia
-        derivedStateOf { tourSteps.getOrNull(currentStepIndex) } // Lee de 'tourSteps'
+    val currentStep by remember(currentStepIndex, tourSteps) {
+        derivedStateOf { tourSteps.getOrNull(currentStepIndex) }
     }
-    // --- FIN MODIFICACIÓN ---
 
-    val targetRect by remember(currentStep, targets) {
+    // --- INICIO MODIFICACIÓN: Obtener TargetInfo completo ---
+    val targetInfo by remember(currentStep, targets) {
         derivedStateOf { currentStep?.let { targets[it.targetId] } }
     }
+    val targetRect = targetInfo?.rect
+    val targetScrollState = targetInfo?.scrollState
+    // --- NUEVAS VARIABLES ---
+    val targetLazyListState = targetInfo?.lazyListState
+    val targetItemIndex = targetInfo?.itemIndex
+    // --- FIN MODIFICACIÓN ---
 
     val isStepOnCorrectScreen = currentStep?.screenRoute == currentScreenRoute
 
@@ -64,10 +72,56 @@ fun TourOverlay(
         }
     }
 
-    // ... (El resto del archivo TourOverlay.kt se mantiene exactamente igual)
-    // ... (El Canvas, TooltipBox, y calculateTooltipPosition no necesitan cambios)
+    // --- INICIO MODIFICACIÓN: Lógica de Auto-Scroll (para ScrollState y LazyListState) ---
+    val configuration = LocalConfiguration.current
+    val density = LocalDensity.current
+    val screenHeightPx = with(density) { configuration.screenHeightDp.dp.toPx() }
 
-    // MODIFICADO: El scrim se muestra si hay target O si es el paso de bienvenida
+    LaunchedEffect(
+        targetRect,
+        targetScrollState,
+        targetLazyListState,
+        targetItemIndex,
+        isStepOnCorrectScreen,
+        screenHeightPx
+    ) {
+        if (!isStepOnCorrectScreen || targetRect == null) {
+            return@LaunchedEffect
+        }
+
+        // Márgenes (TopBar e BottomBar) para definir la "zona visible"
+        val topMargin = with(density) { 100.dp.toPx() } // Altura aprox TopBar
+        val bottomMargin = with(density) { 180.dp.toPx() } // Altura aprox BottomBar + FAB
+
+        val visibleAreaTop = topMargin
+        val visibleAreaBottom = screenHeightPx - bottomMargin
+
+        val isOffScreenTop = targetRect.top < visibleAreaTop // El item está "por encima" de la zona visible
+        val isOffScreenBottom = targetRect.bottom > visibleAreaBottom // El item está "por debajo" de la zona visible
+
+        if (isOffScreenBottom || isOffScreenTop) {
+            // Comprobar qué tipo de scroll usar
+            if (targetScrollState != null) {
+                // --- Lógica para ScrollState ---
+                // Calcula cuánto scrollear.
+                // Queremos que el item aparezca justo debajo del TopBar (topMargin)
+                val scrollAmount = (targetRect.top - topMargin).toInt()
+                // Asegurarse de no scrollear a un valor negativo
+                targetScrollState.animateScrollTo(scrollAmount.coerceAtLeast(0))
+
+            } else if (targetLazyListState != null && targetItemIndex != null) {
+                // --- Lógica para LazyListState ---
+                // Simplemente scrollea al índice del item.
+                // El offset se puede usar si el item es más grande que la pantalla,
+                // pero para centrarlo, scrollear al índice es suficiente.
+                targetLazyListState.animateScrollToItem(targetItemIndex)
+            }
+        }
+    }
+    // --- FIN MODIFICACIÓN ---
+
+
+    // ... (El resto del Composable (Canvas, TooltipBox, etc) se mantiene igual) ...
     val shouldShowScrim = isTourActive && isStepOnCorrectScreen &&
             (targetRect != null || currentStep?.isWelcomeStep == true)
 
@@ -95,13 +149,12 @@ fun TourOverlay(
         ) {
             drawRect(color = scrimColor.copy(alpha = scrimAlpha))
 
-            // MODIFICADO: Solo dibuja el agujero si NO es paso de bienvenida
             val localTargetRect = targetRect
             val localCurrentStep = currentStep
             if (localTargetRect != null &&
                 isStepOnCorrectScreen &&
                 scrimAlpha > 0.1f &&
-                localCurrentStep?.isWelcomeStep != true) { // No hacer agujero en bienvenida
+                localCurrentStep?.isWelcomeStep != true) {
 
                 val inflatedRect = localTargetRect.inflate(with(density) { 8.dp.toPx() })
 
@@ -118,7 +171,6 @@ fun TourOverlay(
         val localCurrentStep = currentStep
         val localTargetRect = targetRect
 
-        // MODIFICADO: Muestra tooltip si hay paso Y (hay target O es bienvenida)
         if (localCurrentStep != null &&
             (localTargetRect != null || localCurrentStep.isWelcomeStep) &&
             isStepOnCorrectScreen &&
@@ -126,7 +178,7 @@ fun TourOverlay(
 
             TooltipBox(
                 step = localCurrentStep,
-                targetRect = localTargetRect, // Puede ser null para bienvenida
+                targetRect = localTargetRect,
                 isFirstStep = tourState.isFirstStepOfTour(),
                 isLastStep = tourState.isLastStepOfTour(),
                 onNext = { tourState.nextStep() },
@@ -140,13 +192,14 @@ fun TourOverlay(
 @Composable
 private fun TooltipBox(
     step: TourStep,
-    targetRect: Rect?, // MODIFICADO: Ahora puede ser null
+    targetRect: Rect?,
     isFirstStep: Boolean,
     isLastStep: Boolean,
     onNext: () -> Unit,
     onPrev: () -> Unit,
     onEnd: () -> Unit
 ) {
+    // ... (El Composable TooltipBox se mantiene igual) ...
     val renovaColors = LocalRenovaColors.current
 
     var tooltipSize by remember { mutableStateOf(IntSize.Zero) }
@@ -155,10 +208,8 @@ private fun TooltipBox(
     val screenHeightPx = with(density) { configuration.screenHeightDp.dp.toPx() }
     val screenWidthPx = with(density) { configuration.screenWidthDp.dp.toPx() }
 
-    // MODIFICADO: Si es paso de bienvenida (sin target), centra el tooltip
     val (tooltipX, tooltipY) = remember(targetRect, tooltipSize, screenWidthPx, screenHeightPx, step.isWelcomeStep) {
         if (step.isWelcomeStep || targetRect == null) {
-            // Centra el tooltip en pantalla
             val x = (screenWidthPx / 2) - (tooltipSize.width / 2)
             val y = (screenHeightPx / 2) - (tooltipSize.height / 2)
             Pair(with(density) { x.toDp().value }, with(density) { y.toDp().value })
@@ -240,23 +291,41 @@ private fun calculateTooltipPosition(
     screenHeightPx: Float,
     density: Density
 ): Pair<Float, Float> {
-
+    // ... (Esta función no cambia) ...
     val margin = with(density) { 16.dp.toPx() }
     val tooltipHeightPx = tooltipSize.height
     val tooltipWidthPx = tooltipSize.width
 
-    val spaceAbove = targetRect.top
-    val spaceBelow = screenHeightPx - targetRect.bottom
+    val safeAreaTop = margin
+    val safeAreaBottom = screenHeightPx - tooltipHeightPx - margin
 
-    val yPx = if (spaceBelow > tooltipHeightPx + margin) {
-        targetRect.bottom + margin
-    } else if (spaceAbove > tooltipHeightPx + margin) {
-        targetRect.top - tooltipHeightPx - margin
+    val targetIsOffBottom = targetRect.top > safeAreaBottom
+    val targetIsOffTop = targetRect.bottom < safeAreaTop
+
+    val yPx: Float
+    if (targetIsOffBottom) {
+        yPx = screenHeightPx - tooltipHeightPx - margin
+    } else if (targetIsOffTop) {
+        yPx = margin
     } else {
-        (screenHeightPx / 2) - (tooltipHeightPx / 2)
+        val spaceAbove = targetRect.top
+        val spaceBelow = screenHeightPx - targetRect.bottom
+
+        yPx = if (spaceBelow > tooltipHeightPx + margin) {
+            targetRect.bottom + margin
+        } else if (spaceAbove > tooltipHeightPx + margin) {
+            targetRect.top - tooltipHeightPx - margin
+        } else {
+            (screenHeightPx / 2) - (tooltipHeightPx / 2)
+        }
     }
 
-    var xPx = (targetRect.left + targetRect.width / 2) - (tooltipWidthPx / 2)
+    var xPx: Float
+    if (targetIsOffBottom || targetIsOffTop) {
+        xPx = (screenWidthPx / 2) - (tooltipWidthPx / 2)
+    } else {
+        xPx = (targetRect.left + targetRect.width / 2) - (tooltipWidthPx / 2)
+    }
 
     if (xPx < margin) {
         xPx = margin
