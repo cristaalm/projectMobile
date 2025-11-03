@@ -173,13 +173,13 @@ fun CustomBottomBar(
     var showLogoutModal by remember { mutableStateOf(false) }
     val context = LocalContext.current
     var showMenu by remember { mutableStateOf(false) }
+    var showManualDialog by remember { mutableStateOf(false) } // <-- MOVIDO AQUÍ FUERA
 
     // --- AÑADIDO: Obtener el estado del Tour (de rama 'tour') ---
     val tourState = LocalTourState.current
-    val currentStepIndex by tourState.currentStepIndex.collectAsState() // <-- AÑADIDO
-    val isTourActive by tourState.isTourActive.collectAsState() // <-- AÑADIDO
+    val currentStepIndex by tourState.currentStepIndex.collectAsState()
+    val isTourActive by tourState.isTourActive.collectAsState()
     // --- FIN ---
-
 
     Box(
         modifier = Modifier
@@ -225,7 +225,6 @@ fun CustomBottomBar(
                 it.route == StoreGraph.ROUTE || it.route == StoreGraph.STORE_LIST
             } == true
 
-            // --- MODIFICADO: Añadir modifier y DisposableEffect (de rama 'tour') ---
             NavItem(
                 item = NavigationItem.Store,
                 isSelected = isStoreSelected,
@@ -247,12 +246,10 @@ fun CustomBottomBar(
             DisposableEffect("bottom_bar_store") {
                 onDispose { tourState.unregisterTarget("bottom_bar_store") }
             }
-            // --- FIN DE MODIFICACIÓN ---
 
             Spacer(modifier = Modifier.width(72.dp))
 
             // --- PERFIL ---
-            // --- MODIFICADO: Añadir modifier y DisposableEffect (de rama 'tour') ---
             NavItem(
                 item = NavigationItem.Profile,
                 isSelected = currentDestination?.route == NavigationItem.Profile.route ||
@@ -276,19 +273,23 @@ fun CustomBottomBar(
             DisposableEffect("bottom_bar_profile") {
                 onDispose { tourState.unregisterTarget("bottom_bar_profile") }
             }
-            // --- FIN DE MODIFICACIÓN ---
 
-            // --- MENÚ (de rama 'develop') ---
+            // --- MENÚ ---
             val interactionSource = remember { MutableInteractionSource() }
             val isPressed by interactionSource.collectIsPressedAsState()
             Box(
                 modifier = Modifier
                     .size(72.dp)
                     .padding(4.dp)
+<<<<<<< Updated upstream
                     .onGloballyPositioned { coords -> // <-- MODIFICADO
                         // --- INICIO MODIFICACIÓN ---
                         tourState.registerTarget("bottom_bar_menu", coords, null)
                         // --- FIN MODIFICACIÓN ---
+=======
+                    .onGloballyPositioned { coords ->
+                        tourState.registerTarget("bottom_bar_menu", coords)
+>>>>>>> Stashed changes
                     },
                 contentAlignment = Alignment.Center
             ) {
@@ -307,25 +308,23 @@ fun CustomBottomBar(
                         .clickable(
                             interactionSource = interactionSource,
                             indication = null
-                        ) { showMenu = true }, // <-- Mantenemos la lógica del menú
+                        ) { showMenu = true },
                     contentAlignment = Alignment.Center
                 ) {
                     Icon(
-                        imageVector = Icons.Filled.Dashboard, // <-- Mantenemos el icono de Menú
+                        imageVector = Icons.Filled.Dashboard,
                         contentDescription = "Menú",
                         tint = Color(0xFF05D16E),
                         modifier = Modifier.size(28.dp)
                     )
                 }
             }
-            // Añadimos el DisposableEffect para el nuevo target
-            DisposableEffect("bottom_bar_menu") { // <-- AÑADIDO
+            DisposableEffect("bottom_bar_menu") {
                 onDispose { tourState.unregisterTarget("bottom_bar_menu") }
             }
         }
 
         val isQrSelected = currentDestination?.route == NavigationItem.QR.route
-        // --- MODIFICADO: Añadir modifier y DisposableEffect (de rama 'tour') ---
         Box(
             modifier = Modifier
                 .size(64.dp)
@@ -342,10 +341,15 @@ fun CustomBottomBar(
                         restoreState = true
                     }
                 }
+<<<<<<< Updated upstream
                 .onGloballyPositioned { coords -> // <-- Añadido
                     // --- INICIO MODIFICACIÓN ---
                     tourState.registerTarget("bottom_bar_qr", coords, null)
                     // --- FIN MODIFICACIÓN ---
+=======
+                .onGloballyPositioned { coords ->
+                    tourState.registerTarget("bottom_bar_qr", coords)
+>>>>>>> Stashed changes
                 },
             contentAlignment = Alignment.Center
         ) {
@@ -376,16 +380,20 @@ fun CustomBottomBar(
                 }
             }
         }
-        DisposableEffect("bottom_bar_qr") { // <-- Añadido
+        DisposableEffect("bottom_bar_qr") {
             onDispose { tourState.unregisterTarget("bottom_bar_qr") }
         }
-        // --- FIN DE MODIFICACIÓN ---
 
-        // --- Panel lateral derecho del menú (de rama 'develop') ---
+        // --- Panel lateral derecho del menú ---
         if (showMenu) {
-            Dialog(onDismissRequest = { showMenu = false }, properties = DialogProperties(usePlatformDefaultWidth = false)) {
+            Dialog(
+                onDismissRequest = { showMenu = false },
+                properties = DialogProperties(usePlatformDefaultWidth = false)
+            ) {
                 var panelVisible by remember { mutableStateOf(false) }
+
                 LaunchedEffect(Unit) { panelVisible = true }
+
                 Box(modifier = Modifier.fillMaxSize()) {
                     Box(
                         modifier = Modifier
@@ -403,10 +411,15 @@ fun CustomBottomBar(
                             modifier = Modifier
                                 .fillMaxHeight()
                                 .width(280.dp)
+<<<<<<< Updated upstream
                                 .onGloballyPositioned { coords -> // <-- MODIFICADO
                                     // --- INICIO MODIFICACIÓN ---
                                     tourState.registerTarget("side_menu_panel", coords, null)
                                     // --- FIN MODIFICACIÓN ---
+=======
+                                .onGloballyPositioned { coords ->
+                                    tourState.registerTarget("side_menu_panel", coords)
+>>>>>>> Stashed changes
                                 },
                             shape = RoundedCornerShape(topStart = 12.dp, bottomStart = 12.dp),
                             color = Color(0xFF05D16E)
@@ -427,18 +440,24 @@ fun CustomBottomBar(
                                         fontWeight = FontWeight.Bold
                                     )
                                     IconButton(onClick = { panelVisible = false }) {
-                                        Icon(imageVector = Icons.Filled.Close, contentDescription = "Cerrar", tint = Color.White)
+                                        Icon(
+                                            imageVector = Icons.Filled.Close,
+                                            contentDescription = "Cerrar",
+                                            tint = Color.White
+                                        )
                                     }
                                 }
+
                                 TextButton(
                                     onClick = {
-                                        panelVisible = false
-                                        context.startActivity(Intent(context, ManualGeneralActivity::class.java))
+                                        showMenu = false          // Cierra el menú primero
+                                        showManualDialog = true   // Luego abre el manual
                                     },
                                     colors = ButtonDefaults.textButtonColors(contentColor = Color.White)
                                 ) {
                                     Text("Manual general (PDF)")
                                 }
+
                                 TextButton(
                                     onClick = {
                                         panelVisible = false
@@ -448,19 +467,25 @@ fun CustomBottomBar(
                                 ) {
                                     Text("Preguntas frecuentes")
                                 }
+
                                 Divider(color = Color.White.copy(alpha = 0.3f))
+
                                 Button(
                                     onClick = {
                                         panelVisible = false
                                         showLogoutModal = true
                                     },
-                                    colors = ButtonDefaults.buttonColors(containerColor = Color.White, contentColor = Color(0xFF05D16E))
+                                    colors = ButtonDefaults.buttonColors(
+                                        containerColor = Color.White,
+                                        contentColor = Color(0xFF05D16E)
+                                    )
                                 ) {
                                     Text("Cerrar sesión")
                                 }
                             }
                         }
                     }
+
                     LaunchedEffect(panelVisible) {
                         if (!panelVisible) {
                             delay(250)
@@ -471,10 +496,14 @@ fun CustomBottomBar(
             }
         }
 
-        // Añadimos el DisposableEffect para el panel
-        DisposableEffect("side_menu_panel") { // <-- AÑADIDO
+        DisposableEffect("side_menu_panel") {
             onDispose { tourState.unregisterTarget("side_menu_panel") }
         }
+    }
+
+    // <-- MOVIDO AQUÍ FUERA DEL IF (showMenu)
+    if (showManualDialog) {
+        ManualDialog(onDismiss = { showManualDialog = false })
     }
 
     LogoutModal(

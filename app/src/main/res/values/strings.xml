@@ -602,6 +602,7 @@
 
     <string name="name">Name</string>
     <string name="error_email_invalid">The email must be a valid email.</string>
+<<<<<<< Updated upstream
 
     <string name="tour_title_profile_verification">Verification Status</string>
     <string name="tour_desc_profile_verification">Here you will see if your account is verified, pending, or if it was rejected (and why).</string>
@@ -617,4 +618,28 @@
     <string name="tour_desc_streak_badges">Accumulate points during the month to unlock these badges and earn bonus points.</string>
     <string name="tour_title_streak_progress">Weekly Progress</string>
     <string name="tour_desc_streak_progress">Finally, here you can see a graph of your recycling activities during the week.</string>
+=======
+    <string name="user_manual">User Manual</string>
+    <string name="view_online">View Online</string>
+    <string name="view_online_description">Interactive manual with page-turning effects</string>
+    <string name="view_pdf">View PDF</string>
+    <string name="view_pdf_description">Downloadable PDF version of the manual</string>
+    <string name="open_in_browser">Open in Browser</string>
+    <string name="online_manual_features">Enjoy an interactive experience with page animations on Issuu. Ideal for smooth and dynamic reading.</string>
+    <string name="pdf_manual_features">View the manual in PDF format for consultation. You can refer to it whenever you need.</string>
+    <string name="unlimited">Unlimited</string>
+    <string name="available_to_claim">Available to claim</string>
+    <string name="claimed">Claimed</string>
+    <string name="claim_reward">Claim Reward</string>
+    <string name="bonus">bonus</string>
+    <string name="weekly_activity">Actividad semanal</string>
+    <string name="monday_short">M</string>
+    <string name="tuesday_short">T</string>
+    <string name="wednesday_short">W</string>
+    <string name="thursday_short">T</string>
+    <string name="friday_short">F</string>
+    <string name="saturday_short">S</string>
+    <string name="sunday_short">S</string>
+
+>>>>>>> Stashed changes
 </resources>

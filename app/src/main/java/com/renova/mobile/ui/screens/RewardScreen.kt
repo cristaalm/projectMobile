@@ -150,13 +150,12 @@ fun RewardScreen(navController: NavController, allianceId: Int) {
 }
 
 @Composable
-fun RewardDetailSheet(reward: Reward) {
+fun RewardDetailSheet(reward: Reward, isBusiness: Boolean = false) {
     val colors = LocalRenovaColors.current
 
     Column(
         modifier = Modifier
             .fillMaxWidth()
-            // Agregamos un padding inferior para que no se corte al final
             .padding(start = 24.dp, end = 24.dp, top = 24.dp, bottom = 48.dp),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
@@ -190,6 +189,34 @@ fun RewardDetailSheet(reward: Reward) {
             textAlign = TextAlign.Center
         )
         Spacer(modifier = Modifier.height(24.dp))
+
+        // Mostrar stock si es negocio
+        if (isBusiness) {
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.Center
+            ) {
+                Text(
+                    text = "${stringResource(id = R.string.stock)}: ",
+                    fontFamily = PoppinsFontFamily,
+                    fontWeight = FontWeight.Medium,
+                    fontSize = 16.sp,
+                    color = colors.textSecondary
+                )
+                Text(
+                    text = if (reward.stock == null) {
+                        stringResource(id = R.string.unlimited)
+                    }else {
+                        reward.stock.toString()
+                    },
+                    fontFamily = PoppinsFontFamily,
+                    fontWeight = FontWeight.Bold,
+                    fontSize = 20.sp,
+                    color = RenovaColors.Primary
+                )
+            }
+            Spacer(modifier = Modifier.height(16.dp))
+        }
 
         // Puntos requeridos
         Row(verticalAlignment = Alignment.Bottom) {
@@ -262,6 +289,7 @@ fun RewardCard(
                 horizontalAlignment = Alignment.CenterHorizontally,
                 verticalArrangement = Arrangement.Center
             ) {
+
                 Text(
                     text = reward.pointsRequired.toString(),
                     fontWeight = FontWeight.Bold,

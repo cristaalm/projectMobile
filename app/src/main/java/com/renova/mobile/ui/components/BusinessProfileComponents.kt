@@ -440,7 +440,7 @@ fun RewardsSection(
                             )
                             Text(
                                 text = stringResource(R.string.rewards_available),
-                                style = MaterialTheme.typography.titleSmall,
+                                style = MaterialTheme.typography.titleMedium,
                                 color = colors.textPrimary
                             )
                         }

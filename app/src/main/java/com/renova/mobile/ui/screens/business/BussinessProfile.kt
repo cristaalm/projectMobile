@@ -168,7 +168,7 @@ fun BusinessProfile(
                     containerColor = colors.cardBackground,
                     shape = RoundedCornerShape(topStart = 24.dp, topEnd = 24.dp)
                 ) {
-                    RewardDetailSheet(reward = selectedReward!!)
+                    RewardDetailSheet(reward = selectedReward!!, isBusiness = true)
                 }
             }
         }
@@ -197,9 +197,10 @@ private fun BusinessProfileContent(
             languageViewModel = languageViewModel,
             logoBytes = documentImages["logo"]
         )
+        Spacer(modifier = Modifier.height(12.dp))
 
         Column(
-            modifier = Modifier.padding(10.dp)
+            modifier = Modifier.padding(horizontal = 20.dp)
         ) {
             BusinessInfoCard(
                 user = user,

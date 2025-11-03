@@ -326,7 +326,7 @@ private fun ActivityContent(
                         modifier = Modifier.weight(1f)
                     )
                     MaterialStatCard(
-                        title = stringResource(R.string.total_materials),
+                        title = "Total",
                         count = state.totalPlastic + state.totalAluminum,
                         icon = R.drawable.bottle,
                         backgroundRes = R.drawable.fondo_comercio,
@@ -426,7 +426,10 @@ private fun ActivityContent(
                 }
             }
         }
+<<<<<<< Updated upstream
 
+=======
+>>>>>>> Stashed changes
         if (state.activities.isNotEmpty()) {
             item { // <-- ÍNDICE 6 (condicional)
                 androidx.compose.animation.AnimatedVisibility(
@@ -585,6 +588,25 @@ private fun MaterialStatCard(
 ) {
     val renovaColors = LocalRenovaColors.current
 
+    val fontSize = when {
+        count >= 1000 -> 24.sp  // 4+ dígitos
+        count >= 100 ->28.sp   // 3 dígitos
+        count >= 10 -> 32.sp    // 2 dígitos
+        else -> 36.sp           // 1 dígito
+    }
+
+    val iconSize = when {
+        count >= 1000 -> 32.dp
+        count >= 100 -> 36.dp
+        else -> 40.dp
+    }
+
+    val boxPadding = when {
+        count >= 1000 -> PaddingValues(horizontal = 12.dp, vertical = 6.dp)
+        count >= 100 -> PaddingValues(horizontal = 14.dp, vertical = 8.dp)
+        else -> PaddingValues(horizontal = 16.dp, vertical = 8.dp)
+    }
+
     Card(
         modifier = modifier.height(110.dp),
         shape = RoundedCornerShape(18.dp),
@@ -603,36 +625,37 @@ private fun MaterialStatCard(
             Column(
                 modifier = Modifier
                     .fillMaxSize()
-                    .padding(vertical = 16.dp, horizontal = 13.dp),
+                    .padding(vertical = 12.dp, horizontal = 12.dp),
                 horizontalAlignment = Alignment.CenterHorizontally,
                 verticalArrangement = Arrangement.Center
             ) {
-                Row(
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.Center
-                ) {
-                    if (showIcon) {
-                        Image(
-                            painter = painterResource(id = icon),
-                            contentDescription = title,
-                            modifier = Modifier.size(34.dp),
-                            colorFilter = androidx.compose.ui.graphics.ColorFilter.tint(Color.White)
+                Box(
+                    modifier = Modifier
+                        .background(
+                            color = Color.White,
+                            shape = RoundedCornerShape(12.dp)
                         )
-                        Spacer(modifier = Modifier.width(3.dp))
-                    }
+                        .padding(boxPadding),
+                    contentAlignment = Alignment.Center
+                ) {
                     Text(
                         text = count.toString(),
-                        style = MaterialTheme.typography.displayMedium,
-                        color = Color.White
+                        fontSize = fontSize,
+                        fontWeight = FontWeight.Bold,
+                        fontFamily = PoppinsFontFamily,
+                        color = Color(0xFF005E70),
+                        maxLines = 1
                     )
                 }
-                Spacer(modifier = Modifier.height(0.dp))
                 Text(
                     text = title,
-                    style = MaterialTheme.typography.labelMedium,
+                    fontSize = 14.sp,
+                    fontWeight = FontWeight.Bold,
+                    fontFamily = PoppinsFontFamily,
                     color = Color.White,
                     textAlign = TextAlign.Center,
-                    maxLines = 1
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis
                 )
             }
         }

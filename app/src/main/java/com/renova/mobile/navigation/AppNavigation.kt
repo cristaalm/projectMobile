@@ -206,7 +206,7 @@ fun AppNavigation(
                         onLogout = onLogout
                     )
                 }
-            }
+            },
         ) { innerPadding ->
             AnimatedVisibility(
                 visible = contentVisible,

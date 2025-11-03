@@ -3,6 +3,7 @@ package com.renova.mobile.utils
 import android.content.Context
 import android.content.SharedPreferences
 import com.renova.mobile.network.User
+import com.renova.mobile.network.UserData
 import com.google.gson.Gson
 import android.util.Log
 
@@ -17,6 +18,7 @@ class SessionManager(context: Context) {
         private const val KEY_TOKEN_TYPE = "token_type"
         private const val KEY_EXPIRES_AT = "expires_at"
         private const val KEY_USER = "user"
+        private const val KEY_USER_DATA = "user_data"
         private const val KEY_IS_LOGGED_IN = "is_logged_in"
         private const val KEY_FCM_TOKEN = "fcm_token"
         private const val KEY_USER_ID = "user_id"
@@ -48,6 +50,30 @@ class SessionManager(context: Context) {
         if (user?.tour_completed == true) {
             Log.d("SessionManager", "API dice que el tour ya estaba completo. Sincronizando bandera local.")
             setFirstLoginComplete() // Esto creará el "Post-it" local
+        }
+    }
+
+    fun saveUser(user: UserData) {
+        sharedPreferences.edit().apply {
+            putString(KEY_USER_DATA, gson.toJson(user))
+            putInt(KEY_USER_ID, user.id)
+            apply()
+        }
+        Log.d("SessionManager", "UserData guardado: ${user.name} - Points: ${user.points_month}")
+    }
+
+    fun getUserData(): UserData? {
+        val userJson = sharedPreferences.getString(KEY_USER_DATA, null)
+        return if (userJson != null) {
+            try {
+                gson.fromJson(userJson, UserData::class.java)
+            } catch (e: Exception) {
+                Log.e("SessionManager", "Error parsing UserData JSON", e)
+                null
+            }
+        } else {
+            Log.w("SessionManager", "UserData JSON is null")
+            null
         }
     }
 
@@ -136,6 +162,7 @@ class SessionManager(context: Context) {
             remove(KEY_TOKEN_TYPE)
             remove(KEY_EXPIRES_AT)
             remove(KEY_USER)
+            remove(KEY_USER_DATA)
             remove(KEY_IS_LOGGED_IN)
             remove(KEY_USER_ID)
             remove(KEY_FCM_TOKEN)
@@ -215,6 +242,11 @@ class SessionManager(context: Context) {
 
     // FUSIONADO: (de 'tour') Getter de UserID más robusto
     fun getUserId(): Int? {
+        val userData = getUserData()
+        if (userData != null) {
+            return userData.id
+        }
+
         val user = getUser()
         if (user != null) {
             return user.id

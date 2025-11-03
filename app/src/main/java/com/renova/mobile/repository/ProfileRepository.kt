@@ -1,6 +1,7 @@
 package com.renova.mobile.data.repository
 
 import android.content.Context
+import android.util.Log
 import com.renova.mobile.network.*
 import com.renova.mobile.utils.SessionManager
 import kotlinx.coroutines.Dispatchers
@@ -34,6 +35,7 @@ class ProfileRepository(private val context: Context) {
             val response: Response<IdentifyUserResponse> = apiService.identifyUser(request)
 
             if (response.isSuccessful) {
+                Log.d("Profile", "token: $cleanToken")
                 response.body()?.let {
                     if (it.success) {
                         Result.success(it)

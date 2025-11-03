@@ -688,7 +688,7 @@ fun ProfileHeader(
                 }
                 // --- Fin de Sección de Puntos ---
 
-                Spacer(modifier = Modifier.height(8.dp)) // <-- Spacer extra para dar aire
+                Spacer(modifier = Modifier.height(12.dp)) // <-- Spacer extra para dar aire
             }
         }
     }

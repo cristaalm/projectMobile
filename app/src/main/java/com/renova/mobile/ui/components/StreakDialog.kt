@@ -15,7 +15,6 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -28,8 +27,8 @@ import com.renova.mobile.ui.theme.PoppinsFontFamily
 import com.renova.mobile.ui.theme.RenovaColors
 import com.renova.mobile.ui.theme.RenovaColorScheme
 
-// Dialog del Challenge
-@Composable
+// Dialog del Challenge - VERSIÓN CORREGIDA
+/*@Composable
 fun WeeklyChallengeDialog(
     challenge: WeeklyChallenge,
     isAccepted: Boolean,
@@ -43,42 +42,16 @@ fun WeeklyChallengeDialog(
 
     val daysRemaining = 4
 
-    var showDialog by remember { mutableStateOf(false) }
-    val scale by animateFloatAsState(
-        targetValue = if (showDialog) 1f else 0.8f,
-        animationSpec = spring(
-            dampingRatio = Spring.DampingRatioMediumBouncy,
-            stiffness = Spring.StiffnessMedium
-        ),
-        label = "dialogScale"
-    )
-
-    val alpha by animateFloatAsState(
-        targetValue = if (showDialog) 1f else 0f,
-        animationSpec = tween(300),
-        label = "dialogAlpha"
-    )
-
-    LaunchedEffect(Unit) {
-        showDialog = true
-    }
-
     Dialog(
         onDismissRequest = onDismiss,
     ) {
         Card(
-            modifier = Modifier
-                .fillMaxWidth()
-                .graphicsLayer {
-                    scaleX = scale
-                    scaleY = scale
-                    this.alpha = alpha
-                },
+            modifier = Modifier.fillMaxWidth(),
             shape = RoundedCornerShape(24.dp),
             colors = CardDefaults.cardColors(
                 containerColor = RenovaColors.SecondaryColor
             ),
-            elevation = cardElevation(defaultElevation = 0.dp)
+            elevation = cardElevation(defaultElevation = 8.dp)
         ) {
             Column(
                 modifier = Modifier
@@ -354,50 +327,27 @@ fun WeeklyChallengeDialog(
             }
         }
     }
-}
+}*/
 
-// BadgeDialog
+// BadgeDialog - VERSIÓN CORREGIDA
 @Composable
 fun BadgeDialog(
     badge: MonthlyBadge,
     currentMonthPoints: Int,
-    onDismiss: () -> Unit
+    isClaimingBadge: Boolean,
+    onDismiss: () -> Unit,
+    onClaim: () -> Unit
 ) {
-    var showDialog by remember { mutableStateOf(false) }
-    val scale by animateFloatAsState(
-        targetValue = if (showDialog) 1f else 0.8f,
-        animationSpec = spring(
-            dampingRatio = Spring.DampingRatioMediumBouncy,
-            stiffness = Spring.StiffnessMedium
-        ),
-        label = "dialogScale"
-    )
-
-    val alpha by animateFloatAsState(
-        targetValue = if (showDialog) 1f else 0f,
-        animationSpec = tween(300),
-        label = "dialogAlpha"
-    )
-
-    LaunchedEffect(Unit) {
-        showDialog = true
-    }
-
     Dialog(onDismissRequest = onDismiss) {
         Card(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(horizontal = 16.dp)
-                .graphicsLayer {
-                    scaleX = scale
-                    scaleY = scale
-                    this.alpha = alpha
-                },
+                .padding(horizontal = 16.dp),
             shape = RoundedCornerShape(24.dp),
             colors = CardDefaults.cardColors(
                 containerColor = if (badge.isUnlocked) badge.backgroundColor else Color(0xFFE0E0E0)
             ),
-            elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
+            elevation = CardDefaults.cardElevation(defaultElevation = 8.dp)
         ) {
             Column(
                 modifier = Modifier
@@ -406,6 +356,7 @@ fun BadgeDialog(
                 horizontalAlignment = Alignment.CenterHorizontally,
                 verticalArrangement = Arrangement.Center
             ) {
+                // Icono del badge
                 Box(
                     modifier = Modifier
                         .size(100.dp)
@@ -432,6 +383,7 @@ fun BadgeDialog(
 
                 Spacer(modifier = Modifier.height(20.dp))
 
+                // Título
                 Text(
                     text = badge.title,
                     style = MaterialTheme.typography.headlineSmall,
@@ -455,11 +407,12 @@ fun BadgeDialog(
 
                 Spacer(modifier = Modifier.height(16.dp))
 
+                // Estado del badge
                 Row(
                     horizontalArrangement = Arrangement.Center,
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-                    if (badge.isUnlocked) {
+                    if (badge.isClaimed) {
                         Icon(
                             imageVector = Icons.Default.CheckCircle,
                             contentDescription = null,
@@ -468,7 +421,23 @@ fun BadgeDialog(
                         )
                         Spacer(modifier = Modifier.width(6.dp))
                         Text(
-                            text = stringResource(R.string.unlocked),
+                            text = stringResource(R.string.claimed),
+                            style = MaterialTheme.typography.labelLarge,
+                            color = badge.color,
+                            fontWeight = FontWeight.Bold,
+                            fontSize = 14.sp,
+                            fontFamily = PoppinsFontFamily
+                        )
+                    } else if (badge.isUnlocked) {
+                        Icon(
+                            imageVector = Icons.Default.Stars,
+                            contentDescription = null,
+                            tint = Color(0xFFFFD700),
+                            modifier = Modifier.size(20.dp)
+                        )
+                        Spacer(modifier = Modifier.width(6.dp))
+                        Text(
+                            text = stringResource(R.string.available_to_claim),
                             style = MaterialTheme.typography.labelLarge,
                             color = badge.color,
                             fontWeight = FontWeight.Bold,
@@ -496,6 +465,7 @@ fun BadgeDialog(
 
                 Spacer(modifier = Modifier.height(20.dp))
 
+                // Información del badge
                 Box(
                     modifier = Modifier
                         .fillMaxWidth()
@@ -534,7 +504,7 @@ fun BadgeDialog(
                             color = if (badge.isUnlocked) {
                                 Color.White.copy(alpha = 0.2f)
                             } else {
-                                Color(0xFF1B4F5C)
+                                Color(0xFFE0E0E0)
                             },
                             thickness = 1.dp
                         )
@@ -570,6 +540,7 @@ fun BadgeDialog(
                     }
                 }
 
+                // Barra de progreso para badges no desbloqueados
                 if (!badge.isUnlocked) {
                     Spacer(modifier = Modifier.height(20.dp))
 
@@ -599,7 +570,7 @@ fun BadgeDialog(
                             Box(
                                 modifier = Modifier
                                     .fillMaxWidth(progress)
-                                    .height(8.dp)
+                                    .fillMaxHeight()
                                     .background(RenovaColors.PrimaryColor, RoundedCornerShape(4.dp))
                             )
                         }
@@ -615,8 +586,53 @@ fun BadgeDialog(
                         )
                     }
                 }
+
+                // Botón de reclamar (solo si está desbloqueado y no reclamado)
+                if (badge.isUnlocked && !badge.isClaimed) {
+                    Spacer(modifier = Modifier.height(24.dp))
+
+                    Button(
+                        onClick = onClaim,
+                        enabled = !isClaimingBadge,
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(50.dp),
+                        colors = ButtonDefaults.buttonColors(
+                            containerColor = RenovaColors.TertiaryColor,
+                            disabledContainerColor = RenovaColors.TertiaryColor.copy(alpha = 0.5f)
+                        ),
+                        shape = RoundedCornerShape(12.dp)
+                    ) {
+                        if (isClaimingBadge) {
+                            CircularProgressIndicator(
+                                modifier = Modifier.size(24.dp),
+                                color = Color.White,
+                                strokeWidth = 2.dp
+                            )
+                        } else {
+                            Row(
+                                verticalAlignment = Alignment.CenterVertically,
+                                horizontalArrangement = Arrangement.Center
+                            ) {
+                                Icon(
+                                    imageVector = Icons.Default.EmojiEvents,
+                                    contentDescription = null,
+                                    tint = badge.backgroundColor,
+                                    modifier = Modifier.size(20.dp)
+                                )
+                                Spacer(modifier = Modifier.width(8.dp))
+                                Text(
+                                    text = stringResource(R.string.claim_reward),
+                                    color = badge.backgroundColor,
+                                    fontWeight = FontWeight.Bold,
+                                    fontSize = 16.sp,
+                                    fontFamily = PoppinsFontFamily
+                                )
+                            }
+                        }
+                    }
+                }
             }
         }
     }
 }
-

@@ -604,6 +604,7 @@
     <string name="business_name">Nombre del negocio</string>
     <string name="business_phone_number">Numero de teléfono del negocio</string>
     <string name="business_address">Dirección del negocio</string>
+<<<<<<< Updated upstream
 
     <string name="tour_title_profile_verification">Estado de Verificación</string>
     <string name="tour_desc_profile_verification">Aquí verás si tu cuenta está verificada, pendiente o si fue rechazada (y por qué).</string>
@@ -619,4 +620,28 @@
     <string name="tour_desc_streak_badges">Acumula puntos durante el mes para desbloquear estas insignias y ganar puntos de bonificación.</string>
     <string name="tour_title_streak_progress">Progreso Semanal</string>
     <string name="tour_desc_streak_progress">Finalmente, aquí puedes ver un gráfico de tus actividades de reciclaje durante la semana.</string>
+=======
+    <string name="user_manual">Manual de Usuario</string>
+    <string name="view_online">Ver en línea</string>
+    <string name="view_online_description">Manual interactivo con efecto de pasar páginas</string>
+    <string name="view_pdf">Ver PDF</string>
+    <string name="view_pdf_description">Versión PDF descargable del manual</string>
+    <string name="open_in_browser">Abrir en navegador</string>
+    <string name="online_manual_features">Disfruta de una experiencia interactiva con animación de páginas en Issuu. Ideal para una lectura fluida y dinámica.</string>
+    <string name="pdf_manual_features">Visualiza el manual en formato PDF para consulta. Puedes revisarlo en cualquier momento.</string>
+    <string name="unlimited">Ilimitado</string>
+    <string name="available_to_claim">Disponible para reclamar</string>
+    <string name="claimed">Reclamado</string>
+    <string name="claim_reward">Reclamar Recompensa</string>
+    <string name="bonus">bonus</string>
+    <string name="weekly_activity">Actividad semanal</string>
+    <string name="monday_short">L</string>
+    <string name="tuesday_short">M</string>
+    <string name="wednesday_short">X</string>
+    <string name="thursday_short">J</string>
+    <string name="friday_short">V</string>
+    <string name="saturday_short">S</string>
+    <string name="sunday_short">D</string>
+
+>>>>>>> Stashed changes
 </resources>

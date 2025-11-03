@@ -35,6 +35,7 @@ import androidx.compose.animation.togetherWith
 import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.runtime.DisposableEffect
 import com.renova.mobile.ui.tour.LocalTourState
+import androidx.compose.foundation.layout.statusBarsPadding
 
 @Composable
 fun CustomTopBar(
@@ -49,6 +50,17 @@ fun CustomTopBar(
             currentRoute == TopNavigationItem.Activity.route ||
             currentRoute == TopNavigationItem.Streak.route
 
+    val surfaceColor = MaterialTheme.colorScheme.surface
+
+    LaunchedEffect(isProfileSection) {
+        if (isProfileSection) {
+            systemUiController.setStatusBarColor(
+                color = surfaceColor, // ← Color surface para la barra del sistema
+                darkIcons = true // Ajusta según tu tema (true para temas claros)
+            )
+        }
+    }
+
     if (!isProfileSection || isLoading) {
         return
     }
@@ -58,7 +70,13 @@ fun CustomTopBar(
         modifier = Modifier
             .fillMaxWidth()
             .background(LocalRenovaColors.current.primaryColor)
-            .padding(start = 16.dp, end = 16.dp, top = 25.dp, bottom = 8.dp),
+            .statusBarsPadding()
+            .padding(
+                start = 16.dp,
+                end = 16.dp,
+                top = 16.dp,
+                bottom = 16.dp
+            ),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
         // Opciones en Row
@@ -164,12 +182,12 @@ private fun TopBarOption(
                     Icon(
                         painter = painterResource(id = icon),
                         contentDescription = title,
-                        tint = Color(0xFF08b662),
+                        tint = Color.White.copy(alpha = .6f),
                         modifier = Modifier.size(18.dp)
                     )
                     Text(
                         text = title,
-                        color = Color(0xFF08b662),
+                        color = Color.White.copy(alpha = .6f),
                         style = MaterialTheme.typography.labelLarge,
                         fontSize = 14.sp,
                         fontWeight = FontWeight.Normal,
@@ -186,7 +204,7 @@ private fun TopBarOption(
             modifier = Modifier
                 .fillMaxWidth(0.85f)
                 .height(3.dp)
-                .background(if (isSelected) MaterialTheme.colorScheme.onPrimary else Color(0xFF08b662))
+                .background(if (isSelected) Color.White else Color.White.copy(alpha = .6f))
         )
     }
 }

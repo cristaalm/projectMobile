@@ -16,8 +16,8 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.scale
 import androidx.compose.ui.draw.alpha
+import androidx.compose.ui.draw.scale
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
@@ -121,7 +121,7 @@ fun MonthlyBadgesSection(
         // Carrusel horizontal de badges
         LazyRow(
             modifier = Modifier.fillMaxWidth(),
-            contentPadding = androidx.compose.foundation.layout.PaddingValues(horizontal = 24.dp),
+            contentPadding = PaddingValues(horizontal = 24.dp),
             horizontalArrangement = Arrangement.spacedBy(10.dp)
         ) {
             itemsIndexed(badges) { index, badge ->
@@ -216,7 +216,7 @@ fun MonthlyBadgeCard(
                     .fillMaxSize()
                     .padding(14.dp),
                 horizontalAlignment = Alignment.CenterHorizontally,
-                verticalArrangement = Arrangement.Center // Cambiado a Center
+                verticalArrangement = Arrangement.Center
             ) {
                 Box(
                     modifier = Modifier
@@ -258,7 +258,7 @@ fun MonthlyBadgeCard(
                         overflow = TextOverflow.Ellipsis,
                         fontFamily = PoppinsFontFamily,
                         lineHeight = 15.sp,
-                        modifier = Modifier.heightIn(min = 30.dp) // Altura mínima para mantener consistencia
+                        modifier = Modifier.heightIn(min = 30.dp)
                     )
 
                     Spacer(modifier = Modifier.height(4.dp))
@@ -296,7 +296,7 @@ fun MonthlyBadgeCard(
                 }
             }
 
-            // Barra de progreso mejorada - solo visible cuando no está desbloqueada y hay progreso
+            // Barra de progreso mejorada
             if (!badge.isUnlocked && progress > 0) {
                 Box(
                     modifier = Modifier
@@ -315,6 +315,7 @@ fun MonthlyBadgeCard(
         }
     }
 }
+
 // WeeklyProgressChart
 @Composable
 fun WeeklyProgressChart(

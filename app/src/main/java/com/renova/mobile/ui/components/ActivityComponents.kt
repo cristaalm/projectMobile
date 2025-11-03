@@ -461,7 +461,7 @@ fun AnimatedPointsCardActivity(
                 initialValue = 0f,
                 targetValue = totalPoints.toFloat(),
                 animationSpec = tween(
-                    durationMillis = 1500,
+                    durationMillis = 2500,
                     easing = FastOutSlowInEasing
                 )
             ) { value, _ ->
