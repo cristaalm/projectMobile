@@ -4,6 +4,7 @@
     <string name="email">Email</string>
     <string name="email_required">Email is required</string>
     <string name="email_invalid">Invalid email</string>
+    <string name="error_email_invalid">Email must be a valid email address.</string>
     <string name="login_password">Password</string>
     <string name="hide_password">Hide password</string>
     <string name="show_password">Show password</string>
@@ -26,6 +27,7 @@
     <string name="error_server">Server error. Try again later.</string>
     <string name="connection_timeout">Connection timed out. Try again.</string>
     <string name="error_unknown">Unknown error. Try again.</string>
+    <string name="unknown_error">Unknown error</string>
 
     <string name="forgot_password_title">Recover Password</string>
     <string name="enter_email_password">Enter your email address and we\'ll send you a link to reset your password.</string>
@@ -75,9 +77,9 @@
     <string name="share_code">Share code</string>
     <string name="qr_code_placeholder">QR Code</string>
     <string name="instructions_title">INSTRUCTIONS:</string>
-    <string name="instruction_1">Align your QR code to scan to start entering the materials.</string>
-    <string name="instruction_2">Press and hold the products to facilitate the process.</string>
-    <string name="instruction_3">Place the recommended products to gain more points.</string>
+    <string name="instruction_1">Align the QR code to scan and start entering materials.</string>
+    <string name="instruction_2">Press and hold on products to facilitate the process.</string>
+    <string name="instruction_3">Place recommended products to earn more points.</string>
 
     <string name="recycling_materials">Recycling Materials</string>
     <string name="earn_points_recycling">Accumulate points for recycling</string>
@@ -312,7 +314,6 @@
     <string name="points_adjustment">Points Adjustment</string>
     <string name="manual_adjustment">Manual Adjustment</string>
     <string name="quantity">Quantity</string>
-    <string name="unknown_error">Unknown Error</string>
     <string name="default_notification_channel_id" translatable="false">fcm_default_channel</string>
     <string name="no_activity_description">Your recycling and reward activities will appear here</string>
 
@@ -492,7 +493,7 @@
     <string name="activity_reward_redemption">Reward redemption</string>
     <string name="activity_generic">Activity</string>
     <string name="activity_points_withdrawal">Points withdrawal</string>
-    <string name="activity_quantity">%d x %s</string>
+    <string name="activity_quantity">%1$d x %2$s</string>
     <string name="activity_equivalent_mxn">MXN equivalent</string>
 
     <string name="error_no_alliance">Alliance ID not found</string>
@@ -601,7 +602,6 @@
     <string name="completed_2">Completed!</string>
 
     <string name="name">Name</string>
-    <string name="error_email_invalid">The email must be a valid email.</string>
 
     <string name="tour_title_profile_verification">Verification Status</string>
     <string name="tour_desc_profile_verification">Here you will see if your account is verified, pending, or if it was rejected (and why).</string>
@@ -638,5 +638,46 @@
     <string name="friday_short">F</string>
     <string name="saturday_short">S</string>
     <string name="sunday_short">S</string>
+
+
+    <!-- Profile: Merchant -->
+
+    <!-- Tab: Home -->
+    <string name="tab_home">Home</string>
+    <string name="my_profile">My Profile</string>
+    <string name="my_profile_description">Press to view your personal information</string>
+    <string name="item">Item</string>
+    <string name="no_recent_sales">No recent sales</string>
+    <string name="recent_sales_description">Sales will appear here</string>
+    <string name="earn_points">Earn Points</string>
+    <string name="earn_points_description">Press to view your earned points</string>
+    <string name="statistics">Statistics</string>
+    <string name="statistics_description">Press to view your recycling statistics</string>
+    <string name="last_activities">Recent activities</string>
+    <!-- sale card -->
+    <string name="last_sale">Last sale</string>
+
+    <!-- card bottom -->
+    <string name="purchase_detail">Purchase Detail</string>
+
+    <!-- Tab: QR -->
+    <string name="tab_qr">Data Scanning</string>
+    <string name="scan_qr_prompt">Press to scan a barcode</string>
+    <string name="scan_barcode_prompt">Scan the customer\'s barcode</string>
+    <string name="scan_barcode_success">Barcode scanned successfully</string>
+     <!-- Errors -->
+    <string name="scan_barcode_error">Barcode not found, please try again</string>
+    <string name="no_qr">Scan the customer\'s barcode, not a QR code. Please try again.</string>
+
+    <!-- Tab: Sale -->
+    <string name="tab_sale">Sale</string>
+    <string name="consumer">Consumer</string>
+    <string name="name_label">Name:</string>
+    <string name="tick">Ticket</string>
+    <string name="product_reward">Scan reward product</string>
+    <!-- Errors -->
+    <string name="first_scan_consumer">First, scan the consumer to add rewards</string>
+    <string name="no_consumer">Not found, must scan first</string>
+    <string name="no_rewards">No rewards in the ticket</string>
 
 </resources>

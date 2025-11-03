@@ -101,7 +101,8 @@ fun AppNavigation(
     sessionManager: SessionManager,
     onLogout: () -> Unit,
     languageViewModel: LanguageViewModel,
-    isUpdatingLanguage: Boolean
+    isUpdatingLanguage: Boolean,
+    pointToMxn: Double
 ) {
     val navController = rememberNavController()
     val businessSaleVM: BusinessSaleViewModel = viewModel()
@@ -252,7 +253,8 @@ fun AppNavigation(
                             vm = businessSaleVM,
                             onNavigateToCashout = {
                                 navController.navigate("business/cashout")
-                            }
+                            },
+                            pointToMxn = pointToMxn
                         )
                     }
 

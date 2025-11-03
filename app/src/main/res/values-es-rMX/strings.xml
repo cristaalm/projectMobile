@@ -76,8 +76,8 @@
     <string name="share_code">Compartir código</string>
     <string name="qr_code_placeholder">CÓDIGO QR</string>
     <string name="instructions_title">INSTRUCCIONES:</string>
-    <string name="instruction_1">Alinea tu código QR al escanear para empezar a ingresar los materiales.</string>
-    <string name="instruction_2">Aplasta previamente los productos para facilitar el proceso.</string>
+    <string name="instruction_1">Alinea el código QR para escanear y comenzar a ingresar materiales.</string>
+    <string name="instruction_2">Mantén presionados los productos para facilitar el proceso.</string>
     <string name="instruction_3">Coloca los productos recomendados para ganar más puntos.</string>
 
     <string name="recycling_materials">Materiales de Reciclaje</string>
@@ -496,7 +496,7 @@
     <string name="activity_reward_redemption">Canjeo de recompensa</string>
     <string name="activity_generic">Actividad</string>
     <string name="activity_points_withdrawal">Retiro de puntos</string>
-    <string name="activity_quantity">%d x %s</string>
+<string name="activity_quantity">%1$d x %2$s</string>
     <string name="activity_equivalent_mxn">equivalente MXN</string>
 
     <string name="error_no_alliance">No se encontró el ID de alianza</string>
@@ -640,4 +640,44 @@
     <string name="saturday_short">S</string>
     <string name="sunday_short">D</string>
 
+
+    <!-- Perfil: Comerciante -->
+
+    <!-- Pestaña: Inicio -->
+    <string name="tab_home">Inicio</string>
+    <string name="my_profile">Mi Perfil</string>
+    <string name="my_profile_description">Presiona para ver tu información personal</string>
+    <string name="item">Elemento</string>
+    <string name="no_recent_sales">Sin ventas recientes</string>
+    <string name="recent_sales_description">Las ventas aparecerán aquí</string>
+    <string name="earn_points">Cobrar Puntos</string>
+    <string name="earn_points_description">Presiona para ver tus puntos acumulados</string>
+    <string name="statistics">Estadísticas</string>
+    <string name="statistics_description">Presiona para ver tus estadísticas de reciclaje</string>
+    <string name="last_activities">Actividades recientes</string>
+    <!-- última venta - card -->
+    <string name="last_sale">Última venta</string>
+
+    <!-- tarjeta inferioir -->
+    <string name="purchase_detail">Detalle de compra</string>
+
+    <!-- Pestaña: QR -->
+    <string name="tab_qr">Escaneo de Datos</string>
+    <string name="scan_qr_prompt">Presiona para escanear un código de barras</string>
+    <string name="scan_barcode_prompt">Escanear el código de barras del cliente</string>
+    <string name="scan_barcode_success">Código de barras escaneado exitosamente</string>
+    <!-- Errores -->
+    <string name="scan_barcode_error">Código de barras no encontrado, por favor intente de nuevo</string>
+    <string name="no_qr">Escanee el código de barras del cliente, no un código QR. Por favor, intente de nuevo.</string>
+
+    <!-- Pestaña: Venta -->
+    <string name="tab_sale">Venta</string>
+    <string name="consumer">Consumidor</string>
+    <string name="name_label">Nombre:</string>
+    <string name="tick">Ticket</string>
+    <string name="product_reward">Escanear producto con recompensa</string>
+    <!-- Errores -->
+    <string name="first_scan_consumer">Primero, escanee al consumidor para agregar recompensas</string>
+    <string name="no_consumer">No encontrado, debe escanear primero</string>
+    <string name="no_rewards">No hay recompensas en el ticket</string>
 </resources>

@@ -39,6 +39,8 @@ import com.renova.mobile.ui.tour.TourState
 import com.renova.mobile.network.User // Import necesario para `saveSession`
 
 class MainActivity : ComponentActivity() {
+    val valorPuntos = 0.01
+
     override fun attachBaseContext(newBase: Context) {
         val language = LocaleHelper.getLanguage(newBase)
         val localizedContext = LocaleHelper.setLocale(newBase, language)
@@ -172,7 +174,8 @@ class MainActivity : ComponentActivity() {
                             },
                             // --- FIN LÓGICA 'develop' ---
                             languageViewModel = languageViewModel,
-                            isUpdatingLanguage = isUpdatingLanguage
+                            isUpdatingLanguage = isUpdatingLanguage,
+                            pointToMxn = valorPuntos
                         )
                     } else {
                         AuthNavigation(

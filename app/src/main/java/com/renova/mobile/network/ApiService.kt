@@ -308,6 +308,7 @@ data class ActivityItem(
     val description: String?,
     val quantity: Int?,
     val alliance: Alliance?, // Versión de DEVELOP (más completa)
+    val user: UserData?,
     val material_type: MaterialType?,
     val reward: HistoryReward?,
     val scan: Scan?

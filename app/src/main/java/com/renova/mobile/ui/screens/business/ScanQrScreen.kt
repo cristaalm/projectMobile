@@ -35,8 +35,8 @@ import androidx.compose.animation.core.infiniteRepeatable
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.core.LinearEasing
 import androidx.compose.animation.core.RepeatMode
-import androidx.navigation.NavGraph.Companion.findStartDestination
 import com.renova.mobile.ui.components.BusinessSectionHeader
+import androidx.compose.ui.res.stringResource
 
 
 @Composable
@@ -59,12 +59,12 @@ fun BusinessQRScreen(onLogout: () -> Unit, vm: BusinessSaleViewModel = viewModel
         if (result.contents != null) {
             // Si por alguna razón se detecta un QR, mostrar error y no continuar
             if (result.formatName == "QR_CODE") {
-                vm.setError("Escanee el código de barras del cliente, no un QR. Intente de nuevo.")
+                vm.setError(context.getString(R.string.no_qr))
             } else {
                 vm.identifyUserByCode(result.contents)
             }
         } else {
-            vm.setError("No se detectó ningún código. Intente nuevamente.")
+            vm.setError(context.getString(R.string.scan_barcode_error))
         }
     }
 
@@ -72,7 +72,7 @@ fun BusinessQRScreen(onLogout: () -> Unit, vm: BusinessSaleViewModel = viewModel
         val options = ScanOptions().apply {
             // Restringir el escaneo a solo códigos de barras (1D)
             setDesiredBarcodeFormats(ScanOptions.ONE_D_CODE_TYPES)
-            setPrompt("Escanee el código de barras del cliente")
+            setPrompt(context.getString(R.string.scan_barcode_prompt))
             setBeepEnabled(true)
             setOrientationLocked(true)
             setCaptureActivity(com.renova.mobile.scan.PortraitCaptureActivity::class.java)

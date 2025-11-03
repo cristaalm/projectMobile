@@ -135,8 +135,6 @@ fun QRScreen(
                 shape = RoundedCornerShape(20.dp),
                 colors = CardDefaults.cardColors(containerColor = Color.Transparent)
             ) {
-                // Animación simplificada: Crossfade entre vistas, sin rotación
-
                 Box(
                     modifier = Modifier
                         .clip(RoundedCornerShape(20.dp))
@@ -176,8 +174,8 @@ fun QRScreen(
                                         )
                                         val pointsFormatted = java.text.NumberFormat.getIntegerInstance(java.util.Locale.forLanguageTag("es-MX")).format(animatedPoints)
                                         Text(
-                                            text = "$pointsFormatted ${stringResource(id = R.string.points_unit)}",
-                                            color = Color.White,
+                                            text = "$pointsFormatted",
+                                           color = Color.White,
                                             style = MaterialTheme.typography.headlineSmall.copy(
                                                 fontFamily = com.renova.mobile.ui.theme.PoppinsFontFamily,
                                                 fontWeight = FontWeight.ExtraBold
@@ -209,15 +207,14 @@ fun QRScreen(
                                         Icon(
                                             imageVector = if (showQr) Icons.Default.CreditCard else Icons.Default.QrCode,
                                             contentDescription = if (showQr) "Mostrar código" else "Mostrar QR",
-                                            tint = if (isDark) Color.Black else Color.White,
+                                            tint = Color.White,
                                             modifier = Modifier.size(32.dp)
                                         )
                                     }
                                 }
 
                                 Divider(
-                                    color = if (isDark) Color.Black.copy(alpha = 0.5f)
-                                    else Color.White.copy(alpha = 0.5f),
+                                    color = Color.White.copy(alpha = 0.5f),
                                     thickness = 1.dp,
                                     modifier = Modifier.padding(vertical = 10.dp)
                                 )
@@ -310,7 +307,7 @@ fun QRScreen(
                                     Column {
                                         Text(
                                             text = nameUser,
-                                            color = if (isDark) Color.Black else Color.White,
+                                            color = Color.White,
                                             style = MaterialTheme.typography.headlineSmall.copy(
                                                 fontFamily = com.renova.mobile.ui.theme.PoppinsFontFamily,
                                                 fontWeight = FontWeight.Bold
@@ -325,7 +322,7 @@ fun QRScreen(
                                         val pointsFormatted2 = java.text.NumberFormat.getIntegerInstance(java.util.Locale.forLanguageTag("es-MX")).format(animatedPoints)
                                         Text(
                                             text = "$pointsFormatted2 ${stringResource(id = R.string.points_unit)}",
-                                            color = if (isDark) Color.Black else Color.White,
+                                            color = Color.White,
                                             style = MaterialTheme.typography.headlineSmall.copy(
                                                 fontFamily = com.renova.mobile.ui.theme.PoppinsFontFamily,
                                                 fontWeight = FontWeight.ExtraBold
@@ -333,7 +330,7 @@ fun QRScreen(
                                         )
                                         Text(
                                             text = stringResource(id = R.string.current_points),
-                                            color = if (isDark) Color.Black else Color.White,
+                                            color = Color.White,
                                             style = MaterialTheme.typography.bodySmall.copy(
                                                 fontFamily = com.renova.mobile.ui.theme.PoppinsFontFamily,
                                                 fontWeight = FontWeight.Medium
@@ -357,15 +354,14 @@ fun QRScreen(
                                         Icon(
                                             imageVector = if (showQr) Icons.Default.CreditCard else Icons.Default.QrCode,
                                             contentDescription = if (showQr) "Mostrar código" else "Mostrar QR",
-                                            tint = if (isDark) Color.Black else Color.White,
+                                            tint = Color.White,
                                             modifier = Modifier.size(32.dp)
                                         )
                                     }
                                 }
 
                                 Divider(
-                                    color = if (isDark) Color.Black.copy(alpha = 0.5f)
-                                    else Color.White.copy(alpha = 0.5f),
+                                    color = Color.White.copy(alpha = 0.5f),
                                     thickness = 1.dp,
                                     modifier = Modifier.padding(vertical = 10.dp)
                                 )
