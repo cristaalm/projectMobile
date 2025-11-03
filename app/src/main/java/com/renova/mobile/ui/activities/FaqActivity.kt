@@ -6,6 +6,7 @@ import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.compose.animation.*
 import androidx.compose.animation.core.*
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -18,6 +19,7 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.stringResource
@@ -26,7 +28,11 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.zIndex
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalView
+import androidx.compose.ui.unit.sp
 import androidx.core.view.WindowCompat
+import androidx.core.view.WindowInsetsCompat
+import androidx.core.view.WindowInsetsControllerCompat
 import com.renova.mobile.R
 import com.renova.mobile.ui.components.BusinessSectionHeader
 import com.renova.mobile.ui.theme.LocalRenovaColors
@@ -37,7 +43,7 @@ import com.renova.mobile.utils.LocaleHelper
 
 class FaqActivity : ComponentActivity() {
 
-    // 🔹 Aplica el idioma guardado antes de crear la interfaz
+    //  Aplica el idioma guardado antes de crear la interfaz
     override fun attachBaseContext(newBase: Context) {
         val localeUpdatedContext = LocaleHelper.setLocale(
             newBase,
@@ -49,11 +55,12 @@ class FaqActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
-        // 🔹 Habilita edge-to-edge para que el contenido se extienda bajo las barras del sistema
+        //  Habilita edge-to-edge para que el contenido se extienda bajo las barras del sistema
         WindowCompat.setDecorFitsSystemWindows(window, false)
 
         setContent {
             RenovaTheme {
+                HideSystemNavigation()
                 Surface(color = MaterialTheme.colorScheme.background) {
                     FaqScreen(
                         onNavigateBack = { finish() }
@@ -63,10 +70,25 @@ class FaqActivity : ComponentActivity() {
         }
     }
 
-    // 🔹 Si el sistema cambia idioma (configuración del dispositivo)
+    //  Si el sistema cambia idioma (configuración del dispositivo)
     override fun onConfigurationChanged(newConfig: android.content.res.Configuration) {
         super.onConfigurationChanged(newConfig)
         recreate()
+    }
+}
+
+// Funcion para ocultar la barra de navegación
+@Composable
+private fun HideSystemNavigation() {
+    val view = LocalView.current
+    DisposableEffect(Unit) {
+        val window =
+            (view.context as? ComponentActivity)?.window ?: return@DisposableEffect onDispose {}
+        val insetsController = WindowCompat.getInsetsController(window, view)
+        insetsController.hide(WindowInsetsCompat.Type.navigationBars())
+        insetsController.systemBarsBehavior =
+            WindowInsetsControllerCompat.BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE
+        onDispose {}
     }
 }
 
@@ -192,12 +214,28 @@ fun FaqContent(
             .statusBarsPadding()
     ) {
         Box {
-            BusinessSectionHeader(
-                title = "     ${stringResource(R.string.faq_title)}",
-                onLogout = { },
-                textColor = Color.White
-            )
+            // Header
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(70.dp)
+                    .background(RenovaColors.Primary)
+                    .padding(horizontal = 16.dp),
+                contentAlignment = Alignment.CenterStart
+            ) {
+                Text(
+                    text = stringResource(R.string.faq_title),
+                    style = MaterialTheme.typography.titleLarge.copy(
+                        fontFamily = PoppinsFontFamily,
+                        fontWeight = FontWeight.Bold,
+                        fontSize = 28.sp
+                    ),
+                    color = Color.White,
+                    modifier = Modifier.padding(start = 48.dp)
+                )
+            }
 
+            // Botón de regreso
             IconButton(
                 onClick = onNavigateBack,
                 modifier = Modifier
