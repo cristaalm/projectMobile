@@ -602,7 +602,6 @@
 
     <string name="name">Name</string>
     <string name="error_email_invalid">The email must be a valid email.</string>
-<<<<<<< Updated upstream
 
     <string name="tour_title_profile_verification">Verification Status</string>
     <string name="tour_desc_profile_verification">Here you will see if your account is verified, pending, or if it was rejected (and why).</string>
@@ -618,7 +617,6 @@
     <string name="tour_desc_streak_badges">Accumulate points during the month to unlock these badges and earn bonus points.</string>
     <string name="tour_title_streak_progress">Weekly Progress</string>
     <string name="tour_desc_streak_progress">Finally, here you can see a graph of your recycling activities during the week.</string>
-=======
     <string name="user_manual">User Manual</string>
     <string name="view_online">View Online</string>
     <string name="view_online_description">Interactive manual with page-turning effects</string>
@@ -641,5 +639,4 @@
     <string name="saturday_short">S</string>
     <string name="sunday_short">S</string>
 
->>>>>>> Stashed changes
 </resources>

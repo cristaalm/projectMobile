@@ -6,10 +6,8 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.*
-// --- INICIO MODIFICACIÓN: Imports añadidos ---
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.ScrollState
-// --- FIN MODIFICACIÓN ---
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
@@ -43,36 +41,30 @@ import com.renova.mobile.ui.theme.LocalRenovaColors
 import com.renova.mobile.ui.theme.PoppinsFontFamily
 import com.renova.mobile.ui.theme.RenovaColors
 import com.renova.mobile.ui.theme.RenovaColorScheme
-<<<<<<< Updated upstream
-
 import androidx.compose.ui.layout.onGloballyPositioned
 import com.renova.mobile.ui.tour.LocalTourState
 import androidx.compose.runtime.DisposableEffect
+import com.renova.mobile.utils.SessionManager
+import kotlinx.coroutines.launch
+import java.text.SimpleDateFormat
+import java.util.*
+import kotlin.math.abs
 
 data class WeeklyChallenge(
-    // ... (Data class no cambia) ...
     val id: Int,
     val title: String,
     val titleEn: String,
     val description: String,
     val goal: String,
     val rewardText: String,
-    val iconEmoji: ImageVector,
+    val iconEmoji: String,
     val expiresAt: Long,
     val isAccepted: Boolean = false,
     val currentProgress: Int = 0,
     val targetProgress: Int = 100
 )
-=======
-import com.renova.mobile.utils.SessionManager
-import kotlinx.coroutines.launch
-import java.text.SimpleDateFormat
-import java.util.*
-import kotlin.math.abs
->>>>>>> Stashed changes
 
 data class MonthlyBadge(
-    // ... (Data class no cambia) ...
     val id: Int,
     val title: String,
     val titleEn: String,
@@ -89,10 +81,8 @@ data class MonthlyBadge(
 
 fun calculateDaysSinceRegistration(createdAt: String): Int {
     return try {
-        // Remover TODOS los dígitos después del punto (microsegundos)
         val cleanedDate = createdAt.replace(Regex("\\.\\d+Z"), "Z")
 
-        // Formato sin milisegundos
         val format = SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss'Z'", Locale.US).apply {
             timeZone = TimeZone.getTimeZone("UTC")
         }
@@ -118,16 +108,6 @@ fun calculateDaysSinceRegistration(createdAt: String): Int {
 @Composable
 fun StreakScreen() {
     val renovaColors = LocalRenovaColors.current
-<<<<<<< Updated upstream
-    val scrollState = rememberScrollState() // <-- ScrollState definido aquí
-    val tourState = LocalTourState.current
-
-    // ... (Lógica de variables (currentStreak, weeklyChallenge, etc) no cambia) ...
-    val currentStreak = 7
-    val longestStreak = 15
-    val totalRecyclingDays = 42
-    val currentMonthPoints = 850
-=======
     val scrollState = rememberScrollState()
     val context = LocalContext.current
     val sessionManager = remember { SessionManager(context) }
@@ -143,7 +123,6 @@ fun StreakScreen() {
     var weekData by remember { mutableStateOf(listOf<Int>()) }
     var isLoading by remember { mutableStateOf(true) }
     var errorMessage by remember { mutableStateOf("") }
->>>>>>> Stashed changes
 
     var selectedBadge by remember { mutableStateOf<MonthlyBadge?>(null) }
     var isClaimingBadge by remember { mutableStateOf(false) }
@@ -152,39 +131,9 @@ fun StreakScreen() {
     LaunchedEffect(Unit) {
         isLoading = true
 
-<<<<<<< Updated upstream
-
-    Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .background(MaterialTheme.colorScheme.background)
-    ) {
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .verticalScroll(scrollState) // <-- Aplicar scrollState
-                .padding(bottom = 16.dp)
-        ) {
-            Box(modifier = Modifier.onGloballyPositioned { coords ->
-                // --- MODIFICADO: Pasar scrollState ---
-                tourState.registerTarget(
-                    id = "streak_card_main",
-                    coordinates = coords,
-                    scrollState = scrollState
-                )
-            }) {
-                StreakCard(
-                    currentStreak = currentStreak,
-                    longestStreak = longestStreak,
-                    totalDays = totalRecyclingDays,
-                    renovaColors = renovaColors
-                )
-            }
-=======
         try {
             // Obtener token y llamar a identityUser para datos actualizados
             val token = sessionManager.getAccessToken()
->>>>>>> Stashed changes
 
             if (token != null) {
                 val identityResponse = ApiClient.apiService.identifyUser(
@@ -194,156 +143,14 @@ fun StreakScreen() {
                     )
                 )
 
-<<<<<<< Updated upstream
-            Box(modifier = Modifier.onGloballyPositioned { coords ->
-                // --- MODIFICADO: Pasar scrollState ---
-                tourState.registerTarget(
-                    id = "streak_weekly_challenge",
-                    coordinates = coords,
-                    scrollState = scrollState
-                )
-            }) {
-                WeeklyChallengeCard(
-                    challenge = weeklyChallenge,
-                    isAccepted = isChallengeAccepted,
-                    onAccept = { isChallengeAccepted = true },
-                    onClick = { showChallengeDialog = true },
-                    renovaColors = renovaColors
-                )
-            }
-=======
->>>>>>> Stashed changes
-
                 if (identityResponse.isSuccessful && identityResponse.body()?.success == true) {
                     identityResponse.body()?.data?.user?.let { userData ->
-
-<<<<<<< Updated upstream
-            Box(modifier = Modifier.onGloballyPositioned { coords ->
-                // --- MODIFICADO: Pasar scrollState ---
-                tourState.registerTarget(
-                    id = "streak_monthly_badges",
-                    coordinates = coords,
-                    scrollState = scrollState
-                )
-            }) {
-                MonthlyBadgesSection(
-                    badges = monthlyBadges,
-                    currentMonthPoints = currentMonthPoints,
-                    renovaColors = renovaColors,
-                    onBadgeClick = { selectedBadge = it }
-                )
-            }
-=======
                         userId = userData.id
                         currentMonthPoints = userData.points_month
                         userBadges = userData.badge
->>>>>>> Stashed changes
 
                         totalRecyclingDays = calculateDaysSinceRegistration(userData.created_at)
 
-<<<<<<< Updated upstream
-            Box(modifier = Modifier.onGloballyPositioned { coords ->
-                // --- MODIFICADO: Pasar scrollState ---
-                tourState.registerTarget(
-                    id = "streak_weekly_progress",
-                    coordinates = coords,
-                    scrollState = scrollState
-                )
-            }) {
-                WeeklyProgressChart(
-                    weekData = listOf(2, 3, 1, 4, 3, 2, 1),
-                    renovaColors = renovaColors
-                )
-            }
-        }
-    }
-
-    DisposableEffect("streak_card_main") {
-        onDispose { tourState.unregisterTarget("streak_card_main") }
-    }
-    DisposableEffect("streak_weekly_challenge") {
-        onDispose { tourState.unregisterTarget("streak_weekly_challenge") }
-    }
-    DisposableEffect("streak_monthly_badges") {
-        onDispose { tourState.unregisterTarget("streak_monthly_badges") }
-    }
-    DisposableEffect("streak_weekly_progress") {
-        onDispose { tourState.unregisterTarget("streak_weekly_progress") }
-    }
-
-    // ... (Diálogos (Badge, Challenge) no cambian) ...
-    selectedBadge?.let { badge ->
-        BadgeDialog(
-            badge = badge,
-            currentMonthPoints = currentMonthPoints,
-            onDismiss = { selectedBadge = null }
-        )
-    }
-
-    if (showChallengeDialog) {
-        WeeklyChallengeDialog(
-            challenge = weeklyChallenge,
-            isAccepted = isChallengeAccepted,
-            onAccept = {
-                isChallengeAccepted = true
-                showChallengeDialog = false
-            },
-            onDismiss = { showChallengeDialog = false },
-            renovaColors = renovaColors
-        )
-    }
-}
-
-@Composable
-private fun WeeklyChallengeCard(
-    // ... (Este Composable no cambia) ...
-    challenge: WeeklyChallenge,
-    isAccepted: Boolean,
-    onAccept: () -> Unit,
-    onClick: () -> Unit,
-    renovaColors: RenovaColorScheme
-) {
-    val progress = if (challenge.targetProgress > 0) {
-        (challenge.currentProgress.toFloat() / challenge.targetProgress.toFloat()).coerceIn(0f, 1f)
-    } else 0f
-
-    val daysRemaining = 4
-
-    Column(
-        modifier = Modifier.padding(horizontal = 20.dp)
-    ) {
-        Text(
-            text = stringResource(R.string.weekly_challenge),
-            style = MaterialTheme.typography.titleLarge,
-            color = renovaColors.textPrimary,
-            fontWeight = FontWeight.Bold,
-            fontSize = 21.sp,
-            fontFamily = PoppinsFontFamily
-        )
-
-        Spacer(modifier = Modifier.height(3.dp))
-
-        Text(
-            text = stringResource(R.string.weekly_challenge_reset),
-            style = MaterialTheme.typography.bodyMedium,
-            color = renovaColors.textSecondary,
-            fontSize = 13.sp,
-            fontFamily = PoppinsFontFamily
-        )
-
-        Spacer(modifier = Modifier.height(12.dp))
-
-        Card(
-            modifier = Modifier
-                .fillMaxWidth()
-                .clickable(
-                    interactionSource = remember { MutableInteractionSource() },
-                    indication = null
-                ) { onClick() },
-            shape = RoundedCornerShape(20.dp),
-            colors = CardDefaults.cardColors(
-                containerColor = RenovaColors.SecondaryColor
-=======
                         // Actualizar UserData en SessionManager
                         sessionManager.saveUser(userData)
                     }
@@ -364,7 +171,6 @@ private fun WeeklyChallengeCard(
                         longestStreak = currentStreak
                     }
                 }
-            } else {
             }
 
             val scansResponse = ApiClient.apiService.getScansByDayOfWeek()
@@ -399,7 +205,6 @@ private fun WeeklyChallengeCard(
                 isUnlocked = currentMonthPoints >= 100,
                 isClaimed = userBadges.ecoWarrior,
                 currentMonthProgress = currentMonthPoints.coerceAtMost(100)
->>>>>>> Stashed changes
             ),
             MonthlyBadge(
                 id = 2,
@@ -618,7 +423,6 @@ private fun WeeklyChallengeCard(
 
 @Composable
 private fun StreakCard(
-    // ... (Este Composable no cambia) ...
     currentStreak: Int,
     isStreakActive: Boolean,
     longestStreak: Int,
@@ -765,16 +569,11 @@ private fun StreakCard(
 }
 
 @Composable
-<<<<<<< Updated upstream
-private fun GifPlayer(modifier: Modifier = Modifier) {
-    // ... (Este Composable no cambia) ...
-=======
 private fun GifPlayer(
     modifier: Modifier = Modifier,
     colorFilter: androidx.compose.ui.graphics.ColorFilter? = null,
     alpha: Float = 1f
 ) {
->>>>>>> Stashed changes
     val context = LocalContext.current
     val imageLoader = ImageLoader.Builder(context)
         .components {

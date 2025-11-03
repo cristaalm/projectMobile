@@ -604,8 +604,6 @@
     <string name="business_name">Nombre del negocio</string>
     <string name="business_phone_number">Numero de teléfono del negocio</string>
     <string name="business_address">Dirección del negocio</string>
-<<<<<<< Updated upstream
-
     <string name="tour_title_profile_verification">Estado de Verificación</string>
     <string name="tour_desc_profile_verification">Aquí verás si tu cuenta está verificada, pendiente o si fue rechazada (y por qué).</string>
     <string name="tour_title_profile_documents">Tus Documentos</string>
@@ -620,7 +618,6 @@
     <string name="tour_desc_streak_badges">Acumula puntos durante el mes para desbloquear estas insignias y ganar puntos de bonificación.</string>
     <string name="tour_title_streak_progress">Progreso Semanal</string>
     <string name="tour_desc_streak_progress">Finalmente, aquí puedes ver un gráfico de tus actividades de reciclaje durante la semana.</string>
-=======
     <string name="user_manual">Manual de Usuario</string>
     <string name="view_online">Ver en línea</string>
     <string name="view_online_description">Manual interactivo con efecto de pasar páginas</string>
@@ -643,5 +640,4 @@
     <string name="saturday_short">S</string>
     <string name="sunday_short">D</string>
 
->>>>>>> Stashed changes
 </resources>

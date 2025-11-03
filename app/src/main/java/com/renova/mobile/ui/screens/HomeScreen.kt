@@ -79,6 +79,7 @@ import androidx.compose.runtime.DisposableEffect
 import androidx.compose.ui.layout.onGloballyPositioned
 import com.renova.mobile.ui.tour.LocalTourState
 // --- FIN: IMPORTS DEL TOUR ---
+
 @Composable
 fun HomeScreen(
     viewModel: ActivityViewModel = androidx.lifecycle.viewmodel.compose.viewModel()
@@ -124,48 +125,56 @@ fun HomeScreen(
             id = 1,
             title = stringResource(R.string.achievement_eco_warrior),
             titleEn = "Eco Warrior",
+            badgeName = "Eco Warrior",
             requiredPoints = 100,
             bonusPoints = 50,
             iconRes = R.drawable.ic_goal_1,
             color = Color.White,
             backgroundColor = Color(0xFF024653),
             isUnlocked = currentMonthPoints >= 100,
+            isClaimed = false, // En HomeScreen no manejamos el claim
             currentMonthProgress = currentMonthPoints.coerceAtMost(100)
         ),
         MonthlyBadge(
             id = 2,
             title = stringResource(R.string.achievement_recycler_pro),
             titleEn = "Recycler Pro",
+            badgeName = "Recycler Pro",
             requiredPoints = 500,
             bonusPoints = 300,
             iconRes = R.drawable.ic_goal_2,
             color = Color.White,
             backgroundColor = Color(0xFF01C851),
             isUnlocked = currentMonthPoints >= 500,
+            isClaimed = false,
             currentMonthProgress = currentMonthPoints.coerceAtMost(500)
         ),
         MonthlyBadge(
             id = 3,
             title = stringResource(R.string.achievement_green_hero),
             titleEn = "Green Hero",
+            badgeName = "Green Hero",
             requiredPoints = 1000,
             bonusPoints = 600,
             iconRes = R.drawable.ic_goal_3,
             color = Color.White,
             backgroundColor = Color(0xFF024653),
             isUnlocked = currentMonthPoints >= 1000,
+            isClaimed = false,
             currentMonthProgress = currentMonthPoints.coerceAtMost(1000)
         ),
         MonthlyBadge(
             id = 4,
             title = stringResource(R.string.achievement_planet_saver),
             titleEn = "Planet Saver",
+            badgeName = "Planet Saver",
             requiredPoints = 2500,
             bonusPoints = 1000,
             iconRes = R.drawable.ic_goal_4,
             color = Color.White,
             backgroundColor = Color(0xFF01C851),
             isUnlocked = currentMonthPoints >= 2500,
+            isClaimed = false,
             currentMonthProgress = currentMonthPoints.coerceAtMost(2500)
         )
     )
@@ -195,7 +204,7 @@ fun HomeScreen(
             ) {
                 // Card de puntos
                 Box(modifier = Modifier.onGloballyPositioned { coords ->
-                    tourState.registerTarget("home_points_card", coords)
+                    tourState.registerTarget("home_points_card", coords, scrollState)
                 }) {
                     AnimatedPointsCard(
                         totalPoints = state.totalPoints,
@@ -209,7 +218,7 @@ fun HomeScreen(
                 // Actividad reciente
                 Column(
                     modifier = Modifier.onGloballyPositioned { coords ->
-                        tourState.registerTarget("home_recent_activity", coords)
+                        tourState.registerTarget("home_recent_activity", coords, scrollState)
                     }
                 ) {
                     Column(
@@ -297,7 +306,7 @@ fun HomeScreen(
 
                 // Sección de logros mensuales - CON DISEÑO DE STREAKSCREEN
                 Box(modifier = Modifier.onGloballyPositioned { coords ->
-                    tourState.registerTarget("home_achievements_section", coords)
+                    tourState.registerTarget("home_achievements_section", coords, scrollState)
                 }) {
                     MonthlyBadgesSection(
                         badges = monthlyBadges,
@@ -315,12 +324,14 @@ fun HomeScreen(
         }
     }
 
-    // DIÁLOGO DE BADGE - Del archivo de componentes más reciente
+    // DIÁLOGO DE BADGE - Versión simplificada sin claim para HomeScreen
     selectedBadge?.let { badge ->
         BadgeDialog(
             badge = badge,
             currentMonthPoints = currentMonthPoints,
-            onDismiss = { selectedBadge = null }
+            isClaimingBadge = false, // No se puede reclamar desde HomeScreen
+            onDismiss = { selectedBadge = null },
+            onClaim = { } // No-op porque no se puede reclamar desde aquí
         )
     }
 }

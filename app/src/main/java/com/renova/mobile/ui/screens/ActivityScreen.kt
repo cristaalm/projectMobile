@@ -426,10 +426,6 @@ private fun ActivityContent(
                 }
             }
         }
-<<<<<<< Updated upstream
-
-=======
->>>>>>> Stashed changes
         if (state.activities.isNotEmpty()) {
             item { // <-- ÍNDICE 6 (condicional)
                 androidx.compose.animation.AnimatedVisibility(

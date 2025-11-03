@@ -79,8 +79,8 @@ import com.renova.mobile.ui.activities.FaqActivity
 import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.runtime.DisposableEffect
 import com.renova.mobile.ui.tour.LocalTourState
-import androidx.compose.runtime.collectAsState // <-- *** AÑADE ESTE IMPORT ***
-import androidx.compose.foundation.ScrollState // <-- AÑADIR ESTE IMPORT
+import androidx.compose.runtime.collectAsState
+import androidx.compose.foundation.ScrollState
 // --- FIN DE IMPORTS ---
 
 private val primaryColor = Color(0xFF08b662)
@@ -91,13 +91,13 @@ fun NavItem(
     item: NavigationItem,
     isSelected: Boolean,
     onClick: () -> Unit,
-    modifier: Modifier = Modifier // <-- MODIFICADO: Se añade el modifier de la rama 'tour'
+    modifier: Modifier = Modifier
 ) {
     val interactionSource = remember { MutableInteractionSource() }
     val isPressed by interactionSource.collectIsPressedAsState()
 
     Box(
-        modifier = modifier // <-- MODIFICADO: Se aplica el modifier
+        modifier = modifier
             .size(72.dp)
             .padding(4.dp),
         contentAlignment = Alignment.Center
@@ -173,7 +173,7 @@ fun CustomBottomBar(
     var showLogoutModal by remember { mutableStateOf(false) }
     val context = LocalContext.current
     var showMenu by remember { mutableStateOf(false) }
-    var showManualDialog by remember { mutableStateOf(false) } // <-- MOVIDO AQUÍ FUERA
+    var showManualDialog by remember { mutableStateOf(false) }
 
     // --- AÑADIDO: Obtener el estado del Tour (de rama 'tour') ---
     val tourState = LocalTourState.current
@@ -238,9 +238,7 @@ fun CustomBottomBar(
                     }
                 },
                 modifier = Modifier.onGloballyPositioned { coords ->
-                    // --- INICIO MODIFICACIÓN ---
                     tourState.registerTarget("bottom_bar_store", coords, null)
-                    // --- FIN MODIFICACIÓN ---
                 }
             )
             DisposableEffect("bottom_bar_store") {
@@ -265,9 +263,7 @@ fun CustomBottomBar(
                     }
                 },
                 modifier = Modifier.onGloballyPositioned { coords ->
-                    // --- INICIO MODIFICACIÓN ---
                     tourState.registerTarget("bottom_bar_profile", coords, null)
-                    // --- FIN MODIFICACIÓN ---
                 }
             )
             DisposableEffect("bottom_bar_profile") {
@@ -281,15 +277,8 @@ fun CustomBottomBar(
                 modifier = Modifier
                     .size(72.dp)
                     .padding(4.dp)
-<<<<<<< Updated upstream
-                    .onGloballyPositioned { coords -> // <-- MODIFICADO
-                        // --- INICIO MODIFICACIÓN ---
-                        tourState.registerTarget("bottom_bar_menu", coords, null)
-                        // --- FIN MODIFICACIÓN ---
-=======
                     .onGloballyPositioned { coords ->
-                        tourState.registerTarget("bottom_bar_menu", coords)
->>>>>>> Stashed changes
+                        tourState.registerTarget("bottom_bar_menu", coords, null)
                     },
                 contentAlignment = Alignment.Center
             ) {
@@ -341,15 +330,8 @@ fun CustomBottomBar(
                         restoreState = true
                     }
                 }
-<<<<<<< Updated upstream
-                .onGloballyPositioned { coords -> // <-- Añadido
-                    // --- INICIO MODIFICACIÓN ---
-                    tourState.registerTarget("bottom_bar_qr", coords, null)
-                    // --- FIN MODIFICACIÓN ---
-=======
                 .onGloballyPositioned { coords ->
-                    tourState.registerTarget("bottom_bar_qr", coords)
->>>>>>> Stashed changes
+                    tourState.registerTarget("bottom_bar_qr", coords, null)
                 },
             contentAlignment = Alignment.Center
         ) {
@@ -411,15 +393,8 @@ fun CustomBottomBar(
                             modifier = Modifier
                                 .fillMaxHeight()
                                 .width(280.dp)
-<<<<<<< Updated upstream
-                                .onGloballyPositioned { coords -> // <-- MODIFICADO
-                                    // --- INICIO MODIFICACIÓN ---
-                                    tourState.registerTarget("side_menu_panel", coords, null)
-                                    // --- FIN MODIFICACIÓN ---
-=======
                                 .onGloballyPositioned { coords ->
-                                    tourState.registerTarget("side_menu_panel", coords)
->>>>>>> Stashed changes
+                                    tourState.registerTarget("side_menu_panel", coords, null)
                                 },
                             shape = RoundedCornerShape(topStart = 12.dp, bottomStart = 12.dp),
                             color = Color(0xFF05D16E)
@@ -450,8 +425,8 @@ fun CustomBottomBar(
 
                                 TextButton(
                                     onClick = {
-                                        showMenu = false          // Cierra el menú primero
-                                        showManualDialog = true   // Luego abre el manual
+                                        showMenu = false
+                                        showManualDialog = true
                                     },
                                     colors = ButtonDefaults.textButtonColors(contentColor = Color.White)
                                 ) {
@@ -501,7 +476,6 @@ fun CustomBottomBar(
         }
     }
 
-    // <-- MOVIDO AQUÍ FUERA DEL IF (showMenu)
     if (showManualDialog) {
         ManualDialog(onDismiss = { showManualDialog = false })
     }
