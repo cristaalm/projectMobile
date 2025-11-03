@@ -128,7 +128,13 @@ fun HomeScreen(
             ) {
                 // --- Card de puntos (MODIFICADA con wrapper de 'tour') ---
                 Box(modifier = Modifier.onGloballyPositioned { coords ->
-                    tourState.registerTarget("home_points_card", coords)
+                    // --- INICIO MODIFICACIÓN: Pasar scrollState ---
+                    tourState.registerTarget(
+                        id = "home_points_card",
+                        coordinates = coords,
+                        scrollState = scrollState
+                    )
+                    // --- FIN MODIFICACIÓN ---
                 }) {
                     AnimatedPointsCard(
                         totalPoints = state.totalPoints,
@@ -143,7 +149,13 @@ fun HomeScreen(
                 // Envolvemos el título y la lista en una sola columna para el tour
                 Column(
                     modifier = Modifier.onGloballyPositioned { coords ->
-                        tourState.registerTarget("home_recent_activity", coords)
+                        // --- INICIO MODIFICACIÓN: Pasar scrollState ---
+                        tourState.registerTarget(
+                            id = "home_recent_activity",
+                            coordinates = coords,
+                            scrollState = scrollState
+                        )
+                        // --- FIN MODIFICACIÓN ---
                     }
                 ) {
                     // Título de actividad reciente
@@ -237,7 +249,13 @@ fun HomeScreen(
 
                 // --- Sección de logros (MODIFICADA con wrapper de 'tour') ---
                 Box(modifier = Modifier.onGloballyPositioned { coords ->
-                    tourState.registerTarget("home_achievements_section", coords)
+                    // --- INICIO MODIFICACIÓN: Pasar scrollState ---
+                    tourState.registerTarget(
+                        id = "home_achievements_section",
+                        coordinates = coords,
+                        scrollState = scrollState
+                    )
+                    // --- FIN MODIFICACIÓN ---
                 }) {
                     AchievementsSection(
                         totalPoints = state.totalPoints,
@@ -251,6 +269,8 @@ fun HomeScreen(
         }
     }
 }
+
+// ... (El resto de HomeScreen.kt (HistoryActivityCard, AchievementsSection, etc.) no cambia) ...
 
 @Composable
 fun HistoryActivityCard(

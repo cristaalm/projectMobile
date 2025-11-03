@@ -46,20 +46,10 @@ fun TourOverlay(
 
     val tourSteps by tourState.tourSteps.collectAsState()
 
-    val currentStep by remember(currentStepIndex, tourSteps) {
-        derivedStateOf { tourSteps.getOrNull(currentStepIndex) }
-    }
+    val currentStep = tourSteps.getOrNull(currentStepIndex)
 
-    // --- INICIO MODIFICACIÓN: Obtener TargetInfo completo ---
-    val targetInfo by remember(currentStep, targets) {
-        derivedStateOf { currentStep?.let { targets[it.targetId] } }
-    }
+    val targetInfo = currentStep?.let { targets[it.targetId] }
     val targetRect = targetInfo?.rect
-    val targetScrollState = targetInfo?.scrollState
-    // --- NUEVAS VARIABLES ---
-    val targetLazyListState = targetInfo?.lazyListState
-    val targetItemIndex = targetInfo?.itemIndex
-    // --- FIN MODIFICACIÓN ---
 
     val isStepOnCorrectScreen = currentStep?.screenRoute == currentScreenRoute
 
@@ -72,22 +62,37 @@ fun TourOverlay(
         }
     }
 
-    // --- INICIO MODIFICACIÓN: Lógica de Auto-Scroll (para ScrollState y LazyListState) ---
+    // Lógica de Auto-Scroll (para ScrollState y LazyListState)
     val configuration = LocalConfiguration.current
     val density = LocalDensity.current
     val screenHeightPx = with(density) { configuration.screenHeightDp.dp.toPx() }
 
+    // Lanzado por currentStep y targets para arreglar race condition
     LaunchedEffect(
-        targetRect,
-        targetScrollState,
-        targetLazyListState,
-        targetItemIndex,
+        currentStep,
+        targets,
         isStepOnCorrectScreen,
-        screenHeightPx
+        screenHeightPx,
+        density
     ) {
-        if (!isStepOnCorrectScreen || targetRect == null) {
+        if (!isStepOnCorrectScreen || currentStep == null) {
             return@LaunchedEffect
         }
+
+        // Obtiene manualmente la info del target para el paso actual
+        val currentTargetInfo = targets[currentStep.targetId]
+
+        if (currentTargetInfo == null) {
+            // El target aún no está en el mapa (probablemente off-screen),
+            // el efecto se volverá a ejecutar cuando 'targets' se actualice.
+            return@LaunchedEffect
+        }
+
+        val rect = currentTargetInfo.rect
+        val scrollState = currentTargetInfo.scrollState
+        val lazyState = currentTargetInfo.lazyListState
+        val itemIndex = currentTargetInfo.itemIndex
+
 
         // Márgenes (TopBar e BottomBar) para definir la "zona visible"
         val topMargin = with(density) { 100.dp.toPx() } // Altura aprox TopBar
@@ -96,32 +101,25 @@ fun TourOverlay(
         val visibleAreaTop = topMargin
         val visibleAreaBottom = screenHeightPx - bottomMargin
 
-        val isOffScreenTop = targetRect.top < visibleAreaTop // El item está "por encima" de la zona visible
-        val isOffScreenBottom = targetRect.bottom > visibleAreaBottom // El item está "por debajo" de la zona visible
+        val isOffScreenTop = rect.top < visibleAreaTop // El item está "por encima" de la zona visible
+        val isOffScreenBottom = rect.bottom > visibleAreaBottom // El item está "por debajo" de la zona visible
 
         if (isOffScreenBottom || isOffScreenTop) {
             // Comprobar qué tipo de scroll usar
-            if (targetScrollState != null) {
+            if (scrollState != null) {
                 // --- Lógica para ScrollState ---
-                // Calcula cuánto scrollear.
-                // Queremos que el item aparezca justo debajo del TopBar (topMargin)
-                val scrollAmount = (targetRect.top - topMargin).toInt()
-                // Asegurarse de no scrollear a un valor negativo
-                targetScrollState.animateScrollTo(scrollAmount.coerceAtLeast(0))
+                val scrollAmount = (rect.top - topMargin).toInt()
+                scrollState.animateScrollTo(scrollAmount.coerceAtLeast(0))
 
-            } else if (targetLazyListState != null && targetItemIndex != null) {
+            } else if (lazyState != null && itemIndex != null) {
                 // --- Lógica para LazyListState ---
-                // Simplemente scrollea al índice del item.
-                // El offset se puede usar si el item es más grande que la pantalla,
-                // pero para centrarlo, scrollear al índice es suficiente.
-                targetLazyListState.animateScrollToItem(targetItemIndex)
+                lazyState.animateScrollToItem(itemIndex)
             }
         }
     }
     // --- FIN MODIFICACIÓN ---
 
 
-    // ... (El resto del Composable (Canvas, TooltipBox, etc) se mantiene igual) ...
     val shouldShowScrim = isTourActive && isStepOnCorrectScreen &&
             (targetRect != null || currentStep?.isWelcomeStep == true)
 
@@ -149,14 +147,13 @@ fun TourOverlay(
         ) {
             drawRect(color = scrimColor.copy(alpha = scrimAlpha))
 
-            val localTargetRect = targetRect
-            val localCurrentStep = currentStep
-            if (localTargetRect != null &&
+            if (targetInfo != null && // Usar targetInfo en lugar de rect/step por separado
                 isStepOnCorrectScreen &&
                 scrimAlpha > 0.1f &&
-                localCurrentStep?.isWelcomeStep != true) {
-
-                val inflatedRect = localTargetRect.inflate(with(density) { 8.dp.toPx() })
+                currentStep?.isWelcomeStep != true
+            ) {
+                //  Recorte más pequeño
+                val inflatedRect = targetInfo!!.rect.inflate(with(density) { 1.dp.toPx() })
 
                 drawRoundRect(
                     color = scrimColor,
@@ -168,24 +165,39 @@ fun TourOverlay(
             }
         }
 
-        val localCurrentStep = currentStep
-        val localTargetRect = targetRect
 
-        if (localCurrentStep != null &&
-            (localTargetRect != null || localCurrentStep.isWelcomeStep) &&
+        if (currentStep != null &&
             isStepOnCorrectScreen &&
-            isTourActive) {
-
-            TooltipBox(
-                step = localCurrentStep,
-                targetRect = localTargetRect,
-                isFirstStep = tourState.isFirstStepOfTour(),
-                isLastStep = tourState.isLastStepOfTour(),
-                onNext = { tourState.nextStep() },
-                onPrev = { tourState.prevStep() },
-                onEnd = { tourState.endTour() }
-            )
+            isTourActive
+        ) {
+            if (targetInfo != null) {
+                // Caso normal: El target es válido y está en el mapa
+                TooltipBox(
+                    step = currentStep!!,
+                    targetRect = targetInfo!!.rect, // Usar el rect de targetInfo
+                    isFirstStep = tourState.isFirstStepOfTour(),
+                    isLastStep = tourState.isLastStepOfTour(),
+                    onNext = { tourState.nextStep() },
+                    onPrev = { tourState.prevStep() },
+                    onEnd = { tourState.endTour() }
+                )
+            } else if (currentStep!!.isWelcomeStep) {
+                // Caso especial: Paso de bienvenida (no tiene targetRect)
+                TooltipBox(
+                    step = currentStep!!,
+                    targetRect = null,
+                    isFirstStep = tourState.isFirstStepOfTour(),
+                    isLastStep = tourState.isLastStepOfTour(),
+                    onNext = { tourState.nextStep() },
+                    onPrev = { tourState.prevStep() },
+                    onEnd = { tourState.endTour() }
+                )
+            }
+            // Si targetInfo es null Y no es el paso de bienvenida,
+            // no se muestra nada (esperando al auto-scroll y actualización de 'targets')
+            // Esto arregla el bug de la "imagen imposible".
         }
+        // --- FIN MODIFICACIÓN ---
     }
 }
 
@@ -284,6 +296,7 @@ private fun TooltipBox(
     }
 }
 
+// Lógica de posicionamiento de Tooltip
 private fun calculateTooltipPosition(
     targetRect: Rect,
     tooltipSize: IntSize,
@@ -291,41 +304,46 @@ private fun calculateTooltipPosition(
     screenHeightPx: Float,
     density: Density
 ): Pair<Float, Float> {
-    // ... (Esta función no cambia) ...
     val margin = with(density) { 16.dp.toPx() }
     val tooltipHeightPx = tooltipSize.height
     val tooltipWidthPx = tooltipSize.width
 
-    val safeAreaTop = margin
-    val safeAreaBottom = screenHeightPx - tooltipHeightPx - margin
+    val spaceAbove = targetRect.top
+    val spaceBelow = screenHeightPx - targetRect.bottom
 
-    val targetIsOffBottom = targetRect.top > safeAreaBottom
-    val targetIsOffTop = targetRect.bottom < safeAreaTop
+    val canPlaceAbove = spaceAbove > tooltipHeightPx + margin
+    val canPlaceBelow = spaceBelow > tooltipHeightPx + margin
 
-    val yPx: Float
-    if (targetIsOffBottom) {
-        yPx = screenHeightPx - tooltipHeightPx - margin
-    } else if (targetIsOffTop) {
-        yPx = margin
-    } else {
-        val spaceAbove = targetRect.top
-        val spaceBelow = screenHeightPx - targetRect.bottom
+    // Decide la posición Y
+    val targetCenterY = targetRect.top + targetRect.height / 2
+    val isTargetInTopHalf = targetCenterY < screenHeightPx / 2
 
-        yPx = if (spaceBelow > tooltipHeightPx + margin) {
+    val yPx: Float = if (isTargetInTopHalf) {
+        // Target está en la mitad superior, prioriza poner el tooltip DEBAJO
+        if (canPlaceBelow) {
             targetRect.bottom + margin
-        } else if (spaceAbove > tooltipHeightPx + margin) {
+        } else if (canPlaceAbove) {
+            // Fallback: ponerlo arriba
             targetRect.top - tooltipHeightPx - margin
         } else {
+            // Fallback: centrarlo en la pantalla
+            (screenHeightPx / 2) - (tooltipHeightPx / 2)
+        }
+    } else {
+        // Target está en la mitad inferior, prioriza poner el tooltip ARRIBA
+        if (canPlaceAbove) {
+            targetRect.top - tooltipHeightPx - margin
+        } else if (canPlaceBelow) {
+            // Fallback: ponerlo abajo
+            targetRect.bottom + margin
+        } else {
+            // Fallback: centrarlo en la pantalla
             (screenHeightPx / 2) - (tooltipHeightPx / 2)
         }
     }
 
-    var xPx: Float
-    if (targetIsOffBottom || targetIsOffTop) {
-        xPx = (screenWidthPx / 2) - (tooltipWidthPx / 2)
-    } else {
-        xPx = (targetRect.left + targetRect.width / 2) - (tooltipWidthPx / 2)
-    }
+    // Decide la posición X (centrado en el target, con límites de pantalla)
+    var xPx: Float = (targetRect.left + targetRect.width / 2) - (tooltipWidthPx / 2)
 
     if (xPx < margin) {
         xPx = margin

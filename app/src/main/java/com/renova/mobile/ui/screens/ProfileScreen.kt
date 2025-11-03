@@ -246,7 +246,8 @@ private fun ProfileContent(
             user = user,
             verificationStatus = verificationStatus,
             languageViewModel = languageViewModel,
-            selfieBytes = documentImages["selfie"]
+            selfieBytes = documentImages["selfie"],
+            scrollState = scrollState // <--- MODIFICACIÓN: Pasar scrollState
         )
         Spacer(modifier = Modifier.height(12.dp))
 
@@ -487,7 +488,8 @@ fun ProfileHeader(
     user: UserData,
     verificationStatus: VerificationStatus? = null,
     languageViewModel: LanguageViewModel,
-    selfieBytes: ByteArray? = null
+    selfieBytes: ByteArray? = null,
+    scrollState: ScrollState // <--- MODIFICACIÓN: Aceptar scrollState
 ) {
     val currentLanguage by languageViewModel.currentLanguage.collectAsState()
     val isSpanish = currentLanguage == "es"
@@ -574,11 +576,11 @@ fun ProfileHeader(
 
                 // --- MODIFICADO: Añadir wrapper del Tour (de 'tour') ---
                 Box(modifier = Modifier.onGloballyPositioned { coords ->
-                    // --- MODIFICADO: Pasar null (Header no scrollea) ---
+                    // --- MODIFICADO: Pasar scrollState ---
                     tourState.registerTarget(
                         id = "profile_language_toggle",
                         coordinates = coords,
-                        scrollState = null
+                        scrollState = scrollState // <--- MODIFICACIÓN: Usar el scrollState recibido
                     )
                 }) {
                     LanguageToggle(
@@ -645,7 +647,7 @@ fun ProfileHeader(
                 Text(
                     text = "${user.name} ${user.last_name}",
                     color = Color.White,
-                    style = MaterialTheme.typography.titleLarge,
+                    style = MaterialTheme. typography.titleLarge,
                     fontWeight = FontWeight.W600,
                     textAlign = TextAlign.Center,
                     maxLines = 3,
