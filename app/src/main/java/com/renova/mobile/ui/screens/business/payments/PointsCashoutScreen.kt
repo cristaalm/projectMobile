@@ -19,17 +19,10 @@ import com.renova.mobile.viewmodel.BusinessHistoryViewModel
 import java.text.NumberFormat
 import java.util.Locale
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.ShoppingCart
-import androidx.compose.material.icons.filled.Recycling
 import androidx.compose.material.icons.filled.History
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.ui.text.style.TextOverflow
-import com.renova.mobile.ui.components.formatFriendlyDate
-import androidx.compose.foundation.clickable
 import androidx.compose.ui.platform.LocalContext
 import android.widget.Toast
-import androidx.compose.material.icons.filled.AttachMoney
-import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import com.renova.mobile.R
 import com.renova.mobile.network.ApiClient
@@ -37,6 +30,8 @@ import com.renova.mobile.utils.SessionManager
 import kotlinx.coroutines.launch
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.ui.zIndex
+import com.renova.mobile.ui.components.business.home.HistorySaleCard
+import androidx.compose.material3.HorizontalDivider
 
 private const val POINT_TO_MXN = 0.01  // 1 centavo por punto
 
@@ -398,7 +393,7 @@ fun PointsCashoutScreen(
                 }
             } else {
                 itemsIndexed(historyState.activities) { index, activity ->
-                    HistorySaleItem(
+                    HistorySaleCard(
                         activity = activity,
                         colors = colors
                     )
@@ -447,133 +442,5 @@ fun PointsCashoutScreen(
                 loadPoints()
             }
         )
-    }
-}
-
-@Composable
-private fun HistorySaleItem(
-    activity: com.renova.mobile.network.ActivityItem,
-    colors: com.renova.mobile.ui.theme.RenovaColorScheme
-) {
-    val context = LocalContext.current
-
-    Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .clickable { }
-            .padding(horizontal = 16.dp, vertical = 12.dp),
-        verticalAlignment = Alignment.CenterVertically
-    ) {
-        // Determinar ícono y color según el tipo de actividad
-        when (activity.type_history) {
-            4 -> {
-                // COBRO - Ícono personalizado
-                Icon(
-                    imageVector = Icons.Default.AttachMoney,
-                    contentDescription = null,
-                    tint = RenovaColors.Success,
-                    modifier = Modifier.size(32.dp)
-                )
-            }
-            2 -> {
-                // RECICLAJE
-                Icon(
-                    imageVector = Icons.Default.Recycling,
-                    contentDescription = null,
-                    tint = RenovaColors.Success,
-                    modifier = Modifier.size(32.dp)
-                )
-            }
-            1 -> {
-                // CANJEO
-                Icon(
-                    imageVector = Icons.Default.ShoppingCart,
-                    contentDescription = null,
-                    tint = RenovaColors.Primary,
-                    modifier = Modifier.size(32.dp)
-                )
-            }
-            else -> {
-                // OTROS
-                Icon(
-                    imageVector = Icons.Default.History,
-                    contentDescription = null,
-                    tint = RenovaColors.Warning,
-                    modifier = Modifier.size(32.dp)
-                )
-            }
-        }
-
-        Spacer(modifier = Modifier.width(16.dp))
-
-        Column(modifier = Modifier.weight(1f)) {
-            Text(
-                text = when (activity.type_history) {
-                    4 -> stringResource(R.string.activity_settlement)
-                    2 -> stringResource(R.string.activity_recycling)
-                    1 -> stringResource(R.string.activity_reward_redemption)
-                    else -> stringResource(R.string.activity_generic)
-                },
-                style = MaterialTheme.typography.bodyMedium.copy(
-                    fontFamily = PoppinsFontFamily,
-                    fontWeight = FontWeight.SemiBold
-                ),
-                color = colors.textPrimary,
-                maxLines = 1,
-                overflow = TextOverflow.Ellipsis
-            )
-
-            Spacer(modifier = Modifier.height(4.dp))
-
-            val subtitleText = when (activity.type_history) {
-                4 -> stringResource(R.string.activity_points_withdrawal)
-                2 -> activity.material_type?.name ?: ""
-                1 -> {
-                    val name = activity.reward?.name ?: context.getString(R.string.activity_reward_redemption)
-                    context.getString(R.string.activity_quantity, 1, name)
-                }
-                else -> activity.alliance?.name ?: ""
-            }
-
-            if (subtitleText.isNotBlank()) {
-                Text(
-                    text = subtitleText,
-                    style = MaterialTheme.typography.bodySmall.copy(
-                        fontFamily = PoppinsFontFamily
-                    ),
-                    color = colors.textSecondary,
-                    maxLines = 2,
-                    overflow = TextOverflow.Ellipsis
-                )
-            }
-
-            Text(
-                text = formatFriendlyDate(activity.created_at),
-                style = MaterialTheme.typography.bodySmall.copy(
-                    fontFamily = PoppinsFontFamily
-                ),
-                color = colors.textSecondary
-            )
-        }
-
-        Column(horizontalAlignment = Alignment.End) {
-            val mxnValue = activity.points * POINT_TO_MXN
-            val mxnColor = if (mxnValue < 0) colors.negativePoints else colors.primaryColor
-            Text(
-                text = NumberFormat.getCurrencyInstance(Locale("es","MX")).format(mxnValue),
-                style = MaterialTheme.typography.bodyLarge.copy(
-                    fontFamily = PoppinsFontFamily,
-                    fontWeight = FontWeight.Bold
-                ),
-                color = mxnColor
-            )
-            Text(
-                text = stringResource(R.string.activity_equivalent_mxn),
-                style = MaterialTheme.typography.bodySmall.copy(
-                    fontFamily = PoppinsFontFamily
-                ),
-                color = colors.textSecondary
-            )
-        }
     }
 }

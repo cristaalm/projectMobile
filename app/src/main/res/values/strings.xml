@@ -695,4 +695,25 @@
     <string name="hist_detail_performed_date_label">Performed:</string>
     <string name="hist_detail_placeholder_dash">—</string>
 
+    <!-- HistorySaleItem strings -->
+    <string name="hist_sale_settlement_title">Settlement</string>
+    <string name="hist_sale_recycling_title">Recycling</string>
+    <string name="hist_sale_reward_title">Reward Exchange</string>
+    <string name="hist_sale_generic_title">Activity</string>
+    <string name="hist_sale_points_withdrawal">Points Withdrawal</string>
+    <string name="hist_sale_equivalent_mxn">equivalent MXN</string>
+
+    <!-- HistorySaleDetailBottomSheet strings -->
+    <string name="hist_sale_detail_business_label">Business:</string>
+    <string name="hist_sale_detail_client_label">Client:</string>
+    <string name="hist_sale_detail_seller_label">Seller:</string>
+    <string name="hist_sale_detail_quantity_label">Quantity:</string>
+    <string name="hist_sale_detail_equivalent_mxn_prefix">Equivalent MXN:</string>
+    <string name="hist_sale_detail_performed_label">Performed:</string>
+    <string name="hist_sale_detail_placeholder_dash">—</string>
+    <string name="hist_sale_detail_settlement_title">Points Settlement</string>
+    <string name="hist_sale_detail_recycling_title">Recycling</string>
+    <string name="hist_sale_detail_reward_title">Reward Exchange</string>
+    <string name="hist_sale_detail_activity_title">Activity</string>
+
 </resources>
