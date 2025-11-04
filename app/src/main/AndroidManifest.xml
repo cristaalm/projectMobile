@@ -49,6 +49,10 @@
             android:name=".ui.activities.FaqActivity"
             android:exported="false" />
         <activity
+            android:name=".ui.activities.BusinessStatisticsActivity"
+            android:exported="false"
+            android:screenOrientation="portrait" />
+        <activity
             android:name=".scan.PortraitCaptureActivity"
             android:screenOrientation="portrait"
             tools:replace="screenOrientation" />

@@ -422,7 +422,13 @@ fun BusinessHomeScreen(
                                 shape = RoundedCornerShape(16.dp),
                                 spotColor = RenovaColors.Light.ActivityShadowColor
                             )
-                            .clickable { /* TODO: Implementar estadísticas */ },
+                            .clickable {
+                                val intent = android.content.Intent(
+                                    context,
+                                    com.renova.mobile.ui.activities.BusinessStatisticsActivity::class.java
+                                )
+                                context.startActivity(intent)
+                            },
                         colors = CardDefaults.cardColors(containerColor = colors.cardBackground),
                         shape = RoundedCornerShape(16.dp),
                         elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)

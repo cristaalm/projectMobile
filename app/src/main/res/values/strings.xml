@@ -714,5 +714,16 @@
     <string name="hist_sale_detail_recycling_title">Recycling</string>
     <string name="hist_sale_detail_reward_title">Reward Exchange</string>
     <string name="hist_sale_detail_activity_title">Activity</string>
+    
+    <!-- Statistics screen strings -->
+    <string name="statistics_total_revenue">Total revenue</string>
+    <string name="statistics_total_points">Points awarded</string>
+    <string name="statistics_average_ticket">Average ticket</string>
+    <string name="statistics_customers_served">Customers served</string>
+    <string name="statistics_top_products">Top redeemed products</string>
+    <string name="statistics_last_7_days">Last 7 days activity</string>
+    <string name="statistics_sales_last_week">Sales last week</string>
+    <string name="statistics_points_last_week">Points last week</string>
+    <string name="statistics_hint_fixed_data">Temporary fixed data for illustration; will connect to backend.</string>
 
 </resources>

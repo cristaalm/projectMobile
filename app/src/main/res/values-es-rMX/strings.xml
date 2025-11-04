@@ -716,4 +716,15 @@
     <string name="hist_sale_detail_recycling_title">Reciclaje</string>
     <string name="hist_sale_detail_reward_title">Canje de Recompensa</string>
     <string name="hist_sale_detail_activity_title">Actividad</string>
+    
+    <!-- Statistics screen strings -->
+    <string name="statistics_total_revenue">Ingresos totales</string>
+    <string name="statistics_total_points">Puntos otorgados</string>
+    <string name="statistics_average_ticket">Ticket promedio</string>
+    <string name="statistics_customers_served">Clientes atendidos</string>
+    <string name="statistics_top_products">Productos más canjeados</string>
+    <string name="statistics_last_7_days">Actividad últimos 7 días</string>
+    <string name="statistics_sales_last_week">Ventas última semana</string>
+    <string name="statistics_points_last_week">Puntos última semana</string>
+    <string name="statistics_hint_fixed_data">Datos fijos temporales para ilustración; se conectarán a backend.</string>
 </resources>
