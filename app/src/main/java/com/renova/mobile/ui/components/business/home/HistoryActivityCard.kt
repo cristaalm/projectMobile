@@ -10,8 +10,6 @@ import androidx.compose.material.icons.filled.ShoppingCart
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
-import androidx.compose.material.icons.filled.Close
 import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
@@ -19,12 +17,13 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.style.TextAlign
+import com.renova.mobile.R
 import com.renova.mobile.network.ActivityItem
 import com.renova.mobile.ui.components.formatFriendlyDate
 import com.renova.mobile.ui.components.SaleSummary
@@ -41,6 +40,7 @@ fun HistoryActivityCard(
     onClick: () -> Unit = {}
 ) {
     val showDetail = remember { mutableStateOf(false) }
+    val context = LocalContext.current
 
     Row(
         modifier = Modifier
@@ -72,12 +72,13 @@ fun HistoryActivityCard(
             modifier = Modifier.weight(1f)
         ) {
             // Título de la actividad
+            val titleText = when (activity.type_history) {
+                2 -> stringResource(R.string.hist_card_recycling_title)
+                1 -> stringResource(R.string.hist_card_reward_exchange_title)
+                else -> stringResource(R.string.hist_card_generic_activity_title)
+            }
             Text(
-                text = when (activity.type_history) {
-                    2 -> "Reciclaje"
-                    1 -> "Canjeo de recompensa"
-                    else -> "Actividad"
-                },
+                text = titleText,
                 style = MaterialTheme.typography.bodyMedium.copy(
                     fontFamily = PoppinsFontFamily,
                     fontWeight = FontWeight.SemiBold
@@ -91,7 +92,7 @@ fun HistoryActivityCard(
             val subtitleText = when (activity.type_history) {
                 2 -> activity.material_type?.name ?: ""
                 1 -> {
-                    val name = activity.reward?.name ?: "Recompensa"
+                    val name = activity.reward?.name ?: context.getString(R.string.reward)
                     val q = activity.quantity ?: 1
                     "$q x $name"
                 }
@@ -134,7 +135,7 @@ fun HistoryActivityCard(
                 color = mxnColor
             )
             Text(
-                text = "equivalente MXN",
+                text = stringResource(R.string.hist_card_equivalent_mxn_label),
                 style = MaterialTheme.typography.bodySmall.copy(
                     fontFamily = PoppinsFontFamily
                 ),
@@ -162,13 +163,12 @@ private fun HistoryDetailBottomSheet(
     onDismiss: () -> Unit
 ) {
     val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
-    val summary = toSaleSummary(activity)
     val context = LocalContext.current
 
     ModalBottomSheet(
         onDismissRequest = onDismiss,
         sheetState = sheetState,
-        containerColor = Color.White
+        containerColor = colors.cardBackground
     ) {
         Column(
             modifier = Modifier
@@ -191,13 +191,14 @@ private fun HistoryDetailBottomSheet(
             )
 
             // Título del tipo de actividad
+            val titleText = when (activity.type_history) {
+                1 -> stringResource(R.string.reward_exchange)
+                2 -> stringResource(R.string.recycling)
+                3 -> stringResource(R.string.points_adjustment)
+                else -> stringResource(R.string.activity)
+            }
             Text(
-                text = when (activity.type_history) {
-                    1 -> stringResource(com.renova.mobile.R.string.reward_exchange)
-                    2 -> stringResource(com.renova.mobile.R.string.recycling)
-                    3 -> stringResource(com.renova.mobile.R.string.points_adjustment)
-                    else -> stringResource(com.renova.mobile.R.string.activity)
-                },
+                text = titleText,
                 style = MaterialTheme.typography.titleLarge.copy(
                     fontFamily = PoppinsFontFamily,
                     fontWeight = FontWeight.Bold
@@ -206,38 +207,39 @@ private fun HistoryDetailBottomSheet(
             )
 
             // Comercio, Cliente, Vendedor
-            val allianceName = activity.alliance?.name ?: "—"
+            val allianceName = activity.alliance?.name ?: stringResource(R.string.hist_detail_placeholder_dash)
             val clientName = activity.user?.let { u ->
                 val last = u.last_name
                 if (last.isNullOrBlank()) u.name else "${u.name} ${last}"
-            } ?: "—"
-            val sellerName = activity.alliance?.contact_name ?: "—"
+            } ?: stringResource(R.string.hist_detail_placeholder_dash)
+            val sellerName = activity.alliance?.contact_name ?: stringResource(R.string.hist_detail_placeholder_dash)
+
             Text(
-                text = "Comercio: $allianceName",
+                text = "${stringResource(R.string.hist_detail_business_label)} $allianceName",
                 style = MaterialTheme.typography.bodyMedium.copy(fontFamily = PoppinsFontFamily),
                 color = colors.textPrimary,
-                textAlign = androidx.compose.ui.text.style.TextAlign.Center
+                textAlign = TextAlign.Center
             )
             Text(
-                text = "Cliente: $clientName",
+                text = "${stringResource(R.string.hist_detail_client_label)} $clientName",
                 style = MaterialTheme.typography.bodyMedium.copy(fontFamily = PoppinsFontFamily),
                 color = colors.textPrimary,
-                textAlign = androidx.compose.ui.text.style.TextAlign.Center
+                textAlign = TextAlign.Center
             )
             Text(
-                text = "Vendedor: $sellerName",
+                text = "${stringResource(R.string.hist_detail_seller_label)} $sellerName",
                 style = MaterialTheme.typography.bodyMedium.copy(fontFamily = PoppinsFontFamily),
                 color = colors.textPrimary,
-                textAlign = androidx.compose.ui.text.style.TextAlign.Center
+                textAlign = TextAlign.Center
             )
 
             // Título del producto en gris
-            val productTitle = activity.reward?.name ?: activity.material_type?.name ?: context.getString(com.renova.mobile.R.string.item)
+            val productTitle = activity.reward?.name ?: activity.material_type?.name ?: context.getString(R.string.item)
             Text(
                 text = productTitle,
                 style = MaterialTheme.typography.bodyMedium.copy(fontFamily = PoppinsFontFamily),
                 color = colors.textSecondary,
-                textAlign = androidx.compose.ui.text.style.TextAlign.Center
+                textAlign = TextAlign.Center
             )
 
             // Descripción del producto
@@ -247,17 +249,17 @@ private fun HistoryDetailBottomSheet(
                     text = productDesc,
                     style = MaterialTheme.typography.bodySmall.copy(fontFamily = PoppinsFontFamily),
                     color = colors.textSecondary,
-                    textAlign = androidx.compose.ui.text.style.TextAlign.Center
+                    textAlign = TextAlign.Center
                 )
             }
 
             // Cantidad
             val qty = activity.quantity ?: 1
             Text(
-                text = "Cantidad: $qty",
+                text = "${stringResource(R.string.hist_detail_quantity_label)} $qty",
                 style = MaterialTheme.typography.bodyMedium.copy(fontFamily = PoppinsFontFamily),
                 color = colors.textPrimary,
-                textAlign = androidx.compose.ui.text.style.TextAlign.Center
+                textAlign = TextAlign.Center
             )
 
             // Puntos en grande sin signo positivo
@@ -275,10 +277,10 @@ private fun HistoryDetailBottomSheet(
             val mxnFormatted = java.text.NumberFormat.getCurrencyInstance(java.util.Locale("es", "MX"))
                 .format(activity.points * pointToMxn)
             Text(
-                text = "Equivalente MXN: $mxnFormatted",
+                text = "${stringResource(R.string.hist_detail_equivalent_mxn_prefix)} $mxnFormatted",
                 style = MaterialTheme.typography.bodyMedium.copy(fontFamily = PoppinsFontFamily),
                 color = RenovaColors.Primary,
-                textAlign = androidx.compose.ui.text.style.TextAlign.Center
+                textAlign = TextAlign.Center
             )
 
             // Fecha de realización dd/MM/yyyy hh:mm
@@ -306,10 +308,10 @@ private fun HistoryDetailBottomSheet(
                 out
             }
             Text(
-                text = "Realizado: $formattedDate",
+                text = "${stringResource(R.string.hist_detail_performed_date_label)} $formattedDate",
                 style = MaterialTheme.typography.bodySmall.copy(fontFamily = PoppinsFontFamily),
                 color = colors.textSecondary,
-                textAlign = androidx.compose.ui.text.style.TextAlign.Center
+                textAlign = TextAlign.Center
             )
         }
     }

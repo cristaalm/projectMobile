@@ -680,4 +680,19 @@
     <string name="first_scan_consumer">Primero, escanee al consumidor para agregar recompensas</string>
     <string name="no_consumer">No encontrado, debe escanear primero</string>
     <string name="no_rewards">No hay recompensas en el ticket</string>
+
+    <!-- HistoryActivityCard strings -->
+    <string name="hist_card_recycling_title">Reciclaje</string>
+    <string name="hist_card_reward_exchange_title">Canjeo de recompensa</string>
+    <string name="hist_card_generic_activity_title">Actividad</string>
+    <string name="hist_card_equivalent_mxn_label">equivalente MXN</string>
+
+    <!-- HistoryDetailBottomSheet strings -->
+    <string name="hist_detail_business_label">Comercio:</string>
+    <string name="hist_detail_client_label">Cliente:</string>
+    <string name="hist_detail_seller_label">Vendedor:</string>
+    <string name="hist_detail_quantity_label">Cantidad:</string>
+    <string name="hist_detail_equivalent_mxn_prefix">Equivalente MXN:</string>
+    <string name="hist_detail_performed_date_label">Realizado:</string>
+    <string name="hist_detail_placeholder_dash">—</string>
 </resources>

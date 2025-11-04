@@ -680,4 +680,19 @@
     <string name="no_consumer">Not found, must scan first</string>
     <string name="no_rewards">No rewards in the ticket</string>
 
+    <!-- HistoryActivityCard strings -->
+    <string name="hist_card_recycling_title">Recycling</string>
+    <string name="hist_card_reward_exchange_title">Reward Exchange</string>
+    <string name="hist_card_generic_activity_title">Activity</string>
+    <string name="hist_card_equivalent_mxn_label">equivalent MXN</string>
+
+    <!-- HistoryDetailBottomSheet strings -->
+    <string name="hist_detail_business_label">Business:</string>
+    <string name="hist_detail_client_label">Client:</string>
+    <string name="hist_detail_seller_label">Seller:</string>
+    <string name="hist_detail_quantity_label">Quantity:</string>
+    <string name="hist_detail_equivalent_mxn_prefix">Equivalent MXN:</string>
+    <string name="hist_detail_performed_date_label">Performed:</string>
+    <string name="hist_detail_placeholder_dash">—</string>
+
 </resources>
