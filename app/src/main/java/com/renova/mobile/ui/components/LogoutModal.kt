@@ -25,6 +25,7 @@ import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
 import com.renova.mobile.R
+import com.renova.mobile.ui.theme.LocalRenovaColors
 import kotlinx.coroutines.delay
 
 @Composable
@@ -34,7 +35,7 @@ fun LogoutModal(
     onConfirm: () -> Unit
 ) {
     var isLoading by remember { mutableStateOf(false) }
-    val isDarkTheme = isSystemInDarkTheme()
+    val renovaColors = LocalRenovaColors.current
 
     LaunchedEffect(isLoading) {
         if (isLoading) {
@@ -52,12 +53,6 @@ fun LogoutModal(
         )
     )
 
-    // Colores según tema
-    val backgroundColor = if (isDarkTheme) Color(0xFF2C2C2C) else Color.White
-    val textColor = if (isDarkTheme) Color(0xFFE0E0E0) else Color(0xFF333333)
-    val secondaryTextColor = if (isDarkTheme) Color(0xFFAAAAAA) else Color(0xFF666666)
-    val buttonColor = if (isDarkTheme) Color(0xFF349A18) else Color(0xFF1F901C)
-
     if (isVisible) {
         Dialog(
             onDismissRequest = { if (!isLoading) onDismiss() },
@@ -71,7 +66,7 @@ fun LogoutModal(
                     .wrapContentSize()
                     .scale(scale),
                 shape = RoundedCornerShape(16.dp),
-                colors = CardDefaults.cardColors(containerColor = backgroundColor),
+                colors = CardDefaults.cardColors(containerColor = renovaColors.cardBackground),
                 elevation = CardDefaults.cardElevation(defaultElevation = 8.dp)
             ) {
                 Column(
@@ -83,7 +78,7 @@ fun LogoutModal(
                     if (isLoading) {
                         CircularProgressIndicator(
                             modifier = Modifier.size(36.dp),
-                            color = buttonColor,
+                            color = renovaColors.primaryColor,
                             strokeWidth = 4.dp
                         )
                         Spacer(modifier = Modifier.height(12.dp))
@@ -91,20 +86,20 @@ fun LogoutModal(
                             text = stringResource(R.string.modal_logout_loading),
                             fontWeight = FontWeight.Medium,
                             fontSize = 14.sp,
-                            color = textColor
+                            color = renovaColors.textPrimary
                         )
                     } else {
                         Text(
                             text = stringResource(R.string.modal_logout_title),
                             fontWeight = FontWeight.Bold,
                             fontSize = 16.sp,
-                            color = textColor
+                            color = renovaColors.textPrimary
                         )
                         Spacer(modifier = Modifier.height(8.dp))
                         Text(
                             text = stringResource(R.string.modal_logout_message),
                             fontSize = 14.sp,
-                            color = secondaryTextColor,
+                            color = renovaColors.textSecondary,
                             textAlign = TextAlign.Center
                         )
                         Spacer(modifier = Modifier.height(16.dp))
@@ -115,13 +110,15 @@ fun LogoutModal(
                             ) {
                                 Text(
                                     text = stringResource(R.string.modal_logout_cancel),
-                                    color = buttonColor
+                                    color = renovaColors.primaryColor
                                 )
                             }
                             Button(
                                 onClick = { isLoading = true },
                                 modifier = Modifier.weight(1f),
-                                colors = ButtonDefaults.buttonColors(containerColor = buttonColor)
+                                colors = ButtonDefaults.buttonColors(
+                                    containerColor = renovaColors.primaryColor
+                                )
                             ) {
                                 Text(
                                     text = stringResource(R.string.modal_logout_confirm),
