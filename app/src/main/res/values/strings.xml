@@ -379,7 +379,7 @@
     <string name="resubmit_documentation">Resubmit Documentation</string>
 
     <string name="tour_button_exit">Exit</string>
-    <string name="tour_button_prev">Prev</string>
+    <string name="tour_button_prev">Prev.</string>
     <string name="tour_button_next">Next</string>
     <string name="tour_button_finish">Finish</string>
     <string name="tour_title_navigating">Navigating...</string>
@@ -393,21 +393,20 @@
     <string name="tour_desc_home_achievements">The more you recycle, the more achievements you unlock! Tap one to see the details.</string>
 
     <string name="tour_title_nav_main">Let\'s go to the Store</string>
-    <string name="tour_desc_nav_main">This is the main menu. Tap "Store" (or "Next") to see where to redeem your points.</string>
+    <string name="tour_desc_nav_main">This is the main menu. Tap  \"Next\" to see where to redeem your points.</string>
     <string name="tour_title_qr_button">Your Access Code</string>
-    <string name="tour_desc_qr_button">This is the access button. Tap here (or "Next") to see your codes.</string>
+    <string name="tour_desc_qr_button">This is the access button. Tap \"Next\" to see your codes.</string>
     <string name="tour_title_profile_button">Your Profile</string>
-    <string name="tour_desc_profile_button">Almost done. Tap "Profile" (or "Next") to see your personal information.</string>
+    <string name="tour_desc_profile_button">Almost done. Tap \"Next\" to see your personal information.</string>
     <string name="tour_title_activity_button">Activity History</string>
-    <string name="tour_desc_activity_button">Finally, tap "Activity" (or "Next") to see the full history of your movements.</string>
+    <string name="tour_desc_activity_button">Finally, tap \"Next\" to see the full history of your movements.</string>
 
     <string name="tour_title_store_categories">Filter Stores</string>
     <string name="tour_desc_store_categories">Use these filters to find stores by category. Tap "All" to see the full list.</string>
     <string name="tour_title_store_alliances">Our Partners</string>
     <string name="tour_desc_store_alliances">Here you\'ll see the list of businesses where you can redeem your points for rewards.</string>
     <string name="tour_title_store_rewards">Choose a Store</string>
-    <string name="tour_desc_store_rewards">Tap any store (or "Next") to explore the exclusive rewards and discounts it offers.</string>
-
+    <string name="tour_desc_store_rewards">You can tap any store to explore the exclusive rewards and discounts it offers.</string>
     <string name="tour_title_qr_container">Your Access Codes</string>
     <string name="tour_desc_qr_container">This screen shows your codes. Use the QR code to identify yourself at containers and the barcode to redeem in stores.</string>
     <string name="tour_title_qr_barcode">Swap between codes</string>

@@ -225,7 +225,13 @@ fun HomeScreen(
             ) {
                 // Card de puntos
                 Box(modifier = Modifier.onGloballyPositioned { coords ->
-                    tourState.registerTarget("home_points_card", coords)
+                    // --- INICIO MODIFICACIÓN: Pasar scrollState ---
+                    tourState.registerTarget(
+                        id = "home_points_card",
+                        coordinates = coords,
+                        scrollState = scrollState
+                    )
+                    // --- FIN MODIFICACIÓN ---
                 }) {
                     AnimatedPointsCard(
                         totalPoints = state.totalPoints,
@@ -239,7 +245,13 @@ fun HomeScreen(
                 // Actividad reciente
                 Column(
                     modifier = Modifier.onGloballyPositioned { coords ->
-                        tourState.registerTarget("home_recent_activity", coords)
+                        // --- INICIO MODIFICACIÓN: Pasar scrollState ---
+                        tourState.registerTarget(
+                            id = "home_recent_activity",
+                            coordinates = coords,
+                            scrollState = scrollState
+                        )
+                        // --- FIN MODIFICACIÓN ---
                     }
                 ) {
                     Column(
@@ -327,7 +339,13 @@ fun HomeScreen(
 
                 // Sección de logros mensuales
                 Box(modifier = Modifier.onGloballyPositioned { coords ->
-                    tourState.registerTarget("home_achievements_section", coords)
+                    // --- INICIO MODIFICACIÓN: Pasar scrollState ---
+                    tourState.registerTarget(
+                        id = "home_achievements_section",
+                        coordinates = coords,
+                        scrollState = scrollState
+                    )
+                    // --- FIN MODIFICACIÓN ---
                 }) {
                     MonthlyBadgesSection(
                         badges = monthlyBadges,
@@ -471,6 +489,8 @@ fun HomeScreen(
         }
     )
 }
+
+// ... (El resto de HomeScreen.kt (HistoryActivityCard, AchievementsSection, etc.) no cambia) ...
 
 @Composable
 fun HistoryActivityCard(

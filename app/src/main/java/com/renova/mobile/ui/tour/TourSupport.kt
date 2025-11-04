@@ -51,7 +51,6 @@ data class TourStep(
     val isWelcomeStep: Boolean = false
 )
 
-// --- INICIO MODIFICACIÓN: Data class para info del target ---
 /**
  * Contiene la información de un elemento UI registrado para el tour,
  * incluyendo su rectángulo (Rect) y el estado de scroll (ScrollState o LazyListState) de su contenedor.
@@ -62,7 +61,6 @@ data class TargetInfo(
     val lazyListState: LazyListState? = null,
     val itemIndex: Int? = null
 )
-// --- FIN MODIFICACIÓN ---
 
 
 @Composable
@@ -71,7 +69,6 @@ fun HandleTourOnError(
     isTourActiveFlow: StateFlow<Boolean>,
     endTour: () -> Unit
 ) {
-    // ... (Esta función no cambia) ...
     val isTourActive by isTourActiveFlow.collectAsState()
     val context = LocalContext.current
 
@@ -214,21 +211,22 @@ class TourState(private val sessionManager: SessionManager) {
             screenRoute = TourRoutes.PROFILE,
             targetId = "profile_language_toggle"
         ),
-        // 14. PERFIL - INFO
-        TourStep(
-            id = "step10_profile_info",
-            titleResId = R.string.tour_title_profile_info,
-            descriptionResId = R.string.tour_desc_profile_info,
-            screenRoute = TourRoutes.PROFILE,
-            targetId = "profile_info_card"
-        ),
-        // 15. PERFIL - VERIFICACIÓN
+        // --- INICIO MODIFICACIÓN DE ORDEN: Arreglado (14 y 15 invertidos) ---
+        // 14. PERFIL - ESTADO DE VERIFICACIÓN
         TourStep(
             id = "step_profile_verification",
             titleResId = R.string.tour_title_profile_verification,
             descriptionResId = R.string.tour_desc_profile_verification,
             screenRoute = TourRoutes.PROFILE,
             targetId = "profile_verification_banner"
+        ),
+        // 15. PERFIL - INFO PERSONAL
+        TourStep(
+            id = "step10_profile_info",
+            titleResId = R.string.tour_title_profile_info,
+            descriptionResId = R.string.tour_desc_profile_info,
+            screenRoute = TourRoutes.PROFILE,
+            targetId = "profile_info_card"
         ),
         // 16. PERFIL - DOCUMENTOS
         TourStep(
@@ -238,6 +236,7 @@ class TourState(private val sessionManager: SessionManager) {
             screenRoute = TourRoutes.PROFILE,
             targetId = "profile_documents_section"
         ),
+        // --- FIN DE MODIFICACIÓN DE ORDEN ---
         // 17. NAV (PERFIL -> ACTIVIDAD)
         TourStep(
             id = "step11_profile_to_topbar",
@@ -310,7 +309,6 @@ class TourState(private val sessionManager: SessionManager) {
             screenRoute = TourRoutes.STREAK,
             targetId = "streak_weekly_progress"
         ),
-        // 26. NAV (RACHA -> MENÚ)
         TourStep(
             id = "step16_menu_button",
             titleResId = R.string.tour_title_menu_button,
@@ -318,7 +316,6 @@ class TourState(private val sessionManager: SessionManager) {
             screenRoute = TourRoutes.STREAK,
             targetId = "bottom_bar_menu"
         ),
-        // 27. AYUDA (¡SE MANTIENE AQUÍ!)
         TourStep(
             id = "step17_full_tour_help",
             titleResId = R.string.tour_title_help_fab,
@@ -328,8 +325,6 @@ class TourState(private val sessionManager: SessionManager) {
         )
     )
 
-    // --- INICIO MODIFICACIÓN: Lógica del botón de ayuda (FAB) ---
-    // Se eliminó el paso "help_fab" de todas las listas excepto la de HOME.
     val screenSpecificTourSteps: Map<String, List<TourStep>> = mapOf(
         TourRoutes.HOME to listOf(
             TourStep(
@@ -353,7 +348,6 @@ class TourState(private val sessionManager: SessionManager) {
                 screenRoute = TourRoutes.HOME,
                 targetId = "home_achievements_section"
             ),
-            // ¡EL PASO DE AYUDA SE QUEDA SOLO AQUÍ!
             TourStep(
                 id = "step_home_help_fab",
                 titleResId = R.string.tour_title_help_fab,
@@ -384,7 +378,6 @@ class TourState(private val sessionManager: SessionManager) {
                 screenRoute = TourRoutes.STORE_LIST,
                 targetId = "store_first_alliance"
             )
-            // Se eliminó el "help_fab" de aquí
         ),
         TourRoutes.QR to listOf(
             TourStep(
@@ -401,9 +394,9 @@ class TourState(private val sessionManager: SessionManager) {
                 screenRoute = TourRoutes.QR,
                 targetId = "qr_switch_button"
             )
-            // Se eliminó el "help_fab" de aquí
         ),
         TourRoutes.PROFILE to listOf(
+            // 1. Botón de Idioma
             TourStep(
                 id = "step9_profile_language",
                 titleResId = R.string.tour_title_profile_language,
@@ -411,13 +404,7 @@ class TourState(private val sessionManager: SessionManager) {
                 screenRoute = TourRoutes.PROFILE,
                 targetId = "profile_language_toggle"
             ),
-            TourStep(
-                id = "step10_profile_info",
-                titleResId = R.string.tour_title_profile_info,
-                descriptionResId = R.string.tour_desc_profile_info,
-                screenRoute = TourRoutes.PROFILE,
-                targetId = "profile_info_card"
-            ),
+            // 2. Banner de Verificación
             TourStep(
                 id = "step_profile_verification",
                 titleResId = R.string.tour_title_profile_verification,
@@ -425,6 +412,15 @@ class TourState(private val sessionManager: SessionManager) {
                 screenRoute = TourRoutes.PROFILE,
                 targetId = "profile_verification_banner"
             ),
+            // 3. Tarjeta de Info Personal
+            TourStep(
+                id = "step10_profile_info",
+                titleResId = R.string.tour_title_profile_info,
+                descriptionResId = R.string.tour_desc_profile_info,
+                screenRoute = TourRoutes.PROFILE,
+                targetId = "profile_info_card"
+            ),
+            // 4. Sección de Documentos
             TourStep(
                 id = "step_profile_documents",
                 titleResId = R.string.tour_title_profile_documents,
@@ -432,7 +428,6 @@ class TourState(private val sessionManager: SessionManager) {
                 screenRoute = TourRoutes.PROFILE,
                 targetId = "profile_documents_section"
             )
-            // Se eliminó el "help_fab" de aquí
         ),
         TourRoutes.ACTIVITY to listOf(
             TourStep(
@@ -456,7 +451,6 @@ class TourState(private val sessionManager: SessionManager) {
                 screenRoute = TourRoutes.ACTIVITY,
                 targetId = "activity_history_title"
             )
-            // Se eliminó el "help_fab" de aquí
         ),
         TourRoutes.STREAK to listOf(
             TourStep(
@@ -487,13 +481,10 @@ class TourState(private val sessionManager: SessionManager) {
                 screenRoute = TourRoutes.STREAK,
                 targetId = "streak_weekly_progress"
             )
-            // Se eliminó el "help_fab" de aquí
         )
     )
-    // --- FIN DE MODIFICACIÓN ---
 
     private fun isCitizen(): Boolean {
-        // ... (Esta función no cambia) ...
         val user = sessionManager.getUser()
         val userRoleId = user?.role?.id ?: 0
         val isBusiness = (userRoleId == 4)
@@ -510,7 +501,6 @@ class TourState(private val sessionManager: SessionManager) {
         get() = currentTargetInfo?.rect
 
     fun startTour() {
-        // ... (Esta función no cambia) ...
         if (!isCitizen()) return
 
         _tourSteps.value = fullTourSteps
@@ -519,7 +509,6 @@ class TourState(private val sessionManager: SessionManager) {
     }
 
     fun startTourForScreen(currentScreenRoute: String) {
-        // ... (Esta función no cambia) ...
         if (!isCitizen()) return
 
         val stepsForScreen = screenSpecificTourSteps[currentScreenRoute]
@@ -535,7 +524,6 @@ class TourState(private val sessionManager: SessionManager) {
     }
 
     fun nextStep() {
-        // ... (Esta función no cambia) ...
         if (!_isTourActive.value) return
 
         if (_currentStepIndex.value < _tourSteps.value.size - 1) {
@@ -546,7 +534,6 @@ class TourState(private val sessionManager: SessionManager) {
     }
 
     fun prevStep() {
-        // ... (Esta función no cambia) ...
         if (!_isTourActive.value) return
 
         if (_currentStepIndex.value > 0) {
@@ -555,7 +542,6 @@ class TourState(private val sessionManager: SessionManager) {
     }
 
     fun endTour() {
-        // ... (Esta función no cambia) ...
         _isTourActive.value = false
         _currentStepIndex.value = 0
         _tourSteps.value = emptyList()
@@ -563,18 +549,15 @@ class TourState(private val sessionManager: SessionManager) {
     }
 
     fun isFirstStepOfTour(): Boolean {
-        // ... (Esta función no cambia) ...
         if (!_isTourActive.value) return true
         return _currentStepIndex.value == 0
     }
 
     fun isLastStepOfTour(): Boolean {
-        // ... (Esta función no cambia) ...
         if (!_isTourActive.value) return true
         return _currentStepIndex.value == _tourSteps.value.size - 1
     }
 
-    // --- INICIO MODIFICACIÓN: registerTarget ahora acepta ScrollState y LazyListState ---
     fun registerTarget(
         id: String,
         coordinates: LayoutCoordinates?,
@@ -607,7 +590,6 @@ class TourState(private val sessionManager: SessionManager) {
             }
         }
     }
-    // --- FIN MODIFICACIÓN ---
 
     fun unregisterTarget(id: String) {
         _targets.update { currentTargets ->
