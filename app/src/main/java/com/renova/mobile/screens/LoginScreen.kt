@@ -621,8 +621,7 @@ fun TermsAndPrivacyText(onClick: () -> Unit) {
 }
 
 fun validatePassword(password: String): Boolean {
-    val regex = Regex("^(?=.*[A-Za-z])(?=.*\\d)[A-Za-z\\d]{6,}$")
-    return regex.matches(password)
+    return password.length >= 8
 }
 
 data class LeafPosition(val drawableId: Int, val alignment: Alignment)
