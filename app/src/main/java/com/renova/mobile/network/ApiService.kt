@@ -11,6 +11,9 @@ import com.renova.mobile.utils.SessionManager
 import okhttp3.MultipartBody
 import retrofit2.http.*
 import java.util.concurrent.TimeUnit
+import com.renova.mobile.data.model.AllianceStatsResponse
+import com.renova.mobile.data.model.ActivityByDayResponse
+import com.renova.mobile.data.model.TopRewardsResponse
 
 data class CashCutResponse(
     val success: Boolean,
@@ -692,6 +695,21 @@ data class TourUser(
 
 // ========== INTERFAZ ApiService (COMBINADA) ==========
 interface ApiService {
+
+    @GET("api/alianzas/stats/{alliance_id}")
+    suspend fun getAllianceStats(
+        @Path("alliance_id") allianceId: Int
+    ): Response<AllianceStatsResponse>
+
+    @GET("api/alianzas/activityByDayOfWeek/{alliance_id}")
+    suspend fun getActivityByDayOfWeek(
+        @Path("alliance_id") allianceId: Int
+    ): Response<ActivityByDayResponse>
+
+    @GET("api/alianzas/top-rewards/{alliance_id}")
+    suspend fun getTopRewards(
+        @Path("alliance_id") allianceId: Int
+    ): Response<TopRewardsResponse>
 
     @GET("api/alianzas/cashCut/{alliance_id}")
     suspend fun getCashCut(

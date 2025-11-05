@@ -78,11 +78,11 @@ fun BusinessHomeScreen(
     vm: BusinessSaleViewModel = viewModel(),
     onNavigateToCashout: () -> Unit = {},
     pointToMxn: Double
- ) {
+) {
     val colors = LocalRenovaColors.current
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
-    
+
     // ViewModels
     val historyViewModel: BusinessHistoryViewModel = viewModel()
     val historyState by historyViewModel.state.collectAsState()
@@ -129,7 +129,7 @@ fun BusinessHomeScreen(
             onLogout = onLogout,
             textColor = Color.White
         )
-        
+
         LazyColumn(
             modifier = Modifier
                 .fillMaxSize()
@@ -345,7 +345,7 @@ fun BusinessHomeScreen(
                                 }
                             }
                             Spacer(modifier = Modifier.height(16.dp))
-                            
+
                             Button(
                                 onClick = { showDetail = true },
                                 modifier = Modifier.fillMaxWidth(),
@@ -413,7 +413,7 @@ fun BusinessHomeScreen(
                         }
                     }
 
-                    // Card de estadísticas
+                    // Card de estadísticas - ✅ CORREGIDO
                     Card(
                         modifier = Modifier
                             .weight(1f)
@@ -423,11 +423,32 @@ fun BusinessHomeScreen(
                                 spotColor = RenovaColors.Light.ActivityShadowColor
                             )
                             .clickable {
-                                val intent = android.content.Intent(
-                                    context,
-                                    com.renova.mobile.ui.activities.BusinessStatisticsActivity::class.java
-                                )
-                                context.startActivity(intent)
+                                // Obtener allianceId del ViewModel
+                                val allianceId = vm.businessAllianceId.value
+
+                                if (allianceId != null) {
+                                    // Si existe en el ViewModel, usarlo
+                                    com.renova.mobile.ui.activities.BusinessStatisticsActivity.start(
+                                        context = context,
+                                        allianceId = allianceId
+                                    )
+                                } else {
+                                    // Si no existe, intentar obtenerlo del historial
+                                    val historyAllianceId = historyState.activities.firstOrNull()?.alliance?.id
+
+                                    if (historyAllianceId != null) {
+                                        com.renova.mobile.ui.activities.BusinessStatisticsActivity.start(
+                                            context = context,
+                                            allianceId = historyAllianceId
+                                        )
+                                    } else {
+                                        Toast.makeText(
+                                            context,
+                                            "No se pudo obtener el ID de la alianza. Intenta escanear un código primero.",
+                                            Toast.LENGTH_SHORT
+                                        ).show()
+                                    }
+                                }
                             },
                         colors = CardDefaults.cardColors(containerColor = colors.cardBackground),
                         shape = RoundedCornerShape(16.dp),
@@ -458,10 +479,12 @@ fun BusinessHomeScreen(
                         }
                     }
                 }
+            }
 
+            // Sección de Historial del Comercio
+            item {
                 Spacer(modifier = Modifier.height(24.dp))
 
-                // Sección de Historial del Comercio
                 Text(
                     text = context.getString(R.string.tour_title_activity_button),
                     style = MaterialTheme.typography.headlineSmall.copy(
@@ -473,8 +496,10 @@ fun BusinessHomeScreen(
                 )
 
                 Spacer(modifier = Modifier.height(16.dp))
+            }
 
-                // Cards de historial
+            // Cards de historial
+            item {
                 if (historyState.isLoading) {
                     Box(
                         modifier = Modifier
@@ -485,55 +510,55 @@ fun BusinessHomeScreen(
                         CircularProgressIndicator(color = RenovaColors.Primary)
                     }
                 } else if (historyState.error != null) {
-                     Card(
-                         modifier = Modifier
-                             .fillMaxWidth()
-                             .padding(horizontal = 16.dp),
-                         colors = CardDefaults.cardColors(containerColor = colors.cardBackground),
-                         shape = RoundedCornerShape(16.dp),
-                         elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
-                     ) {
-                         Column(
-                             modifier = Modifier
-                                 .fillMaxWidth()
-                                 .padding(16.dp),
-                             horizontalAlignment = Alignment.CenterHorizontally
-                         ) {
-                             Text(
-                                 text = context.getString(R.string.cashout_error_history),
-                                 style = MaterialTheme.typography.bodyMedium.copy(
-                                     fontFamily = PoppinsFontFamily,
-                                     fontWeight = FontWeight.Medium
-                                 ),
-                                 color = colors.textPrimary
-                             )
-                             Spacer(modifier = Modifier.height(8.dp))
-                             Text(
-                                 text = historyState.error!!,
-                                 style = MaterialTheme.typography.bodySmall.copy(
-                                     fontFamily = PoppinsFontFamily
-                                 ),
-                                 color = colors.textSecondary,
-                                 textAlign = TextAlign.Center
-                             )
-                             Spacer(modifier = Modifier.height(12.dp))
-                             Button(
-                                 onClick = { historyViewModel.retry() },
-                                 colors = androidx.compose.material3.ButtonDefaults.buttonColors(
-                                     containerColor = RenovaColors.Primary
-                                 )
-                             ) {
-                                 Text(
-                                     text = context.getString(R.string.retry),
-                                     style = MaterialTheme.typography.bodyMedium.copy(
-                                         fontFamily = PoppinsFontFamily,
-                                         fontWeight = FontWeight.Medium
-                                     ),
-                                     color = Color.White
-                                 )
-                             }
-                         }
-                     }
+                    Card(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(horizontal = 16.dp),
+                        colors = CardDefaults.cardColors(containerColor = colors.cardBackground),
+                        shape = RoundedCornerShape(16.dp),
+                        elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
+                    ) {
+                        Column(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(16.dp),
+                            horizontalAlignment = Alignment.CenterHorizontally
+                        ) {
+                            Text(
+                                text = context.getString(R.string.cashout_error_history),
+                                style = MaterialTheme.typography.bodyMedium.copy(
+                                    fontFamily = PoppinsFontFamily,
+                                    fontWeight = FontWeight.Medium
+                                ),
+                                color = colors.textPrimary
+                            )
+                            Spacer(modifier = Modifier.height(8.dp))
+                            Text(
+                                text = historyState.error!!,
+                                style = MaterialTheme.typography.bodySmall.copy(
+                                    fontFamily = PoppinsFontFamily
+                                ),
+                                color = colors.textSecondary,
+                                textAlign = TextAlign.Center
+                            )
+                            Spacer(modifier = Modifier.height(12.dp))
+                            Button(
+                                onClick = { historyViewModel.retry() },
+                                colors = androidx.compose.material3.ButtonDefaults.buttonColors(
+                                    containerColor = RenovaColors.Primary
+                                )
+                            ) {
+                                Text(
+                                    text = context.getString(R.string.retry),
+                                    style = MaterialTheme.typography.bodyMedium.copy(
+                                        fontFamily = PoppinsFontFamily,
+                                        fontWeight = FontWeight.Medium
+                                    ),
+                                    color = Color.White
+                                )
+                            }
+                        }
+                    }
                 } else {
                     LazyColumn(
                         modifier = Modifier
@@ -548,56 +573,53 @@ fun BusinessHomeScreen(
                                 pointToMxn = pointToMxn
                             )
                             if (index < historyState.activities.filter { it.reward != null }.take(3).size - 1) {
-                                 Divider(
-                                     color = RenovaColors.PrimaryColor,
-                                     thickness = 1.dp,
-                                     modifier = Modifier.padding(vertical = 3.dp)
-                                 )
-                             }
+                                Divider(
+                                    color = RenovaColors.PrimaryColor,
+                                    thickness = 1.dp,
+                                    modifier = Modifier.padding(vertical = 3.dp)
+                                )
+                            }
                         }
-                         
-                         if (historyState.activities.filter { it.reward != null }.isEmpty()) {
-                              item {
-                                  Card(
-                                      modifier = Modifier.fillMaxWidth(),
-                                      colors = CardDefaults.cardColors(containerColor = colors.cardBackground),
-                                      shape = RoundedCornerShape(16.dp),
-                                      elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
-                                  ) {
-                                      Column(
-                                          modifier = Modifier
-                                              .fillMaxWidth()
-                                              .padding(24.dp),
-                                          horizontalAlignment = Alignment.CenterHorizontally
-                                      ) {
-                                          Icon(
-                                              imageVector = Icons.Default.History,
-                                              contentDescription = "Sin historial",
-                                              tint = colors.textSecondary,
-                                              modifier = Modifier.size(48.dp)
-                                          )
-                                          Spacer(modifier = Modifier.height(12.dp))
-                                          Text(
-                                              text = "No hay actividades registradas",
-                                              style = MaterialTheme.typography.bodyMedium.copy(
-                                                  fontFamily = PoppinsFontFamily,
-                                                  fontWeight = FontWeight.Medium
-                                              ),
-                                              color = colors.textSecondary,
-                                              textAlign = TextAlign.Center
-                                          )
-                                      }
-                                  }
-                              }
-                          }
-                     }
 
+                        if (historyState.activities.filter { it.reward != null }.isEmpty()) {
+                            item {
+                                Card(
+                                    modifier = Modifier.fillMaxWidth(),
+                                    colors = CardDefaults.cardColors(containerColor = colors.cardBackground),
+                                    shape = RoundedCornerShape(16.dp),
+                                    elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
+                                ) {
+                                    Column(
+                                        modifier = Modifier
+                                            .fillMaxWidth()
+                                            .padding(24.dp),
+                                        horizontalAlignment = Alignment.CenterHorizontally
+                                    ) {
+                                        Icon(
+                                            imageVector = Icons.Default.History,
+                                            contentDescription = "Sin historial",
+                                            tint = colors.textSecondary,
+                                            modifier = Modifier.size(48.dp)
+                                        )
+                                        Spacer(modifier = Modifier.height(12.dp))
+                                        Text(
+                                            text = "No hay actividades registradas",
+                                            style = MaterialTheme.typography.bodyMedium.copy(
+                                                fontFamily = PoppinsFontFamily,
+                                                fontWeight = FontWeight.Medium
+                                            ),
+                                            color = colors.textSecondary,
+                                            textAlign = TextAlign.Center
+                                        )
+                                    }
+                                }
+                            }
+                        }
+                    }
                 }
             }
         }
     }
-
-    // Detalle de compra ahora gestionado por HistoryActivityCard (bottom sheet interno)
 
     // Printer Selection Modal desde Home
     if (showPrinterSelection && lastSaleSummary != null) {

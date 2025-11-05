@@ -1,6 +1,7 @@
 package com.renova.mobile.ui.activities
 
 import android.content.Context
+import android.content.Intent
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
@@ -10,15 +11,21 @@ import com.renova.mobile.ui.screens.business.statistics.BusinessStatisticsScreen
 import com.renova.mobile.ui.theme.RenovaTheme
 import com.renova.mobile.utils.LocaleHelper
 import androidx.core.view.WindowCompat
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.DisposableEffect
-import androidx.compose.ui.platform.LocalView
-import androidx.core.view.WindowInsetsCompat
-import androidx.core.view.WindowInsetsControllerCompat
 
 class BusinessStatisticsActivity : ComponentActivity() {
 
-    // Aplica el idioma guardado antes de crear la interfaz
+    companion object {
+        private const val EXTRA_ALLIANCE_ID = "EXTRA_ALLIANCE_ID"
+
+        // Método helper para iniciar esta activity
+        fun start(context: Context, allianceId: Int) {
+            val intent = Intent(context, BusinessStatisticsActivity::class.java).apply {
+                putExtra(EXTRA_ALLIANCE_ID, allianceId)
+            }
+            context.startActivity(intent)
+        }
+    }
+
     override fun attachBaseContext(newBase: Context) {
         val localeUpdatedContext = LocaleHelper.setLocale(
             newBase,
@@ -30,13 +37,22 @@ class BusinessStatisticsActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
-        // Respeta los márgenes superiores e inferiores del sistema
+        // Obtener el allianceId del Intent
+        val allianceId = intent.getIntExtra(EXTRA_ALLIANCE_ID, -1)
+
+        // Si no hay allianceId válido, cerrar la actividad
+        if (allianceId == -1) {
+            finish()
+            return
+        }
+
         WindowCompat.setDecorFitsSystemWindows(window, true)
 
         setContent {
             RenovaTheme {
                 Surface(color = MaterialTheme.colorScheme.background) {
                     BusinessStatisticsScreen(
+                        allianceId = allianceId, // ✅ Ahora se pasa el parámetro
                         onLogout = {},
                         onNavigateBack = { finish() }
                     )
@@ -48,19 +64,5 @@ class BusinessStatisticsActivity : ComponentActivity() {
     override fun onConfigurationChanged(newConfig: android.content.res.Configuration) {
         super.onConfigurationChanged(newConfig)
         recreate()
-    }
-}
-
-@Composable
-private fun HideSystemNavigation() {
-    val view = LocalView.current
-    DisposableEffect(Unit) {
-        val window =
-            (view.context as? ComponentActivity)?.window ?: return@DisposableEffect onDispose {}
-        val insetsController = WindowCompat.getInsetsController(window, view)
-        insetsController.hide(WindowInsetsCompat.Type.navigationBars())
-        insetsController.systemBarsBehavior =
-            WindowInsetsControllerCompat.BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE
-        onDispose {}
     }
 }

@@ -28,11 +28,19 @@ import androidx.compose.material.icons.filled.Star
 import androidx.compose.material.icons.filled.History
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Snackbar
+import androidx.compose.material3.SnackbarHost
+import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -43,151 +51,205 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.viewmodel.compose.viewModel
 import com.renova.mobile.R
 import com.renova.mobile.ui.components.BusinessSectionHeader
 import com.renova.mobile.ui.theme.LocalRenovaColors
 import com.renova.mobile.ui.theme.PoppinsFontFamily
 import com.renova.mobile.ui.theme.RenovaColors
+import com.renova.mobile.viewmodel.BusinessStatisticsViewModel
+import java.text.NumberFormat
+import java.util.Locale
 
 @Composable
 fun BusinessStatisticsScreen(
+    allianceId: Int,
     onLogout: () -> Unit,
-    onNavigateBack: () -> Unit = {}
+    onNavigateBack: () -> Unit = {},
+    viewModel: BusinessStatisticsViewModel = viewModel()
 ) {
     val colors = LocalRenovaColors.current
+    val uiState by viewModel.uiState.collectAsState()
+    val snackbarHostState = remember { SnackbarHostState() }
 
-    Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .windowInsetsPadding(WindowInsets.statusBars)
-    ) {
-        // Encabezado con botón de retroceso siguiendo el patrón existente
-        Box {
-            BusinessSectionHeader(
-                title = "     ${stringResource(R.string.statistics)}",
-                onLogout = onLogout,
-                textColor = Color.White
-            )
+    // Cargar datos al iniciar
+    LaunchedEffect(allianceId) {
+        viewModel.loadStatistics(allianceId)
+    }
 
-            IconButton(
-                onClick = onNavigateBack,
-                modifier = Modifier
-                    .align(Alignment.CenterStart)
-                    .padding(start = 4.dp)
-                    .zIndex(1f)
-            ) {
-                Icon(
-                    Icons.AutoMirrored.Filled.ArrowBack,
-                    contentDescription = stringResource(R.string.back),
-                    tint = Color.White
-                )
-            }
+    // Mostrar errores
+    LaunchedEffect(uiState.error) {
+        uiState.error?.let { error ->
+            snackbarHostState.showSnackbar(error)
+            viewModel.clearError()
         }
+    }
 
-        LazyColumn(
+    Box(modifier = Modifier.fillMaxSize()) {
+        Column(
             modifier = Modifier
                 .fillMaxSize()
-                .windowInsetsPadding(WindowInsets.navigationBars)
-                .padding(16.dp),
-            verticalArrangement = Arrangement.spacedBy(16.dp),
-            contentPadding = PaddingValues(bottom = 24.dp)
+                .windowInsetsPadding(WindowInsets.statusBars)
         ) {
-            // Tarjetas de métricas principales (una columna, ancho completo)
-            item {
-                StatCard(
-                    title = stringResource(R.string.statistics_total_revenue),
-                    value = "$ 12,450.00 MXN",
-                    icon = Icons.Filled.AttachMoney,
-                    modifier = Modifier.fillMaxWidth()
+            // Header
+            Box {
+                BusinessSectionHeader(
+                    title = "     ${stringResource(R.string.statistics)}",
+                    onLogout = onLogout,
+                    textColor = Color.White
                 )
-            }
 
-            item {
-                StatCard(
-                    title = stringResource(R.string.statistics_total_points),
-                    value = "8,320 pts",
-                    icon = Icons.Filled.Star,
-                    modifier = Modifier.fillMaxWidth()
-                )
-            }
-
-            item {
-                StatCard(
-                    title = stringResource(R.string.statistics_average_ticket),
-                    value = "$ 155.25 MXN",
-                    icon = Icons.Filled.Leaderboard,
-                    modifier = Modifier.fillMaxWidth()
-                )
-            }
-
-            item {
-                StatCard(
-                    title = stringResource(R.string.statistics_customers_served),
-                    value = "146",
-                    icon = Icons.Filled.Groups,
-                    modifier = Modifier.fillMaxWidth()
-                )
-            }
-
-            // Sección "Últimos 7 días": título y dos cards en una sola columna
-            item {
-                SectionTitle(text = stringResource(R.string.statistics_last_7_days))
-            }
-            item {
-                WeeklyBarChart(
-                    data = listOf(24, 30, 18, 26, 22, 28, 36),
-                    labels = listOf("L", "M", "X", "J", "V", "S", "D"),
+                IconButton(
+                    onClick = onNavigateBack,
                     modifier = Modifier
-                        .fillMaxWidth()
-                        .shadow(
-                            elevation = 3.dp,
-                            shape = RoundedCornerShape(12.dp),
-                            spotColor = RenovaColors.Light.ActivityShadowColor
-                        )
-                )
-            }
-            item {
-                Last7DaysSummaryCard(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .shadow(
-                            elevation = 3.dp,
-                            shape = RoundedCornerShape(12.dp),
-                            spotColor = RenovaColors.Light.ActivityShadowColor
-                        )
-                )
-            }
-
-            // Productos más canjeados
-            item {
-                SectionTitle(text = stringResource(R.string.statistics_top_products))
-                Card(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .shadow(
-                            elevation = 3.dp,
-                            shape = RoundedCornerShape(12.dp),
-                            spotColor = RenovaColors.Light.ActivityShadowColor
-                        ),
-                    colors = CardDefaults.cardColors(containerColor = colors.cardBackground),
-                    shape = RoundedCornerShape(12.dp),
-                    elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
+                        .align(Alignment.CenterStart)
+                        .padding(start = 4.dp)
+                        .zIndex(1f)
                 ) {
-                    Column(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(20.dp),
-                        verticalArrangement = Arrangement.spacedBy(12.dp)
-                    ) {
-                        TopProductRow(name = "Botella PET", count = 120)
-                        TopProductRow(name = "Lata de aluminio", count = 95)
-                        TopProductRow(name = "Café Americano (Recompensa)", count = 75)
-                    }
+                    Icon(
+                        Icons.AutoMirrored.Filled.ArrowBack,
+                        contentDescription = stringResource(R.string.back),
+                        tint = Color.White
+                    )
                 }
             }
 
-            // (El bloque detallado de actividad se consolidó en Last7DaysSummaryCard)
+            // Loading indicator
+            if (uiState.isLoading) {
+                Box(
+                    modifier = Modifier.fillMaxSize(),
+                    contentAlignment = Alignment.Center
+                ) {
+                    CircularProgressIndicator(color = RenovaColors.Primary)
+                }
+            } else {
+                LazyColumn(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .windowInsetsPadding(WindowInsets.navigationBars)
+                        .padding(16.dp),
+                    verticalArrangement = Arrangement.spacedBy(16.dp),
+                    contentPadding = PaddingValues(bottom = 24.dp)
+                ) {
+                    // Tarjetas de métricas principales
+                    uiState.stats?.let { stats ->
+                        item {
+                            StatCard(
+                                title = stringResource(R.string.statistics_total_revenue),
+                                value = formatCurrency(stats.totalIncome),
+                                icon = Icons.Filled.AttachMoney,
+                                modifier = Modifier.fillMaxWidth()
+                            )
+                        }
+
+                        item {
+                            StatCard(
+                                title = stringResource(R.string.statistics_total_points),
+                                value = "${formatNumber(stats.totalPoints)} pts",
+                                icon = Icons.Filled.Star,
+                                modifier = Modifier.fillMaxWidth()
+                            )
+                        }
+
+                        item {
+                            StatCard(
+                                title = stringResource(R.string.statistics_average_ticket),
+                                value = formatCurrency(stats.averageTicket),
+                                icon = Icons.Filled.Leaderboard,
+                                modifier = Modifier.fillMaxWidth()
+                            )
+                        }
+
+                        item {
+                            StatCard(
+                                title = stringResource(R.string.statistics_customers_served),
+                                value = formatNumber(stats.totalCustomersServed),
+                                icon = Icons.Filled.Groups,
+                                modifier = Modifier.fillMaxWidth()
+                            )
+                        }
+                    }
+
+                    // Sección "Últimos 7 días"
+                    uiState.activityData?.let { activityData ->
+                        item {
+                            SectionTitle(text = stringResource(R.string.statistics_last_7_days))
+                        }
+
+                        item {
+                            WeeklyBarChart(
+                                data = activityData.statsToWeek.map { it.totalActivity },
+                                labels = activityData.statsToWeek.map {
+                                    parseDayLabel(it.day)
+                                },
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .shadow(
+                                        elevation = 3.dp,
+                                        shape = RoundedCornerShape(12.dp),
+                                        spotColor = RenovaColors.Light.ActivityShadowColor
+                                    )
+                            )
+                        }
+
+                        item {
+                            Last7DaysSummaryCard(
+                                totalSales = activityData.totalSales,
+                                totalPoints = activityData.totalPoints,
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .shadow(
+                                        elevation = 3.dp,
+                                        shape = RoundedCornerShape(12.dp),
+                                        spotColor = RenovaColors.Light.ActivityShadowColor
+                                    )
+                            )
+                        }
+                    }
+
+                    // Productos más canjeados
+                    if (uiState.topRewards.isNotEmpty()) {
+                        item {
+                            SectionTitle(text = stringResource(R.string.statistics_top_products))
+                            Card(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .shadow(
+                                        elevation = 3.dp,
+                                        shape = RoundedCornerShape(12.dp),
+                                        spotColor = RenovaColors.Light.ActivityShadowColor
+                                    ),
+                                colors = CardDefaults.cardColors(containerColor = colors.cardBackground),
+                                shape = RoundedCornerShape(12.dp),
+                                elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
+                            ) {
+                                Column(
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .padding(20.dp),
+                                    verticalArrangement = Arrangement.spacedBy(12.dp)
+                                ) {
+                                    uiState.topRewards.take(3).forEach { reward ->
+                                        TopProductRow(
+                                            name = reward.rewardName,
+                                            count = reward.totalClaimed
+                                        )
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
         }
+
+        // Snackbar para errores
+        SnackbarHost(
+            hostState = snackbarHostState,
+            modifier = Modifier
+                .align(Alignment.BottomCenter)
+                .padding(16.dp)
+        )
     }
 }
 
@@ -279,7 +341,7 @@ private fun TopProductRow(name: String, count: Int) {
             modifier = Modifier.weight(1f)
         )
         Text(
-            text = "$count",
+            text = formatNumber(count),
             style = MaterialTheme.typography.bodyLarge.copy(
                 fontFamily = PoppinsFontFamily,
                 fontWeight = FontWeight.SemiBold,
@@ -327,7 +389,7 @@ private fun WeeklyBarChart(
                     ) {
                         Box(
                             modifier = Modifier
-                                .size(width = 22.dp, height = barHeight)
+                                .size(width = 22.dp, height = barMaxHeight)
                                 .background(RenovaColors.Primary.copy(alpha = 0.12f), RoundedCornerShape(6.dp))
                         ) {
                             Box(
@@ -354,6 +416,8 @@ private fun WeeklyBarChart(
 
 @Composable
 private fun Last7DaysSummaryCard(
+    totalSales: Int,
+    totalPoints: Int,
     modifier: Modifier = Modifier
 ) {
     val colors = LocalRenovaColors.current
@@ -370,7 +434,6 @@ private fun Last7DaysSummaryCard(
             horizontalArrangement = Arrangement.spacedBy(12.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
-            // Columna izquierda con ícono de actividad reciente
             Box(
                 modifier = Modifier
                     .size(56.dp)
@@ -385,13 +448,12 @@ private fun Last7DaysSummaryCard(
                 )
             }
 
-            // Columna derecha con resumen textual
             Column(
                 modifier = Modifier.weight(1f),
                 verticalArrangement = Arrangement.spacedBy(8.dp)
             ) {
                 Text(
-                    text = "${stringResource(R.string.statistics_sales_last_week)}: 224",
+                    text = "${stringResource(R.string.statistics_sales_last_week)}: ${formatNumber(totalSales)}",
                     style = MaterialTheme.typography.titleMedium.copy(
                         fontFamily = PoppinsFontFamily,
                         fontWeight = FontWeight.SemiBold
@@ -399,21 +461,37 @@ private fun Last7DaysSummaryCard(
                     color = colors.textPrimary
                 )
                 Text(
-                    text = "${stringResource(R.string.statistics_points_last_week)}: 1,840 pts",
+                    text = "${stringResource(R.string.statistics_points_last_week)}: ${formatNumber(totalPoints)} pts",
                     style = MaterialTheme.typography.titleMedium.copy(
                         fontFamily = PoppinsFontFamily,
                         fontWeight = FontWeight.SemiBold
                     ),
                     color = colors.textPrimary
-                )
-                Text(
-                    text = stringResource(R.string.statistics_hint_fixed_data),
-                    style = MaterialTheme.typography.bodySmall.copy(
-                        fontFamily = PoppinsFontFamily
-                    ),
-                    color = colors.textSecondary
                 )
             }
         }
+    }
+}
+
+// Helper functions
+private fun formatCurrency(amount: Double): String {
+    val formatter = NumberFormat.getCurrencyInstance(Locale("es", "MX"))
+    return formatter.format(amount)
+}
+
+private fun formatNumber(number: Int): String {
+    return NumberFormat.getNumberInstance(Locale("es", "MX")).format(number)
+}
+
+private fun parseDayLabel(day: String): String {
+    return when (day.uppercase()) {
+        "MONDAY" -> "L"
+        "TUESDAY" -> "M"
+        "WEDNESDAY" -> "X"
+        "THURSDAY" -> "J"
+        "FRIDAY" -> "V"
+        "SATURDAY" -> "S"
+        "SUNDAY" -> "D"
+        else -> day.first().toString()
     }
 }
