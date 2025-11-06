@@ -767,4 +767,6 @@
     <string name="notification_insufficient_points">Insufficient points to finish purchase</string>
     <string name="notification_permission_denied">Notification permission denied</string>
 
+    <string name="image_compressed_message">The image was too large and was automatically compressed to meet the 5MB limit</string>
+    <string name="info_title">Information</string>
 </resources>

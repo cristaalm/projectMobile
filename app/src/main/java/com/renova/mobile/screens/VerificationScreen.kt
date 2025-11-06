@@ -63,6 +63,61 @@ fun VerificationScreen(
         )
     }
 
+    // Función para validar tamaño del archivo
+    fun validateFileSize(uri: Uri): Boolean {
+        try {
+            context.contentResolver.openInputStream(uri)?.use { inputStream ->
+                val fileSize = inputStream.available()
+                val maxSize = 5 * 1024 * 1024 // 5MB en bytes
+                return fileSize <= maxSize
+            }
+        } catch (e: Exception) {
+            android.util.Log.e("VerificationScreen", "Error validando tamaño: ${e.message}")
+            return false
+        }
+        return false
+    }
+
+    // Función para comprimir imagen si es necesario
+    fun compressImageIfNeeded(uri: Uri): Uri? {
+        try {
+            val inputStream = context.contentResolver.openInputStream(uri)
+            val bitmap = android.graphics.BitmapFactory.decodeStream(inputStream)
+            inputStream?.close()
+
+            if (bitmap != null) {
+                val file = File(context.cacheDir, "compressed_selfie_${System.currentTimeMillis()}.jpg")
+                val outputStream = file.outputStream()
+
+                // Intentar comprimir al 80% primero
+                var quality = 80
+                bitmap.compress(android.graphics.Bitmap.CompressFormat.JPEG, quality, outputStream)
+                outputStream.close()
+
+                // Si aún es muy grande, reducir calidad
+                while (file.length() > 5 * 1024 * 1024 && quality > 20) {
+                    quality -= 10
+                    val newOutputStream = file.outputStream()
+                    bitmap.compress(android.graphics.Bitmap.CompressFormat.JPEG, quality, newOutputStream)
+                    newOutputStream.close()
+                }
+
+                bitmap.recycle()
+
+                if (file.length() <= 5 * 1024 * 1024) {
+                    return FileProvider.getUriForFile(
+                        context,
+                        "${context.packageName}.fileprovider",
+                        file
+                    )
+                }
+            }
+        } catch (e: Exception) {
+            android.util.Log.e("VerificationScreen", "Error comprimiendo imagen: ${e.message}")
+        }
+        return null
+    }
+
     // Observar el estado de subida
     LaunchedEffect(uploadState) {
         when (uploadState) {
@@ -97,7 +152,22 @@ fun VerificationScreen(
         contract = ActivityResultContracts.TakePicture()
     ) { success ->
         if (success && tempImageUri != null) {
-            selfieUri = tempImageUri
+            // Validar tamaño del archivo
+            if (validateFileSize(tempImageUri!!)) {
+                selfieUri = tempImageUri
+            } else {
+                // Intentar comprimir
+                val compressedUri = compressImageIfNeeded(tempImageUri!!)
+                if (compressedUri != null && validateFileSize(compressedUri)) {
+                    selfieUri = compressedUri
+                    errorMessage = context.getString(R.string.image_compressed_message)
+                    showErrorDialog = true
+                } else {
+                    errorMessage = context.getString(R.string.error_file_too_large)
+                    showErrorDialog = true
+                    tempImageUri = null
+                }
+            }
         }
     }
 
@@ -112,13 +182,16 @@ fun VerificationScreen(
         }
     }
 
-    // Diálogo de error
+    // Diálogo de error/info
     if (showErrorDialog) {
         AlertDialog(
             onDismissRequest = { showErrorDialog = false },
             title = {
                 Text(
-                    text = "Error",
+                    text = if (errorMessage.contains("comprimida", ignoreCase = true))
+                        stringResource(R.string.info_title)
+                    else
+                        stringResource(R.string.error_title),
                     fontFamily = Poppins,
                     fontWeight = FontWeight.Bold
                 )
@@ -139,7 +212,10 @@ fun VerificationScreen(
                         containerColor = CustomGreenColor
                     )
                 ) {
-                    Text("Aceptar", fontFamily = Poppins)
+                    Text(
+                        text = stringResource(R.string.accept),
+                        fontFamily = Poppins
+                    )
                 }
             }
         )

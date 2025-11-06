@@ -1,10 +1,7 @@
 package com.renova.mobile.ui.viewmodels
 
 import android.content.Context
-import android.graphics.Bitmap
-import android.graphics.BitmapFactory
 import android.net.Uri
-import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.renova.mobile.network.*
@@ -22,7 +19,6 @@ import okhttp3.MultipartBody
 import okhttp3.RequestBody.Companion.asRequestBody
 import java.io.File
 import java.io.FileOutputStream
-import java.io.IOException
 
 sealed class RegisterState {
     object Idle : RegisterState()
@@ -39,13 +35,6 @@ sealed class UploadState {
 }
 
 class RegisterViewModel : ViewModel() {
-    companion object {
-        private const val TAG = "RegisterViewModel"
-        private const val MAX_IMAGE_SIZE_KB = 1024 // 1 MB
-        private const val COMPRESSION_QUALITY = 85
-        private const val MAX_IMAGE_DIMENSION = 1920
-    }
-
     private val _registerState = MutableStateFlow<RegisterState>(RegisterState.Idle)
     val registerState: StateFlow<RegisterState> = _registerState
 
@@ -118,24 +107,38 @@ class RegisterViewModel : ViewModel() {
                     }
                 } else {
                     val responseBody = response.body()
-                    Log.d(TAG, "=== DEBUG REGISTER ERROR ===")
-                    Log.d(TAG, "Status Code: ${response.code()}")
-                    Log.d(TAG, "Response Body: $responseBody")
-                    Log.d(TAG, "Message: ${responseBody?.message}")
-                    Log.d(TAG, "Errors: ${responseBody?.errors}")
 
+                    // 🔍 DEBUG: Ver qué está llegando
+                    android.util.Log.d("RegisterViewModel", "=== DEBUG REGISTER ERROR ===")
+                    android.util.Log.d("RegisterViewModel", "Status Code: ${response.code()}")
+                    android.util.Log.d("RegisterViewModel", "Response Body: $responseBody")
+                    android.util.Log.d("RegisterViewModel", "Message: ${responseBody?.message}")
+                    android.util.Log.d("RegisterViewModel", "Errors: ${responseBody?.errors}")
+                    android.util.Log.d("RegisterViewModel", "Errors Type: ${responseBody?.errors?.javaClass}")
+
+                    // 🌍 Mapear el error al idioma actual
                     val backendMessage = responseBody?.message ?: "Error al registrar usuario"
                     val statusCode = response.code()
 
+                    // Verificar si hay errores específicos de validación (422)
                     val localizedMessage = if (statusCode == 422 && responseBody?.errors != null) {
+                        // Extraer el primer error específico del campo
                         val errors = responseBody.errors
+                        android.util.Log.d("RegisterViewModel", "Errors is Map: ${errors is Map<*, *>}")
+
                         if (errors is Map<*, *>) {
                             val errorsMap = errors as? Map<String, List<String>>
+                            android.util.Log.d("RegisterViewModel", "Errors Map: $errorsMap")
+
                             val firstError = errorsMap?.entries?.firstOrNull()
+                            android.util.Log.d("RegisterViewModel", "First Error: $firstError")
 
                             if (firstError != null && firstError.value.isNotEmpty()) {
                                 val fieldName = firstError.key
                                 val errorMessage = firstError.value.first()
+
+                                android.util.Log.d("RegisterViewModel", "Field: $fieldName, Message: $errorMessage")
+
                                 appContext?.let { ctx ->
                                     RegisterErrorMapper.mapValidationError(fieldName, errorMessage, ctx)
                                 } ?: errorMessage
@@ -155,10 +158,11 @@ class RegisterViewModel : ViewModel() {
                         } ?: backendMessage
                     }
 
+                    android.util.Log.d("RegisterViewModel", "Final Localized Message: $localizedMessage")
+
                     _registerState.value = RegisterState.Error(localizedMessage)
                 }
             } catch (e: Exception) {
-                Log.e(TAG, "Exception during registration", e)
                 val errorMsg = appContext?.let { ctx ->
                     RegisterErrorMapper.mapRegisterError(
                         "Error de conexión: ${e.message}",
@@ -175,24 +179,19 @@ class RegisterViewModel : ViewModel() {
         viewModelScope.launch {
             _uploadDocumentsState.value = UploadState.Loading
             try {
-                Log.d(TAG, "=== INICIANDO UPLOAD DE DOCUMENTOS ===")
-
-                val frontFile = uriToCompressedFile(context, documentsData.ineFrontUri, "front.jpg")
-                val backFile = uriToCompressedFile(context, documentsData.ineBackUri, "back.jpg")
-
-                Log.d(TAG, "Tamaño archivo frontal: ${frontFile.length() / 1024} KB")
-                Log.d(TAG, "Tamaño archivo trasero: ${backFile.length() / 1024} KB")
+                val frontFile = uriToFile(context, documentsData.ineFrontUri, "front.jpg")
+                val backFile = uriToFile(context, documentsData.ineBackUri, "back.jpg")
 
                 val frontPart = MultipartBody.Part.createFormData(
                     "document_front",
                     frontFile.name,
-                    frontFile.asRequestBody("image/jpeg".toMediaTypeOrNull())
+                    frontFile.asRequestBody("image/*".toMediaTypeOrNull())
                 )
 
                 val backPart = MultipartBody.Part.createFormData(
                     "document_back",
                     backFile.name,
-                    backFile.asRequestBody("image/jpeg".toMediaTypeOrNull())
+                    backFile.asRequestBody("image/*".toMediaTypeOrNull())
                 )
 
                 val response = ApiClient.apiService.uploadDocuments(
@@ -202,20 +201,14 @@ class RegisterViewModel : ViewModel() {
                 )
 
                 if (response.isSuccessful && response.body()?.success == true) {
-                    Log.d(TAG, "✅ Documentos subidos exitosamente")
                     _uploadDocumentsState.value = UploadState.Success
                 } else {
+                    // 🌍 Mapear el error al idioma actual
                     val responseBody = response.body()
-                    val errorBody = response.errorBody()?.string()
-
-                    Log.e(TAG, "=== ERROR UPLOAD DOCUMENTOS ===")
-                    Log.e(TAG, "Status Code: ${response.code()}")
-                    Log.e(TAG, "Response Body: $responseBody")
-                    Log.e(TAG, "Error Body: $errorBody")
-
                     val backendMessage = responseBody?.message ?: "Error al subir documentos"
                     val statusCode = response.code()
 
+                    // Verificar si hay errores específicos de validación (422)
                     val localizedMessage = if (statusCode == 422 && responseBody?.errors != null) {
                         val errors = responseBody.errors
                         if (errors is Map<*, *>) {
@@ -238,9 +231,8 @@ class RegisterViewModel : ViewModel() {
                     _uploadDocumentsState.value = UploadState.Error(localizedMessage)
                 }
             } catch (e: Exception) {
-                Log.e(TAG, "Exception durante upload de documentos", e)
                 val localizedMessage = DocumentsErrorMapper.mapDocumentsError(
-                    "Error: ${e.message}",
+                    "Error de conexión: ${e.message}",
                     -1,
                     context
                 )
@@ -253,47 +245,28 @@ class RegisterViewModel : ViewModel() {
         viewModelScope.launch {
             _uploadSelfieState.value = UploadState.Loading
             try {
-                Log.d(TAG, "=== INICIANDO UPLOAD DE SELFIE ===")
-                Log.d(TAG, "URI: $selfieUri")
-
-                val selfieFile = uriToCompressedFile(context, selfieUri, "selfie.jpg")
-                Log.d(TAG, "Tamaño archivo selfie: ${selfieFile.length() / 1024} KB")
-
-                if (!selfieFile.exists()) {
-                    throw IOException("El archivo de selfie no existe")
-                }
+                val selfieFile = uriToFile(context, selfieUri, "selfie.jpg")
 
                 val selfiePart = MultipartBody.Part.createFormData(
                     "selfie",
                     selfieFile.name,
-                    selfieFile.asRequestBody("image/jpeg".toMediaTypeOrNull())
+                    selfieFile.asRequestBody("image/*".toMediaTypeOrNull())
                 )
 
-                Log.d(TAG, "Enviando selfie al servidor...")
                 val response = ApiClient.apiService.uploadSelfie(
                     userId = userId,
                     selfie = selfiePart
                 )
 
-                Log.d(TAG, "Respuesta recibida - Code: ${response.code()}")
-
                 if (response.isSuccessful && response.body()?.success == true) {
-                    Log.d(TAG, "✅ Selfie subida exitosamente")
                     _uploadSelfieState.value = UploadState.Success
                 } else {
+                    // 🌍 Mapear el error al idioma actual
                     val responseBody = response.body()
-                    val errorBody = response.errorBody()?.string()
-
-                    Log.e(TAG, "=== ERROR UPLOAD SELFIE ===")
-                    Log.e(TAG, "Status Code: ${response.code()}")
-                    Log.e(TAG, "Response Body: $responseBody")
-                    Log.e(TAG, "Error Body: $errorBody")
-                    Log.e(TAG, "Message: ${responseBody?.message}")
-                    Log.e(TAG, "Errors: ${responseBody?.errors}")
-
-                    val backendMessage = responseBody?.message ?: errorBody ?: "Error al subir selfie"
+                    val backendMessage = responseBody?.message ?: "Error al subir selfie"
                     val statusCode = response.code()
 
+                    // Verificar si hay errores específicos de validación (422)
                     val localizedMessage = if (statusCode == 422 && responseBody?.errors != null) {
                         val errors = responseBody.errors
                         if (errors is Map<*, *>) {
@@ -302,7 +275,6 @@ class RegisterViewModel : ViewModel() {
 
                             if (firstError != null && firstError.value.isNotEmpty()) {
                                 val errorMessage = firstError.value.first()
-                                Log.e(TAG, "Error de validación: $errorMessage")
                                 SelfieErrorMapper.mapSelfieValidationError(errorMessage, context)
                             } else {
                                 SelfieErrorMapper.mapSelfieError(backendMessage, statusCode, context)
@@ -317,11 +289,8 @@ class RegisterViewModel : ViewModel() {
                     _uploadSelfieState.value = UploadState.Error(localizedMessage)
                 }
             } catch (e: Exception) {
-                Log.e(TAG, "Exception durante upload de selfie", e)
-                Log.e(TAG, "Stack trace:", e)
-
                 val localizedMessage = SelfieErrorMapper.mapSelfieError(
-                    "Error: ${e.message}",
+                    "Error de conexión: ${e.message}",
                     -1,
                     context
                 )
@@ -330,59 +299,14 @@ class RegisterViewModel : ViewModel() {
         }
     }
 
-    /**
-     * Convierte un URI a un archivo comprimido para reducir el tamaño
-     */
-    private fun uriToCompressedFile(context: Context, uri: Uri, fileName: String): File {
-        try {
-            // Leer el bitmap original
-            val inputStream = context.contentResolver.openInputStream(uri)
-                ?: throw IOException("No se pudo abrir el archivo")
-
-            val originalBitmap = BitmapFactory.decodeStream(inputStream)
-            inputStream.close()
-
-            if (originalBitmap == null) {
-                throw IOException("No se pudo decodificar la imagen")
-            }
-
-            Log.d(TAG, "Imagen original - Ancho: ${originalBitmap.width}, Alto: ${originalBitmap.height}")
-
-            // Escalar si es necesario
-            val scaledBitmap = if (originalBitmap.width > MAX_IMAGE_DIMENSION ||
-                originalBitmap.height > MAX_IMAGE_DIMENSION) {
-                val ratio = minOf(
-                    MAX_IMAGE_DIMENSION.toFloat() / originalBitmap.width,
-                    MAX_IMAGE_DIMENSION.toFloat() / originalBitmap.height
-                )
-                val newWidth = (originalBitmap.width * ratio).toInt()
-                val newHeight = (originalBitmap.height * ratio).toInt()
-
-                Log.d(TAG, "Escalando imagen a - Ancho: $newWidth, Alto: $newHeight")
-                Bitmap.createScaledBitmap(originalBitmap, newWidth, newHeight, true)
-            } else {
-                originalBitmap
-            }
-
-            // Comprimir y guardar
-            val file = File(context.cacheDir, fileName)
+    private fun uriToFile(context: Context, uri: Uri, fileName: String): File {
+        val file = File(context.cacheDir, fileName)
+        context.contentResolver.openInputStream(uri)?.use { input ->
             FileOutputStream(file).use { output ->
-                scaledBitmap.compress(Bitmap.CompressFormat.JPEG, COMPRESSION_QUALITY, output)
+                input.copyTo(output)
             }
-
-            // Limpiar memoria
-            if (scaledBitmap != originalBitmap) {
-                originalBitmap.recycle()
-            }
-            scaledBitmap.recycle()
-
-            Log.d(TAG, "Archivo comprimido creado: ${file.length() / 1024} KB")
-
-            return file
-        } catch (e: Exception) {
-            Log.e(TAG, "Error al comprimir imagen", e)
-            throw IOException("Error al procesar la imagen: ${e.message}", e)
         }
+        return file
     }
 
     fun resetStates() {

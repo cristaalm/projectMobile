@@ -766,4 +766,7 @@
     <!-- Errores de venta: validación de recompensa -->
     <string name="error_reward_not_found_for_business">Recompensa no encontrada para este comercio.</string>
     <string name="error_reward_not_belongs_to_business">La recompensa no pertenece a este comercio.</string>
+
+    <string name="image_compressed_message">La imagen era muy grande y se comprimió automáticamente para cumplir con el límite de 5MB</string>
+    <string name="info_title">Información</string>
 </resources>
