@@ -32,6 +32,7 @@ import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.ui.zIndex
 import com.renova.mobile.ui.components.business.home.HistorySaleCard
 import androidx.compose.material3.HorizontalDivider
+import androidx.compose.ui.draw.shadow
 
 private const val POINT_TO_MXN = 0.01  // 1 centavo por punto
 
@@ -54,6 +55,7 @@ fun PointsCashoutScreen(
 
     // Estado para el modal de pago
     var showPaymentModal by remember { mutableStateOf(false) }
+
 
     // Función para cargar puntos
     fun loadPoints() {
@@ -123,9 +125,10 @@ fun PointsCashoutScreen(
     Column(modifier = Modifier.fillMaxSize()) {
         Box {
             BusinessSectionHeader(
-                title = "     ${stringResource(R.string.cashout_title)}",
+                title = stringResource(R.string.cashout_title),
                 onLogout = onLogout,
-                textColor = Color.White
+                textColor = Color.White,
+                hasNavigationIcon = true
             )
 
             IconButton(
@@ -143,6 +146,8 @@ fun PointsCashoutScreen(
             }
         }
 
+        // Modal de logout gestionado por BusinessSectionHeader (LogoutAction)
+
         LazyColumn(
             modifier = Modifier
                 .fillMaxSize()
@@ -152,7 +157,13 @@ fun PointsCashoutScreen(
             // Card de conversión y cobro
             item {
                 Card(
-                    modifier = Modifier.fillMaxWidth(),
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .shadow(
+                            elevation = 3.dp,
+                            shape = RoundedCornerShape(16.dp),
+                            spotColor = RenovaColors.Light.ActivityShadowColor
+                        ),
                     colors = CardDefaults.cardColors(containerColor = colors.cardBackground),
                     shape = RoundedCornerShape(12.dp),
                     elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)

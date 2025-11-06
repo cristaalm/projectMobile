@@ -2,6 +2,7 @@ package com.renova.mobile.ui.screens.business
 
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.*
@@ -17,6 +18,7 @@ import com.renova.mobile.ui.components.BusinessHeader
 import com.renova.mobile.viewmodel.BusinessSaleViewModel
 import com.renova.mobile.ui.theme.PoppinsFontFamily
 import com.renova.mobile.ui.theme.RenovaColors
+import com.renova.mobile.ui.theme.LocalRenovaColors
 import androidx.activity.compose.rememberLauncherForActivityResult
 import com.journeyapps.barcodescanner.ScanContract
 import com.journeyapps.barcodescanner.ScanOptions
@@ -41,6 +43,10 @@ import kotlinx.coroutines.launch
 import com.renova.mobile.ui.components.PrinterSelectionModal
 import com.renova.mobile.utils.TicketPrinter
 import com.renova.mobile.utils.PrinterModel
+import androidx.compose.ui.draw.shadow
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.foundation.background
 
 import com.renova.mobile.utils.SessionManager
 import com.renova.mobile.network.ApiClient
@@ -56,6 +62,7 @@ fun BusinessStoreScreen(onLogout: () -> Unit, vm: BusinessSaleViewModel = viewMo
 
     val scrollState = rememberScrollState()
     val context = LocalContext.current
+    val colors = LocalRenovaColors.current
 
     val sessionManager = remember { SessionManager(context) }
     val userCommerce = sessionManager.getUser()
@@ -72,17 +79,17 @@ fun BusinessStoreScreen(onLogout: () -> Unit, vm: BusinessSaleViewModel = viewMo
     // Toast para indicar proceso de escaneo/agregado de recompensa
     LaunchedEffect(isRewardLoading) {
         if (isRewardLoading) {
-            Toast.makeText(context, "Agregando recompensa al ticket...", Toast.LENGTH_SHORT).show()
+            Toast.makeText(context, context.getString(R.string.adding_reward_to_ticket), Toast.LENGTH_SHORT).show()
         }
     }
 
     val rewardScanner = rememberLauncherForActivityResult(ScanContract()) { result ->
         if (result.contents != null) {
             if (user != null) {
-                Toast.makeText(context, "Recompensa detectada, agregando...", Toast.LENGTH_SHORT).show()
+                Toast.makeText(context, context.getString(R.string.product_reward_detected), Toast.LENGTH_SHORT).show()
                 vm.addRewardByCode(result.contents.trim())
             } else {
-                vm.setError("Primero escanee al consumidor para agregar recompensas")
+                vm.setError(context.getString(R.string.first_scan_consumer))
             }
         }
     }
@@ -90,7 +97,7 @@ fun BusinessStoreScreen(onLogout: () -> Unit, vm: BusinessSaleViewModel = viewMo
     fun startRewardScanner() {
         val options = ScanOptions().apply {
             setDesiredBarcodeFormats(ScanOptions.ONE_D_CODE_TYPES)
-            setPrompt("Escanee el código de barras de la recompensa")
+            setPrompt(context.getString(R.string.product_reward))
             setBeepEnabled(true)
             setOrientationLocked(true)
             setCaptureActivity(com.renova.mobile.scan.PortraitCaptureActivity::class.java)
@@ -140,7 +147,7 @@ fun BusinessStoreScreen(onLogout: () -> Unit, vm: BusinessSaleViewModel = viewMo
         )
         vm.setLastSaleSummary(summary)
         isSubmitting = true
-        Toast.makeText(context, "Finalizando la compra...", Toast.LENGTH_SHORT).show()
+        Toast.makeText(context, context.getString(R.string.finishing_purchase), Toast.LENGTH_SHORT).show()
 
         // Asegurar registro del token FCM del comercio justo antes del claim
         val merchantId = userCommerce?.id
@@ -167,7 +174,7 @@ fun BusinessStoreScreen(onLogout: () -> Unit, vm: BusinessSaleViewModel = viewMo
                 // Limpiar estado local y mover al Home para visualizar última venta
                 vm.finalizeSale()
                 navController.navigate(NavigationItemBusiness.Home.route)
-                Toast.makeText(context, "Venta finalizada", Toast.LENGTH_SHORT).show()
+                Toast.makeText(context, context.getString(R.string.sale_finished), Toast.LENGTH_SHORT).show()
             },
             onError = { err ->
                 isSubmitting = false
@@ -188,7 +195,7 @@ fun BusinessStoreScreen(onLogout: () -> Unit, vm: BusinessSaleViewModel = viewMo
             // Enviar notificación y mostrar modal de detalle con resumen
             sendNotificationAndFinalize()
         } else if (!granted) {
-            vm.setError("Permiso de notificaciones denegado")
+            vm.setError(context.getString(R.string.notification_permission_denied))
         }
     }
 
@@ -196,7 +203,7 @@ fun BusinessStoreScreen(onLogout: () -> Unit, vm: BusinessSaleViewModel = viewMo
 
     Column(modifier = Modifier.fillMaxSize().verticalScroll(scrollState)) {
         BusinessSectionHeader(
-            title = stringResource(id = R.string.bottom_nav_sale),
+            title = stringResource(id = R.string.tab_sale),
             onLogout = onLogout,
             textColor = Color.White
         )
@@ -205,9 +212,15 @@ fun BusinessStoreScreen(onLogout: () -> Unit, vm: BusinessSaleViewModel = viewMo
             Card(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(16.dp),
-                colors = CardDefaults.cardColors(containerColor = RenovaColors.BackgroundMint),
-                shape = RoundedCornerShape(12.dp)
+                    .padding(start = 16.dp, top = 16.dp, end = 16.dp)
+                    .shadow(
+                        elevation = 3.dp,
+                        shape = RoundedCornerShape(16.dp),
+                        spotColor = RenovaColors.Light.ActivityShadowColor
+                    ),
+                colors = CardDefaults.cardColors(containerColor = colors.cardBackground),
+                shape = RoundedCornerShape(16.dp),
+                elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
             ) {
                 Column(modifier = Modifier.padding(16.dp)) {
                     Row(
@@ -215,7 +228,7 @@ fun BusinessStoreScreen(onLogout: () -> Unit, vm: BusinessSaleViewModel = viewMo
                         verticalAlignment = Alignment.CenterVertically
                     ) {
                         Text(
-                            text = "Consumidor",
+                            text = stringResource(id = R.string.consumer),
                             style = MaterialTheme.typography.titleMedium.copy(
                                 fontFamily = PoppinsFontFamily,
                                 fontWeight = FontWeight.ExtraBold
@@ -226,11 +239,11 @@ fun BusinessStoreScreen(onLogout: () -> Unit, vm: BusinessSaleViewModel = viewMo
                         if (user != null && ticket.isEmpty()) {
                             IconButton(onClick = {
                                 vm.finalizeSale()
-                                Toast.makeText(context, "Venta limpiada. Escanee un nuevo consumidor.", Toast.LENGTH_SHORT).show()
+                                Toast.makeText(context, context.getString(R.string.sale_cleaned), Toast.LENGTH_SHORT).show()
                             }) {
                                 Icon(
                                     imageVector = Icons.Filled.Close,
-                                    contentDescription = "Limpiar venta",
+                                    contentDescription = stringResource(R.string.clear_sale),
                                     tint = RenovaColors.Primary
                                 )
                             }
@@ -239,72 +252,41 @@ fun BusinessStoreScreen(onLogout: () -> Unit, vm: BusinessSaleViewModel = viewMo
                     Spacer(modifier = Modifier.height(6.dp))
                     if (user != null) {
                         Text(
-                            text = "Nombre: ${user!!.name} ${user!!.last_name ?: ""}",
+                            text = stringResource(id = R.string.name_label) + " ${user!!.name} ${user!!.last_name ?: ""}",
                             style = MaterialTheme.typography.bodyMedium.copy(
                                 fontFamily = PoppinsFontFamily,
                                 fontWeight = FontWeight.SemiBold
                             ),
-                            color = Color.Black
+                            color = colors.textPrimary
                         )
                         Text(
-                            text = "Puntos disponibles: " + java.text.NumberFormat.getIntegerInstance(java.util.Locale("es","MX")).format(user!!.total_points),
+                            text = stringResource(id = R.string.available_points_label) + " " + java.text.NumberFormat.getIntegerInstance(java.util.Locale("es","MX")).format(user!!.total_points),
                             style = MaterialTheme.typography.bodyMedium.copy(fontFamily = PoppinsFontFamily),
-                            color = Color.Black
+                            color = colors.textPrimary
                         )
                     } else {
                         Text(
-                            text = "Aún no se ha escaneado al consumidor",
+                            text = stringResource(id = R.string.consumer_not_scanned),
                             style = MaterialTheme.typography.bodyMedium.copy(fontFamily = PoppinsFontFamily),
-                            color = Color.DarkGray
+                            color = colors.textSecondary
                         )
                     }
                 }
             }
 
-        // Sección: Comercio identificado (sin mostrar ID)
-        Card(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(horizontal = 16.dp),
-            shape = RoundedCornerShape(12.dp),
-            colors = CardDefaults.cardColors(containerColor = RenovaColors.BackgroundMint)
-        ) {
-            Column(modifier = Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                Text(
-                    text = "Comercio",
-                    style = MaterialTheme.typography.titleMedium.copy(
-                        fontFamily = PoppinsFontFamily,
-                        fontWeight = FontWeight.Bold
-                    ),
-                    color = RenovaColors.Primary
-                )
-                if (userCommerce != null) {
-                    Text(
-                        text = "Nombre: ${userCommerce.name}",
-                        style = MaterialTheme.typography.bodyMedium.copy(
-                            fontFamily = PoppinsFontFamily,
-                            fontWeight = FontWeight.SemiBold
-                        ),
-                        color = Color.Black
-                    )
-                } else {
-                    Text(
-                        text = "No hay comercio identificado",
-                        style = MaterialTheme.typography.bodyMedium.copy(fontFamily = PoppinsFontFamily),
-                        color = Color.DarkGray
-                    )
-                }
-            }
-        }
-
         // Ticket y acciones
-        Spacer(modifier = Modifier.height(8.dp))
         Card(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(16.dp),
-            colors = CardDefaults.cardColors(containerColor = RenovaColors.BackgroundMint),
-            shape = RoundedCornerShape(12.dp)
+                .padding(start = 16.dp, top = 16.dp, end = 16.dp)
+                .shadow(
+                    elevation = 3.dp,
+                    shape = RoundedCornerShape(16.dp),
+                    spotColor = RenovaColors.Light.ActivityShadowColor
+                ),
+            colors = CardDefaults.cardColors(containerColor = colors.cardBackground),
+            shape = RoundedCornerShape(16.dp),
+            elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
         ) {
             Column(modifier = Modifier.padding(16.dp)) {
                 Row(
@@ -313,7 +295,7 @@ fun BusinessStoreScreen(onLogout: () -> Unit, vm: BusinessSaleViewModel = viewMo
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     Text(
-                        text = "Ticket",
+                        text = stringResource(R.string.ticket),
                         style = MaterialTheme.typography.titleMedium.copy(
                             fontFamily = PoppinsFontFamily,
                             fontWeight = FontWeight.ExtraBold
@@ -325,19 +307,20 @@ fun BusinessStoreScreen(onLogout: () -> Unit, vm: BusinessSaleViewModel = viewMo
                             if (user != null) {
                                 startRewardScanner()
                             } else {
-                                vm.setError("Primero escanee al consumidor para agregar recompensas")
+                                vm.setError(context.getString(R.string.consumer_not_scanned))
                             }
                         }
-                    ) { Text("Agregar recompensa") }
+                    ) { Text(context.getString(R.string.add_reward)) }
                 }
                 Spacer(modifier = Modifier.height(8.dp))
                 if (ticket.isEmpty()) {
                     Text(
-                        text = "No hay recompensas en el ticket",
+                        text = context.getString(R.string.no_rewards_in_ticket),
                         style = MaterialTheme.typography.bodyMedium.copy(fontFamily = PoppinsFontFamily),
-                        color = Color.DarkGray
+                        color = colors.textSecondary
                     )
                 } else {
+                    var selectedName by remember { mutableStateOf<String?>(null) }
                     val groupedByName = remember(ticket) { ticket.groupBy { it.name } }
                     groupedByName.entries.forEachIndexed { index, (name, items) ->
                         val quantity = items.size
@@ -345,7 +328,22 @@ fun BusinessStoreScreen(onLogout: () -> Unit, vm: BusinessSaleViewModel = viewMo
                         val subtotalPoints = quantity * pointsPerItem
 
                         Row(
-                            modifier = Modifier.fillMaxWidth(),
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .clip(RoundedCornerShape(12.dp))
+                                .background(if (selectedName == name) colors.negativePoints.copy(alpha = 0.10f) else Color.Transparent)
+                                .padding(8.dp)
+                                .pointerInput(name) {
+                                    detectTapGestures(
+                                        onTap = {
+                                            selectedName = name
+                                        },
+                                        onDoubleTap = {
+                                            vm.removeRewardGroupByName(name)
+                                            if (selectedName == name) selectedName = null
+                                        }
+                                    )
+                                },
                             verticalAlignment = Alignment.CenterVertically
                         ) {
                             Column(modifier = Modifier.weight(1f)) {
@@ -355,31 +353,39 @@ fun BusinessStoreScreen(onLogout: () -> Unit, vm: BusinessSaleViewModel = viewMo
                                         fontFamily = PoppinsFontFamily,
                                         fontWeight = FontWeight.SemiBold
                                     ),
-                                    color = Color.Black
+                                    color = if (selectedName == name) colors.negativePoints else colors.textPrimary
                                 )
                                 Text(
-                                    text = "Cantidad: $quantity",
+                                    text = context.getString(R.string.quantity_label) + " $quantity",
                                     style = MaterialTheme.typography.bodySmall.copy(fontFamily = PoppinsFontFamily),
-                                    color = Color.DarkGray
+                                    color = colors.textSecondary
                                 )
                             }
-                            Column(horizontalAlignment = Alignment.End) {
-                                Text(
-                                    text = "Puntos",
-                                    style = MaterialTheme.typography.bodySmall.copy(
-                                        fontFamily = PoppinsFontFamily,
-                                        fontWeight = FontWeight.Medium
-                                    ),
-                                    color = Color.DarkGray
-                                )
-                                Text(
-                                    text = java.text.NumberFormat.getIntegerInstance(java.util.Locale("es","MX")).format(subtotalPoints),
-                                    style = MaterialTheme.typography.titleSmall.copy(
-                                        fontFamily = PoppinsFontFamily,
-                                        fontWeight = FontWeight.Bold
-                                    ),
-                                    color = RenovaColors.Primary
-                                )
+                            Row(verticalAlignment = Alignment.CenterVertically) {
+                                Column(horizontalAlignment = Alignment.End) {
+                                    Text(
+                                        text = stringResource(R.string.available_points_label),
+                                        style = MaterialTheme.typography.bodySmall.copy(
+                                            fontFamily = PoppinsFontFamily,
+                                            fontWeight = FontWeight.Medium
+                                        ),
+                                        color = colors.textSecondary
+                                    )
+                                    Text(
+                                        text = java.text.NumberFormat.getIntegerInstance(java.util.Locale("es","MX")).format(subtotalPoints),
+                                        style = MaterialTheme.typography.titleSmall.copy(
+                                            fontFamily = PoppinsFontFamily,
+                                            fontWeight = FontWeight.Bold
+                                        ),
+                                        color = RenovaColors.Primary
+                                    )
+                                }
+                                IconButton(onClick = {
+                                    vm.removeRewardGroupByName(name)
+                                    if (selectedName == name) selectedName = null
+                                }) {
+                                    Icon(Icons.Filled.Close, contentDescription = null, tint = colors.textSecondary)
+                                }
                             }
                         }
 
@@ -397,12 +403,12 @@ fun BusinessStoreScreen(onLogout: () -> Unit, vm: BusinessSaleViewModel = viewMo
                         verticalAlignment = Alignment.CenterVertically
                     ) {
                         Text(
-                            text = "Total de puntos",
+                            text = context.getString(R.string.total_points_label),
                             style = MaterialTheme.typography.bodyMedium.copy(
                                 fontFamily = PoppinsFontFamily,
                                 fontWeight = FontWeight.Medium
                             ),
-                            color = Color.DarkGray
+                            color = colors.textSecondary
                         )
                         Text(
                             text = java.text.NumberFormat.getIntegerInstance(java.util.Locale("es","MX")).format(totalPoints),
@@ -419,10 +425,10 @@ fun BusinessStoreScreen(onLogout: () -> Unit, vm: BusinessSaleViewModel = viewMo
                         OutlinedButton(
                             onClick = {
                                 vm.finalizeSale()
-                                Toast.makeText(context, "Venta limpiada. Escanee un nuevo consumidor.", Toast.LENGTH_SHORT).show()
+                                Toast.makeText(context, context.getString(R.string.sale_cleaned), Toast.LENGTH_SHORT).show()
                             },
                             modifier = Modifier.weight(1f)
-                        ) { Text("Limpiar venta") }
+                        ) { Text( context.getString(R.string.clear_sale)) }
 
                         Button(
                             onClick = {
@@ -431,14 +437,20 @@ fun BusinessStoreScreen(onLogout: () -> Unit, vm: BusinessSaleViewModel = viewMo
                                     return@Button
                                 }
                                 if (ticket.isEmpty()) {
-                                    vm.setError("Agrega recompensas al ticket")
+                                    vm.setError(context.getString(R.string.notification_add_reward_to_ticket))
                                     return@Button
                                 }
 
                                 val userPts = user?.total_points ?: 0
                                 val totalTicketPoints = ticket.sumOf { it.pointsRequired }
                                 if (userPts < totalTicketPoints) {
-                                    vm.setError("Puntos insuficientes para finalizar la compra")
+                                    vm.setError(context.getString(R.string.notification_insufficient_points))
+                                    return@Button
+                                }
+
+                                // Validar que no haya recompensas expiradas en el ticket
+                                if (vm.hasExpiredRewardsInTicket()) {
+                                    vm.setError(context.getString(R.string.expired_reward_in_ticket))
                                     return@Button
                                 }
 
@@ -457,7 +469,7 @@ fun BusinessStoreScreen(onLogout: () -> Unit, vm: BusinessSaleViewModel = viewMo
                             enabled = userCommerce != null && ticket.isNotEmpty() && !isSubmitting,
                             modifier = Modifier.weight(1f)
                         ) {
-                            Text("Finalizar compra")
+                            Text(context.getString(R.string.finish_purchase))
                         }
                     }
 
@@ -495,13 +507,13 @@ fun BusinessStoreScreen(onLogout: () -> Unit, vm: BusinessSaleViewModel = viewMo
             onPrintSelected = { printer ->
                 scope.launch {
                     try {
-                        Toast.makeText(context, "Imprimiendo en ${printer.getDisplayName()}...", Toast.LENGTH_SHORT).show()
+                        Toast.makeText(context, context.getString(R.string.printing_in) + " ${printer.getDisplayName()}...", Toast.LENGTH_SHORT).show()
                         TicketPrinter.printTicket(localPrintSummary!!, printer, context)
-                        Toast.makeText(context, "Ticket impreso correctamente", Toast.LENGTH_SHORT).show()
+                        Toast.makeText(context, context.getString(R.string.printing_success), Toast.LENGTH_SHORT).show()
 
                         navController.navigate(NavigationItemBusiness.Home.route)
                     } catch (e: Exception) {
-                        Toast.makeText(context, "Error al imprimir: ${e.message}", Toast.LENGTH_LONG).show()
+                        Toast.makeText(context, context.getString(R.string.printing_error) + ": ${e.message}", Toast.LENGTH_LONG).show()
                     }
                     showPrinterSelection = false
                 }

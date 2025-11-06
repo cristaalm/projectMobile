@@ -321,7 +321,7 @@ fun QRScreen(
                                         )
                                         val pointsFormatted2 = java.text.NumberFormat.getIntegerInstance(java.util.Locale.forLanguageTag("es-MX")).format(animatedPoints)
                                         Text(
-                                            text = "$pointsFormatted2 ${stringResource(id = R.string.points_unit)}",
+                                            text = "$pointsFormatted2",
                                             color = Color.White,
                                             style = MaterialTheme.typography.headlineSmall.copy(
                                                 fontFamily = com.renova.mobile.ui.theme.PoppinsFontFamily,

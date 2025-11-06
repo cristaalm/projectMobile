@@ -8,8 +8,9 @@ import com.google.gson.Gson
 import android.util.Log
 
 class SessionManager(context: Context) {
+    private val appContext: Context = context.applicationContext
     private val sharedPreferences: SharedPreferences =
-        context.getSharedPreferences(PREF_NAME, Context.MODE_PRIVATE)
+        appContext.getSharedPreferences(PREF_NAME, Context.MODE_PRIVATE)
     private val gson = Gson()
 
     companion object {
@@ -157,20 +158,47 @@ class SessionManager(context: Context) {
     // FUSIONADO: (de 'tour') Cerrar sesión sin borrar banderas de tour
     fun logout() {
         Log.d("SessionManager", "Cerrando sesión...")
-        sharedPreferences.edit().apply {
-            remove(KEY_ACCESS_TOKEN)
-            remove(KEY_TOKEN_TYPE)
-            remove(KEY_EXPIRES_AT)
-            remove(KEY_USER)
-            remove(KEY_USER_DATA)
-            remove(KEY_IS_LOGGED_IN)
-            remove(KEY_USER_ID)
-            remove(KEY_FCM_TOKEN)
-            remove(KEY_REMEMBER_ME) // Añadido de la lógica de 'develop'
-            // NO borramos las banderas de tour (KEY_FIRST_LOGIN_PREFIX)
-            apply()
+        // Limpiar absolutamente todos los datos de la app para evitar estados inconsistentes
+        try {
+            sharedPreferences.edit().clear().apply()
+            clearAppStorage()
+        } catch (e: Exception) {
+            Log.e("SessionManager", "Error limpiando datos/cache de la app en logout", e)
         }
         Log.d("SessionManager", "Sesión cerrada. isLoggedIn: ${isLoggedIn()}")
+    }
+
+    // Limpia caché y archivos temporales para evitar datos corruptos que afecten el login
+    private fun clearAppStorage() {
+        try {
+            // Cache interna
+            deleteChildren(appContext.cacheDir)
+            // Code cache
+            deleteChildren(appContext.codeCacheDir)
+            // Cache externa (si existe)
+            appContext.externalCacheDir?.let { deleteChildren(it) }
+            // Archivos temporales comunes
+            deleteChildren(appContext.filesDir)
+        } catch (e: Exception) {
+            Log.e("SessionManager", "Error limpiando almacenamiento de la app", e)
+        }
+    }
+
+    private fun deleteChildren(dir: java.io.File?) {
+        if (dir == null || !dir.exists()) return
+        dir.listFiles()?.forEach { file ->
+            try {
+                if (file.isDirectory) {
+                    deleteChildren(file)
+                }
+                // Intentar borrar; si falla, ignorar para no bloquear logout
+                if (!file.delete()) {
+                    Log.w("SessionManager", "No se pudo borrar: ${file.absolutePath}")
+                }
+            } catch (e: Exception) {
+                Log.w("SessionManager", "Error borrando: ${file.absolutePath}", e)
+            }
+        }
     }
 
     //NUEVO: (de 'develop') Verificar si el token expiró

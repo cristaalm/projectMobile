@@ -653,31 +653,55 @@
     <string name="statistics">Statistics</string>
     <string name="statistics_description">Press to view your recycling statistics</string>
     <string name="last_activities">Recent activities</string>
+    <string name="no_recent_activities">No recent activities</string>
     <!-- sale card -->
     <string name="last_sale">Last sale</string>
 
     <!-- card bottom -->
     <string name="purchase_detail">Purchase Detail</string>
+    <string name="print_ticket">Print Ticket</string>
+    <string name="points_required">Points required: %d</string>
+    <string name="hist_detail_time_label">Time: %s</string>
 
     <!-- Tab: QR -->
     <string name="tab_qr">Data Scanning</string>
-    <string name="scan_qr_prompt">Press to scan a barcode</string>
-    <string name="scan_barcode_prompt">Scan the customer\'s barcode</string>
+    <string name="scan_barcode_prompt">Press to scan a barcode</string>
+    <string name="scan_barcode_description">Customer\'s barcode to add rewards</string>
     <string name="scan_barcode_success">Barcode scanned successfully</string>
      <!-- Errors -->
     <string name="scan_barcode_error">Barcode not found, please try again</string>
     <string name="no_qr">Scan the customer\'s barcode, not a QR code. Please try again.</string>
+    <string name="consumer_not_scanned">No consumer has been scanned yet</string>
 
     <!-- Tab: Sale -->
     <string name="tab_sale">Sale</string>
     <string name="consumer">Consumer</string>
     <string name="name_label">Name:</string>
-    <string name="tick">Ticket</string>
+    <string name="consumer_label">Consumer:</string>
+    <string name="quantity_label">Quantity:</string>
+    <string name="total_points_label">Total points:</string>
+    <string name="available_points_label">Available points:</string>
+    <string name="ticket">Ticket</string>
+    <string name="add_reward">Add reward</string>
     <string name="product_reward">Scan reward product</string>
+    <string name="adding_reward_to_ticket">Adding reward to ticket...</string>
+    <string name="product_reward_detected">Product reward detected</string>
+    <string name="finishing_purchase">Finishing the purchase...</string>
+    <string name="sale_finished">Sale finished</string>
+    <string name="sale_cleaned">Sale cleaned. Scan a new consumer</string>
+    <string name="clear_sale">Clear sale</string>
+    <string name="finish_purchase">Finish</string>
+    <string name="reward_off">The reward has expired</string>
+    <string name="no_stock_reward">There is no stock available for this reward</string>
+    <!-- printer -->
+    <string name="printing_in">Printing in</string>
+    <string name="printing_error">Error printing</string>
+    <string name="printing_success">Ticket printed successfully</string>
     <!-- Errors -->
     <string name="first_scan_consumer">First, scan the consumer to add rewards</string>
     <string name="no_consumer">Not found, must scan first</string>
     <string name="no_rewards">No rewards in the ticket</string>
+    <string name="no_rewards_in_ticket">No rewards in the ticket</string>
 
     <!-- HistoryActivityCard strings -->
     <string name="hist_card_recycling_title">Recycling</string>
@@ -687,6 +711,9 @@
 
     <!-- HistoryDetailBottomSheet strings -->
     <string name="hist_detail_business_label">Business:</string>
+    <string name="hist_detail_points_label">Points:</string>
+    <string name="hist_detail_product_label">Product(s):</string>
+    <string name="hist_detail_product_unspecified">Unspecified</string>
     <string name="hist_detail_client_label">Client:</string>
     <string name="hist_detail_seller_label">Seller:</string>
     <string name="hist_detail_quantity_label">Quantity:</string>
@@ -714,6 +741,10 @@
     <string name="hist_sale_detail_recycling_title">Recycling</string>
     <string name="hist_sale_detail_reward_title">Reward Exchange</string>
     <string name="hist_sale_detail_activity_title">Activity</string>
+    <string name="hist_sale_detail_points_label">Points:</string>
+    <!-- Home: last sale detail button -->
+    <string name="view_full_detail">View full detail</string>
+    <string name="expired_reward_in_ticket">Expired reward in ticket</string>
     
     <!-- Statistics screen strings -->
     <string name="statistics_total_revenue">Total revenue</string>
@@ -722,8 +753,18 @@
     <string name="statistics_customers_served">Customers served</string>
     <string name="statistics_top_products">Top redeemed products</string>
     <string name="statistics_last_7_days">Last 7 days activity</string>
+    
+    <!-- Sale errors: reward validation -->
+    <string name="error_reward_not_found_for_business">Reward not found for this business.</string>
+    <string name="error_reward_not_belongs_to_business">The reward does not belong to this business.</string>
     <string name="statistics_sales_last_week">Sales last week</string>
     <string name="statistics_points_last_week">Points last week</string>
     <string name="statistics_hint_fixed_data">Temporary fixed data for illustration; will connect to backend.</string>
+
+    <!-- Notification strings -->
+    <string name="notification_title">Notification</string>
+    <string name="notification_add_reward_to_ticket">Add rewards to ticket to finish purchase</string>
+    <string name="notification_insufficient_points">Insufficient points to finish purchase</string>
+    <string name="notification_permission_denied">Notification permission denied</string>
 
 </resources>

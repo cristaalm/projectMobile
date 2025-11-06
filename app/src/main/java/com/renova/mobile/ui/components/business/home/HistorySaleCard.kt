@@ -127,9 +127,12 @@ fun HistorySaleCard(
                 horizontalAlignment = Alignment.End
             ) {
                 val mxnValue = activity.points * POINT_TO_MXN
-                val mxnColor = if (mxnValue < 0.0) colors.negativePoints else colors.primaryColor
+                val mxnColor = if (mxnValue < 0.0) RenovaColors.Success else colors.negativePoints
+                val fmt = NumberFormat.getCurrencyInstance(Locale("es","MX"))
+                val absText = fmt.format(kotlin.math.abs(mxnValue))
+                val displayText = if (mxnValue < 0.0) absText else "-$absText"
                 Text(
-                    text = NumberFormat.getCurrencyInstance(Locale("es","MX")).format(mxnValue),
+                    text = displayText,
                     style = MaterialTheme.typography.bodyLarge.copy(
                         fontFamily = PoppinsFontFamily,
                         fontWeight = FontWeight.Bold
@@ -260,9 +263,8 @@ private fun HistorySaleDetailBottomSheet(
                 )
             }
 
-            val pointsText = if (activity.points < 0) "${activity.points}" else "${activity.points}"
             Text(
-                text = pointsText,
+                text = "${stringResource(R.string.hist_sale_detail_points_label)} ${activity.points}",
                 style = MaterialTheme.typography.headlineSmall.copy(
                     fontFamily = PoppinsFontFamily,
                     fontWeight = FontWeight.Bold
@@ -270,12 +272,18 @@ private fun HistorySaleDetailBottomSheet(
                 color = RenovaColors.Primary
             )
 
-            val mxnFormatted = NumberFormat.getCurrencyInstance(Locale("es", "MX"))
-                .format(activity.points * POINT_TO_MXN)
+            val mxnValue = activity.points * POINT_TO_MXN
+            val mxnColor = if (mxnValue < 0.0) RenovaColors.Success else colors.negativePoints
+            val fmt = NumberFormat.getCurrencyInstance(Locale("es", "MX"))
+            val absText = fmt.format(kotlin.math.abs(mxnValue))
+            val displayText = if (mxnValue < 0.0) absText else "-$absText"
             Text(
-                text = "${stringResource(R.string.hist_sale_detail_equivalent_mxn_prefix)} $mxnFormatted",
-                style = MaterialTheme.typography.bodyMedium.copy(fontFamily = PoppinsFontFamily),
-                color = RenovaColors.Primary,
+                text = "${stringResource(R.string.hist_sale_detail_equivalent_mxn_prefix)} $displayText",
+                style = MaterialTheme.typography.headlineSmall.copy(
+                    fontFamily = PoppinsFontFamily,
+                    fontWeight = FontWeight.Bold
+                ),
+                color = mxnColor,
                 textAlign = TextAlign.Center
             )
 

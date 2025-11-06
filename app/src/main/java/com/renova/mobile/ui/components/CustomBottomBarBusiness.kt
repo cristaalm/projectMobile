@@ -26,6 +26,7 @@ import com.renova.mobile.navigation.NavigationItemBusiness
 import androidx.compose.animation.*
 import androidx.compose.ui.graphics.ColorFilter
 import com.renova.mobile.navigation.TopNavigationItem
+import androidx.compose.ui.res.stringResource
 
 private val primaryColor = Color(0xFF08b662)
 private val qrBackgroundColor = Color(0xFF05D16E).copy(alpha = 0.5f)
@@ -72,8 +73,14 @@ fun NavItemBusiness(item: NavigationItemBusiness, isSelected: Boolean, onClick: 
                 label = "IconOrTitle"
             ) { selected ->
                 if (selected) {
+                    val titleText = when (item) {
+                        NavigationItemBusiness.Home -> stringResource(id = R.string.tab_home)
+                        NavigationItemBusiness.Store -> stringResource(id = R.string.tab_sale)
+                        NavigationItemBusiness.QR -> stringResource(id = R.string.tab_qr)
+                        NavigationItemBusiness.Profile -> stringResource(id = R.string.my_profile)
+                    }
                     Text(
-                        text = item.title,
+                        text = titleText,
                         color = primaryColor,
                         fontSize = 16.sp,
                         fontWeight = FontWeight.Bold
@@ -170,7 +177,7 @@ fun CustomBottomBarBusiness(
             ) { selected ->
                 if (selected) {
                     Text(
-                        text = NavigationItemBusiness.QR.title,
+                        text = stringResource(id = R.string.bottom_nav_qr),
                         color = Color.White,
                         fontSize = 12.sp,
                         fontWeight = FontWeight.Bold

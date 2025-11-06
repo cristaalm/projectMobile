@@ -291,7 +291,7 @@ fun BusinessHomeScreen(
                                     if (firstItem != null) {
                                         val extra = if (lastSaleSummary!!.items.size > 1) " +${lastSaleSummary!!.items.size - 1}" else ""
                                         Text(
-                                            text = "Producto: ${firstItem.name}$extra",
+                                            text = context.getString(R.string.hist_detail_product_label) + " ${firstItem.name}$extra",
                                             style = MaterialTheme.typography.bodyMedium.copy(
                                                 fontFamily = PoppinsFontFamily
                                             ),
@@ -300,7 +300,7 @@ fun BusinessHomeScreen(
                                             overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis
                                         )
                                         Text(
-                                            text = "Cantidad: ${firstItem.quantity}",
+                                            text = context.getString(R.string.hist_detail_quantity_label) + " ${firstItem.quantity}",
                                             style = MaterialTheme.typography.bodyMedium.copy(
                                                 fontFamily = PoppinsFontFamily
                                             ),
@@ -308,7 +308,7 @@ fun BusinessHomeScreen(
                                         )
                                     } else {
                                         Text(
-                                            text = "Producto: Sin especificar",
+                                            text = context.getString(R.string.hist_detail_product_unspecified),
                                             style = MaterialTheme.typography.bodyMedium.copy(
                                                 fontFamily = PoppinsFontFamily
                                             ),
@@ -318,7 +318,7 @@ fun BusinessHomeScreen(
                                 }
                                 Column(horizontalAlignment = Alignment.End) {
                                     Text(
-                                        text = "Total Puntos",
+                                        text = context.getString(R.string.total_points),
                                         style = MaterialTheme.typography.bodySmall.copy(
                                             fontFamily = PoppinsFontFamily,
                                             fontWeight = FontWeight.Medium
@@ -335,7 +335,7 @@ fun BusinessHomeScreen(
                                     )
                                     Spacer(modifier = Modifier.height(6.dp))
                                     Text(
-                                        text = "Equivalente MXN: $pesosFormatted",
+                                        text = context.getString(R.string.hist_detail_equivalent_mxn_prefix) + " $pesosFormatted",
                                         style = MaterialTheme.typography.bodyMedium.copy(
                                             fontFamily = PoppinsFontFamily,
                                             fontWeight = FontWeight.SemiBold
@@ -355,7 +355,7 @@ fun BusinessHomeScreen(
                                 shape = RoundedCornerShape(12.dp)
                             ) {
                                 Text(
-                                    text = "Ver Detalle Completo",
+                                    text = stringResource(R.string.view_full_detail),
                                     style = MaterialTheme.typography.bodyLarge.copy(
                                         fontFamily = PoppinsFontFamily,
                                         fontWeight = FontWeight.Medium
@@ -580,46 +580,58 @@ fun BusinessHomeScreen(
                                 )
                             }
                         }
+                         
+                         if (historyState.activities.filter { it.reward != null }.isEmpty()) {
+                              item {
+                                  Card(
+                                      modifier = Modifier.fillMaxWidth(),
+                                      colors = CardDefaults.cardColors(containerColor = colors.cardBackground),
+                                      shape = RoundedCornerShape(16.dp),
+                                      elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
+                                  ) {
+                                      Column(
+                                          modifier = Modifier
+                                              .fillMaxWidth()
+                                              .padding(24.dp),
+                                          horizontalAlignment = Alignment.CenterHorizontally
+                                      ) {
+                                          Icon(
+                                              imageVector = Icons.Default.History,
+                                              contentDescription = "Sin historial",
+                                              tint = colors.textSecondary,
+                                              modifier = Modifier.size(48.dp)
+                                          )
+                                          Spacer(modifier = Modifier.height(12.dp))
+                                          Text(
+                                              text = context.getString(R.string.no_recent_activities),
+                                              style = MaterialTheme.typography.bodyMedium.copy(
+                                                  fontFamily = PoppinsFontFamily,
+                                                  fontWeight = FontWeight.Medium
+                                              ),
+                                              color = colors.textSecondary,
+                                              textAlign = TextAlign.Center
+                                          )
+                                      }
+                                  }
+                              }
+                          }
+                     }
 
-                        if (historyState.activities.filter { it.reward != null }.isEmpty()) {
-                            item {
-                                Card(
-                                    modifier = Modifier.fillMaxWidth(),
-                                    colors = CardDefaults.cardColors(containerColor = colors.cardBackground),
-                                    shape = RoundedCornerShape(16.dp),
-                                    elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
-                                ) {
-                                    Column(
-                                        modifier = Modifier
-                                            .fillMaxWidth()
-                                            .padding(24.dp),
-                                        horizontalAlignment = Alignment.CenterHorizontally
-                                    ) {
-                                        Icon(
-                                            imageVector = Icons.Default.History,
-                                            contentDescription = "Sin historial",
-                                            tint = colors.textSecondary,
-                                            modifier = Modifier.size(48.dp)
-                                        )
-                                        Spacer(modifier = Modifier.height(12.dp))
-                                        Text(
-                                            text = "No hay actividades registradas",
-                                            style = MaterialTheme.typography.bodyMedium.copy(
-                                                fontFamily = PoppinsFontFamily,
-                                                fontWeight = FontWeight.Medium
-                                            ),
-                                            color = colors.textSecondary,
-                                            textAlign = TextAlign.Center
-                                        )
-                                    }
-                                }
-                            }
-                        }
-                    }
                 }
             }
         }
     }
+
+    // Detalle completo de última venta
+    if (showDetail && lastSaleSummary != null) {
+        SaleDetailModal(
+            summary = lastSaleSummary!!,
+            onClose = { showDetail = false },
+            onPrint = { showDetail = false }
+        )
+    }
+
+    // Detalle de compra ahora gestionado por HistoryActivityCard (bottom sheet interno)
 
     // Printer Selection Modal desde Home
     if (showPrinterSelection && lastSaleSummary != null) {
@@ -629,11 +641,11 @@ fun BusinessHomeScreen(
             onPrintSelected = { printer ->
                 scope.launch {
                     try {
-                        Toast.makeText(context, "Imprimiendo en ${printer.getDisplayName()}...", Toast.LENGTH_SHORT).show()
+                        Toast.makeText(context, context.getString(R.string.printing_in) + " ${printer.getDisplayName()}...", Toast.LENGTH_SHORT).show()
                         TicketPrinter.printTicket(lastSaleSummary!!, printer, context)
-                        Toast.makeText(context, "Ticket impreso correctamente", Toast.LENGTH_SHORT).show()
+                        Toast.makeText(context, context.getString(R.string.printing_success), Toast.LENGTH_SHORT).show()
                     } catch (e: Exception) {
-                        Toast.makeText(context, "Error al imprimir: ${e.message}", Toast.LENGTH_LONG).show()
+                        Toast.makeText(context, context.getString(R.string.printing_error) + " ${e.message}", Toast.LENGTH_LONG).show()
                     }
                     showPrinterSelection = false
                 }

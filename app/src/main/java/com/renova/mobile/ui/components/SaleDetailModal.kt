@@ -14,8 +14,10 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
+import androidx.compose.ui.platform.LocalContext
 import com.renova.mobile.ui.theme.PoppinsFontFamily
 import com.renova.mobile.ui.theme.RenovaColors
+import com.renova.mobile.R
 
 // Modelo de detalle de compra reutilizable
 data class SaleItem(
@@ -38,13 +40,14 @@ fun SaleDetailModal(
     onClose: () -> Unit,
     onPrint: () -> Unit,
 ) {
+    val context = LocalContext.current
     Dialog(onDismissRequest = onClose) {
         Card(shape = androidx.compose.foundation.shape.RoundedCornerShape(12.dp), colors = CardDefaults.cardColors(containerColor = Color.White)) {
             Column(modifier = Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
                 // Encabezado con botón de cierre arriba a la derecha
                 Row(modifier = Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
                     Text(
-                        text = "Detalle de compra",
+                        text = context.getString(   R.string.purchase_detail),
                         color = RenovaColors.Primary,
                         fontSize = 22.sp,
                         fontWeight = FontWeight.Bold,
@@ -59,13 +62,13 @@ fun SaleDetailModal(
                 // Hora de la venta debajo del título
                 val timeText = runCatching {
                     val millis = summary.id.toLong()
-                    val fmt = java.text.SimpleDateFormat("HH:mm:ss", java.util.Locale.getDefault())
+                    val fmt = java.text.SimpleDateFormat("HH:mm", java.util.Locale.getDefault())
                     fmt.format(java.util.Date(millis))
                 }.getOrNull()
                 if (timeText != null) {
                     Spacer(modifier = Modifier.height(4.dp))
                     Text(
-                        text = "Hora: $timeText",
+                        text = context.getString(R.string.hist_detail_time_label, timeText),
                         style = MaterialTheme.typography.bodySmall.copy(fontFamily = PoppinsFontFamily),
                         color = Color.DarkGray
                     )
@@ -76,22 +79,25 @@ fun SaleDetailModal(
                     // Eliminado: ID de la venta
                     if (summary.allianceName != null) {
                         Text(
-                            text = "Comercio: ${summary.allianceName}",
-                            style = MaterialTheme.typography.bodyMedium.copy(fontFamily = PoppinsFontFamily)
+                            text = context.getString(R.string.hist_detail_business_label, summary.allianceName),
+                            style = MaterialTheme.typography.bodyMedium.copy(fontFamily = PoppinsFontFamily),
+                            color = RenovaColors.Primary
                         )
                     }
                     if (summary.consumerName != null) {
                         Text(
-                            text = "Cliente: ${summary.consumerName}",
-                            style = MaterialTheme.typography.bodyMedium.copy(fontFamily = PoppinsFontFamily)
+                            text = context.getString(R.string.hist_detail_client_label, summary.consumerName),
+                            style = MaterialTheme.typography.bodyMedium.copy(fontFamily = PoppinsFontFamily),
+                            color = RenovaColors.Primary
                         )
                     }
                     Text(
-                        text = "Total puntos: ${summary.totalPoints}",
+                        text = context.getString(R.string.total_points_label, summary.totalPoints),
                         style = MaterialTheme.typography.bodyMedium.copy(
                             fontFamily = PoppinsFontFamily,
                             fontWeight = FontWeight.SemiBold
-                        )
+                        ),
+                        color = RenovaColors.Primary
                     )
                 }
 
@@ -103,7 +109,7 @@ fun SaleDetailModal(
                         Row(modifier = Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
                             Column(modifier = Modifier.weight(1f)) {
                                 Text(text = item.name, style = MaterialTheme.typography.bodyMedium.copy(fontFamily = PoppinsFontFamily, fontWeight = FontWeight.SemiBold), color = Color.Black)
-                                Text(text = "Puntos requeridos: ${item.pointsRequired}", style = MaterialTheme.typography.bodySmall.copy(fontFamily = PoppinsFontFamily), color = Color.DarkGray)
+                                Text(text = context.getString(R.string.points_required, item.pointsRequired), style = MaterialTheme.typography.bodySmall.copy(fontFamily = PoppinsFontFamily), color = Color.DarkGray)
                             }
                             Text(text = "x${item.quantity}", style = MaterialTheme.typography.titleSmall.copy(fontFamily = PoppinsFontFamily, fontWeight = FontWeight.Bold), color = RenovaColors.Primary)
                         }
@@ -120,7 +126,7 @@ fun SaleDetailModal(
                         ),
                         border = androidx.compose.foundation.BorderStroke(1.dp, RenovaColors.Primary)
                     ) {
-                        Text(text = "Imprimir")
+                        Text(text = context.getString(R.string.print_ticket))
                     }
                     Button(
                         onClick = onClose,
@@ -130,7 +136,7 @@ fun SaleDetailModal(
                             contentColor = Color.White
                         )
                     ) {
-                        Text(text = "Cancelar")
+                        Text(text = context.getString(R.string.action_cancel))
                     }
                 }
             }

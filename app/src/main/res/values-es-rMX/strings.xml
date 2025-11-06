@@ -110,7 +110,6 @@
     <string name="today">Hoy</string>
     <string name="yesterday">Ayer</string>
 
-    <string name="total_points">Puntos Totales</string>
     <string name="accumulated_points">Pts acumulados</string>
 
     <string name="points_code_title">Puntos Renova</string>
@@ -655,31 +654,56 @@
     <string name="statistics">Estadísticas</string>
     <string name="statistics_description">Presiona para ver tus estadísticas de reciclaje</string>
     <string name="last_activities">Actividades recientes</string>
+    <string name="total_points">Total de puntos</string>
+    <string name="no_recent_activities">No hay actividades registradas</string>
     <!-- última venta - card -->
     <string name="last_sale">Última venta</string>
 
     <!-- tarjeta inferioir -->
     <string name="purchase_detail">Detalle de compra</string>
+    <string name="print_ticket">Imprimir</string>
+    <string name="points_required">Puntos requeridos: %d</string>
+    <string name="hist_detail_time_label">Hora: %s</string>
 
     <!-- Pestaña: QR -->
     <string name="tab_qr">Escaneo de Datos</string>
-    <string name="scan_qr_prompt">Presiona para escanear un código de barras</string>
-    <string name="scan_barcode_prompt">Escanear el código de barras del cliente</string>
+    <string name="scan_barcode_prompt">Presiona para escanear un código de barras</string>
+    <string name="scan_barcode_description">Código del cliente para agregar recompensas</string>
     <string name="scan_barcode_success">Código de barras escaneado exitosamente</string>
     <!-- Errores -->
     <string name="scan_barcode_error">Código de barras no encontrado, por favor intente de nuevo</string>
     <string name="no_qr">Escanee el código de barras del cliente, no un código QR. Por favor, intente de nuevo.</string>
+    <string name="consumer_not_scanned">No se ha escaneado ningún consumidor todavía</string>
 
     <!-- Pestaña: Venta -->
     <string name="tab_sale">Venta</string>
     <string name="consumer">Consumidor</string>
     <string name="name_label">Nombre:</string>
-    <string name="tick">Ticket</string>
+    <string name="consumer_label">Consumidor:</string>
+    <string name="quantity_label">Cantidad:</string>
+    <string name="total_points_label">Total de puntos: %1$d</string>
+    <string name="available_points_label">Puntos disponibles:</string>
+    <string name="ticket">Recibo</string>
+    <string name="add_reward">Agregar recompensa</string>
     <string name="product_reward">Escanear producto con recompensa</string>
+    <string name="adding_reward_to_ticket">Agregando recompensa al ticket...</string>
+    <string name="product_reward_detected">Producto con recompensa detectado</string>
+    <string name="finishing_purchase">Finalizando la compra...</string>
+    <string name="sale_finished">Venta finalizada</string>
+    <string name="sale_cleaned">Venta limpiada. Escanee un nuevo consumidor</string>
+    <string name="clear_sale">Limpiar venta</string>
+    <string name="finish_purchase">Finalizar</string>
+    <string name="reward_off">La recompensa está expirada</string>
+    <string name="no_stock_reward">No hay stock disponible para esta recompensa</string>
+    <!-- impresión -->
+    <string name="printing_in">Imprimiendo en</string>
+    <string name="printing_error">Error al imprimir</string>
+    <string name="printing_success">Ticket impreso correctamente</string>
     <!-- Errores -->
     <string name="first_scan_consumer">Primero, escanee al consumidor para agregar recompensas</string>
     <string name="no_consumer">No encontrado, debe escanear primero</string>
     <string name="no_rewards">No hay recompensas en el ticket</string>
+    <string name="no_rewards_in_ticket">No hay recompensas en el ticket</string>
 
     <!-- HistoryActivityCard strings -->
     <string name="hist_card_recycling_title">Reciclaje</string>
@@ -689,6 +713,9 @@
 
     <!-- HistoryDetailBottomSheet strings -->
     <string name="hist_detail_business_label">Comercio:</string>
+    <string name="hist_detail_points_label">Puntos:</string>
+    <string name="hist_detail_product_label">Producto(s):</string>
+    <string name="hist_detail_product_unspecified">Sin especificar</string>
     <string name="hist_detail_client_label">Cliente:</string>
     <string name="hist_detail_seller_label">Vendedor:</string>
     <string name="hist_detail_quantity_label">Cantidad:</string>
@@ -716,6 +743,7 @@
     <string name="hist_sale_detail_recycling_title">Reciclaje</string>
     <string name="hist_sale_detail_reward_title">Canje de Recompensa</string>
     <string name="hist_sale_detail_activity_title">Actividad</string>
+    <string name="hist_sale_detail_points_label">Puntos:</string>
     
     <!-- Statistics screen strings -->
     <string name="statistics_total_revenue">Ingresos totales</string>
@@ -727,4 +755,15 @@
     <string name="statistics_sales_last_week">Ventas última semana</string>
     <string name="statistics_points_last_week">Puntos última semana</string>
     <string name="statistics_hint_fixed_data">Datos fijos temporales para ilustración; se conectarán a backend.</string>
+
+
+    <!-- Notification strings -->
+    <string name="notification_title">Notificación</string>
+    <string name="notification_add_reward_to_ticket">Agregue recompensas al ticket para finalizar la compra</string>
+    <string name="notification_insufficient_points">Puntos insuficientes para finalizar la compra</string>
+    <string name="notification_permission_denied">Permiso de notificaciones denegado</string>
+    
+    <!-- Errores de venta: validación de recompensa -->
+    <string name="error_reward_not_found_for_business">Recompensa no encontrada para este comercio.</string>
+    <string name="error_reward_not_belongs_to_business">La recompensa no pertenece a este comercio.</string>
 </resources>

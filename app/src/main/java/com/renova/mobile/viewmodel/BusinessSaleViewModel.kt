@@ -1,17 +1,19 @@
 package com.renova.mobile.viewmodel
 
-import androidx.lifecycle.ViewModel
+import android.app.Application
+import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import com.renova.mobile.network.ApiClient
 import com.renova.mobile.network.IdentifyUserByCodeRequest
 import com.renova.mobile.network.UserData
 import com.renova.mobile.network.ClaimRewardRequest
 import com.renova.mobile.network.SendNotificationRequest
+import com.renova.mobile.R
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
 
-class BusinessSaleViewModel : ViewModel() {
+class BusinessSaleViewModel(application: Application) : AndroidViewModel(application) {
     private val _scannedUser = MutableStateFlow<UserData?>(null)
     val scannedUser: StateFlow<UserData?> = _scannedUser
 
@@ -145,38 +147,47 @@ class BusinessSaleViewModel : ViewModel() {
 
             val reward = _availableRewards.value.firstOrNull { it.code == code }
             if (reward == null) {
-                _error.value = "Recompensa no encontrada para este comercio."
+                _error.value = getApplication<Application>().getString(R.string.error_reward_not_found_for_business)
                 return@launch
             }
 
             if (reward.allianceId != allianceId) {
-                _error.value = "La recompensa no pertenece a este comercio."
+                _error.value = getApplication<Application>().getString(R.string.error_reward_not_belongs_to_business)
                 return@launch
             }
 
             if (!reward.isActive) {
-                _error.value = "La recompensa no está activa."
+                _error.value = getApplication<Application>().getString(R.string.reward_off)
                 return@launch
+            }
+
+            // Validar expiración antes de agregar al ticket
+            val expiresAt = reward.expiresAt
+            if (!expiresAt.isNullOrBlank()) {
+                if (isExpired(expiresAt)) {
+                    _error.value = getApplication<Application>().getString(R.string.reward_off)
+                    return@launch
+                }
             }
 
             // Stock: si es null, se considera ilimitado (permitir agregar)
             val stock = reward.stock
             if (stock != null && stock <= 0) {
-                _error.value = "No hay stock disponible para esta recompensa."
+                _error.value = getApplication<Application>().getString(R.string.no_stock_reward)
                 return@launch
             }
 
             // Validar puntos disponibles del cliente antes de agregar
             val currentUser = _scannedUser.value
             if (currentUser == null) {
-                _error.value = "Primero escanee al consumidor para agregar recompensas"
+                _error.value = getApplication<Application>().getString(R.string.first_scan_consumer)
                 return@launch
             }
             val userPoints = currentUser.total_points
             val ticketPoints = _ticket.value.sumOf { it.pointsRequired }
             val neededPoints = reward.pointsRequired
             if (userPoints < ticketPoints + neededPoints) {
-                _error.value = "Puntos insuficientes para agregar esta recompensa"
+                _error.value = getApplication<Application>().getString(R.string.notification_insufficient_points)
                 return@launch
             }
 
@@ -194,6 +205,49 @@ class BusinessSaleViewModel : ViewModel() {
         _error.value = null
         _scannedUser.value = null
         // Mantener la alianza y el último resumen para continuidad del flujo
+    }
+
+    fun hasExpiredRewardsInTicket(): Boolean {
+        return _ticket.value.any { r ->
+            val exp = r.expiresAt
+            !exp.isNullOrBlank() && isExpired(exp)
+        }
+    }
+
+    fun getExpiredRewardNames(): List<String> {
+        return _ticket.value.filter { r ->
+            val exp = r.expiresAt
+            !exp.isNullOrBlank() && isExpired(exp)
+        }.map { it.name }.distinct()
+    }
+
+    // Eliminar todas las entradas de una recompensa por nombre (grupo)
+    fun removeRewardGroupByName(name: String) {
+        _ticket.value = _ticket.value.filterNot { it.name == name }
+    }
+
+    // Utilidades de fecha para expiración
+    private fun isExpired(dateStr: String): Boolean {
+        val parsed = parseDateFlexible(dateStr) ?: return false
+        return java.util.Date().after(parsed)
+    }
+
+    private fun parseDateFlexible(dateStr: String): java.util.Date? {
+        val patterns = listOf(
+            "yyyy-MM-dd'T'HH:mm:ss.SSS'Z'",
+            "yyyy-MM-dd'T'HH:mm:ss'Z'",
+            "yyyy-MM-dd HH:mm:ss",
+            "yyyy-MM-dd"
+        )
+        for (p in patterns) {
+            try {
+                val sdf = java.text.SimpleDateFormat(p, java.util.Locale.getDefault())
+                sdf.timeZone = java.util.TimeZone.getTimeZone("UTC")
+                return sdf.parse(dateStr)
+            } catch (_: Exception) {
+            }
+        }
+        return null
     }
 
     // Envío de notificación al cliente después de la venta (ya no se usa; backend envía push)

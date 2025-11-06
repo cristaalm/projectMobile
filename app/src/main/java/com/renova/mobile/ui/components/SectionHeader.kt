@@ -91,10 +91,9 @@ fun BusinessSectionHeader(
     modifier: Modifier = Modifier,
     textColor: Color = Color.White,
     onOpenManual: (() -> Unit)? = null,
-    onOpenFAQ: (() -> Unit)? = null
+    onOpenFAQ: (() -> Unit)? = null,
+    hasNavigationIcon: Boolean = false
 ) {
-    val context = LocalContext.current
-
     Box(
         modifier = modifier
             .fillMaxWidth()
@@ -107,6 +106,9 @@ fun BusinessSectionHeader(
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.SpaceBetween
         ) {
+            if (hasNavigationIcon) {
+                Spacer(modifier = Modifier.width(20.dp))
+            }
             Text(
                 text = title,
                 color = textColor,
@@ -114,15 +116,8 @@ fun BusinessSectionHeader(
                 fontWeight = FontWeight.Bold,
                 fontFamily = PoppinsFontFamily
             )
-            RightMenuAction(
-                onOpenManual = onOpenManual ?: {
-                    context.startActivity(Intent(context, ManualGeneralActivity::class.java))
-                },
-                onOpenFAQ = onOpenFAQ ?: {
-                    context.startActivity(Intent(context, FaqActivity::class.java))
-                },
-                onLogout = onLogout
-            )
+            // Ícono de cierre de sesión con modal de confirmación, consistente en todos los headers
+            LogoutAction(onConfirm = onLogout)
         }
     }
 }

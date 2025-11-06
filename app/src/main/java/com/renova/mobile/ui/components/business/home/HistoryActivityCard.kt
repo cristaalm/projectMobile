@@ -125,9 +125,12 @@ fun HistoryActivityCard(
             horizontalAlignment = Alignment.End
         ) {
             val mxnValue = activity.points * pointToMxn
-            val mxnColor = if (mxnValue < 0.0) colors.negativePoints else colors.primaryColor
+            val mxnColor = if (mxnValue < 0.0) RenovaColors.Success else colors.negativePoints
+            val fmt = java.text.NumberFormat.getCurrencyInstance(java.util.Locale("es","MX"))
+            val absText = fmt.format(kotlin.math.abs(mxnValue))
+            val displayText = if (mxnValue < 0.0) absText else "-$absText"
             Text(
-                text = java.text.NumberFormat.getCurrencyInstance(java.util.Locale("es","MX")).format(mxnValue),
+                text = displayText,
                 style = MaterialTheme.typography.bodyLarge.copy(
                     fontFamily = PoppinsFontFamily,
                     fontWeight = FontWeight.Bold
@@ -262,10 +265,9 @@ private fun HistoryDetailBottomSheet(
                 textAlign = TextAlign.Center
             )
 
-            // Puntos en grande sin signo positivo
-            val pointsText = if (activity.points < 0) "${activity.points}" else "${activity.points}"
+            // Puntos: etiqueta y valor con el mismo énfasis que equivalente MXN
             Text(
-                text = pointsText,
+                text = "${stringResource(R.string.hist_detail_points_label)} ${activity.points}",
                 style = MaterialTheme.typography.headlineSmall.copy(
                     fontFamily = PoppinsFontFamily,
                     fontWeight = FontWeight.Bold
@@ -273,13 +275,19 @@ private fun HistoryDetailBottomSheet(
                 color = RenovaColors.Primary
             )
 
-            // Equivalente en MXN
-            val mxnFormatted = java.text.NumberFormat.getCurrencyInstance(java.util.Locale("es", "MX"))
-                .format(activity.points * pointToMxn)
+            // Equivalente en MXN con inversión de colores y misma jerarquía tipográfica
+            val mxnValue = activity.points * pointToMxn
+            val mxnColor = if (mxnValue < 0.0) RenovaColors.Success else colors.negativePoints
+            val fmt = java.text.NumberFormat.getCurrencyInstance(java.util.Locale("es", "MX"))
+            val absText = fmt.format(kotlin.math.abs(mxnValue))
+            val displayText = if (mxnValue < 0.0) absText else "-$absText"
             Text(
-                text = "${stringResource(R.string.hist_detail_equivalent_mxn_prefix)} $mxnFormatted",
-                style = MaterialTheme.typography.bodyMedium.copy(fontFamily = PoppinsFontFamily),
-                color = RenovaColors.Primary,
+                text = "${stringResource(R.string.hist_detail_equivalent_mxn_prefix)} $displayText",
+                style = MaterialTheme.typography.headlineSmall.copy(
+                    fontFamily = PoppinsFontFamily,
+                    fontWeight = FontWeight.Bold
+                ),
+                color = mxnColor,
                 textAlign = TextAlign.Center
             )
 
