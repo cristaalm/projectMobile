@@ -29,6 +29,9 @@ import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.material3.Divider
+import androidx.compose.material3.ModalBottomSheet
+import androidx.compose.material3.rememberModalBottomSheetState
+import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
@@ -57,6 +60,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ShoppingCart
 import androidx.compose.material.icons.filled.Recycling
 import androidx.compose.material.icons.filled.History
+import androidx.compose.material.icons.filled.Person
 import androidx.compose.material3.Icon
 import com.renova.mobile.R
 import com.renova.mobile.network.ActivityItem
@@ -67,6 +71,7 @@ import com.renova.mobile.ui.components.formatFriendlyDate
 import com.renova.mobile.ui.components.MonthlyBadgesSection
 import com.renova.mobile.ui.components.BadgeDialog
 import com.renova.mobile.ui.components.RetryableErrorModal
+import com.renova.mobile.ui.components.DetailSheet
 import com.renova.mobile.ui.theme.LocalRenovaColors
 import com.renova.mobile.ui.theme.PoppinsFontFamily
 import com.renova.mobile.ui.theme.RenovaColorScheme
@@ -86,6 +91,7 @@ import com.renova.mobile.ui.tour.LocalTourState
 import androidx.compose.runtime.rememberCoroutineScope
 // --- FIN: IMPORTS DEL TOUR ---
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun HomeScreen(
     viewModel: ActivityViewModel = androidx.lifecycle.viewmodel.compose.viewModel()
@@ -104,6 +110,10 @@ fun HomeScreen(
     var isClaimingBadge by remember { mutableStateOf(false) }
     var showErrorModal by remember { mutableStateOf(false) }
     var errorMessage by remember { mutableStateOf("") }
+
+    // Estado para el modal de actividad
+    var selectedActivity by remember { mutableStateOf<ActivityItem?>(null) }
+    val sheetState = rememberModalBottomSheetState()
 
     // Estados para datos del usuario
     var currentMonthPoints by remember { mutableStateOf(0) }
@@ -225,13 +235,11 @@ fun HomeScreen(
             ) {
                 // Card de puntos
                 Box(modifier = Modifier.onGloballyPositioned { coords ->
-                    // --- INICIO MODIFICACIÓN: Pasar scrollState ---
                     tourState.registerTarget(
                         id = "home_points_card",
                         coordinates = coords,
                         scrollState = scrollState
                     )
-                    // --- FIN MODIFICACIÓN ---
                 }) {
                     AnimatedPointsCard(
                         totalPoints = state.totalPoints,
@@ -245,13 +253,11 @@ fun HomeScreen(
                 // Actividad reciente
                 Column(
                     modifier = Modifier.onGloballyPositioned { coords ->
-                        // --- INICIO MODIFICACIÓN: Pasar scrollState ---
                         tourState.registerTarget(
                             id = "home_recent_activity",
                             coordinates = coords,
                             scrollState = scrollState
                         )
-                        // --- FIN MODIFICACIÓN ---
                     }
                 ) {
                     Column(
@@ -319,7 +325,9 @@ fun HomeScreen(
                                 HistoryActivityCard(
                                     activity = activity,
                                     colors = renovaColors,
-                                    onClick = { }
+                                    onClick = {
+                                        selectedActivity = activity
+                                    }
                                 )
                                 if (index < recentActivities.size - 1) {
                                     Divider(
@@ -339,13 +347,11 @@ fun HomeScreen(
 
                 // Sección de logros mensuales
                 Box(modifier = Modifier.onGloballyPositioned { coords ->
-                    // --- INICIO MODIFICACIÓN: Pasar scrollState ---
                     tourState.registerTarget(
                         id = "home_achievements_section",
                         coordinates = coords,
                         scrollState = scrollState
                     )
-                    // --- FIN MODIFICACIÓN ---
                 }) {
                     MonthlyBadgesSection(
                         badges = monthlyBadges,
@@ -360,6 +366,18 @@ fun HomeScreen(
                     onDispose { tourState.unregisterTarget("home_achievements_section") }
                 }
             }
+        }
+    }
+
+    // Modal de detalle de actividad
+    selectedActivity?.let { activity ->
+        ModalBottomSheet(
+            onDismissRequest = { selectedActivity = null },
+            sheetState = sheetState,
+            containerColor = renovaColors.cardBackground,
+            shape = RoundedCornerShape(topStart = 24.dp, topEnd = 24.dp)
+        ) {
+            DetailSheet(activity = activity)
         }
     }
 
@@ -383,10 +401,8 @@ fun HomeScreen(
 
                         if (response.isSuccessful && response.body()?.success == true) {
                             response.body()?.data?.user?.let { updatedUserData ->
-                                // Actualizar UserData
                                 sessionManager.saveUser(updatedUserData)
 
-                                // Actualizar también User para mantener sincronía
                                 val currentUser = sessionManager.getUser()
                                 currentUser?.let { user ->
                                     val updatedUser = user.copy(
@@ -405,8 +421,6 @@ fun HomeScreen(
 
                                 currentMonthPoints = updatedUserData.points_month
                                 userBadges = updatedUserData.badge
-
-                                // Recargar actividades para actualizar puntos totales
                                 viewModel.loadHistory(1)
                             }
                             selectedBadge = null
@@ -469,7 +483,6 @@ fun HomeScreen(
 
                                 currentMonthPoints = updatedUserData.points_month
                                 userBadges = updatedUserData.badge
-
                                 viewModel.loadHistory(1)
                             }
                             selectedBadge = null
@@ -490,14 +503,14 @@ fun HomeScreen(
     )
 }
 
-// ... (El resto de HomeScreen.kt (HistoryActivityCard, AchievementsSection, etc.) no cambia) ...
-
 @Composable
 fun HistoryActivityCard(
     activity: ActivityItem,
     colors: RenovaColorScheme,
     onClick: () -> Unit = {}
 ) {
+    val context = LocalContext.current
+
     Row(
         modifier = Modifier
             .fillMaxWidth()
@@ -505,11 +518,15 @@ fun HistoryActivityCard(
             .padding(horizontal = 16.dp, vertical = 12.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
-        val (icon, iconColor) = when (activity.type_history) {
-            2 -> Icons.Default.Recycling to RenovaColors.Success
-            1 -> Icons.Default.ShoppingCart to RenovaColors.Primary
-            else -> Icons.Default.History to RenovaColors.Warning
+        // Icono según el tipo de actividad
+        val iconData = when (activity.type_history) {
+            1 -> Pair(Icons.Default.ShoppingCart, RenovaColors.PrimaryColor)
+            2 -> Pair(Icons.Default.Recycling, RenovaColors.PrimaryColor)
+            3 -> Pair(Icons.Default.Person, RenovaColors.PrimaryColor)
+            else -> Pair(Icons.Default.History, RenovaColors.PrimaryColor)
         }
+        val icon = iconData.first
+        val iconColor = iconData.second
 
         Icon(
             imageVector = icon,
@@ -525,8 +542,9 @@ fun HistoryActivityCard(
         ) {
             Text(
                 text = when (activity.type_history) {
-                    2 -> stringResource(R.string.recycling)
                     1 -> stringResource(R.string.reward_exchange)
+                    2 -> stringResource(R.string.recycling)
+                    3 -> stringResource(R.string.points_adjustment)
                     else -> stringResource(R.string.activity)
                 },
                 style = MaterialTheme.typography.bodyMedium.copy(
@@ -539,14 +557,24 @@ fun HistoryActivityCard(
             )
 
             Spacer(modifier = Modifier.height(4.dp))
+
             val subtitleText = when (activity.type_history) {
-                2 -> activity.material_type?.name ?: ""
-                1 -> {
-                    val name = activity.reward?.name ?: "Recompensa"
-                    "1 x $name"
+                1 -> activity.alliance?.name ?: ""
+                2 -> {
+                    val materialName = activity.material_type?.name ?: ""
+                    val baseName = when {
+                        materialName.contains("Plástico", ignoreCase = true)  ->
+                            context.getString(R.string.plastic)
+                        materialName.contains("Aluminio", ignoreCase = true) ->
+                            context.getString(R.string.aluminum)
+                        else -> materialName
+                    }
+                    if (activity.scan?.is_crushed == true) "$baseName - ${context.getString(R.string.crushed)}" else baseName
                 }
+                3 -> context.getString(R.string.manual_adjustment)
                 else -> activity.alliance?.name ?: ""
             }
+
             if (subtitleText.isNotBlank()) {
                 Text(
                     text = subtitleText,
@@ -554,7 +582,7 @@ fun HistoryActivityCard(
                         fontFamily = PoppinsFontFamily
                     ),
                     color = colors.textSecondary,
-                    maxLines = 2,
+                    maxLines = 1,
                     overflow = TextOverflow.Ellipsis
                 )
             }
@@ -571,8 +599,18 @@ fun HistoryActivityCard(
         Column(
             horizontalAlignment = Alignment.End
         ) {
-            val pointsColor = if (activity.points < 0) colors.negativePoints else colors.primaryColor
-            val pointsText = if (activity.type_history == 1) "${activity.points} pts" else "+${activity.points} pts"
+            val pointsColor = when (activity.type_history) {
+                1 -> colors.negativePoints
+                2 -> if (activity.points == 0) colors.textPrimary else colors.primaryColor
+                3 -> if (activity.points < 0) colors.negativePoints else colors.primaryColor
+                else -> if (activity.points == 0) colors.textPrimary else colors.primaryColor
+            }
+            val pointsText = when (activity.type_history) {
+                1 -> if ("${activity.points}".startsWith("-")) "${activity.points}" else "-${activity.points}"
+                2 -> if (activity.points == 0) "-${activity.points}-" else "+${activity.points}"
+                3 -> if (activity.points < 0) "${activity.points}" else "+${activity.points}"
+                else -> if (activity.points == 0) "${activity.points}" else "+${activity.points}"
+            }
             Text(
                 text = pointsText,
                 style = MaterialTheme.typography.bodyLarge.copy(
