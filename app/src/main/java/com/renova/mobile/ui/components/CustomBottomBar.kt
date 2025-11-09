@@ -74,14 +74,10 @@ import androidx.compose.ui.window.DialogProperties
 import android.content.Intent
 import com.renova.mobile.ui.activities.ManualGeneralActivity
 import com.renova.mobile.ui.activities.FaqActivity
-
-// --- IMPORTS AÑADIDOS DE LA RAMA 'tour' ---
 import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.runtime.DisposableEffect
 import com.renova.mobile.ui.tour.LocalTourState
 import androidx.compose.runtime.collectAsState
-import androidx.compose.foundation.ScrollState
-// --- FIN DE IMPORTS ---
 
 private val primaryColor = Color(0xFF08b662)
 private val qrBackgroundColor = Color(0xFF05D16E).copy(alpha = 0.5f)
@@ -162,7 +158,6 @@ fun NavItem(
     }
 }
 
-
 @Composable
 fun CustomBottomBar(
     navController: NavController,
@@ -175,11 +170,9 @@ fun CustomBottomBar(
     var showMenu by remember { mutableStateOf(false) }
     var showManualDialog by remember { mutableStateOf(false) }
 
-    // --- AÑADIDO: Obtener el estado del Tour (de rama 'tour') ---
     val tourState = LocalTourState.current
     val currentStepIndex by tourState.currentStepIndex.collectAsState()
     val isTourActive by tourState.isTourActive.collectAsState()
-    // --- FIN ---
 
     Box(
         modifier = Modifier
@@ -193,123 +186,132 @@ fun CustomBottomBar(
             modifier = Modifier
                 .fillMaxWidth()
                 .offset(y = (-12).dp),
-            colorFilter = ColorFilter.tint(Color(0xFF44E382)) ,
+            colorFilter = ColorFilter.tint(Color(0xFF44E382)),
             contentScale = ContentScale.FillWidth
         )
 
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(horizontal = 16.dp)
+                .padding(horizontal = 8.dp)
                 .offset(y = 8.dp),
-            horizontalArrangement = Arrangement.SpaceEvenly,
+            horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.CenterVertically
         ) {
-            // --- INICIO ---
-            NavItem(
-                item = NavigationItem.Home,
-                isSelected = currentDestination?.route == NavigationItem.Home.route,
-                onClick = {
-                    navController.navigate(NavigationItem.Home.route) {
-                        popUpTo(navController.graph.findStartDestination().id) {
-                            saveState = true
-                        }
-                        launchSingleTop = true
-                        restoreState = true
-                    }
-                }
-            )
-
-            // --- TIENDA ---
-            val isStoreSelected = currentDestination?.hierarchy?.any {
-                it.route == StoreGraph.ROUTE || it.route == StoreGraph.STORE_LIST
-            } == true
-
-            NavItem(
-                item = NavigationItem.Store,
-                isSelected = isStoreSelected,
-                onClick = {
-                    navController.navigate(StoreGraph.ROUTE) {
-                        popUpTo(navController.graph.findStartDestination().id) {
-                            saveState = true
-                        }
-                        launchSingleTop = true
-                        restoreState = true
-                    }
-                },
-                modifier = Modifier.onGloballyPositioned { coords ->
-                    tourState.registerTarget("bottom_bar_store", coords, null)
-                }
-            )
-            DisposableEffect("bottom_bar_store") {
-                onDispose { tourState.unregisterTarget("bottom_bar_store") }
-            }
-
-            Spacer(modifier = Modifier.width(72.dp))
-
-            // --- PERFIL ---
-            NavItem(
-                item = NavigationItem.Profile,
-                isSelected = currentDestination?.route == NavigationItem.Profile.route ||
-                        currentDestination?.route == TopNavigationItem.Activity.route ||
-                        currentDestination?.route == TopNavigationItem.Streak.route,
-                onClick = {
-                    navController.navigate(NavigationItem.Profile.route) {
-                        popUpTo(navController.graph.findStartDestination().id) {
-                            saveState = true
-                        }
-                        launchSingleTop = true
-                        restoreState = true
-                    }
-                },
-                modifier = Modifier.onGloballyPositioned { coords ->
-                    tourState.registerTarget("bottom_bar_profile", coords, null)
-                }
-            )
-            DisposableEffect("bottom_bar_profile") {
-                onDispose { tourState.unregisterTarget("bottom_bar_profile") }
-            }
-
-            // --- MENÚ ---
-            val interactionSource = remember { MutableInteractionSource() }
-            val isPressed by interactionSource.collectIsPressedAsState()
-            Box(
-                modifier = Modifier
-                    .size(72.dp)
-                    .padding(4.dp)
-                    .onGloballyPositioned { coords ->
-                        tourState.registerTarget("bottom_bar_menu", coords, null)
-                    },
-                contentAlignment = Alignment.Center
+            // Izquierda: Inicio y Tienda
+            Row(
+                horizontalArrangement = Arrangement.spacedBy(0.dp),
+                verticalAlignment = Alignment.CenterVertically
             ) {
-                if (isPressed) {
-                    Box(
-                        modifier = Modifier
-                            .size(64.dp)
-                            .clip(CircleShape)
-                            .background(primaryColor.copy(alpha = 0.15f))
-                    )
+                NavItem(
+                    item = NavigationItem.Home,
+                    isSelected = currentDestination?.route == NavigationItem.Home.route,
+                    onClick = {
+                        navController.navigate(NavigationItem.Home.route) {
+                            popUpTo(navController.graph.findStartDestination().id) {
+                                saveState = true
+                            }
+                            launchSingleTop = true
+                            restoreState = true
+                        }
+                    }
+                )
+
+                val isStoreSelected = currentDestination?.hierarchy?.any {
+                    it.route == StoreGraph.ROUTE || it.route == StoreGraph.STORE_LIST
+                } == true
+
+                NavItem(
+                    item = NavigationItem.Store,
+                    isSelected = isStoreSelected,
+                    onClick = {
+                        navController.navigate(StoreGraph.ROUTE) {
+                            popUpTo(navController.graph.findStartDestination().id) {
+                                saveState = true
+                            }
+                            launchSingleTop = true
+                            restoreState = true
+                        }
+                    },
+                    modifier = Modifier.onGloballyPositioned { coords ->
+                        tourState.registerTarget("bottom_bar_store", coords, null)
+                    }
+                )
+                DisposableEffect("bottom_bar_store") {
+                    onDispose { tourState.unregisterTarget("bottom_bar_store") }
                 }
+            }
+
+            // Espacio para el botón QR en el centro
+            Spacer(modifier = Modifier.width(88.dp))
+
+            // Derecha: Perfil y Menú
+            Row(
+                horizontalArrangement = Arrangement.spacedBy(0.dp),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                NavItem(
+                    item = NavigationItem.Profile,
+                    isSelected = currentDestination?.route == NavigationItem.Profile.route ||
+                            currentDestination?.route == TopNavigationItem.Activity.route ||
+                            currentDestination?.route == TopNavigationItem.Streak.route,
+                    onClick = {
+                        navController.navigate(NavigationItem.Profile.route) {
+                            popUpTo(navController.graph.findStartDestination().id) {
+                                saveState = true
+                            }
+                            launchSingleTop = true
+                            restoreState = true
+                        }
+                    },
+                    modifier = Modifier.onGloballyPositioned { coords ->
+                        tourState.registerTarget("bottom_bar_profile", coords, null)
+                    }
+                )
+                DisposableEffect("bottom_bar_profile") {
+                    onDispose { tourState.unregisterTarget("bottom_bar_profile") }
+                }
+
+                val interactionSource = remember { MutableInteractionSource() }
+                val isPressed by interactionSource.collectIsPressedAsState()
                 Box(
                     modifier = Modifier
-                        .fillMaxSize()
-                        .clip(CircleShape)
-                        .clickable(
-                            interactionSource = interactionSource,
-                            indication = null
-                        ) { showMenu = true },
+                        .size(72.dp)
+                        .padding(4.dp)
+                        .onGloballyPositioned { coords ->
+                            tourState.registerTarget("bottom_bar_menu", coords, null)
+                        },
                     contentAlignment = Alignment.Center
                 ) {
-                    Icon(
-                        imageVector = Icons.Filled.Dashboard,
-                        contentDescription = "Menú",
-                        tint = Color(0xFF05D16E),
-                        modifier = Modifier.size(28.dp)
-                    )
+                    if (isPressed) {
+                        Box(
+                            modifier = Modifier
+                                .size(64.dp)
+                                .clip(CircleShape)
+                                .background(primaryColor.copy(alpha = 0.15f))
+                        )
+                    }
+                    Box(
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .clip(CircleShape)
+                            .clickable(
+                                interactionSource = interactionSource,
+                                indication = null
+                            ) { showMenu = true },
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Icon(
+                            imageVector = Icons.Filled.Dashboard,
+                            contentDescription = "Menú",
+                            tint = Color(0xFF05D16E),
+                            modifier = Modifier.size(28.dp)
+                        )
+                    }
                 }
-            }
-            DisposableEffect("bottom_bar_menu") {
-                onDispose { tourState.unregisterTarget("bottom_bar_menu") }
+                DisposableEffect("bottom_bar_menu") {
+                    onDispose { tourState.unregisterTarget("bottom_bar_menu") }
+                }
             }
         }
 
@@ -366,7 +368,6 @@ fun CustomBottomBar(
             onDispose { tourState.unregisterTarget("bottom_bar_qr") }
         }
 
-        // --- Panel lateral derecho del menú ---
         if (showMenu) {
             Dialog(
                 onDismissRequest = { showMenu = false },
