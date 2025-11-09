@@ -41,8 +41,6 @@ import coil.decode.GifDecoder
 import coil.decode.ImageDecoderDecoder
 import coil.request.ImageRequest
 import com.renova.mobile.R
-import com.renova.mobile.navigation.StoreGraph
-import com.renova.mobile.network.Alianza
 import com.renova.mobile.network.TypeShop
 import com.renova.mobile.ui.components.AlianzaCard
 import com.renova.mobile.ui.components.CategoryCard
@@ -58,7 +56,6 @@ import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.runtime.rememberCoroutineScope
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.delay
-
 
 @Composable
 fun StoreScreen(
@@ -124,46 +121,39 @@ fun StoreScreen(
         derivedStateOf { tourState.currentStep?.targetId }
     }
 
-    // MODIFICACIÓN: Ahora observamos currentStepIndex directamente en lugar de solo el targetId
+    // Lógica de scroll para el tour
     LaunchedEffect(isTourActive, currentStepIndex, activeCategories.isNotEmpty(), paginatedAlianzas.isNotEmpty()) {
         if (isTourActive && currentStepTargetId != null) {
-            // Pequeño delay para asegurar que el target se haya registrado
             delay(100)
 
-            // Cálculo de índices
             var categoriesGridIndex = -1
-            var alliancesTitleIndex = 3
-            var firstAllianceIndex = 4
+            var alliancesSectionIndex = 3
 
             if (activeCategories.isNotEmpty()) {
-                categoriesGridIndex = 4
-                alliancesTitleIndex = 5
-                firstAllianceIndex = 6
+                categoriesGridIndex = 3
+                alliancesSectionIndex = 4
             }
 
-            // Ejecutar scroll según el target actual
             when (currentStepTargetId) {
                 "store_categories" -> {
                     if (categoriesGridIndex != -1) {
                         lazyListState.animateScrollToItem(
                             index = categoriesGridIndex,
-                            scrollOffset = -50
+                            scrollOffset = 0
                         )
                     }
                 }
-
-                "store_alliances_title" -> {
+                "store_alliances_section" -> {
                     lazyListState.animateScrollToItem(
-                        index = alliancesTitleIndex,
-                        scrollOffset = -50
+                        index = alliancesSectionIndex,
+                        scrollOffset = 0
                     )
                 }
-
                 "store_first_alliance" -> {
                     if (paginatedAlianzas.isNotEmpty()) {
                         lazyListState.animateScrollToItem(
-                            index = firstAllianceIndex,
-                            scrollOffset = -50
+                            index = alliancesSectionIndex,
+                            scrollOffset = 0
                         )
                     }
                 }
@@ -183,9 +173,9 @@ fun StoreScreen(
             modifier = Modifier
                 .padding(horizontal = 16.dp)
                 .imePadding(),
-            verticalArrangement = Arrangement.spacedBy(16.dp)
+            verticalArrangement = Arrangement.spacedBy(8.dp)
         ) {
-            item { Spacer(modifier = Modifier.height(8.dp)) }
+            item { Spacer(modifier = Modifier.height(5.3.dp)) }
 
             item {
                 SearchBar(
@@ -196,60 +186,66 @@ fun StoreScreen(
             }
             item { DiscoverSection(colors = colors) }
 
+            // Sección de categorías
             if (activeCategories.isNotEmpty()) {
                 item {
-                    Column {
-                        Text(
-                            text = stringResource(R.string.categories),
-                            fontSize = 20.sp,
-                            fontWeight = FontWeight.Bold,
-                            fontFamily = PoppinsFontFamily,
-                            color = colors.textPrimary
-                        )
-                        Text(
-                            text = stringResource(R.string.store_subtitle),
-                            fontSize = 13.sp,
-                            fontFamily = PoppinsFontFamily,
-                            color = colors.textSecondary,
-                            modifier = Modifier.padding(top = 4.dp)
-                        )
-                    }
-                }
+                    Column(
+                        modifier = Modifier.onGloballyPositioned { coords ->
+                            tourState.registerTarget("store_categories", coords)
+                        }
+                    ) {
+                        Column {
+                            Text(
+                                text = stringResource(R.string.categories),
+                                fontSize = 20.sp,
+                                fontWeight = FontWeight.Bold,
+                                fontFamily = PoppinsFontFamily,
+                                color = colors.textPrimary
+                            )
+                            Text(
+                                text = stringResource(R.string.store_subtitle),
+                                fontSize = 13.sp,
+                                fontFamily = PoppinsFontFamily,
+                                color = colors.textSecondary,
+                                modifier = Modifier.padding(top = 4.dp)
+                            )
+                        }
 
-                item {
-                    Box(modifier = Modifier.onGloballyPositioned { coords ->
-                        tourState.registerTarget("store_categories", coords)
-                    }) {
-                        LazyVerticalGrid(
-                            columns = GridCells.Fixed(4),
-                            modifier = Modifier
-                                .height(200.dp),
-                            horizontalArrangement = Arrangement.spacedBy(8.dp),
-                            verticalArrangement = Arrangement.spacedBy(8.dp)
-                        ) {
-                            item {
-                                val cardColor = RenovaColors.Primary
-                                CategoryCard(
-                                    category = TypeShop(id = -1, name = stringResource(R.string.all_categories)),
-                                    isSelected = selectedCategoryId == null,
-                                    onClick = { selectedCategoryId = null },
-                                    cardColor = cardColor
-                                )
-                            }
+                        Spacer(modifier = Modifier.height(8.dp))
 
-                            items(activeCategories.take(7)) { category ->
-                                val cardColor = colors.categoryCardBackgrounds[category.id % colors.categoryCardBackgrounds.size]
-                                CategoryCard(
-                                    category = category,
-                                    isSelected = selectedCategoryId == category.id,
-                                    onClick = {
-                                        selectedCategoryId = if (selectedCategoryId == category.id) null else category.id
-                                    },
-                                    cardColor = cardColor
-                                )
+                        Box {
+                            LazyVerticalGrid(
+                                columns = GridCells.Fixed(4),
+                                modifier = Modifier
+                                    .height(200.dp),
+                                horizontalArrangement = Arrangement.spacedBy(8.dp),
+                                verticalArrangement = Arrangement.spacedBy(8.dp)
+                            ) {
+                                item {
+                                    val cardColor = RenovaColors.Primary
+                                    CategoryCard(
+                                        category = TypeShop(id = -1, name = stringResource(R.string.all_categories)),
+                                        isSelected = selectedCategoryId == null,
+                                        onClick = { selectedCategoryId = null },
+                                        cardColor = cardColor
+                                    )
+                                }
+
+                                items(activeCategories.take(7)) { category ->
+                                    val cardColor = colors.categoryCardBackgrounds[category.id % colors.categoryCardBackgrounds.size]
+                                    CategoryCard(
+                                        category = category,
+                                        isSelected = selectedCategoryId == category.id,
+                                        onClick = {
+                                            selectedCategoryId = if (selectedCategoryId == category.id) null else category.id
+                                        },
+                                        cardColor = cardColor
+                                    )
+                                }
                             }
                         }
                     }
+
                     DisposableEffect(Unit) {
                         onDispose {
                             tourState.unregisterTarget("store_categories")
@@ -258,89 +254,133 @@ fun StoreScreen(
                 }
             }
 
+            // Sección de comercios aliados (Título + 3 primeros)
             item {
-                Column (
+                Column(
                     modifier = Modifier.onGloballyPositioned { coords ->
-                        tourState.registerTarget("store_alliances_title", coords)
+                        tourState.registerTarget("store_alliances_section", coords)
                     }
-                ){
-                    Text(
-                        text = stringResource(R.string.featured_stores),
-                        fontSize = 20.sp,
-                        fontWeight = FontWeight.Bold,
-                        fontFamily = PoppinsFontFamily,
-                        color = colors.textPrimary
-                    )
-                    Text(
-                        text = stringResource(R.string.store_rewards_subtitle),
-                        fontSize = 13.sp,
-                        fontFamily = PoppinsFontFamily,
-                        color = colors.textSecondary,
-                        modifier = Modifier.padding(top = 4.dp)
-                    )
-                }
-                DisposableEffect(Unit) {
-                    onDispose {
-                        tourState.unregisterTarget("store_alliances_title")
+                ) {
+                    Column {
+                        Text(
+                            text = stringResource(R.string.featured_stores),
+                            fontSize = 20.sp,
+                            fontWeight = FontWeight.Bold,
+                            fontFamily = PoppinsFontFamily,
+                            color = colors.textPrimary
+                        )
+                        Text(
+                            text = stringResource(R.string.store_rewards_subtitle),
+                            fontSize = 13.sp,
+                            fontFamily = PoppinsFontFamily,
+                            color = colors.textSecondary,
+                            modifier = Modifier.padding(top = 4.dp)
+                        )
                     }
-                }
-            }
 
-            when {
-                uiState.isLoading -> item { LoadingSection(colors = colors) }
-                uiState.error != null -> item { ErrorSection(message = uiState.error, onRetry = { viewModel.retryLoading() }, colors = colors) }
-                filteredAlianzas.isEmpty() -> item { EmptySection(colors = colors) }
-                else -> {
-                    itemsIndexed(paginatedAlianzas, key = { _, alianza -> alianza.id }) { index, alianza ->
-                        val logoColor = colors.allianceLogoBackgrounds[alianza.id % colors.allianceLogoBackgrounds.size]
+                    Spacer(modifier = Modifier.height(8.dp))
 
-                        val itemModifier = if (index == 0) {
-                            Modifier.onGloballyPositioned { coords ->
-                                tourState.registerTarget("store_first_alliance", coords)
-                            }
-                        } else {
-                            Modifier
-                        }
+                    when {
+                        uiState.isLoading -> LoadingSection(colors = colors)
+                        uiState.error != null -> ErrorSection(
+                            message = uiState.error,
+                            onRetry = { viewModel.retryLoading() },
+                            colors = colors
+                        )
+                        filteredAlianzas.isEmpty() -> EmptySection(colors = colors)
+                        else -> {
+                            val firstThree = paginatedAlianzas.take(3)
+                            Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                                firstThree.forEachIndexed { index, alianza ->
+                                    val logoColor = colors.allianceLogoBackgrounds[alianza.id % colors.allianceLogoBackgrounds.size]
 
-                        if (index == 0) {
-                            DisposableEffect(Unit) {
-                                onDispose {
-                                    tourState.unregisterTarget("store_first_alliance")
+                                    val itemModifier = if (index == 0) {
+                                        Modifier.onGloballyPositioned { coords ->
+                                            tourState.registerTarget("store_first_alliance", coords)
+                                        }
+                                    } else {
+                                        Modifier
+                                    }
+
+                                    if (index == 0) {
+                                        DisposableEffect(Unit) {
+                                            onDispose {
+                                                tourState.unregisterTarget("store_first_alliance")
+                                            }
+                                        }
+                                    }
+
+                                    Column(modifier = itemModifier) {
+                                        AlianzaCard(
+                                            alianza = alianza,
+                                            categories = uiState.categories,
+                                            colors = colors,
+                                            logoColor = logoColor,
+                                            onClick = { navController.navigate("reward_screen/${alianza.id}") }
+                                        )
+
+                                        if (index < paginatedAlianzas.size - 1) {
+                                            Divider(
+                                                color = RenovaColors.PrimaryColor,
+                                                thickness = 1.dp,
+                                                modifier = Modifier.padding(vertical = 3.dp)
+                                            )
+                                        }
+                                    }
                                 }
                             }
                         }
-                        Column (modifier = itemModifier){
-                            AlianzaCard(
-                                alianza = alianza,
-                                categories = uiState.categories,
-                                colors = colors,
-                                logoColor = logoColor,
-                                onClick = { navController.navigate("reward_screen/${alianza.id}") }
-                            )
-
-                            if (index < paginatedAlianzas.size - 1) {
-                                Divider(
-                                    color = RenovaColors.PrimaryColor,
-                                    thickness = 1.dp,
-                                    modifier = Modifier.padding(vertical = 3.dp)
-                                )
-                            }
-                        }
                     }
+                }
 
-                    if (totalPages > 1) {
-                        item {
-                            PaginationControls(
-                                currentPage = currentPage,
-                                totalPages = totalPages,
-                                isLoading = uiState.isLoading,
-                                onPreviousPage = { viewModel.previousPage() },
-                                onNextPage = { viewModel.nextPage() }
-                            )
-                        }
+                DisposableEffect(Unit) {
+                    onDispose {
+                        tourState.unregisterTarget("store_alliances_section")
                     }
                 }
             }
+
+            // Resto de los comercios (después de los 3 primeros)
+            val remainingAlianzas = paginatedAlianzas.drop(3)
+            itemsIndexed(
+                items = remainingAlianzas,
+                key = { _, alianza -> "alianza_${alianza.id}" }
+            ) { index, alianza ->
+                val overallIndex = index + 3
+                val logoColor = colors.allianceLogoBackgrounds[alianza.id % colors.allianceLogoBackgrounds.size]
+
+                Column(modifier = Modifier) {
+                    AlianzaCard(
+                        alianza = alianza,
+                        categories = uiState.categories,
+                        colors = colors,
+                        logoColor = logoColor,
+                        onClick = { navController.navigate("reward_screen/${alianza.id}") }
+                    )
+
+                    if (overallIndex < paginatedAlianzas.size - 1) {
+                        Divider(
+                            color = RenovaColors.PrimaryColor,
+                            thickness = 1.dp,
+                            modifier = Modifier.padding(vertical = 3.dp)
+                        )
+                    }
+                }
+            }
+
+            // Controles de paginación
+            if (totalPages > 1 && !uiState.isLoading && paginatedAlianzas.isNotEmpty()) {
+                item {
+                    PaginationControls(
+                        currentPage = currentPage,
+                        totalPages = totalPages,
+                        isLoading = uiState.isLoading,
+                        onPreviousPage = { viewModel.previousPage() },
+                        onNextPage = { viewModel.nextPage() }
+                    )
+                }
+            }
+
             item { Spacer(modifier = Modifier.height(80.dp)) }
         }
     }
@@ -462,7 +502,6 @@ private fun SearchBar(
         )
     )
 }
-
 
 @Composable
 private fun DiscoverSection(
