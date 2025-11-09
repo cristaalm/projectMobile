@@ -388,11 +388,11 @@
     <string name="tour_desc_navigating">Cargando siguiente pantalla...</string>
 
     <string name="tour_title_home_points">Tus Puntos Totales</string>
-    <string name="tour_desc_home_points">¡Bienvenido! Esta tarjeta muestra el total de puntos que has ganado reciclando. ¡Mira cómo crecen!</string>
+    <string name="tour_desc_home_points">Esta tarjeta muestra el total de puntos que has ganado reciclando. ¡Mira cómo crecen!</string>
     <string name="tour_title_home_activity">Tu Actividad Reciente</string>
     <string name="tour_desc_home_activity">Aquí verás un resumen de tus últimos movimientos, como reciclajes y recompensas.</string>
     <string name="tour_title_home_achievements">Tus Logros</string>
-    <string name="tour_desc_home_achievements">¡Mientras más reciclas, más logros desbloqueas! Toca uno para ver los detalles.</string>
+    <string name="tour_desc_home_achievements">¡Mientras más reciclas, más logros desbloqueas! Puedes tocar uno para ver los detalles.</string>
 
     <string name="tour_title_nav_main">Vamos a la Tienda</string>
     <string name="tour_desc_nav_main">Este es el menú principal. Toca \"Sig.\" para ver dónde canjear tus puntos.</string>
@@ -413,12 +413,12 @@
     <string name="tour_title_qr_container">Tus Códigos de Acceso</string>
     <string name="tour_desc_qr_container">Esta pantalla muestra tus códigos. Usa el QR para identificarte en contenedores y el código de barras para canjear en tiendas.</string>
     <string name="tour_title_qr_barcode">Intercambia entre códigos</string>
-    <string name="tour_desc_qr_barcode">Toca este botón para cambiar entre tu código QR y tu código de barras.</string>
+    <string name="tour_desc_qr_barcode">Puedes tocar este botón para cambiar entre tu código QR y tu código de barras.</string>
 
     <string name="tour_title_profile_language">Cambia tu Idioma</string>
     <string name="tour_desc_profile_language">Desde aquí puedes cambiar el idioma de la aplicación.</string>
     <string name="tour_title_profile_info">Tu Información</string>
-    <string name="tour_desc_profile_info">Aquí puedes ver tus datos personales y el estado de tu verificación de identidad.</string>
+    <string name="tour_desc_profile_info">Aquí puedes ver tus datos personales.</string>
 
     <string name="tour_title_activity_points">Resumen de Puntos</string>
     <string name="tour_desc_activity_points">Aquí tienes el total de puntos que has acumulado.</string>
@@ -507,7 +507,7 @@
     <string name="tour_title_welcome">¡Renova te da la bienvenida!</string>
     <string name="tour_desc_welcome">Estamos emocionados de tenerte aquí. Te mostraremos las funciones principales para que empieces a reciclar y ganar recompensas. Presiona \"Sig.\" para comenzar.</string>
     <string name="tour_title_menu_button">Menú de Opciones</string>
-    <string name="tour_desc_menu_button">Toca aquí para ver más opciones, como la ayuda y el cierre de sesión.</string>
+    <string name="tour_desc_menu_button">Puedes tocar aquí para ver más opciones, como la ayuda y el cierre de sesión.</string>
     <string name="tour_title_side_menu">Menú Principal</string>
     <string name="tour_desc_side_menu">Aquí puedes cerrar sesión y encontrar preguntas frecuentes.</string>
     <string name="tour_title_help_fab">Botón de Ayuda</string>

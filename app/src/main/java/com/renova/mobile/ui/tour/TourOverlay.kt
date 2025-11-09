@@ -153,7 +153,7 @@ fun TourOverlay(
                 currentStep?.isWelcomeStep != true
             ) {
                 //  Recorte más pequeño
-                val inflatedRect = targetInfo!!.rect.inflate(with(density) { 1.dp.toPx() })
+                val inflatedRect = targetInfo!!.rect.inflate(with(density) { 0.4.dp.toPx() })
 
                 drawRoundRect(
                     color = scrimColor,

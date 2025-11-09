@@ -6,18 +6,11 @@ import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
-// --- INICIO MODIFICACIÓN: Imports añadidos ---
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.foundation.lazy.rememberLazyListState
-// --- FIN MODIFICACIÓN ---
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Refresh
-import androidx.compose.material.icons.filled.ShoppingCart
-import androidx.compose.material.icons.filled.Recycling
-import androidx.compose.material.icons.filled.History
-import androidx.compose.material.icons.filled.Person
+import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
 import androidx.compose.material3.pulltorefresh.*
 import androidx.compose.runtime.*
@@ -28,14 +21,11 @@ import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Paint
 import androidx.compose.ui.graphics.drawscope.drawIntoCanvas
-import androidx.compose.ui.graphics.graphicsLayer
-import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
@@ -47,18 +37,16 @@ import com.renova.mobile.ui.theme.PoppinsFontFamily
 import com.renova.mobile.ui.theme.RenovaColorScheme
 import com.renova.mobile.ui.theme.RenovaColors
 import com.renova.mobile.ui.viewmodels.ActivityViewModel
-import java.text.SimpleDateFormat
-import java.util.*
 import com.renova.mobile.ui.components.*
-
 import androidx.compose.ui.layout.onGloballyPositioned
 import com.renova.mobile.ui.tour.LocalTourState
-import androidx.compose.foundation.ScrollState
 import androidx.compose.runtime.DisposableEffect
-
+import androidx.compose.runtime.derivedStateOf
+import androidx.compose.ui.graphics.toArgb
+import androidx.compose.ui.text.style.TextAlign
+import kotlinx.coroutines.delay
 
 fun Modifier.greenShadow(
-    // ... (Esta función no cambia) ...
     color: Color = Color(0xFF4CAF50),
     alpha: Float = 0.15f,
     borderRadius: Dp = 16.dp,
@@ -96,14 +84,12 @@ fun Modifier.greenShadow(
 fun ActivityScreen(
     viewModel: ActivityViewModel = androidx.lifecycle.viewmodel.compose.viewModel()
 ) {
-    // ... (La lógica de ActivityScreen (states, modals, etc) no cambia) ...
     val renovaColors = LocalRenovaColors.current
     val state by viewModel.state.collectAsState()
     val pullToRefreshState = rememberPullToRefreshState()
     val sheetState = rememberModalBottomSheetState()
     var selectedActivity by remember { mutableStateOf<ActivityItem?>(null) }
     var showErrorModal by remember { mutableStateOf(false) }
-
     var isFirstLoad by remember { mutableStateOf(true) }
 
     LaunchedEffect(Unit) {
@@ -122,18 +108,14 @@ fun ActivityScreen(
         }
     }
 
-    Box(
-        modifier = Modifier.fillMaxSize()
-    ) {
+    Box(modifier = Modifier.fillMaxSize()) {
         when {
             state.isLoading && state.activities.isEmpty() -> {
                 LoadingState(renovaColors)
             }
-
             state.error != null && state.activities.isEmpty() -> {
                 Box(modifier = Modifier.fillMaxSize())
             }
-
             else -> {
                 PullToRefreshBox(
                     isRefreshing = state.isLoading && state.activities.isNotEmpty(),
@@ -211,20 +193,54 @@ private fun ActivityContent(
     onActivityClick: (ActivityItem) -> Unit
 ) {
     val tourState = LocalTourState.current
-    // --- INICIO MODIFICACIÓN: Añadir LazyListState ---
     val lazyListState = rememberLazyListState()
-    // --- FIN MODIFICACIÓN ---
+
+    val isTourActive by tourState.isTourActive.collectAsState()
+    val currentStepIndex by tourState.currentStepIndex.collectAsState()
+
+    val currentStepTargetId by remember(tourState) {
+        derivedStateOf { tourState.currentStep?.targetId }
+    }
+
+    LaunchedEffect(isTourActive, currentStepIndex, currentStepTargetId, state.activities.isNotEmpty()) {
+        if (isTourActive && currentStepTargetId != null) {
+            delay(100)
+
+            val pointsCardIndex = 0
+            val materialsRowIndex = 1
+            val historySectionIndex = 2
+
+            when (currentStepTargetId) {
+                "activity_points_card" -> {
+                    lazyListState.animateScrollToItem(
+                        index = pointsCardIndex,
+                        scrollOffset = 0
+                    )
+                }
+                "activity_materials_row" -> {
+                    lazyListState.animateScrollToItem(
+                        index = materialsRowIndex,
+                        scrollOffset = 0
+                    )
+                }
+                "activity_history_title" -> {
+                    lazyListState.animateScrollToItem(
+                        index = historySectionIndex,
+                        scrollOffset = 0
+                    )
+                }
+            }
+        }
+    }
 
     LazyColumn(
-        // --- INICIO MODIFICACIÓN: Pasar el estado ---
         state = lazyListState,
-        // --- FIN MODIFICACIÓN ---
         modifier = Modifier
             .fillMaxSize()
             .background(Color.Transparent),
         contentPadding = PaddingValues(bottom = 16.dp)
     ) {
-        item { // <-- ÍNDICE 0
+        item {
             androidx.compose.animation.AnimatedVisibility(
                 visible = true,
                 enter = androidx.compose.animation.fadeIn(
@@ -235,14 +251,12 @@ private fun ActivityContent(
                 )
             ) {
                 Box(modifier = Modifier.onGloballyPositioned { coords ->
-                    // --- INICIO MODIFICACIÓN ---
                     tourState.registerTarget(
                         id = "activity_points_card",
                         coordinates = coords,
                         lazyListState = lazyListState,
                         itemIndex = 0
                     )
-                    // --- FIN MODIFICACIÓN ---
                 }) {
                     AnimatedPointsCardActivity(
                         totalPoints = state.totalPoints,
@@ -251,9 +265,12 @@ private fun ActivityContent(
                     )
                 }
             }
+            DisposableEffect(Unit) {
+                onDispose { tourState.unregisterTarget("activity_points_card") }
+            }
         }
 
-        item { // <-- ÍNDICE 1
+        item {
             androidx.compose.animation.AnimatedVisibility(
                 visible = true,
                 enter = androidx.compose.animation.fadeIn(
@@ -264,170 +281,155 @@ private fun ActivityContent(
                 )
             ) {
                 Column(
-                    modifier = Modifier.padding(top = 0.dp, start = 20.dp, end = 20.dp, bottom = 8.dp)
-                ) {
-                    Text(
-                        text = stringResource(R.string.recycling_materials),
-                        style = MaterialTheme.typography.titleLarge,
-                        color = renovaColors.textPrimary,
-                        fontWeight = FontWeight.Bold,
-                        fontSize = 21.sp,
-                        fontFamily = PoppinsFontFamily
-                    )
-                    Text(
-                        text = stringResource(R.string.earn_points_recycling),
-                        style = MaterialTheme.typography.bodyMedium,
-                        color = renovaColors.textSecondary,
-                        fontSize = 14.sp,
-                        fontFamily = PoppinsFontFamily
-                    )
-                }
-            }
-        }
-
-        item { // <-- ÍNDICE 2
-            androidx.compose.animation.AnimatedVisibility(
-                visible = true,
-                enter = androidx.compose.animation.fadeIn(
-                    animationSpec = androidx.compose.animation.core.tween(durationMillis = 600, delayMillis = 200)
-                ) + androidx.compose.animation.slideInVertically(
-                    initialOffsetY = { -20 },
-                    animationSpec = androidx.compose.animation.core.tween(durationMillis = 600, delayMillis = 200)
-                )
-            ) {
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(horizontal = 20.dp, vertical = 8.dp)
-                        .onGloballyPositioned { coords ->
-                            // --- INICIO MODIFICACIÓN ---
-                            tourState.registerTarget(
-                                id = "activity_materials_row",
-                                coordinates = coords,
-                                lazyListState = lazyListState,
-                                itemIndex = 2
-                            )
-                            // --- FIN MODIFICACIÓN ---
-                        },
-                    horizontalArrangement = Arrangement.spacedBy(12.dp)
-                ) {
-                    MaterialStatCard(
-                        title = stringResource(R.string.plastic),
-                        count = state.totalPlastic,
-                        icon = R.drawable.bottle,
-                        backgroundRes = R.drawable.fondo_chico,
-                        modifier = Modifier.weight(1f)
-                    )
-                    MaterialStatCard(
-                        title = stringResource(R.string.aluminum),
-                        count = state.totalAluminum,
-                        icon = R.drawable.can,
-                        backgroundRes = R.drawable.fondo_botella,
-                        modifier = Modifier.weight(1f)
-                    )
-                    MaterialStatCard(
-                        title = "Total",
-                        count = state.totalPlastic + state.totalAluminum,
-                        icon = R.drawable.bottle,
-                        backgroundRes = R.drawable.fondo_comercio,
-                        showIcon = false,
-                        modifier = Modifier.weight(1f)
-                    )
-                }
-            }
-        }
-
-        item { // <-- ÍNDICE 3
-            androidx.compose.animation.AnimatedVisibility(
-                visible = true,
-                enter = androidx.compose.animation.fadeIn(
-                    animationSpec = androidx.compose.animation.core.tween(durationMillis = 600, delayMillis = 300)
-                ) + androidx.compose.animation.slideInVertically(
-                    initialOffsetY = { -20 },
-                    animationSpec = androidx.compose.animation.core.tween(durationMillis = 600, delayMillis = 300)
-                )
-            ) {
-                Column(
-                    modifier = Modifier
-                        .padding(start = 20.dp, top = 12.dp, bottom = 8.dp)
-                ) {
-                    Text(
-                        text = stringResource(R.string.history),
-                        style = MaterialTheme.typography.titleLarge,
-                        color = renovaColors.textPrimary,
-                        fontWeight = FontWeight.Bold,
-                        fontSize = 21.sp,
-                        fontFamily = PoppinsFontFamily
-                    )
-                    Text(
-                        text = stringResource(R.string.activity_record),
-                        style = MaterialTheme.typography.bodyMedium,
-                        color = renovaColors.textSecondary,
-                        fontSize = 14.sp,
-                        fontFamily = PoppinsFontFamily
-                    )
-                }
-            }
-        }
-
-        item { // <-- ÍNDICE 4
-            DisposableEffect("activity_points_card") {
-                onDispose { tourState.unregisterTarget("activity_points_card") }
-            }
-            DisposableEffect("activity_materials_row") {
-                onDispose { tourState.unregisterTarget("activity_materials_row") }
-            }
-            DisposableEffect("activity_history_title") {
-                onDispose { tourState.unregisterTarget("activity_history_title") }
-            }
-        }
-
-        item { // <-- ÍNDICE 5
-            Column(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .onGloballyPositioned { coords ->
-                        // --- INICIO MODIFICACIÓN ---
+                    modifier = Modifier.onGloballyPositioned { coords ->
                         tourState.registerTarget(
-                            id = "activity_history_title",
+                            id = "activity_materials_row",
                             coordinates = coords,
                             lazyListState = lazyListState,
-                            itemIndex = 5
+                            itemIndex = 1
                         )
-                        // --- FIN MODIFICACIÓN ---
                     }
-            ) {
-                if (state.activities.isEmpty()) {
-                    EmptyStateInline(renovaColors = renovaColors)
-                } else {
+                ) {
                     Column(
+                        modifier = Modifier.padding(top = 0.dp, start = 20.dp, end = 20.dp, bottom = 8.dp)
+                    ) {
+                        Text(
+                            text = stringResource(R.string.recycling_materials),
+                            style = MaterialTheme.typography.titleLarge,
+                            color = renovaColors.textPrimary,
+                            fontWeight = FontWeight.Bold,
+                            fontSize = 21.sp,
+                            fontFamily = PoppinsFontFamily
+                        )
+                        Text(
+                            text = stringResource(R.string.earn_points_recycling),
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = renovaColors.textSecondary,
+                            fontSize = 14.sp,
+                            fontFamily = PoppinsFontFamily
+                        )
+                    }
+
+                    Row(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .padding(horizontal = 24.dp),
-                        verticalArrangement = Arrangement.spacedBy(0.dp)
+                            .padding(horizontal = 20.dp, vertical = 8.dp),
+                        horizontalArrangement = Arrangement.spacedBy(12.dp)
                     ) {
-                        state.activities.forEachIndexed { index, activity ->
-                            ActivityHistoryCard(
-                                activity = activity,
-                                colors = renovaColors,
-                                onClick = {
-                                    onActivityClick(activity)
-                                }
-                            )
-                            if (index < state.activities.size - 1) {
-                                Divider(
-                                    color = RenovaColors.PrimaryColor,
-                                    thickness = 1.dp,
-                                    modifier = Modifier.padding(vertical = 3.dp)
+                        MaterialStatCard(
+                            title = stringResource(R.string.plastic),
+                            count = state.totalPlastic,
+                            icon = R.drawable.bottle,
+                            backgroundRes = R.drawable.fondo_chico,
+                            modifier = Modifier.weight(1f)
+                        )
+                        MaterialStatCard(
+                            title = stringResource(R.string.aluminum),
+                            count = state.totalAluminum,
+                            icon = R.drawable.can,
+                            backgroundRes = R.drawable.fondo_botella,
+                            modifier = Modifier.weight(1f)
+                        )
+                        MaterialStatCard(
+                            title = "Total",
+                            count = state.totalPlastic + state.totalAluminum,
+                            icon = R.drawable.bottle,
+                            backgroundRes = R.drawable.fondo_comercio,
+                            showIcon = false,
+                            modifier = Modifier.weight(1f)
+                        )
+                    }
+                }
+            }
+            DisposableEffect(Unit) {
+                onDispose { tourState.unregisterTarget("activity_materials_row") }
+            }
+        }
+
+        item {
+            Column(
+                modifier = Modifier.onGloballyPositioned { coords ->
+                    tourState.registerTarget(
+                        id = "activity_history_title",
+                        coordinates = coords,
+                        lazyListState = lazyListState,
+                        itemIndex = 2
+                    )
+                }
+            ) {
+                androidx.compose.animation.AnimatedVisibility(
+                    visible = true,
+                    enter = androidx.compose.animation.fadeIn(
+                        animationSpec = androidx.compose.animation.core.tween(durationMillis = 600, delayMillis = 300)
+                    ) + androidx.compose.animation.slideInVertically(
+                        initialOffsetY = { -20 },
+                        animationSpec = androidx.compose.animation.core.tween(durationMillis = 600, delayMillis = 300)
+                    )
+                ) {
+                    Column(
+                        modifier = Modifier
+                            .padding(start = 20.dp, top = 12.dp, bottom = 8.dp)
+                    ) {
+                        Text(
+                            text = stringResource(R.string.history),
+                            style = MaterialTheme.typography.titleLarge,
+                            color = renovaColors.textPrimary,
+                            fontWeight = FontWeight.Bold,
+                            fontSize = 21.sp,
+                            fontFamily = PoppinsFontFamily
+                        )
+                        Text(
+                            text = stringResource(R.string.activity_record),
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = renovaColors.textSecondary,
+                            fontSize = 14.sp,
+                            fontFamily = PoppinsFontFamily
+                        )
+                    }
+                }
+
+                Spacer(modifier = Modifier.height(8.dp))
+
+                Column(modifier = Modifier.fillMaxWidth()) {
+                    if (state.activities.isEmpty()) {
+                        EmptyStateInline(renovaColors = renovaColors)
+                    } else {
+                        Column(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(horizontal = 24.dp),
+                            verticalArrangement = Arrangement.spacedBy(0.dp)
+                        ) {
+                            state.activities.forEachIndexed { index, activity ->
+                                ActivityHistoryCard(
+                                    activity = activity,
+                                    colors = renovaColors,
+                                    onClick = {
+                                        onActivityClick(activity)
+                                    }
                                 )
+                                if (index < state.activities.size - 1) {
+                                    Divider(
+                                        color = RenovaColors.PrimaryColor,
+                                        thickness = 1.dp,
+                                        modifier = Modifier.padding(vertical = 3.dp)
+                                    )
+                                }
                             }
                         }
                     }
                 }
             }
+
+            DisposableEffect(Unit) {
+                onDispose {
+                    tourState.unregisterTarget("activity_history_title")
+                }
+            }
         }
+
         if (state.activities.isNotEmpty()) {
-            item { // <-- ÍNDICE 6 (condicional)
+            item {
                 androidx.compose.animation.AnimatedVisibility(
                     visible = true,
                     enter = androidx.compose.animation.fadeIn(
@@ -453,7 +455,6 @@ private fun ActivityContent(
 
 @Composable
 fun ActivityHistoryCard(
-    // ... (Este Composable no cambia) ...
     activity: ActivityItem,
     colors: RenovaColorScheme,
     onClick: () -> Unit = {}
@@ -467,7 +468,6 @@ fun ActivityHistoryCard(
             .padding(horizontal = 16.dp, vertical = 12.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
-        // Icono según el tipo de actividad
         val iconData = when (activity.type_history) {
             1 -> Pair(Icons.Default.ShoppingCart, RenovaColors.PrimaryColor)
             2 -> Pair(Icons.Default.Recycling, RenovaColors.PrimaryColor)
@@ -486,9 +486,7 @@ fun ActivityHistoryCard(
 
         Spacer(modifier = Modifier.width(16.dp))
 
-        Column(
-            modifier = Modifier.weight(1f)
-        ) {
+        Column(modifier = Modifier.weight(1f)) {
             Text(
                 text = when (activity.type_history) {
                     1 -> stringResource(R.string.reward_exchange)
@@ -545,9 +543,7 @@ fun ActivityHistoryCard(
             )
         }
 
-        Column(
-            horizontalAlignment = Alignment.End
-        ) {
+        Column(horizontalAlignment = Alignment.End) {
             val pointsColor = when (activity.type_history) {
                 1 -> colors.negativePoints
                 2 -> if (activity.points == 0) colors.textPrimary else colors.primaryColor
@@ -574,7 +570,6 @@ fun ActivityHistoryCard(
 
 @Composable
 private fun MaterialStatCard(
-    // ... (Este Composable no cambia) ...
     title: String,
     count: Int,
     icon: Int,
@@ -585,10 +580,10 @@ private fun MaterialStatCard(
     val renovaColors = LocalRenovaColors.current
 
     val fontSize = when {
-        count >= 1000 -> 24.sp  // 4+ dígitos
-        count >= 100 ->28.sp   // 3 dígitos
-        count >= 10 -> 32.sp    // 2 dígitos
-        else -> 36.sp           // 1 dígito
+        count >= 1000 -> 24.sp
+        count >= 100 ->28.sp
+        count >= 10 -> 32.sp
+        else -> 36.sp
     }
 
     val iconSize = when {
@@ -660,7 +655,6 @@ private fun MaterialStatCard(
 
 @Composable
 fun EmptyStateInline(
-    // ... (Este Composable no cambia) ...
     renovaColors: RenovaColorScheme,
     modifier: Modifier = Modifier
 ) {

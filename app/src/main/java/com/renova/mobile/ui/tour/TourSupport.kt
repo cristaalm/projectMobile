@@ -155,15 +155,17 @@ class TourState(private val sessionManager: SessionManager) {
             screenRoute = TourRoutes.STORE_LIST,
             targetId = "store_categories"
         ),
-        // 7. TIENDA - TÍTULO
+        // --- INICIO DE LA MODIFICACIÓN (Paso 7) ---
+        // 7. TIENDA - SECCIÓN DE ALIANZAS (TÍTULO + LISTA)
         TourStep(
-            id = "step3_store_title",
+            id = "step3_store_alliances", // ID de paso (puede ser el mismo)
             titleResId = R.string.tour_title_store_alliances,
             descriptionResId = R.string.tour_desc_store_alliances,
             screenRoute = TourRoutes.STORE_LIST,
-            targetId = "store_alliances_title"
+            targetId = "store_alliances_section" // <-- ID DEL TARGET CORREGIDO
         ),
-        // 8. TIENDA - ALIANZA
+        // --- FIN DE LA MODIFICACIÓN ---
+        // 8. TIENDA - ALIANZA (PRIMERA)
         TourStep(
             id = "step4_store_alliance",
             titleResId = R.string.tour_title_store_rewards,
@@ -285,7 +287,9 @@ class TourState(private val sessionManager: SessionManager) {
             screenRoute = TourRoutes.STREAK,
             targetId = "streak_card_main"
         ),
+        // --- INICIO MODIFICACIÓN: Paso eliminado porque el componente no existe ---
         // 23. RACHA - RETO
+        /*
         TourStep(
             id = "step_streak_challenge",
             titleResId = R.string.tour_title_streak_challenge,
@@ -293,6 +297,8 @@ class TourState(private val sessionManager: SessionManager) {
             screenRoute = TourRoutes.STREAK,
             targetId = "streak_weekly_challenge"
         ),
+        */
+        // --- FIN MODIFICACIÓN ---
         // 24. RACHA - INSIGNIAS
         TourStep(
             id = "step_streak_badges",
@@ -364,13 +370,15 @@ class TourState(private val sessionManager: SessionManager) {
                 screenRoute = TourRoutes.STORE_LIST,
                 targetId = "store_categories"
             ),
+            // --- INICIO DE LA MODIFICACIÓN (Tour específico de pantalla) ---
             TourStep(
-                id = "step3_store_title",
+                id = "step3_store_alliances",
                 titleResId = R.string.tour_title_store_alliances,
                 descriptionResId = R.string.tour_desc_store_alliances,
                 screenRoute = TourRoutes.STORE_LIST,
-                targetId = "store_alliances_title"
+                targetId = "store_alliances_section" // <-- ID DEL TARGET CORREGIDO
             ),
+            // --- FIN DE LA MODIFICACIÓN ---
             TourStep(
                 id = "step4_store_alliance",
                 titleResId = R.string.tour_title_store_rewards,
@@ -460,6 +468,8 @@ class TourState(private val sessionManager: SessionManager) {
                 screenRoute = TourRoutes.STREAK,
                 targetId = "streak_card_main"
             ),
+            // --- INICIO MODIFICACIÓN: Paso eliminado porque el componente no existe ---
+            /*
             TourStep(
                 id = "step_streak_challenge",
                 titleResId = R.string.tour_title_streak_challenge,
@@ -467,6 +477,8 @@ class TourState(private val sessionManager: SessionManager) {
                 screenRoute = TourRoutes.STREAK,
                 targetId = "streak_weekly_challenge"
             ),
+            */
+            // --- FIN MODIFICACIÓN ---
             TourStep(
                 id = "step_streak_badges",
                 titleResId = R.string.tour_title_streak_badges,

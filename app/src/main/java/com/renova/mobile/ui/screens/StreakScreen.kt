@@ -41,9 +41,12 @@ import com.renova.mobile.ui.theme.LocalRenovaColors
 import com.renova.mobile.ui.theme.PoppinsFontFamily
 import com.renova.mobile.ui.theme.RenovaColors
 import com.renova.mobile.ui.theme.RenovaColorScheme
+// --- INICIO MODIFICACIÓN: Imports añadidos para el Tour ---
 import androidx.compose.ui.layout.onGloballyPositioned
 import com.renova.mobile.ui.tour.LocalTourState
 import androidx.compose.runtime.DisposableEffect
+import com.renova.mobile.ui.tour.TourState
+// --- FIN MODIFICACIÓN ---
 import com.renova.mobile.utils.SessionManager
 import kotlinx.coroutines.launch
 import java.text.SimpleDateFormat
@@ -113,6 +116,10 @@ fun StreakScreen() {
     val sessionManager = remember { SessionManager(context) }
     val scope = rememberCoroutineScope()
 
+    // --- INICIO MODIFICACIÓN: Obtener TourState ---
+    val tourState = LocalTourState.current
+    // --- FIN MODIFICACIÓN ---
+
     var currentStreak by remember { mutableStateOf(0) }
     var isStreakActive by remember { mutableStateOf(false) }
     var longestStreak by remember { mutableStateOf(0) }
@@ -127,6 +134,16 @@ fun StreakScreen() {
     var selectedBadge by remember { mutableStateOf<MonthlyBadge?>(null) }
     var isClaimingBadge by remember { mutableStateOf(false) }
     var showErrorModal by remember { mutableStateOf(false) }
+
+    // --- INICIO MODIFICACIÓN: Registrar y desregistrar targets del tour ---
+    DisposableEffect(Unit) {
+        onDispose {
+            tourState.unregisterTarget("streak_card_main")
+            tourState.unregisterTarget("streak_monthly_badges")
+            tourState.unregisterTarget("streak_weekly_progress")
+        }
+    }
+    // --- FIN MODIFICACIÓN ---
 
     LaunchedEffect(Unit) {
         isLoading = true
@@ -270,31 +287,59 @@ fun StreakScreen() {
                     .verticalScroll(scrollState)
                     .padding(bottom = 16.dp)
             ) {
+                // --- INICIO MODIFICACIÓN: Pasar scrollState y tourState a StreakCard ---
                 StreakCard(
                     currentStreak = currentStreak,
                     isStreakActive = isStreakActive,
                     longestStreak = longestStreak,
                     totalDays = totalRecyclingDays,
-                    renovaColors = renovaColors
-                )
-
-                Spacer(modifier = Modifier.height(16.dp))
-
-                MonthlyBadgesSection(
-                    badges = monthlyBadges,
-                    currentMonthPoints = currentMonthPoints,
                     renovaColors = renovaColors,
-                    onBadgeClick = { selectedBadge = it }
+                    scrollState = scrollState,
+                    tourState = tourState
                 )
+                // --- FIN MODIFICACIÓN ---
 
                 Spacer(modifier = Modifier.height(16.dp))
 
-                if (weekData.isNotEmpty()) {
-                    WeeklyProgressChart(
-                        weekData = weekData,
-                        renovaColors = renovaColors
+                // --- INICIO MODIFICACIÓN: Envolver MonthlyBadgesSection para registrar target ---
+                Box(
+                    modifier = Modifier.onGloballyPositioned {
+                        tourState.registerTarget(
+                            id = "streak_monthly_badges",
+                            coordinates = it,
+                            scrollState = scrollState
+                        )
+                    }
+                ) {
+                    MonthlyBadgesSection(
+                        badges = monthlyBadges,
+                        currentMonthPoints = currentMonthPoints,
+                        renovaColors = renovaColors,
+                        onBadgeClick = { selectedBadge = it }
                     )
                 }
+                // --- FIN MODIFICACIÓN ---
+
+                Spacer(modifier = Modifier.height(16.dp))
+
+                // --- INICIO MODIFICACIÓN: Envolver WeeklyProgressChart para registrar target ---
+                if (weekData.isNotEmpty()) {
+                    Box(
+                        modifier = Modifier.onGloballyPositioned {
+                            tourState.registerTarget(
+                                id = "streak_weekly_progress",
+                                coordinates = it,
+                                scrollState = scrollState
+                            )
+                        }
+                    ) {
+                        WeeklyProgressChart(
+                            weekData = weekData,
+                            renovaColors = renovaColors
+                        )
+                    }
+                }
+                // --- FIN MODIFICACIÓN ---
             }
         }
     }
@@ -427,12 +472,25 @@ private fun StreakCard(
     isStreakActive: Boolean,
     longestStreak: Int,
     totalDays: Int,
-    renovaColors: RenovaColorScheme
+    renovaColors: RenovaColorScheme,
+    // --- INICIO MODIFICACIÓN: Recibir scrollState y tourState ---
+    scrollState: ScrollState,
+    tourState: TourState
+    // --- FIN MODIFICACIÓN ---
 ) {
     Card(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(10.dp, 0.dp, 10.dp, 4.dp),
+            .padding(10.dp, 0.dp, 10.dp, 4.dp)
+            // --- INICIO MODIFICACIÓN: Registrar el target "streak_card_main" ---
+            .onGloballyPositioned {
+                tourState.registerTarget(
+                    id = "streak_card_main",
+                    coordinates = it,
+                    scrollState = scrollState
+                )
+            },
+        // --- FIN MODIFICACIÓN ---
         colors = CardDefaults.cardColors(
             containerColor = Color.Transparent
         ),
