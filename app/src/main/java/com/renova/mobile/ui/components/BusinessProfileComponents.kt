@@ -406,7 +406,9 @@ fun RewardsSection(
     )
 
     Surface(
-        modifier = Modifier.fillMaxWidth(),
+        modifier = Modifier
+            .padding(bottom = 80.dp)
+            .fillMaxWidth(),
         shape = RoundedCornerShape(12.dp),
         color = colors.cardBackground,
         border = androidx.compose.foundation.BorderStroke(

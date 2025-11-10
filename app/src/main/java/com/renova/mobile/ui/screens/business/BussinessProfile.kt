@@ -9,6 +9,8 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
+import coil.compose.AsyncImage
+import coil.request.ImageRequest
 import androidx.compose.ui.Modifier
 import com.renova.mobile.ui.components.LoadingState
 import androidx.compose.ui.unit.dp
@@ -185,7 +187,6 @@ private fun BusinessProfileContent(
     onRewardClick: (Reward) -> Unit,
     onRefresh: () -> Unit
 ) {
-    val documentImages by businessProfileViewModel.documentImages.collectAsState()
 
     Column(
         modifier = Modifier
@@ -194,8 +195,7 @@ private fun BusinessProfileContent(
     ) {
         BusinessHeader(
             user = user,
-            languageViewModel = languageViewModel,
-            logoBytes = documentImages["logo"]
+            languageViewModel = languageViewModel
         )
         Spacer(modifier = Modifier.height(12.dp))
 
@@ -224,8 +224,7 @@ private fun BusinessProfileContent(
 @Composable
 fun BusinessHeader(
     user: UserData,
-    languageViewModel: LanguageViewModel,
-    logoBytes: ByteArray? = null
+    languageViewModel: LanguageViewModel
 ) {
     val currentLanguage by languageViewModel.currentLanguage.collectAsState()
     val isSpanish = currentLanguage == "es"
@@ -234,13 +233,8 @@ fun BusinessHeader(
 
     var showImageZoom by remember { mutableStateOf(false) }
 
-    val logoBitmap = remember(logoBytes) {
-        logoBytes?.let { bytes ->
-            BitmapFactory.decodeByteArray(bytes, 0, bytes.size)
-        }
-    }
+    val logoUrl = user.alliance?.getLogoUrl()
 
-    // Usar las funciones de traducción e iconos del archivo de componentes
     val categoryIcon = getCategoryIcon(user.alliance?.type_shop?.name)
     val translatedCategory = getCategoryTranslation(user.alliance?.type_shop?.name, isSpanish)
 
@@ -259,8 +253,7 @@ fun BusinessHeader(
         )
 
         Column(
-            modifier = Modifier
-                .padding(horizontal = 20.dp)
+            modifier = Modifier.padding(horizontal = 20.dp)
         ) {
             Row(
                 modifier = Modifier
@@ -269,7 +262,6 @@ fun BusinessHeader(
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically
             ) {
-
                 Surface(
                     shape = RoundedCornerShape(22.dp),
                     color = Color.White.copy(alpha = 0.3f),
@@ -278,8 +270,7 @@ fun BusinessHeader(
                         .height(44.dp)
                 ) {
                     Row(
-                        modifier = Modifier
-                            .padding(horizontal = 12.dp),
+                        modifier = Modifier.padding(horizontal = 12.dp),
                         verticalAlignment = Alignment.CenterVertically,
                         horizontalArrangement = Arrangement.Center
                     ) {
@@ -317,12 +308,12 @@ fun BusinessHeader(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
-
+                // NUEVA implementación con AsyncImage (Coil)
                 Box(
                     modifier = Modifier
                         .size(96.dp)
                         .clickable(
-                            enabled = logoBitmap != null,
+                            enabled = logoUrl != null,
                             onClick = { showImageZoom = true }
                         )
                 ) {
@@ -336,12 +327,17 @@ fun BusinessHeader(
                             modifier = Modifier.fillMaxSize(),
                             contentAlignment = Alignment.Center
                         ) {
-                            if (logoBitmap != null) {
-                                Image(
-                                    bitmap = logoBitmap.asImageBitmap(),
-                                    contentDescription = null,
+                            if (logoUrl != null) {
+                                AsyncImage(
+                                    model = ImageRequest.Builder(context)
+                                        .data(logoUrl)
+                                        .crossfade(true)
+                                        .build(),
+                                    contentDescription = "Logo del comercio",
                                     contentScale = ContentScale.Crop,
-                                    modifier = Modifier.fillMaxSize()
+                                    modifier = Modifier.fillMaxSize(),
+                                    placeholder = painterResource(R.drawable.ic_launcher_foreground),
+                                    error = painterResource(R.drawable.ic_launcher_foreground)
                                 )
                             } else {
                                 Icon(
@@ -369,7 +365,6 @@ fun BusinessHeader(
 
                 Spacer(modifier = Modifier.height(10.dp))
 
-                // Badge de categoría mejorado con icono y traducción
                 if (translatedCategory != "-") {
                     Surface(
                         shape = RoundedCornerShape(20.dp),
@@ -400,7 +395,8 @@ fun BusinessHeader(
             }
         }
 
-        if (showImageZoom && logoBitmap != null) {
+        // ACTUALIZA el diálogo de zoom de imagen
+        if (showImageZoom && logoUrl != null) {
             Dialog(
                 onDismissRequest = { showImageZoom = false }
             ) {
@@ -450,10 +446,13 @@ fun BusinessHeader(
                                 shape = RoundedCornerShape(12.dp),
                                 shadowElevation = 4.dp
                             ) {
-                                Image(
-                                    bitmap = logoBitmap.asImageBitmap(),
-                                    contentDescription = null,
-                                    contentScale = ContentScale.Crop,
+                                AsyncImage(
+                                    model = ImageRequest.Builder(context)
+                                        .data(logoUrl)
+                                        .crossfade(true)
+                                        .build(),
+                                    contentDescription = "Logo ampliado",
+                                    contentScale = ContentScale.Fit,
                                     modifier = Modifier.fillMaxSize()
                                 )
                             }

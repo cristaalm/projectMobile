@@ -65,11 +65,11 @@ import androidx.compose.material3.Icon
 import com.renova.mobile.R
 import com.renova.mobile.network.ActivityItem
 import com.renova.mobile.network.ApiClient
-import com.renova.mobile.network.ClaimBadgeRequest
+import com.renova.mobile.network.ClaimBadgeRequestV2
 import com.renova.mobile.ui.components.SectionHeader
 import com.renova.mobile.ui.components.formatFriendlyDate
-import com.renova.mobile.ui.components.MonthlyBadgesSection
-import com.renova.mobile.ui.components.BadgeDialog
+import com.renova.mobile.ui.components.MonthlyBadgesSectionV2
+import com.renova.mobile.ui.components.BadgeDialogV2
 import com.renova.mobile.ui.components.RetryableErrorModal
 import com.renova.mobile.ui.components.DetailSheet
 import com.renova.mobile.ui.theme.LocalRenovaColors
@@ -105,7 +105,8 @@ fun HomeScreen(
 
     val tourState = LocalTourState.current
 
-    // Estados para badges
+    // Estados para badges (versión V2 desde el backend)
+    var monthlyBadges by remember { mutableStateOf<List<MonthlyBadge>>(emptyList()) }
     var selectedBadge by remember { mutableStateOf<MonthlyBadge?>(null) }
     var isClaimingBadge by remember { mutableStateOf(false) }
     var showErrorModal by remember { mutableStateOf(false) }
@@ -123,10 +124,11 @@ fun HomeScreen(
     LaunchedEffect(Unit) {
         viewModel.loadHistory(1)
 
-        // Cargar datos del usuario desde la sesión o API
+        // Cargar datos del usuario y badges desde el backend
         try {
             val token = sessionManager.getAccessToken()
             if (token != null) {
+                // 1. Obtener datos del usuario
                 val identityResponse = ApiClient.apiService.identifyUser(
                     com.renova.mobile.network.IdentifyUserRequest(
                         token = token,
@@ -139,9 +141,34 @@ fun HomeScreen(
                         userId = userData.id
                         currentMonthPoints = userData.points_month
                         userBadges = userData.badge
-
-                        // Actualizar UserData en SessionManager
                         sessionManager.saveUser(userData)
+                    }
+                }
+
+                // 2. Obtener badges desde el backend
+                val badgesResponse = ApiClient.apiService.getAllBadges(
+                    perPage = 100,
+                    status = 1 // Solo badges activos
+                )
+
+                if (badgesResponse.isSuccessful && badgesResponse.body()?.success == true) {
+                    badgesResponse.body()?.data?.data?.let { badges ->
+                        monthlyBadges = badges.map { badge ->
+                            val (iconRes, color, bgColor) = getBadgeVisualConfig(badge.name)
+                            val isClaimed = userBadges.isClaimed(badge.name)
+
+                            MonthlyBadge(
+                                id = badge.id,
+                                name = badge.name,
+                                pointsRequired = badge.pointsRequired,
+                                bonusPoints = badge.pointsAwarded,
+                                iconRes = iconRes,
+                                isActive = badge.status,
+                                isUnlocked = currentMonthPoints >= badge.pointsRequired,
+                                isClaimed = isClaimed,
+                                currentMonthProgress = currentMonthPoints.coerceAtMost(badge.pointsRequired)
+                            )
+                        }.sortedBy { it.pointsRequired } // Ordenar por puntos requeridos
                     }
                 }
             }
@@ -149,65 +176,6 @@ fun HomeScreen(
             e.printStackTrace()
         }
     }
-
-    val monthlyBadges = listOf(
-        MonthlyBadge(
-            id = 1,
-            title = "Guerrero Ecológico",
-            titleEn = "Eco Warrior",
-            badgeName = "Eco Warrior",
-            requiredPoints = 100,
-            bonusPoints = 50,
-            iconRes = R.drawable.ic_goal_1,
-            color = Color.White,
-            backgroundColor = Color(0xFF024653),
-            isUnlocked = currentMonthPoints >= 100,
-            isClaimed = userBadges.ecoWarrior,
-            currentMonthProgress = currentMonthPoints.coerceAtMost(100)
-        ),
-        MonthlyBadge(
-            id = 2,
-            title = "Reciclador Pro",
-            titleEn = "Recycler Pro",
-            badgeName = "Recycler Pro",
-            requiredPoints = 500,
-            bonusPoints = 300,
-            iconRes = R.drawable.ic_goal_2,
-            color = Color.White,
-            backgroundColor = Color(0xFF01C851),
-            isUnlocked = currentMonthPoints >= 500,
-            isClaimed = userBadges.recyclerPro,
-            currentMonthProgress = currentMonthPoints.coerceAtMost(500)
-        ),
-        MonthlyBadge(
-            id = 3,
-            title = "Héroe Verde",
-            titleEn = "Green Hero",
-            badgeName = "Green Hero",
-            requiredPoints = 1000,
-            bonusPoints = 600,
-            iconRes = R.drawable.ic_goal_3,
-            color = Color.White,
-            backgroundColor = Color(0xFF024653),
-            isUnlocked = currentMonthPoints >= 1000,
-            isClaimed = userBadges.greenHero,
-            currentMonthProgress = currentMonthPoints.coerceAtMost(1000)
-        ),
-        MonthlyBadge(
-            id = 4,
-            title = "Salvador del Planeta",
-            titleEn = "Planet Saver",
-            badgeName = "Planet Saver",
-            requiredPoints = 2500,
-            bonusPoints = 1000,
-            iconRes = R.drawable.ic_goal_4,
-            color = Color.White,
-            backgroundColor = Color(0xFF01C851),
-            isUnlocked = currentMonthPoints >= 2500,
-            isClaimed = userBadges.planetSaver,
-            currentMonthProgress = currentMonthPoints.coerceAtMost(2500)
-        )
-    )
 
     Column(
         modifier = Modifier
@@ -231,7 +199,7 @@ fun HomeScreen(
                 modifier = Modifier
                     .fillMaxSize()
                     .verticalScroll(scrollState)
-                    .padding(bottom = 80.dp) // Padding para la barra de navegación
+                    .padding(bottom = 80.dp)
             ) {
                 // Card de puntos
                 Box(modifier = Modifier.onGloballyPositioned { coords ->
@@ -345,7 +313,7 @@ fun HomeScreen(
                     onDispose { tourState.unregisterTarget("home_recent_activity") }
                 }
 
-                // Sección de logros mensuales
+                // Sección de logros mensuales (versión V2 con badges dinámicos)
                 Box(modifier = Modifier.onGloballyPositioned { coords ->
                     tourState.registerTarget(
                         id = "home_achievements_section",
@@ -353,7 +321,7 @@ fun HomeScreen(
                         scrollState = scrollState
                     )
                 }) {
-                    MonthlyBadgesSection(
+                    MonthlyBadgesSectionV2(
                         badges = monthlyBadges,
                         currentMonthPoints = currentMonthPoints,
                         renovaColors = renovaColors,
@@ -381,9 +349,9 @@ fun HomeScreen(
         }
     }
 
-    // DIÁLOGO DE BADGE con lógica de claim
+    // DIÁLOGO DE BADGE V2 con lógica de claim actualizada
     selectedBadge?.let { badge ->
-        BadgeDialog(
+        BadgeDialogV2(
             badge = badge,
             currentMonthPoints = currentMonthPoints,
             isClaimingBadge = isClaimingBadge,
@@ -392,10 +360,10 @@ fun HomeScreen(
                 scope.launch {
                     isClaimingBadge = true
                     try {
-                        val response = ApiClient.apiService.claimBadge(
-                            ClaimBadgeRequest(
+                        val response = ApiClient.apiService.claimBadgeV2(
+                            ClaimBadgeRequestV2(
                                 userId = userId,
-                                badgeName = badge.badgeName
+                                badgeId = badge.id // Ahora usa el ID del badge
                             )
                         )
 
@@ -421,6 +389,14 @@ fun HomeScreen(
 
                                 currentMonthPoints = updatedUserData.points_month
                                 userBadges = updatedUserData.badge
+
+                                // Actualizar estado de badges localmente
+                                monthlyBadges = monthlyBadges.map { b ->
+                                    if (b.id == badge.id) {
+                                        b.copy(isClaimed = true)
+                                    } else b
+                                }
+
                                 viewModel.loadHistory(1)
                             }
                             selectedBadge = null
@@ -454,10 +430,10 @@ fun HomeScreen(
                 scope.launch {
                     isClaimingBadge = true
                     try {
-                        val response = ApiClient.apiService.claimBadge(
-                            ClaimBadgeRequest(
+                        val response = ApiClient.apiService.claimBadgeV2(
+                            ClaimBadgeRequestV2(
                                 userId = userId,
-                                badgeName = badge.badgeName
+                                badgeId = badge.id
                             )
                         )
 
@@ -483,6 +459,11 @@ fun HomeScreen(
 
                                 currentMonthPoints = updatedUserData.points_month
                                 userBadges = updatedUserData.badge
+
+                                monthlyBadges = monthlyBadges.map { b ->
+                                    if (b.id == badge.id) b.copy(isClaimed = true) else b
+                                }
+
                                 viewModel.loadHistory(1)
                             }
                             selectedBadge = null
@@ -518,7 +499,6 @@ fun HistoryActivityCard(
             .padding(horizontal = 16.dp, vertical = 12.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
-        // Icono según el tipo de actividad
         val iconData = when (activity.type_history) {
             1 -> Pair(Icons.Default.ShoppingCart, RenovaColors.PrimaryColor)
             2 -> Pair(Icons.Default.Recycling, RenovaColors.PrimaryColor)

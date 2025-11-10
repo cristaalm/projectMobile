@@ -11,6 +11,9 @@ import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
+import coil.compose.AsyncImage
+import coil.request.ImageRequest
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Rect
 import androidx.compose.ui.geometry.Size
@@ -18,6 +21,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Outline
 import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.Shape
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
@@ -247,6 +251,9 @@ fun RewardCard(
     isBusiness: Boolean = false,
     onClick: () -> Unit
 ) {
+    val context = LocalContext.current
+    val logoUrl = reward.alliance?.getLogoUrl()
+
     Card(
         modifier = Modifier
             .fillMaxWidth()
@@ -267,6 +274,20 @@ fun RewardCard(
                     .padding(start = 24.dp, top = 20.dp, bottom = 20.dp, end = 8.dp),
                 verticalArrangement = Arrangement.spacedBy(4.dp)
             ) {
+                if (logoUrl != null) {
+                    AsyncImage(
+                        model = ImageRequest.Builder(context)
+                            .data(logoUrl)
+                            .crossfade(true)
+                            .build(),
+                        contentDescription = "Logo de ${reward.alliance?.name}",
+                        modifier = Modifier
+                            .size(32.dp)
+                            .padding(bottom = 4.dp),
+                        contentScale = ContentScale.Fit
+                    )
+                }
+
                 Text(
                     text = reward.name,
                     fontWeight = FontWeight.Bold,
@@ -289,7 +310,6 @@ fun RewardCard(
                 horizontalAlignment = Alignment.CenterHorizontally,
                 verticalArrangement = Arrangement.Center
             ) {
-
                 Text(
                     text = reward.pointsRequired.toString(),
                     fontWeight = FontWeight.Bold,

@@ -9,6 +9,8 @@ import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
 import androidx.compose.material3.pulltorefresh.*
 import androidx.compose.runtime.*
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
@@ -112,7 +114,7 @@ fun PaginationControls(
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(horizontal = 16.dp, vertical = 16.dp),
+            .padding(start = 16.dp, top = 16.dp, end = 16.dp, bottom = 80.dp),
         horizontalArrangement = Arrangement.SpaceBetween
     ) {
         Button(
@@ -243,17 +245,30 @@ fun DetailSheet(activity: ActivityItem) {
         else -> if (activity.points < 0) colors.negativePoints else colors.primaryColor
     }
 
-    // Determinar el texto de los puntos
+    // Calcular puntos mostrados (puntos / 10) con formato de 2 decimales
+    val displayPoints = activity.points / 10.0
+
+    // Determinar el texto de los puntos con formato de 2 decimales
     val pointsText = when (activity.type_history) {
-        1 -> if ("${activity.points}".startsWith("-")) "${activity.points}" else "-${activity.points}"
-        2 -> if (activity.points == 0) "-${activity.points}-" else "+${activity.points}"
-        3 -> if (activity.points < 0) "${activity.points}" else "+${activity.points}"
-        else -> if (activity.points < 0) "${activity.points}" else "+${activity.points}"
+        1 -> if (activity.points < 0)
+            "${"%.2f".format(displayPoints)}"
+        else "-${"%.2f".format(displayPoints)}"
+        2 -> if (activity.points == 0)
+            "-${"%.2f".format(displayPoints)}-"
+        else "+${"%.2f".format(displayPoints)}"
+        3 -> if (activity.points < 0)
+            "${"%.2f".format(displayPoints)}"
+        else "+${"%.2f".format(displayPoints)}"
+        else -> if (activity.points < 0)
+            "${"%.2f".format(displayPoints)}"
+        else "+${"%.2f".format(-displayPoints)}"
     }
 
     Column(
         modifier = Modifier
             .fillMaxWidth()
+            .wrapContentHeight()
+            .verticalScroll(rememberScrollState())
             .padding(start = 24.dp, end = 24.dp, top = 24.dp, bottom = 48.dp),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
@@ -359,7 +374,6 @@ fun DetailSheet(activity: ActivityItem) {
                 // Información del escaneo
                 activity.scan?.let { scan ->
                     Spacer(modifier = Modifier.height(10.dp))
-                    // Descripción del escaneo
                     scan.description?.let { desc ->
                         Text(
                             text = desc,
@@ -369,11 +383,9 @@ fun DetailSheet(activity: ActivityItem) {
                             textAlign = TextAlign.Center
                         )
                     }
-
                 }
             }
             3 -> {
-
                 // Ajuste manual: Mostrar descripción si existe
                 Text(
                     text = context.getString(R.string.manual_adjustment),
@@ -413,7 +425,7 @@ fun DetailSheet(activity: ActivityItem) {
 
         // Puntos con color dinámico
         Text(
-            text = "$pointsText",
+            text = pointsText,
             fontFamily = PoppinsFontFamily,
             fontWeight = FontWeight.ExtraBold,
             fontSize = 56.sp,
@@ -424,7 +436,7 @@ fun DetailSheet(activity: ActivityItem) {
 
         Spacer(modifier = Modifier.height(10.dp))
 
-        // Equivalente en MXN
+        // Equivalente en MXN (puntos originales * 0.01)
         Text(
             text = "$${"%.2f".format(kotlin.math.abs(activity.points) * 0.01)} MXN",
             fontFamily = PoppinsFontFamily,
@@ -448,18 +460,18 @@ fun DetailSheet(activity: ActivityItem) {
 
 @Composable
 fun AnimatedPointsCardActivity(
-    totalPoints: Int,
+    totalPoints: Float,
     renovaColors: RenovaColorScheme,
     shouldAnimate: Boolean = true
 ) {
     // Animación del contador de puntos
-    var animatedPoints by remember { mutableStateOf(if (shouldAnimate) 0f else totalPoints.toFloat()) }
+    var animatedPoints by remember { mutableStateOf(if (shouldAnimate) 0f else totalPoints) }
 
     LaunchedEffect(totalPoints, shouldAnimate) {
         if (shouldAnimate) {
             animate(
                 initialValue = 0f,
-                targetValue = totalPoints.toFloat(),
+                targetValue = totalPoints,
                 animationSpec = tween(
                     durationMillis = 2500,
                     easing = FastOutSlowInEasing
@@ -468,7 +480,7 @@ fun AnimatedPointsCardActivity(
                 animatedPoints = value
             }
         } else {
-            animatedPoints = totalPoints.toFloat()
+            animatedPoints = totalPoints
         }
     }
 
@@ -516,9 +528,11 @@ fun AnimatedPointsCardActivity(
                     Spacer(modifier = Modifier.height(4.dp))
                     Row {
                         Text(
-                            text = java.text.NumberFormat.getIntegerInstance(
-                                java.util.Locale.forLanguageTag("es-MX")
-                            ).format(animatedPoints.toInt()),
+                            text = String.format(
+                                java.util.Locale.forLanguageTag("es-MX"),
+                                "%.2f",
+                                animatedPoints
+                            ),
                             style = MaterialTheme.typography.displayLarge,
                             color = Color.White,
                             fontSize = 52.sp,

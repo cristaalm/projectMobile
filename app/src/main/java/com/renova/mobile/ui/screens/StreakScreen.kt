@@ -3,16 +3,13 @@ package com.renova.mobile.ui.screens
 import android.os.Build
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
-import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.ScrollState
+import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
 import androidx.compose.material3.CardDefaults.cardElevation
 import androidx.compose.runtime.*
@@ -28,30 +25,29 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.graphics.ColorFilter
+import androidx.compose.ui.graphics.ColorMatrix
+import androidx.compose.ui.layout.onGloballyPositioned
 import coil.ImageLoader
 import coil.compose.AsyncImage
 import coil.decode.ImageDecoderDecoder
 import coil.request.ImageRequest
 import com.renova.mobile.R
 import com.renova.mobile.network.ApiClient
-import com.renova.mobile.network.ClaimBadgeRequest
+import com.renova.mobile.network.ClaimBadgeRequestV2
 import com.renova.mobile.network.BadgeCollection
+import com.renova.mobile.network.IdentifyUserRequest
 import com.renova.mobile.ui.components.*
 import com.renova.mobile.ui.theme.LocalRenovaColors
 import com.renova.mobile.ui.theme.PoppinsFontFamily
 import com.renova.mobile.ui.theme.RenovaColors
 import com.renova.mobile.ui.theme.RenovaColorScheme
-// --- INICIO MODIFICACIÓN: Imports añadidos para el Tour ---
-import androidx.compose.ui.layout.onGloballyPositioned
 import com.renova.mobile.ui.tour.LocalTourState
-import androidx.compose.runtime.DisposableEffect
 import com.renova.mobile.ui.tour.TourState
-// --- FIN MODIFICACIÓN ---
 import com.renova.mobile.utils.SessionManager
 import kotlinx.coroutines.launch
 import java.text.SimpleDateFormat
 import java.util.*
-import kotlin.math.abs
 
 data class WeeklyChallenge(
     val id: Int,
@@ -69,18 +65,58 @@ data class WeeklyChallenge(
 
 data class MonthlyBadge(
     val id: Int,
-    val title: String,
-    val titleEn: String,
-    val badgeName: String,
-    val requiredPoints: Int,
+    val name: String,
+    val pointsRequired: Int,
     val bonusPoints: Int,
     val iconRes: Int,
-    val color: Color,
-    val backgroundColor: Color,
+    val isActive: Boolean,
     val isUnlocked: Boolean = false,
     val isClaimed: Boolean = false,
     val currentMonthProgress: Int = 0
 )
+
+fun getBadgeVisualConfig(badgeName: String): Triple<Int, Color, Color> {
+    return when (badgeName) {
+        "Eco Warrior" -> Triple(
+            R.drawable.ic_goal_1,
+            Color.White,
+            Color(0xFF024653)
+        )
+        "Recycler Pro" -> Triple(
+            R.drawable.ic_goal_2,
+            Color.White,
+            Color(0xFF01C851)
+        )
+        "Green Hero" -> Triple(
+            R.drawable.ic_goal_3,
+            Color.White,
+            Color(0xFF024653)
+        )
+        "Planet Saver" -> Triple(
+            R.drawable.ic_goal_4,
+            Color.White,
+            Color(0xFF01C851)
+        )
+        else -> Triple(
+            R.drawable.ic_goal_1,
+            Color.White,
+            Color(0xFF024653)
+        )
+    }
+}
+
+@Composable
+fun getBadgeStateColor(isUnlocked: Boolean, isClaimed: Boolean): Color {
+    return when {
+        isClaimed -> RenovaColors.PrimaryColor.copy(alpha = 0.7f)
+        isUnlocked -> RenovaColors.SecondaryColor
+        else -> if(isSystemInDarkTheme() == true){
+            RenovaColors.SecondaryColor.copy(alpha = 0.4f)
+        } else {
+            RenovaColors.SecondaryColor.copy(alpha = 0.7f)
+        }
+    }
+}
 
 fun calculateDaysSinceRegistration(createdAt: String): Int {
     return try {
@@ -115,11 +151,9 @@ fun StreakScreen() {
     val context = LocalContext.current
     val sessionManager = remember { SessionManager(context) }
     val scope = rememberCoroutineScope()
-
-    // --- INICIO MODIFICACIÓN: Obtener TourState ---
     val tourState = LocalTourState.current
-    // --- FIN MODIFICACIÓN ---
 
+    // Estados existentes
     var currentStreak by remember { mutableStateOf(0) }
     var isStreakActive by remember { mutableStateOf(false) }
     var longestStreak by remember { mutableStateOf(0) }
@@ -131,11 +165,15 @@ fun StreakScreen() {
     var isLoading by remember { mutableStateOf(true) }
     var errorMessage by remember { mutableStateOf("") }
 
+    // Estados para badges desde el backend
+    var monthlyBadges by remember { mutableStateOf<List<MonthlyBadge>>(emptyList()) }
+
+    // Estados de UI
     var selectedBadge by remember { mutableStateOf<MonthlyBadge?>(null) }
     var isClaimingBadge by remember { mutableStateOf(false) }
     var showErrorModal by remember { mutableStateOf(false) }
 
-    // --- INICIO MODIFICACIÓN: Registrar y desregistrar targets del tour ---
+    // Registrar y desregistrar targets del tour
     DisposableEffect(Unit) {
         onDispose {
             tourState.unregisterTarget("streak_card_main")
@@ -143,18 +181,17 @@ fun StreakScreen() {
             tourState.unregisterTarget("streak_weekly_progress")
         }
     }
-    // --- FIN MODIFICACIÓN ---
 
     LaunchedEffect(Unit) {
         isLoading = true
 
         try {
-            // Obtener token y llamar a identityUser para datos actualizados
             val token = sessionManager.getAccessToken()
 
             if (token != null) {
+                // 1. Obtener datos del usuario
                 val identityResponse = ApiClient.apiService.identifyUser(
-                    com.renova.mobile.network.IdentifyUserRequest(
+                    IdentifyUserRequest(
                         token = token,
                         with_identity = false
                     )
@@ -165,39 +202,59 @@ fun StreakScreen() {
                         userId = userData.id
                         currentMonthPoints = userData.points_month
                         userBadges = userData.badge
-
                         totalRecyclingDays = calculateDaysSinceRegistration(userData.created_at)
-
-                        // Actualizar UserData en SessionManager
                         sessionManager.saveUser(userData)
                     }
-                } else {
-                    errorMessage = context.getString(R.string.unknown_error)
+                }
+
+                // 2. Obtener badges desde el backend
+                val badgesResponse = ApiClient.apiService.getAllBadges(
+                    perPage = 100,
+                    status = 1 // Solo badges activos
+                )
+
+                if (badgesResponse.isSuccessful && badgesResponse.body()?.success == true) {
+                    badgesResponse.body()?.data?.data?.let { badges ->
+                        monthlyBadges = badges.map { badge ->
+                            val (iconRes, color, bgColor) = getBadgeVisualConfig(badge.name)
+                            val isClaimed = userBadges.isClaimed(badge.name)
+
+                            MonthlyBadge(
+                                id = badge.id,
+                                name = badge.name,
+                                pointsRequired = badge.pointsRequired,
+                                bonusPoints = badge.pointsAwarded,
+                                iconRes = iconRes,
+                                isActive = badge.status,
+                                isUnlocked = currentMonthPoints >= badge.pointsRequired,
+                                isClaimed = isClaimed,
+                                currentMonthProgress = currentMonthPoints.coerceAtMost(badge.pointsRequired)
+                            )
+                        }.sortedBy { it.pointsRequired }
+                    }
+                }
+
+                // 3. Obtener racha
+                val streakResponse = ApiClient.apiService.getStreak()
+                if (streakResponse.isSuccessful && streakResponse.body()?.success == true) {
+                    streakResponse.body()?.data?.let { streakData ->
+                        currentStreak = streakData.streak
+                        isStreakActive = streakData.is_active
+                        if (currentStreak > longestStreak) {
+                            longestStreak = currentStreak
+                        }
+                    }
+                }
+
+                // 4. Obtener datos de la semana
+                val scansResponse = ApiClient.apiService.getScansByDayOfWeek()
+                if (scansResponse.isSuccessful && scansResponse.body()?.success == true) {
+                    scansResponse.body()?.data?.let { scansList ->
+                        weekData = scansList.map { it.scans_count }
+                    }
                 }
             } else {
                 errorMessage = "No se encontró sesión activa"
-            }
-
-            val streakResponse = ApiClient.apiService.getStreak()
-
-            if (streakResponse.isSuccessful && streakResponse.body()?.success == true) {
-                streakResponse.body()?.data?.let { streakData ->
-                    currentStreak = streakData.streak
-                    isStreakActive = streakData.is_active
-                    if (currentStreak > longestStreak) {
-                        longestStreak = currentStreak
-                    }
-                }
-            }
-
-            val scansResponse = ApiClient.apiService.getScansByDayOfWeek()
-
-            if (scansResponse.isSuccessful && scansResponse.body()?.success == true) {
-                scansResponse.body()?.data?.let { scansList ->
-                    weekData = scansList.map { it.scans_count }
-                }
-            } else {
-                android.util.Log.e("StreakScreen", "❌ Error en scans: ${scansResponse.message()}")
             }
         } catch (e: Exception) {
             errorMessage = e.message ?: context.getString(R.string.unknown_error)
@@ -205,67 +262,6 @@ fun StreakScreen() {
         } finally {
             isLoading = false
         }
-    }
-
-    val monthlyBadges = remember(currentMonthPoints, userBadges) {
-        listOf(
-            MonthlyBadge(
-                id = 1,
-                title = "Guerrero Ecológico",
-                titleEn = "Eco Warrior",
-                badgeName = "Eco Warrior",
-                requiredPoints = 100,
-                bonusPoints = 50,
-                iconRes = R.drawable.ic_goal_1,
-                color = Color.White,
-                backgroundColor = Color(0xFF024653),
-                isUnlocked = currentMonthPoints >= 100,
-                isClaimed = userBadges.ecoWarrior,
-                currentMonthProgress = currentMonthPoints.coerceAtMost(100)
-            ),
-            MonthlyBadge(
-                id = 2,
-                title = "Reciclador Pro",
-                titleEn = "Recycler Pro",
-                badgeName = "Recycler Pro",
-                requiredPoints = 500,
-                bonusPoints = 300,
-                iconRes = R.drawable.ic_goal_2,
-                color = Color.White,
-                backgroundColor = Color(0xFF01C851),
-                isUnlocked = currentMonthPoints >= 500,
-                isClaimed = userBadges.recyclerPro,
-                currentMonthProgress = currentMonthPoints.coerceAtMost(500)
-            ),
-            MonthlyBadge(
-                id = 3,
-                title = "Héroe Verde",
-                titleEn = "Green Hero",
-                badgeName = "Green Hero",
-                requiredPoints = 1000,
-                bonusPoints = 600,
-                iconRes = R.drawable.ic_goal_3,
-                color = Color.White,
-                backgroundColor = Color(0xFF024653),
-                isUnlocked = currentMonthPoints >= 1000,
-                isClaimed = userBadges.greenHero,
-                currentMonthProgress = currentMonthPoints.coerceAtMost(1000)
-            ),
-            MonthlyBadge(
-                id = 4,
-                title = "Salvador del Planeta",
-                titleEn = "Planet Saver",
-                badgeName = "Planet Saver",
-                requiredPoints = 2500,
-                bonusPoints = 1000,
-                iconRes = R.drawable.ic_goal_4,
-                color = Color.White,
-                backgroundColor = Color(0xFF01C851),
-                isUnlocked = currentMonthPoints >= 2500,
-                isClaimed = userBadges.planetSaver,
-                currentMonthProgress = currentMonthPoints.coerceAtMost(2500)
-            )
-        )
     }
 
     if (isLoading) {
@@ -285,9 +281,8 @@ fun StreakScreen() {
                 modifier = Modifier
                     .fillMaxSize()
                     .verticalScroll(scrollState)
-                    .padding(bottom = 16.dp)
+                    .padding(bottom = 80.dp)
             ) {
-                // --- INICIO MODIFICACIÓN: Pasar scrollState y tourState a StreakCard ---
                 StreakCard(
                     currentStreak = currentStreak,
                     isStreakActive = isStreakActive,
@@ -297,11 +292,9 @@ fun StreakScreen() {
                     scrollState = scrollState,
                     tourState = tourState
                 )
-                // --- FIN MODIFICACIÓN ---
 
                 Spacer(modifier = Modifier.height(16.dp))
 
-                // --- INICIO MODIFICACIÓN: Envolver MonthlyBadgesSection para registrar target ---
                 Box(
                     modifier = Modifier.onGloballyPositioned {
                         tourState.registerTarget(
@@ -311,18 +304,16 @@ fun StreakScreen() {
                         )
                     }
                 ) {
-                    MonthlyBadgesSection(
+                    MonthlyBadgesSectionV2(
                         badges = monthlyBadges,
                         currentMonthPoints = currentMonthPoints,
                         renovaColors = renovaColors,
                         onBadgeClick = { selectedBadge = it }
                     )
                 }
-                // --- FIN MODIFICACIÓN ---
 
                 Spacer(modifier = Modifier.height(16.dp))
 
-                // --- INICIO MODIFICACIÓN: Envolver WeeklyProgressChart para registrar target ---
                 if (weekData.isNotEmpty()) {
                     Box(
                         modifier = Modifier.onGloballyPositioned {
@@ -339,13 +330,13 @@ fun StreakScreen() {
                         )
                     }
                 }
-                // --- FIN MODIFICACIÓN ---
             }
         }
     }
 
+    // Dialog del badge seleccionado
     selectedBadge?.let { badge ->
-        BadgeDialog(
+        BadgeDialogV2(
             badge = badge,
             currentMonthPoints = currentMonthPoints,
             isClaimingBadge = isClaimingBadge,
@@ -354,19 +345,17 @@ fun StreakScreen() {
                 scope.launch {
                     isClaimingBadge = true
                     try {
-                        val response = ApiClient.apiService.claimBadge(
-                            ClaimBadgeRequest(
+                        val response = ApiClient.apiService.claimBadgeV2(
+                            ClaimBadgeRequestV2(
                                 userId = userId,
-                                badgeName = badge.badgeName
+                                badgeId = badge.id
                             )
                         )
 
                         if (response.isSuccessful && response.body()?.success == true) {
                             response.body()?.data?.user?.let { updatedUserData ->
-                                // Actualizar UserData si existe
                                 sessionManager.saveUser(updatedUserData)
 
-                                // Actualizar también User para mantener sincronía
                                 val currentUser = sessionManager.getUser()
                                 currentUser?.let { user ->
                                     val updatedUser = user.copy(
@@ -385,6 +374,12 @@ fun StreakScreen() {
 
                                 currentMonthPoints = updatedUserData.points_month
                                 userBadges = updatedUserData.badge
+
+                                monthlyBadges = monthlyBadges.map { b ->
+                                    if (b.id == badge.id) {
+                                        b.copy(isClaimed = true)
+                                    } else b
+                                }
                             }
                             selectedBadge = null
                         } else {
@@ -403,6 +398,7 @@ fun StreakScreen() {
         )
     }
 
+    // Modal de error
     RetryableErrorModal(
         isVisible = showErrorModal,
         errorMessage = errorMessage,
@@ -416,37 +412,22 @@ fun StreakScreen() {
                 scope.launch {
                     isClaimingBadge = true
                     try {
-                        val response = ApiClient.apiService.claimBadge(
-                            ClaimBadgeRequest(
+                        val response = ApiClient.apiService.claimBadgeV2(
+                            ClaimBadgeRequestV2(
                                 userId = userId,
-                                badgeName = badge.badgeName
+                                badgeId = badge.id
                             )
                         )
 
                         if (response.isSuccessful && response.body()?.success == true) {
                             response.body()?.data?.user?.let { updatedUserData ->
-                                // Actualizar UserData si existe
                                 sessionManager.saveUser(updatedUserData)
-
-                                // Actualizar también User para mantener sincronía
-                                val currentUser = sessionManager.getUser()
-                                currentUser?.let { user ->
-                                    val updatedUser = user.copy(
-                                        points_month = updatedUserData.points_month,
-                                        badge = updatedUserData.badge,
-                                        total_points = updatedUserData.total_points
-                                    )
-                                    sessionManager.saveSession(
-                                        sessionManager.getAccessToken() ?: "",
-                                        sessionManager.getTokenType(),
-                                        sessionManager.getExpiresAt(),
-                                        updatedUser,
-                                        sessionManager.hasRememberMe()
-                                    )
-                                }
-
                                 currentMonthPoints = updatedUserData.points_month
                                 userBadges = updatedUserData.badge
+
+                                monthlyBadges = monthlyBadges.map { b ->
+                                    if (b.id == badge.id) b.copy(isClaimed = true) else b
+                                }
                             }
                             selectedBadge = null
                         } else {
@@ -473,16 +454,13 @@ private fun StreakCard(
     longestStreak: Int,
     totalDays: Int,
     renovaColors: RenovaColorScheme,
-    // --- INICIO MODIFICACIÓN: Recibir scrollState y tourState ---
     scrollState: ScrollState,
     tourState: TourState
-    // --- FIN MODIFICACIÓN ---
 ) {
     Card(
         modifier = Modifier
             .fillMaxWidth()
             .padding(10.dp, 0.dp, 10.dp, 4.dp)
-            // --- INICIO MODIFICACIÓN: Registrar el target "streak_card_main" ---
             .onGloballyPositioned {
                 tourState.registerTarget(
                     id = "streak_card_main",
@@ -490,7 +468,6 @@ private fun StreakCard(
                     scrollState = scrollState
                 )
             },
-        // --- FIN MODIFICACIÓN ---
         colors = CardDefaults.cardColors(
             containerColor = Color.Transparent
         ),
@@ -570,29 +547,6 @@ private fun StreakCard(
                     }
 
                     Spacer(modifier = Modifier.height(16.dp))
-
-                    Row(
-                        horizontalArrangement = Arrangement.spacedBy(24.dp)
-                    ){
-                        Column {
-                            Text(
-                                text = stringResource(R.string.total_days),
-                                style = MaterialTheme.typography.bodySmall,
-                                color = Color.White,
-                                fontSize = 11.sp,
-                                fontWeight = FontWeight.SemiBold,
-                                fontFamily = PoppinsFontFamily
-                            )
-                            Text(
-                                text = "$totalDays ${stringResource(R.string.days)}",
-                                style = MaterialTheme.typography.titleMedium,
-                                color = Color.White,
-                                fontWeight = FontWeight.Black,
-                                fontSize = 16.sp,
-                                fontFamily = PoppinsFontFamily
-                            )
-                        }
-                    }
                 }
 
                 Box(
@@ -612,8 +566,8 @@ private fun StreakCard(
                     } else {
                         GifPlayer(
                             modifier = Modifier.fillMaxSize(),
-                            colorFilter = androidx.compose.ui.graphics.ColorFilter.colorMatrix(
-                                androidx.compose.ui.graphics.ColorMatrix().apply {
+                            colorFilter = ColorFilter.colorMatrix(
+                                ColorMatrix().apply {
                                     setToSaturation(0f)
                                 }
                             ),
@@ -629,7 +583,7 @@ private fun StreakCard(
 @Composable
 private fun GifPlayer(
     modifier: Modifier = Modifier,
-    colorFilter: androidx.compose.ui.graphics.ColorFilter? = null,
+    colorFilter: ColorFilter? = null,
     alpha: Float = 1f
 ) {
     val context = LocalContext.current

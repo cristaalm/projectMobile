@@ -46,7 +46,7 @@ class ActivityViewModel(
             _state.update { it.copy(isLoading = true, error = null) }
 
             try {
-                val historyDeferred = async { repository.getHistory(page = page, perPage = 10) }
+                val historyDeferred = async { repository.getHistory(page = page, perPage = 6) }
                 val totalsDeferred = async {
                     if (_state.value.totalPlastic == 0 && _state.value.totalAluminum == 0) {
                         repository.getTotalScans()

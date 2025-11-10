@@ -30,8 +30,6 @@ class BusinessProfileViewModel(application: Application) : AndroidViewModel(appl
     private val _isRefreshing = MutableStateFlow(false)
     val isRefreshing: StateFlow<Boolean> = _isRefreshing.asStateFlow()
 
-    private val _documentImages = MutableStateFlow<Map<String, ByteArray>>(emptyMap())
-    val documentImages: StateFlow<Map<String, ByteArray>> = _documentImages.asStateFlow()
 
     init {
         loadBusinessProfile()
@@ -47,10 +45,7 @@ class BusinessProfileViewModel(application: Application) : AndroidViewModel(appl
                         val allianceId = data.user.alliance?.id
 
                         if (allianceId != null) {
-                            // Cargar logo del comercio
-                            loadAllianceLogo(allianceId)
-
-                            // Cargar recompensas del comercio
+                            // Solo cargar recompensas (el logo ya viene en el objeto alliance)
                             loadRewards(allianceId, data.user)
                         } else {
                             _uiState.value = BusinessProfileUiState.Success(
@@ -92,19 +87,6 @@ class BusinessProfileViewModel(application: Application) : AndroidViewModel(appl
         }
     }
 
-    private fun loadAllianceLogo(allianceId: Int) {
-        viewModelScope.launch {
-            repository.getDocumentImage("logo", allianceId).fold(
-                onSuccess = { bytes ->
-                    _documentImages.value = _documentImages.value + ("logo" to bytes)
-                },
-                onFailure = {
-                    // Si falla la carga del logo, continuar sin él
-                }
-            )
-        }
-    }
-
     fun refreshBusinessProfile() {
         viewModelScope.launch {
             _isRefreshing.value = true
@@ -115,7 +97,7 @@ class BusinessProfileViewModel(application: Application) : AndroidViewModel(appl
                         val allianceId = data.user.alliance?.id
 
                         if (allianceId != null) {
-                            loadAllianceLogo(allianceId)
+                            // Solo cargar recompensas (el logo ya viene en el objeto alliance)
                             loadRewards(allianceId, data.user)
                         } else {
                             _uiState.value = BusinessProfileUiState.Success(

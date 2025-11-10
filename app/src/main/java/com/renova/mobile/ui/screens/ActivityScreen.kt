@@ -44,6 +44,8 @@ import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.window.Dialog
+import androidx.compose.ui.window.DialogProperties
 import kotlinx.coroutines.delay
 
 fun Modifier.greenShadow(
@@ -79,6 +81,7 @@ fun Modifier.greenShadow(
     }
 }
 
+
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ActivityScreen(
@@ -87,7 +90,6 @@ fun ActivityScreen(
     val renovaColors = LocalRenovaColors.current
     val state by viewModel.state.collectAsState()
     val pullToRefreshState = rememberPullToRefreshState()
-    val sheetState = rememberModalBottomSheetState()
     var selectedActivity by remember { mutableStateOf<ActivityItem?>(null) }
     var showErrorModal by remember { mutableStateOf(false) }
     var isFirstLoad by remember { mutableStateOf(true) }
@@ -160,9 +162,10 @@ fun ActivityScreen(
     selectedActivity?.let { activity ->
         ModalBottomSheet(
             onDismissRequest = { selectedActivity = null },
-            sheetState = sheetState,
+            sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true),
             containerColor = renovaColors.cardBackground,
-            shape = RoundedCornerShape(topStart = 24.dp, topEnd = 24.dp)
+            shape = RoundedCornerShape(topStart = 24.dp, topEnd = 24.dp),
+            scrimColor = Color.Black.copy(alpha = 0.32f)
         ) {
             DetailSheet(activity = activity)
         }
@@ -259,7 +262,7 @@ private fun ActivityContent(
                     )
                 }) {
                     AnimatedPointsCardActivity(
-                        totalPoints = state.totalPoints,
+                        totalPoints = (state.totalPoints * 0.1).toFloat(),
                         renovaColors = renovaColors,
                         shouldAnimate = shouldAnimatePoints
                     )
@@ -544,6 +547,9 @@ fun ActivityHistoryCard(
         }
 
         Column(horizontalAlignment = Alignment.End) {
+            // Calcular puntos con formato de 2 decimales
+            val displayPoints = activity.points * 0.1
+
             val pointsColor = when (activity.type_history) {
                 1 -> colors.negativePoints
                 2 -> if (activity.points == 0) colors.textPrimary else colors.primaryColor
@@ -551,10 +557,22 @@ fun ActivityHistoryCard(
                 else -> if (activity.points == 0) colors.textPrimary else colors.primaryColor
             }
             val pointsText = when (activity.type_history) {
-                1 -> if ("${activity.points}".startsWith("-")) "${activity.points}" else "-${activity.points}"
-                2 -> if (activity.points == 0) "-${activity.points}-" else "+${activity.points}"
-                3 -> if (activity.points < 0) "${activity.points}" else "+${activity.points}"
-                else -> if (activity.points == 0) "${activity.points}" else "+${activity.points}"
+                1 -> if (activity.points < 0)
+                    "${"%.2f".format(displayPoints)}"
+                else
+                    "-${"%.2f".format(kotlin.math.abs(displayPoints))}"
+                2 -> if (activity.points == 0)
+                    "-${"%.2f".format(displayPoints)}-"
+                else
+                    "+${"%.2f".format(displayPoints)}"
+                3 -> if (activity.points < 0)
+                    "${"%.2f".format(displayPoints)}"
+                else
+                    "+${"%.2f".format(displayPoints)}"
+                else -> if (activity.points == 0)
+                    "${"%.2f".format(displayPoints)}"
+                else
+                    "+${"%.2f".format(displayPoints)}"
             }
             Text(
                 text = pointsText,
@@ -580,70 +598,59 @@ private fun MaterialStatCard(
     val renovaColors = LocalRenovaColors.current
 
     val fontSize = when {
-        count >= 1000 -> 24.sp
-        count >= 100 ->28.sp
-        count >= 10 -> 32.sp
-        else -> 36.sp
+        count >= 1000 -> 34.sp
+        count >= 100 -> 38.sp
+        count >= 10 -> 44.sp
+        else -> 50.sp
     }
 
-    val iconSize = when {
-        count >= 1000 -> 32.dp
-        count >= 100 -> 36.dp
-        else -> 40.dp
-    }
-
-    val boxPadding = when {
-        count >= 1000 -> PaddingValues(horizontal = 12.dp, vertical = 6.dp)
-        count >= 100 -> PaddingValues(horizontal = 14.dp, vertical = 8.dp)
-        else -> PaddingValues(horizontal = 16.dp, vertical = 8.dp)
-    }
+    // Determinar si es la tarjeta de Total
+    val isTotal = title.lowercase() == "total"
+    val textColor = if (isTotal) RenovaColors.Secondary else Color.White
 
     Card(
-        modifier = modifier.height(110.dp),
-        shape = RoundedCornerShape(18.dp),
+        modifier = modifier.height(120.dp),
+        shape = RoundedCornerShape(20.dp),
         colors = CardDefaults.cardColors(containerColor = Color.Transparent),
         elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
     ) {
         Box(modifier = Modifier.fillMaxSize()) {
+            // Fondo con imagen (sin overlay)
             Image(
                 painter = painterResource(id = backgroundRes),
                 contentDescription = null,
                 contentScale = ContentScale.Crop,
                 modifier = Modifier
                     .matchParentSize()
-                    .clip(RoundedCornerShape(18.dp))
+                    .clip(RoundedCornerShape(20.dp))
             )
+
             Column(
                 modifier = Modifier
                     .fillMaxSize()
-                    .padding(vertical = 12.dp, horizontal = 12.dp),
+                    .padding(16.dp),
                 horizontalAlignment = Alignment.CenterHorizontally,
                 verticalArrangement = Arrangement.Center
             ) {
-                Box(
-                    modifier = Modifier
-                        .background(
-                            color = Color.White,
-                            shape = RoundedCornerShape(12.dp)
-                        )
-                        .padding(boxPadding),
-                    contentAlignment = Alignment.Center
-                ) {
-                    Text(
-                        text = count.toString(),
-                        fontSize = fontSize,
-                        fontWeight = FontWeight.Bold,
-                        fontFamily = PoppinsFontFamily,
-                        color = Color(0xFF005E70),
-                        maxLines = 1
-                    )
-                }
+                // Número grande en el centro
+                Text(
+                    text = count.toString(),
+                    fontSize = fontSize,
+                    fontWeight = FontWeight.ExtraBold,
+                    fontFamily = PoppinsFontFamily,
+                    color = textColor,
+                    maxLines = 1
+                )
+
+                Spacer(modifier = Modifier.height(8.dp))
+
+                // Título abajo
                 Text(
                     text = title,
                     fontSize = 14.sp,
                     fontWeight = FontWeight.Bold,
                     fontFamily = PoppinsFontFamily,
-                    color = Color.White,
+                    color = textColor,
                     textAlign = TextAlign.Center,
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis
@@ -661,7 +668,7 @@ fun EmptyStateInline(
     Column(
         modifier = modifier
             .fillMaxWidth()
-            .padding(horizontal = 32.dp, vertical = 48.dp),
+            .padding(start = 32.dp, top = 48.dp, end = 32.dp, bottom = 80.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Center
     ) {

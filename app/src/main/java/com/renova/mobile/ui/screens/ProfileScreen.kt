@@ -675,7 +675,7 @@ fun ProfileHeader(
                             modifier = Modifier.size(20.dp)
                         )
                         Text(
-                            text = "${user.total_points}",
+                            text = "${user.total_points * .1}",
                             color = Color.White,
                             style = MaterialTheme.typography.headlineMedium,
                             fontWeight = FontWeight.W700

@@ -162,7 +162,7 @@ fun DocumentUploadCard(
         )
     ) {
         Column(
-            modifier = Modifier.padding(8.dp),
+            modifier = Modifier.padding(all = 8.dp),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
             Box(
@@ -400,7 +400,9 @@ fun DocumentsUploadSection(
     )
 
     Surface(
-        modifier = modifier.fillMaxWidth(),
+        modifier = modifier
+            .padding(bottom = 80.dp)
+            .fillMaxWidth(),
         shape = RoundedCornerShape(12.dp),
         color = colors.cardBackground,
         border = androidx.compose.foundation.BorderStroke(
@@ -503,7 +505,7 @@ fun DocumentsUploadSection(
                     ) {
                         documents.forEach { doc ->
                             val isCurrentlyUploading = documentUploadState is ProfileViewModel.DocumentUploadState.Loading &&
-                                    (documentUploadState as ProfileViewModel.DocumentUploadState.Loading).documentType == doc.type
+                                    documentUploadState.documentType == doc.type
 
                             DocumentUploadCard(
                                 document = doc,

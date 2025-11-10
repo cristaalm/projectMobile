@@ -9,7 +9,7 @@ import android.util.Log
 class ActivityRepository {
     suspend fun getHistory(
         page: Int = 1,
-        perPage: Int = 10,
+        perPage: Int = 6,
         key: String = "created_at",
         order: String = "desc"
     ): HistoryResponse {

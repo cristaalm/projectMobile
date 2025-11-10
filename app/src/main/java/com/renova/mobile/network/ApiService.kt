@@ -218,7 +218,15 @@ data class Alianza(
     val status: Int,
     val created_at: String,
     val updated_at: String
-)
+){
+    fun getLogoUrl(): String? {
+        return if (logo == true && ext != null) {
+            "https://renova-3q4h.onrender.com/storage/alliances/$id/logo.$ext"
+        } else {
+            null
+        }
+    }
+}
 
 // ========== TYPE SHOP ==========
 data class TypeShopResponse(
@@ -331,7 +339,15 @@ data class Alliance( // Versión de DEVELOP (más completa)
     val status: Int,
     val created_at: String?,
     val updated_at: String?
-)
+){
+    fun getLogoUrl(): String? {
+        return if (logo == true && ext != null) {
+            "https://renova-3q4h.onrender.com/storage/alliances/$id/logo.$ext"
+        } else {
+            null
+        }
+    }
+}
 
 data class MaterialType(
     val id: Int,
@@ -693,6 +709,45 @@ data class TourUser(
     val updated_at: String
 )
 
+
+data class Badge(
+    val id: Int,
+    val name: String,
+    @SerializedName("points_required") val pointsRequired: Int,
+    @SerializedName("points_awarded") val pointsAwarded: Int,
+    val status: Boolean,
+    @SerializedName("created_at") val createdAt: String,
+    @SerializedName("updated_at") val updatedAt: String
+)
+
+data class BadgesListResponse(
+    val success: Boolean,
+    val message: String,
+    val data: BadgesPaginatedData?,
+    val errors: Any?,
+    val status: Int
+)
+
+data class BadgesPaginatedData(
+    val data: List<Badge>,
+    @SerializedName("current_page") val currentPage: Int,
+    @SerializedName("first_page_url") val firstPageUrl: String?,
+    val from: Int?,
+    @SerializedName("last_page") val lastPage: Int,
+    @SerializedName("last_page_url") val lastPageUrl: String?,
+    @SerializedName("next_page_url") val nextPageUrl: String?,
+    val path: String?,
+    @SerializedName("per_page") val perPage: Int,
+    @SerializedName("prev_page_url") val prevPageUrl: String?,
+    val to: Int?,
+    val total: Int
+)
+
+data class ClaimBadgeRequestV2(
+    @SerializedName("user_id") val userId: Int,
+    @SerializedName("badge") val badgeId: Int
+)
+
 // ========== INTERFAZ ApiService (COMBINADA) ==========
 interface ApiService {
 
@@ -723,6 +778,19 @@ interface ApiService {
         @Query("date_start") dateStart: String,
         @Query("date_end") dateEnd: String
     ): Response<TotalPointsResponse>
+
+    @GET("api/badges/getAll")
+    suspend fun getAllBadges(
+        @Query("per_page") perPage: Int = 100,
+        @Query("query") query: String? = null,
+        @Query("key") key: String = "name",
+        @Query("order") order: String = "asc",
+        @Query("status") status: Int = 1,  // 1 = activos
+        @Query("page") page: Int = 1
+    ): Response<BadgesListResponse>
+
+    @POST("api/badges/claimBadge")
+    suspend fun claimBadgeV2(@Body request: ClaimBadgeRequestV2): Response<ClaimBadgeResponse>
 
     @POST("api/users/register")
     suspend fun register(@Body request: RegisterRequest): Response<RegisterResponse>
@@ -856,6 +924,7 @@ interface ApiService {
 // ========== API CLIENT ==========
 object ApiClient {
     private const val BASE_URL = "https://renova-3q4h.onrender.com/"
+    const val STORAGE_URL = "${BASE_URL}storage/"
 
     private var sessionManager: SessionManager? = null
 
