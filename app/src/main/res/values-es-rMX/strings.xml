@@ -771,4 +771,22 @@
 
     <string name="image_compressed_message">La imagen era muy grande y se comprimió automáticamente para cumplir con el límite de 5MB</string>
     <string name="info_title">Información</string>
+
+
+    <!-- Validaciones de Contraseña -->
+    <string name="validation_err_pwd_min_length">Debe tener al menos 8 caracteres</string>
+    <string name="validation_err_pwd_need_number">Debe contener al menos un número</string>
+    <string name="validation_err_pwd_need_special">Debe incluir un carácter especial (!@#$%...)</string>
+
+    <!-- Validaciones de Nombre/Apellido -->
+    <string name="validation_err_name_no_digits">No se permiten números en el nombre</string>
+    <string name="validation_err_name_min_chars">Debe tener al menos 2 caracteres</string>
+    <string name="validation_err_name_invalid">Nombre no válido</string>
+
+    <!-- Validaciones Generales -->
+    <string name="validation_err_email_invalid">Correo electrónico inválido</string>
+    <string name="validation_err_phone_invalid">Número de teléfono inválido (10 dígitos)</string>
+    <string name="validation_err_curp_invalid">CURP inválido</string>
+    <string name="validation_err_pwd_no_match">Las contraseñas no coinciden</string>
+    <string name="validation_err_field_invalid">Campo inválido</string>
 </resources>

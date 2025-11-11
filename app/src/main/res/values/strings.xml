@@ -769,4 +769,21 @@
 
     <string name="image_compressed_message">The image was too large and was automatically compressed to meet the 5MB limit</string>
     <string name="info_title">Information</string>
+
+    <!-- Password Validations -->
+    <string name="validation_err_pwd_min_length">Must be at least 8 characters</string>
+    <string name="validation_err_pwd_need_number">Must contain at least one number</string>
+    <string name="validation_err_pwd_need_special">Must include a special character (!@#$%...)</string>
+
+    <!-- Name/Last Name Validations -->
+    <string name="validation_err_name_no_digits">Numbers are not allowed in names</string>
+    <string name="validation_err_name_min_chars">Must be at least 2 characters</string>
+    <string name="validation_err_name_invalid">Invalid name</string>
+
+    <!-- General Validations -->
+    <string name="validation_err_email_invalid">Invalid email address</string>
+    <string name="validation_err_phone_invalid">Invalid phone number (10 digits)</string>
+    <string name="validation_err_curp_invalid">Invalid CURP</string>
+    <string name="validation_err_pwd_no_match">Passwords do not match</string>
+    <string name="validation_err_field_invalid">Invalid field</string>
 </resources>

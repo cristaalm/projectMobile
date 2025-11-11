@@ -90,10 +90,12 @@ fun RegisterScreen(
                 )
                 onContinueToDocuments(data)
             }
+
             is RegisterState.Error -> {
                 errorMessage = (registerState as RegisterState.Error).message
                 showErrorDialog = true
             }
+
             else -> {}
         }
     }
@@ -412,6 +414,8 @@ fun RegisterScreen(
     }
 }
 
+// ==================== CAMPOS Y VALIDACIONES ====================
+
 @Composable
 fun ValidatedTextField(
     value: String,
@@ -544,8 +548,18 @@ fun ValidatedTextField(
             enter = fadeIn() + expandVertically(),
             exit = fadeOut() + shrinkVertically()
         ) {
+            val errorText = when {
+                label.contains(stringResource(R.string.password), ignoreCase = true) &&
+                        !label.contains(stringResource(R.string.confirm_password), ignoreCase = true) ->
+                    getPasswordError(value)
+                label.contains(stringResource(R.string.first_name), ignoreCase = true) ||
+                        label.contains(stringResource(R.string.last_name), ignoreCase = true) ->
+                    getNameError(value)
+                else -> getErrorMessage(label)
+            }
+
             Text(
-                text = getErrorMessage(label),
+                text = errorText,
                 color = RenovaColors.Error,
                 fontSize = 12.sp,
                 fontFamily = Poppins,
@@ -570,8 +584,12 @@ data class RegisterData(
     val password: String
 )
 
+// ==================== VALIDADORES ====================
+
 fun validateName(name: String): Boolean =
-    name.length >= 2 && name.all { it.isLetter() || it.isWhitespace() }
+    name.length >= 2 &&
+            name.all { it.isLetter() || it.isWhitespace() } &&
+            !name.any { it.isDigit() }
 
 fun validateEmail(email: String): Boolean =
     android.util.Patterns.EMAIL_ADDRESS.matcher(email).matches()
@@ -587,26 +605,38 @@ fun validateCURP(curp: String): Boolean {
 fun validateConfirmPassword(password: String, confirmPassword: String): Boolean =
     password == confirmPassword && password.isNotEmpty()
 
+// ==================== MENSAJES DE ERROR DINÁMICOS ====================
+@Composable
+fun getPasswordError(password: String): String {
+    return when {
+        password.length < 8 -> stringResource(R.string.validation_err_pwd_min_length)
+        !password.any { it.isDigit() } -> stringResource(R.string.validation_err_pwd_need_number)
+        !password.any { it in "!@#$%^&*()_+-=[]{};':\"\\|,.<>/?`~" } ->
+            stringResource(R.string.validation_err_pwd_need_special)
+        else -> ""
+    }
+}
+
+@Composable
+fun getNameError(name: String): String {
+    return when {
+        name.any { it.isDigit() } -> stringResource(R.string.validation_err_name_no_digits)
+        name.length < 2 -> stringResource(R.string.validation_err_name_min_chars)
+        else -> stringResource(R.string.validation_err_name_invalid)
+    }
+}
+
 @Composable
 fun getErrorMessage(label: String): String {
     return when {
-        label.contains(stringResource(R.string.first_name), ignoreCase = true) ||
-                label.contains(stringResource(R.string.last_name), ignoreCase = true) ->
-            stringResource(R.string.error_name_min_length)
-
         label.contains(stringResource(R.string.email), ignoreCase = true) ->
-            stringResource(R.string.email_invalid)
-
+            stringResource(R.string.validation_err_email_invalid)
         label.contains(stringResource(R.string.phone_number), ignoreCase = true) ->
-            stringResource(R.string.error_phone_digits)
-
-        label.contains(stringResource(R.string.password), ignoreCase = true) &&
-                !label.contains(stringResource(R.string.confirm_password), ignoreCase = true) ->
-            stringResource(R.string.error_password_requirements)
-
+            stringResource(R.string.validation_err_phone_invalid)
+        label.contains(stringResource(R.string.document_curp_number), ignoreCase = true) ->
+            stringResource(R.string.validation_err_curp_invalid)
         label.contains(stringResource(R.string.confirm_password), ignoreCase = true) ->
-            stringResource(R.string.error_passwords_not_match)
-
-        else -> stringResource(R.string.error_invalid_field)
+            stringResource(R.string.validation_err_pwd_no_match)
+        else -> stringResource(R.string.validation_err_field_invalid)
     }
 }
