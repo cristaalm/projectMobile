@@ -335,9 +335,8 @@ fun LoginScreen(
 
                                 if (!emailEmptyError && !passwordEmptyError) {
                                     emailError = !android.util.Patterns.EMAIL_ADDRESS.matcher(email).matches()
-                                    passwordError = !validatePassword(password)
 
-                                    if (!emailError && !passwordError) {
+                                    if (!emailError) {
                                         isButtonLoading = true
                                         //CAMBIO CRÍTICO: Pasar rememberMe al ViewModel
                                         viewModel.login(email, password, rememberMe)
