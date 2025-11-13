@@ -41,6 +41,7 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -51,7 +52,12 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.ui.platform.LocalView
 import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.activity.ComponentActivity
+import androidx.core.view.WindowCompat
+import androidx.core.view.WindowInsetsCompat
+import androidx.core.view.WindowInsetsControllerCompat
 import com.renova.mobile.R
 import com.renova.mobile.ui.components.BusinessSectionHeader
 import com.renova.mobile.ui.theme.LocalRenovaColors
@@ -71,6 +77,9 @@ fun BusinessStatisticsScreen(
     val colors = LocalRenovaColors.current
     val uiState by viewModel.uiState.collectAsState()
     val snackbarHostState = remember { SnackbarHostState() }
+
+    // Ocultar barra de navegación
+    HideSystemNavigation()
 
     // Cargar datos al iniciar
     LaunchedEffect(allianceId) {
@@ -250,6 +259,20 @@ fun BusinessStatisticsScreen(
                 .align(Alignment.BottomCenter)
                 .padding(16.dp)
         )
+    }
+}
+
+@Composable
+private fun HideSystemNavigation() {
+    val view = LocalView.current
+    DisposableEffect(Unit) {
+        val window =
+            (view.context as? ComponentActivity)?.window ?: return@DisposableEffect onDispose {}
+        val insetsController = WindowCompat.getInsetsController(window, view)
+        insetsController.hide(WindowInsetsCompat.Type.navigationBars())
+        insetsController.systemBarsBehavior =
+            WindowInsetsControllerCompat.BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE
+        onDispose {}
     }
 }
 
