@@ -714,7 +714,7 @@ data class Badge(
     val id: Int,
     val name: String,
     @SerializedName("points_required") val pointsRequired: Int,
-    @SerializedName("points_awarded") val pointsAwarded: Int,
+    @SerializedName("points_awared") val pointsAwarded: Int,
     val status: Boolean,
     @SerializedName("created_at") val createdAt: String,
     @SerializedName("updated_at") val updatedAt: String

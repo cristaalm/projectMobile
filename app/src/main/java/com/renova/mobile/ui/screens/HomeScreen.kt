@@ -604,7 +604,7 @@ fun HistoryActivityCard(
 }
 
 @Composable
-private fun AnimatedPointsCard(
+fun AnimatedPointsCard(
     totalPoints: Int,
     renovaColors: RenovaColorScheme
 ) {

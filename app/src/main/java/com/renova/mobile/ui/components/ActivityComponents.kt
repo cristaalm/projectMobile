@@ -236,6 +236,7 @@ fun formatFriendlyDate(isoString: String): String {
 fun DetailSheet(activity: ActivityItem) {
     val colors = LocalRenovaColors.current
     val context = LocalContext.current
+    val scrollState = rememberScrollState()
 
     // Determinar el color según si suma o resta puntos
     val pointsColor = when (activity.type_history) {
@@ -245,30 +246,18 @@ fun DetailSheet(activity: ActivityItem) {
         else -> if (activity.points < 0) colors.negativePoints else colors.primaryColor
     }
 
-    // Calcular puntos mostrados (puntos / 10) con formato de 2 decimales
-    val displayPoints = activity.points / 10.0
-
-    // Determinar el texto de los puntos con formato de 2 decimales
+    // Determinar el texto de los puntos
     val pointsText = when (activity.type_history) {
-        1 -> if (activity.points < 0)
-            "${"%.2f".format(displayPoints)}"
-        else "-${"%.2f".format(displayPoints)}"
-        2 -> if (activity.points == 0)
-            "-${"%.2f".format(displayPoints)}-"
-        else "+${"%.2f".format(displayPoints)}"
-        3 -> if (activity.points < 0)
-            "${"%.2f".format(displayPoints)}"
-        else "+${"%.2f".format(displayPoints)}"
-        else -> if (activity.points < 0)
-            "${"%.2f".format(displayPoints)}"
-        else "+${"%.2f".format(-displayPoints)}"
+        1 -> if ("${activity.points}".startsWith("-")) "${activity.points}" else "-${activity.points}"
+        2 -> if (activity.points == 0) "-${activity.points}-" else "+${activity.points}"
+        3 -> if (activity.points < 0) "${activity.points}" else "+${activity.points}"
+        else -> if (activity.points < 0) "${activity.points}" else "+${activity.points * -1}"
     }
 
     Column(
         modifier = Modifier
             .fillMaxWidth()
-            .wrapContentHeight()
-            .verticalScroll(rememberScrollState())
+            .verticalScroll(scrollState)
             .padding(start = 24.dp, end = 24.dp, top = 24.dp, bottom = 48.dp),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
@@ -374,6 +363,7 @@ fun DetailSheet(activity: ActivityItem) {
                 // Información del escaneo
                 activity.scan?.let { scan ->
                     Spacer(modifier = Modifier.height(10.dp))
+                    // Descripción del escaneo
                     scan.description?.let { desc ->
                         Text(
                             text = desc,
@@ -383,9 +373,11 @@ fun DetailSheet(activity: ActivityItem) {
                             textAlign = TextAlign.Center
                         )
                     }
+
                 }
             }
             3 -> {
+
                 // Ajuste manual: Mostrar descripción si existe
                 Text(
                     text = context.getString(R.string.manual_adjustment),
@@ -436,7 +428,7 @@ fun DetailSheet(activity: ActivityItem) {
 
         Spacer(modifier = Modifier.height(10.dp))
 
-        // Equivalente en MXN (puntos originales * 0.01)
+        // Equivalente en MXN
         Text(
             text = "$${"%.2f".format(kotlin.math.abs(activity.points) * 0.01)} MXN",
             fontFamily = PoppinsFontFamily,
@@ -465,13 +457,13 @@ fun AnimatedPointsCardActivity(
     shouldAnimate: Boolean = true
 ) {
     // Animación del contador de puntos
-    var animatedPoints by remember { mutableStateOf(if (shouldAnimate) 0f else totalPoints) }
+    var animatedPoints by remember { mutableStateOf(if (shouldAnimate) 0f else totalPoints.toFloat()) }
 
     LaunchedEffect(totalPoints, shouldAnimate) {
         if (shouldAnimate) {
             animate(
                 initialValue = 0f,
-                targetValue = totalPoints,
+                targetValue = totalPoints.toFloat(),
                 animationSpec = tween(
                     durationMillis = 2500,
                     easing = FastOutSlowInEasing
@@ -480,7 +472,7 @@ fun AnimatedPointsCardActivity(
                 animatedPoints = value
             }
         } else {
-            animatedPoints = totalPoints
+            animatedPoints = totalPoints.toFloat()
         }
     }
 
@@ -528,11 +520,9 @@ fun AnimatedPointsCardActivity(
                     Spacer(modifier = Modifier.height(4.dp))
                     Row {
                         Text(
-                            text = String.format(
-                                java.util.Locale.forLanguageTag("es-MX"),
-                                "%.2f",
-                                animatedPoints
-                            ),
+                            text = java.text.NumberFormat.getIntegerInstance(
+                                java.util.Locale.forLanguageTag("es-MX")
+                            ).format(animatedPoints.toFloat()),
                             style = MaterialTheme.typography.displayLarge,
                             color = Color.White,
                             fontSize = 52.sp,

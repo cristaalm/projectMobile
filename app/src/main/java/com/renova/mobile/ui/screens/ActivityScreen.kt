@@ -38,6 +38,7 @@ import com.renova.mobile.ui.theme.RenovaColorScheme
 import com.renova.mobile.ui.theme.RenovaColors
 import com.renova.mobile.ui.viewmodels.ActivityViewModel
 import com.renova.mobile.ui.components.*
+import com.renova.mobile.ui.screens.AnimatedPointsCard
 import androidx.compose.ui.layout.onGloballyPositioned
 import com.renova.mobile.ui.tour.LocalTourState
 import androidx.compose.runtime.DisposableEffect
@@ -261,10 +262,9 @@ private fun ActivityContent(
                         itemIndex = 0
                     )
                 }) {
-                    AnimatedPointsCardActivity(
-                        totalPoints = (state.totalPoints * 0.1).toFloat(),
-                        renovaColors = renovaColors,
-                        shouldAnimate = shouldAnimatePoints
+                    AnimatedPointsCard(
+                        totalPoints = state.totalPoints,
+                        renovaColors = renovaColors
                     )
                 }
             }
@@ -548,7 +548,7 @@ fun ActivityHistoryCard(
 
         Column(horizontalAlignment = Alignment.End) {
             // Calcular puntos con formato de 2 decimales
-            val displayPoints = activity.points * 0.1
+            val displayPoints = activity.points
 
             val pointsColor = when (activity.type_history) {
                 1 -> colors.negativePoints
@@ -556,26 +556,8 @@ fun ActivityHistoryCard(
                 3 -> if (activity.points < 0) colors.negativePoints else colors.primaryColor
                 else -> if (activity.points == 0) colors.textPrimary else colors.primaryColor
             }
-            val pointsText = when (activity.type_history) {
-                1 -> if (activity.points < 0)
-                    "${"%.2f".format(displayPoints)}"
-                else
-                    "-${"%.2f".format(kotlin.math.abs(displayPoints))}"
-                2 -> if (activity.points == 0)
-                    "-${"%.2f".format(displayPoints)}-"
-                else
-                    "+${"%.2f".format(displayPoints)}"
-                3 -> if (activity.points < 0)
-                    "${"%.2f".format(displayPoints)}"
-                else
-                    "+${"%.2f".format(displayPoints)}"
-                else -> if (activity.points == 0)
-                    "${"%.2f".format(displayPoints)}"
-                else
-                    "+${"%.2f".format(displayPoints)}"
-            }
             Text(
-                text = pointsText,
+                text = "$displayPoints",
                 style = MaterialTheme.typography.bodyLarge.copy(
                     fontFamily = PoppinsFontFamily,
                     fontWeight = FontWeight.Bold
