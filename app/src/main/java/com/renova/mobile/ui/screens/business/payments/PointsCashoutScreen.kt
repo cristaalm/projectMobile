@@ -34,7 +34,7 @@ import com.renova.mobile.ui.components.business.home.HistorySaleCard
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.ui.draw.shadow
 
-private const val POINT_TO_MXN = 0.01  // 1 centavo por punto
+private const val POINT_TO_MXN = 0.1  // 1 centavo por punto
 
 @Composable
 fun PointsCashoutScreen(

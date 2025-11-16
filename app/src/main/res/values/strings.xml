@@ -472,7 +472,7 @@
     <string name="cashout_title">Cash Out Points</string>
     <string name="cashout_back">Back</string>
     <string name="cashout_available_points">Available points</string>
-    <string name="cashout_conversion_rate">Conversion rate: 1 point = $0.01 MXN</string>
+    <string name="cashout_conversion_rate">Conversion rate: 1 point = $0.10 MXN</string>
     <string name="cashout_points_label">Available points</string>
     <string name="cashout_equivalent">Equivalent:</string>
     <string name="cashout_no_points">No points available to cash out</string>

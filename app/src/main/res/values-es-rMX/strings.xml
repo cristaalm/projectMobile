@@ -475,7 +475,7 @@
     <string name="cashout_title">Cobrar Puntos</string>
     <string name="cashout_back">Atrás</string>
     <string name="cashout_available_points">Puntos disponibles</string>
-    <string name="cashout_conversion_rate">Tasa de conversión: 1 punto = $0.01 MXN</string>
+    <string name="cashout_conversion_rate">Tasa de conversión: 1 punto = $0.10 MXN</string>
     <string name="cashout_points_label">Puntos disponibles</string>
     <string name="cashout_equivalent">Equivalente:</string>
     <string name="cashout_no_points">No hay puntos disponibles para cobrar</string>
