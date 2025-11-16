@@ -3,7 +3,9 @@ package com.renova.mobile.screens
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -28,6 +30,7 @@ fun ForgotPasswordScreen(
     viewModel: ForgotPasswordViewModel = viewModel()
 ) {
     val colors = MaterialTheme.renovaColors
+    val scrollState = rememberScrollState()
 
     var email by remember { mutableStateOf("") }
     var emailError by remember { mutableStateOf(false) }
@@ -60,7 +63,6 @@ fun ForgotPasswordScreen(
         modifier = Modifier
             .fillMaxSize()
             .background(RenovaGradients.backgroundGradient())
-            .padding(24.dp)
     ) {
         SubtleLeavesBackground(
             modifier = Modifier.fillMaxSize(),
@@ -70,173 +72,175 @@ fun ForgotPasswordScreen(
             )
         )
 
-        Box(
-            modifier = Modifier.fillMaxSize(),
-            contentAlignment = Alignment.Center
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .verticalScroll(scrollState)
+                .imePadding()
+                .navigationBarsPadding()
+                .padding(24.dp),
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.Center
         ) {
-            Column(
-                horizontalAlignment = Alignment.CenterHorizontally,
-                verticalArrangement = Arrangement.Center
+            Spacer(modifier = Modifier.weight(1f))
+
+            Image(
+                painter = painterResource(id = R.drawable.logo),
+                contentDescription = stringResource(R.string.logo_description),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(150.dp)
+                    .padding(bottom = 24.dp)
+            )
+
+            Card(
+                modifier = Modifier.fillMaxWidth(),
+                shape = RoundedCornerShape(16.dp),
+                colors = CardDefaults.cardColors(containerColor = colors.cardBackground),
+                elevation = CardDefaults.cardElevation(defaultElevation = 8.dp)
             ) {
-                Image(
-                    painter = painterResource(id = R.drawable.logo),
-                    contentDescription = stringResource(R.string.logo_description),
-                    modifier = Modifier
-                        .padding(horizontal = 16.dp)
-                        .fillMaxWidth()
-                        .height(150.dp)
-                        .padding(bottom = 24.dp)
-                )
-
-                Card(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(horizontal = 16.dp),
-                    shape = RoundedCornerShape(16.dp),
-                    colors = CardDefaults.cardColors(containerColor = colors.cardBackground),
-                    elevation = CardDefaults.cardElevation(defaultElevation = 8.dp)
+                Column(
+                    modifier = Modifier.padding(32.dp),
+                    horizontalAlignment = Alignment.CenterHorizontally
                 ) {
-                    Column(
-                        modifier = Modifier.padding(32.dp),
-                        horizontalAlignment = Alignment.CenterHorizontally
-                    ) {
-                        Text(
-                            text = stringResource(R.string.forgot_password_title),
-                            fontSize = 24.sp,
-                            fontWeight = FontWeight.Bold,
-                            fontFamily = PoppinsFontFamily,
+                    Text(
+                        text = stringResource(R.string.forgot_password_title),
+                        fontSize = 24.sp,
+                        fontWeight = FontWeight.Bold,
+                        fontFamily = PoppinsFontFamily,
+                        color = colors.textPrimary,
+                        textAlign = TextAlign.Center
+                    )
+
+                    Spacer(modifier = Modifier.height(8.dp))
+
+                    Text(
+                        text = stringResource(R.string.enter_email_password),
+                        fontSize = 14.sp,
+                        fontFamily = PoppinsFontFamily,
+                        color = colors.textSecondary,
+                        textAlign = TextAlign.Center,
+                        modifier = Modifier.padding(horizontal = 8.dp)
+                    )
+
+                    Spacer(modifier = Modifier.height(24.dp))
+
+                    Text(
+                        text = stringResource(R.string.email),
+                        color = colors.textPrimary,
+                        fontSize = 14.sp,
+                        fontWeight = FontWeight.Medium,
+                        fontFamily = PoppinsFontFamily,
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(bottom = 4.dp)
+                    )
+
+                    OutlinedTextField(
+                        value = email,
+                        onValueChange = {
+                            email = it
+                            emailError = it.isNotEmpty() && !android.util.Patterns.EMAIL_ADDRESS.matcher(it).matches()
+                            if (it.isNotEmpty()) emailEmptyError = false
+                        },
+                        leadingIcon = {
+                            Icon(
+                                painter = painterResource(id = R.drawable.ic_email),
+                                contentDescription = stringResource(R.string.email),
+                                tint = colors.iconTint
+                            )
+                        },
+                        isError = emailError || emailEmptyError,
+                        singleLine = true,
+                        modifier = Modifier.fillMaxWidth(),
+                        shape = RoundedCornerShape(12.dp),
+                        textStyle = TextStyle(
                             color = colors.textPrimary,
-                            textAlign = TextAlign.Center
-                        )
+                            fontFamily = PoppinsFontFamily
+                        ),
+                        colors = RenovaComponentColors.textFieldColors()
+                    )
 
-                        Spacer(modifier = Modifier.height(8.dp))
-
+                    if ((emailError && email.isNotEmpty()) || emailEmptyError) {
                         Text(
-                            text = stringResource(R.string.enter_email_password),
-                            fontSize = 14.sp,
+                            text = if (emailEmptyError)
+                                stringResource(R.string.email_required)
+                            else
+                                stringResource(R.string.email_invalid),
+                            color = RenovaColors.Error,
+                            fontSize = 12.sp,
                             fontFamily = PoppinsFontFamily,
-                            color = colors.textSecondary,
-                            textAlign = TextAlign.Center,
-                            modifier = Modifier.padding(horizontal = 8.dp)
-                        )
-
-                        Spacer(modifier = Modifier.height(24.dp))
-
-                        Text(
-                            text = stringResource(R.string.email),
-                            color = colors.textPrimary,
-                            fontSize = 14.sp,
-                            fontWeight = FontWeight.Medium,
-                            fontFamily = PoppinsFontFamily,
+                            lineHeight = 14.sp,
                             modifier = Modifier
                                 .fillMaxWidth()
-                                .padding(bottom = 4.dp)
+                                .padding(start = 16.dp, top = 4.dp)
                         )
+                    }
 
-                        OutlinedTextField(
-                            value = email,
-                            onValueChange = {
-                                email = it
-                                emailError = it.isNotEmpty() && !android.util.Patterns.EMAIL_ADDRESS.matcher(it).matches()
-                                if (it.isNotEmpty()) emailEmptyError = false
-                            },
-                            leadingIcon = {
-                                Icon(
-                                    painter = painterResource(id = R.drawable.ic_email),
-                                    contentDescription = stringResource(R.string.email),
-                                    tint = colors.iconTint
-                                )
-                            },
-                            isError = emailError || emailEmptyError,
-                            singleLine = true,
-                            modifier = Modifier.fillMaxWidth(),
-                            shape = RoundedCornerShape(12.dp),
-                            textStyle = TextStyle(
-                                color = colors.textPrimary,
-                                fontFamily = PoppinsFontFamily
-                            ),
-                            colors = RenovaComponentColors.textFieldColors()
-                        )
+                    Spacer(modifier = Modifier.height(24.dp))
 
-                        if ((emailError && email.isNotEmpty()) || emailEmptyError) {
-                            Text(
-                                text = if (emailEmptyError)
-                                    stringResource(R.string.email_required)
-                                else
-                                    stringResource(R.string.email_invalid),
-                                color = RenovaColors.Error,
-                                fontSize = 12.sp,
-                                fontFamily = PoppinsFontFamily,
-                                lineHeight = 14.sp,
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .padding(start = 16.dp, top = 4.dp)
-                            )
-                        }
-
-                        Spacer(modifier = Modifier.height(24.dp))
-
-                        Button(
-                            onClick = {
-                                emailEmptyError = email.isEmpty()
-                                if (!emailEmptyError) {
-                                    emailError = !android.util.Patterns.EMAIL_ADDRESS.matcher(email).matches()
-                                    if (!emailError) {
-                                        viewModel.forgotPassword(email)
-                                    }
+                    Button(
+                        onClick = {
+                            emailEmptyError = email.isEmpty()
+                            if (!emailEmptyError) {
+                                emailError = !android.util.Patterns.EMAIL_ADDRESS.matcher(email).matches()
+                                if (!emailError) {
+                                    viewModel.forgotPassword(email)
                                 }
-                            },
-                            enabled = !forgotPasswordState.isLoading,
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .height(50.dp),
-                            shape = RoundedCornerShape(12.dp),
-                            colors = ButtonDefaults.buttonColors(
-                                containerColor = CustomGreenColor,
-                                disabledContainerColor = CustomGreenColor.copy(alpha = 0.6f)
-                            )
-                        ) {
-                            if (forgotPasswordState.isLoading) {
-                                CircularProgressIndicator(
-                                    modifier = Modifier.size(16.dp),
-                                    color = Color.White,
-                                    strokeWidth = 2.dp
-                                )
-                                Spacer(modifier = Modifier.width(8.dp))
-                                Text(
-                                    stringResource(R.string.sending),
-                                    fontSize = 16.sp,
-                                    fontWeight = FontWeight.Bold,
-                                    fontFamily = PoppinsFontFamily,
-                                    color = Color.White
-                                )
-                            } else {
-                                Text(
-                                    stringResource(R.string.send_link),
-                                    fontSize = 16.sp,
-                                    fontWeight = FontWeight.Bold,
-                                    fontFamily = PoppinsFontFamily,
-                                    color = Color.White
-                                )
                             }
-                        }
-
-                        Spacer(modifier = Modifier.height(16.dp))
-
-                        TextButton(
-                            onClick = { onBackToLogin() },
-                            modifier = Modifier.fillMaxWidth()
-                        ) {
+                        },
+                        enabled = !forgotPasswordState.isLoading,
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(50.dp),
+                        shape = RoundedCornerShape(12.dp),
+                        colors = ButtonDefaults.buttonColors(
+                            containerColor = CustomGreenColor,
+                            disabledContainerColor = CustomGreenColor.copy(alpha = 0.6f)
+                        )
+                    ) {
+                        if (forgotPasswordState.isLoading) {
+                            CircularProgressIndicator(
+                                modifier = Modifier.size(16.dp),
+                                color = Color.White,
+                                strokeWidth = 2.dp
+                            )
+                            Spacer(modifier = Modifier.width(8.dp))
                             Text(
-                                stringResource(R.string.return_login),
-                                color = RenovaColors.Primary,
-                                fontSize = 14.sp,
-                                fontFamily = PoppinsFontFamily
+                                stringResource(R.string.sending),
+                                fontSize = 16.sp,
+                                fontWeight = FontWeight.Bold,
+                                fontFamily = PoppinsFontFamily,
+                                color = Color.White
+                            )
+                        } else {
+                            Text(
+                                stringResource(R.string.send_link),
+                                fontSize = 16.sp,
+                                fontWeight = FontWeight.Bold,
+                                fontFamily = PoppinsFontFamily,
+                                color = Color.White
                             )
                         }
                     }
+
+                    Spacer(modifier = Modifier.height(16.dp))
+
+                    TextButton(
+                        onClick = { onBackToLogin() },
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+                        Text(
+                            stringResource(R.string.return_login),
+                            color = RenovaColors.Primary,
+                            fontSize = 14.sp,
+                            fontFamily = PoppinsFontFamily
+                        )
+                    }
                 }
             }
+
+            Spacer(modifier = Modifier.weight(1f))
         }
     }
 
