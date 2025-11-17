@@ -932,6 +932,15 @@ object ApiClient {
         level = HttpLoggingInterceptor.Level.BODY
     }
 
+    // ✅ Lista de endpoints que NO requieren autenticación
+    private val publicEndpoints = listOf(
+        "/api/users/register",
+        "/api/auth/login",
+        "/api/auth/forgot-password",
+        "/api/auth/reset-password",
+        "/api/auth/validateToken"
+    )
+
     private val client: OkHttpClient
         get() {
             if (sessionManager == null) {
@@ -942,19 +951,35 @@ object ApiClient {
                 .addInterceptor(loggingInterceptor)
                 .addInterceptor { chain ->
                     val original = chain.request()
+                    val url = original.url.toString()
+
+                    // ✅ Verificar si es un endpoint público
+                    val isPublicEndpoint = publicEndpoints.any { endpoint ->
+                        url.contains(endpoint)
+                    }
+
                     val builder = original.newBuilder()
 
-                    val alreadyHasAuth = original.header("Authorization") != null
-                    val token = sessionManager?.getAuthToken()
-                    if (token != null && !alreadyHasAuth) {
-                        builder.addHeader("Authorization", token)
+                    // ✅ Solo añadir token si NO es un endpoint público
+                    if (!isPublicEndpoint) {
+                        val token = sessionManager?.getAuthToken()
+                        val tokenType = sessionManager?.getTokenType() ?: "Bearer"
+
+                        if (!token.isNullOrEmpty()) {
+                            android.util.Log.d("ApiClient", "🔐 Endpoint protegido: ${original.url.encodedPath} - Añadiendo token")
+                            builder.addHeader("Authorization", "$tokenType $token")
+                        } else {
+                            android.util.Log.w("ApiClient", "⚠️ Token no disponible para: ${original.url.encodedPath}")
+                        }
+                    } else {
+                        android.util.Log.d("ApiClient", "🔓 Endpoint público: ${original.url.encodedPath} - Sin token")
                     }
 
                     chain.proceed(builder.build())
                 }
                 .connectTimeout(30, TimeUnit.SECONDS)
                 .readTimeout(30, TimeUnit.SECONDS)
-                .writeTimeout(60, TimeUnit.SECONDS) // Ambas ramas tenían 60s
+                .writeTimeout(60, TimeUnit.SECONDS)
                 .build()
         }
 

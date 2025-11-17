@@ -64,8 +64,18 @@ class RegisterViewModel : ViewModel() {
     }
 
     fun registerUser(registerData: RegisterData) {
+        // ✅ Prevenir múltiples llamadas
+        if (_registerState.value is RegisterState.Loading) {
+            android.util.Log.w("RegisterViewModel", "Ya hay un registro en progreso, ignorando...")
+            return
+        }
+
         viewModelScope.launch {
             _registerState.value = RegisterState.Loading
+
+            android.util.Log.d("RegisterViewModel", "=== INICIANDO REGISTRO ===")
+            android.util.Log.d("RegisterViewModel", "Email: ${registerData.email}")
+
             try {
                 val request = RegisterRequest(
                     name = registerData.firstName,
@@ -77,16 +87,24 @@ class RegisterViewModel : ViewModel() {
                     password_confirmation = registerData.password
                 )
 
+                android.util.Log.d("RegisterViewModel", "Enviando petición al servidor...")
                 val response = ApiClient.apiService.register(request)
+                android.util.Log.d("RegisterViewModel", "Respuesta recibida: ${response.code()}")
 
                 if (response.isSuccessful && response.body()?.success == true) {
                     val data = response.body()?.data
+                    android.util.Log.d("RegisterViewModel", "✅ Registro exitoso")
+
                     if (data != null) {
                         userId = data.user.id
                         authToken = data.access_token
                         tokenType = data.token_type
                         expiresAt = data.expires_at
 
+                        android.util.Log.d("RegisterViewModel", "UserId: $userId")
+                        android.util.Log.d("RegisterViewModel", "Token guardado en SessionManager")
+
+                        // Guardar token temporal
                         sessionManager?.saveAuthToken(authToken, tokenType)
 
                         _registerState.value = RegisterState.Success(
@@ -96,6 +114,7 @@ class RegisterViewModel : ViewModel() {
                             expiresAt = expiresAt
                         )
                     } else {
+                        android.util.Log.e("RegisterViewModel", "❌ Data es null")
                         val errorMsg = appContext?.let { ctx ->
                             RegisterErrorMapper.mapRegisterError(
                                 "Error: datos de usuario no disponibles",
@@ -107,37 +126,31 @@ class RegisterViewModel : ViewModel() {
                     }
                 } else {
                     val responseBody = response.body()
+                    val errorBody = response.errorBody()?.string()
 
-                    // 🔍 DEBUG: Ver qué está llegando
-                    android.util.Log.d("RegisterViewModel", "=== DEBUG REGISTER ERROR ===")
-                    android.util.Log.d("RegisterViewModel", "Status Code: ${response.code()}")
-                    android.util.Log.d("RegisterViewModel", "Response Body: $responseBody")
-                    android.util.Log.d("RegisterViewModel", "Message: ${responseBody?.message}")
-                    android.util.Log.d("RegisterViewModel", "Errors: ${responseBody?.errors}")
-                    android.util.Log.d("RegisterViewModel", "Errors Type: ${responseBody?.errors?.javaClass}")
+                    android.util.Log.e("RegisterViewModel", "=== ERROR EN REGISTRO ===")
+                    android.util.Log.e("RegisterViewModel", "Status Code: ${response.code()}")
+                    android.util.Log.e("RegisterViewModel", "Response Body: $responseBody")
+                    android.util.Log.e("RegisterViewModel", "Error Body: $errorBody")
+                    android.util.Log.e("RegisterViewModel", "Message: ${responseBody?.message}")
+                    android.util.Log.e("RegisterViewModel", "Errors: ${responseBody?.errors}")
 
-                    // 🌍 Mapear el error al idioma actual
-                    val backendMessage = responseBody?.message ?: "Error al registrar usuario"
+                    val backendMessage = responseBody?.message ?: errorBody ?: "Error al registrar usuario"
                     val statusCode = response.code()
 
-                    // Verificar si hay errores específicos de validación (422)
                     val localizedMessage = if (statusCode == 422 && responseBody?.errors != null) {
-                        // Extraer el primer error específico del campo
                         val errors = responseBody.errors
-                        android.util.Log.d("RegisterViewModel", "Errors is Map: ${errors is Map<*, *>}")
 
                         if (errors is Map<*, *>) {
                             val errorsMap = errors as? Map<String, List<String>>
-                            android.util.Log.d("RegisterViewModel", "Errors Map: $errorsMap")
-
                             val firstError = errorsMap?.entries?.firstOrNull()
-                            android.util.Log.d("RegisterViewModel", "First Error: $firstError")
 
                             if (firstError != null && firstError.value.isNotEmpty()) {
                                 val fieldName = firstError.key
                                 val errorMessage = firstError.value.first()
 
-                                android.util.Log.d("RegisterViewModel", "Field: $fieldName, Message: $errorMessage")
+                                android.util.Log.d("RegisterViewModel", "Campo con error: $fieldName")
+                                android.util.Log.d("RegisterViewModel", "Mensaje de error: $errorMessage")
 
                                 appContext?.let { ctx ->
                                     RegisterErrorMapper.mapValidationError(fieldName, errorMessage, ctx)
@@ -158,11 +171,15 @@ class RegisterViewModel : ViewModel() {
                         } ?: backendMessage
                     }
 
-                    android.util.Log.d("RegisterViewModel", "Final Localized Message: $localizedMessage")
-
+                    android.util.Log.e("RegisterViewModel", "Mensaje final: $localizedMessage")
                     _registerState.value = RegisterState.Error(localizedMessage)
                 }
             } catch (e: Exception) {
+                android.util.Log.e("RegisterViewModel", "=== EXCEPCIÓN EN REGISTRO ===", e)
+                android.util.Log.e("RegisterViewModel", "Tipo: ${e.javaClass.simpleName}")
+                android.util.Log.e("RegisterViewModel", "Mensaje: ${e.message}")
+                android.util.Log.e("RegisterViewModel", "Causa: ${e.cause}")
+
                 val errorMsg = appContext?.let { ctx ->
                     RegisterErrorMapper.mapRegisterError(
                         "Error de conexión: ${e.message}",
@@ -176,11 +193,24 @@ class RegisterViewModel : ViewModel() {
     }
 
     fun uploadDocuments(context: Context, documentsData: DocumentsData) {
+        // ✅ Prevenir múltiples llamadas
+        if (_uploadDocumentsState.value is UploadState.Loading) {
+            android.util.Log.w("RegisterViewModel", "Ya hay una subida en progreso, ignorando...")
+            return
+        }
+
         viewModelScope.launch {
             _uploadDocumentsState.value = UploadState.Loading
+
+            android.util.Log.d("RegisterViewModel", "=== SUBIENDO DOCUMENTOS ===")
+            android.util.Log.d("RegisterViewModel", "UserId: $userId")
+
             try {
                 val frontFile = uriToFile(context, documentsData.ineFrontUri, "front.jpg")
                 val backFile = uriToFile(context, documentsData.ineBackUri, "back.jpg")
+
+                android.util.Log.d("RegisterViewModel", "Front file size: ${frontFile.length()} bytes")
+                android.util.Log.d("RegisterViewModel", "Back file size: ${backFile.length()} bytes")
 
                 val frontPart = MultipartBody.Part.createFormData(
                     "document_front",
@@ -200,15 +230,22 @@ class RegisterViewModel : ViewModel() {
                     document_back = backPart
                 )
 
+                android.util.Log.d("RegisterViewModel", "Respuesta documentos: ${response.code()}")
+
                 if (response.isSuccessful && response.body()?.success == true) {
+                    android.util.Log.d("RegisterViewModel", "✅ Documentos subidos exitosamente")
                     _uploadDocumentsState.value = UploadState.Success
                 } else {
-                    // 🌍 Mapear el error al idioma actual
                     val responseBody = response.body()
-                    val backendMessage = responseBody?.message ?: "Error al subir documentos"
+                    val errorBody = response.errorBody()?.string()
+
+                    android.util.Log.e("RegisterViewModel", "Error subiendo documentos")
+                    android.util.Log.e("RegisterViewModel", "Response: $responseBody")
+                    android.util.Log.e("RegisterViewModel", "Error Body: $errorBody")
+
+                    val backendMessage = responseBody?.message ?: errorBody ?: "Error al subir documentos"
                     val statusCode = response.code()
 
-                    // Verificar si hay errores específicos de validación (422)
                     val localizedMessage = if (statusCode == 422 && responseBody?.errors != null) {
                         val errors = responseBody.errors
                         if (errors is Map<*, *>) {
@@ -231,6 +268,7 @@ class RegisterViewModel : ViewModel() {
                     _uploadDocumentsState.value = UploadState.Error(localizedMessage)
                 }
             } catch (e: Exception) {
+                android.util.Log.e("RegisterViewModel", "Excepción subiendo documentos", e)
                 val localizedMessage = DocumentsErrorMapper.mapDocumentsError(
                     "Error de conexión: ${e.message}",
                     -1,
@@ -242,10 +280,21 @@ class RegisterViewModel : ViewModel() {
     }
 
     fun uploadSelfie(context: Context, selfieUri: Uri) {
+        // ✅ Prevenir múltiples llamadas
+        if (_uploadSelfieState.value is UploadState.Loading) {
+            android.util.Log.w("RegisterViewModel", "Ya hay una subida en progreso, ignorando...")
+            return
+        }
+
         viewModelScope.launch {
             _uploadSelfieState.value = UploadState.Loading
+
+            android.util.Log.d("RegisterViewModel", "=== SUBIENDO SELFIE ===")
+            android.util.Log.d("RegisterViewModel", "UserId: $userId")
+
             try {
                 val selfieFile = uriToFile(context, selfieUri, "selfie.jpg")
+                android.util.Log.d("RegisterViewModel", "Selfie file size: ${selfieFile.length()} bytes")
 
                 val selfiePart = MultipartBody.Part.createFormData(
                     "selfie",
@@ -258,15 +307,22 @@ class RegisterViewModel : ViewModel() {
                     selfie = selfiePart
                 )
 
+                android.util.Log.d("RegisterViewModel", "Respuesta selfie: ${response.code()}")
+
                 if (response.isSuccessful && response.body()?.success == true) {
+                    android.util.Log.d("RegisterViewModel", "✅ Selfie subida exitosamente")
                     _uploadSelfieState.value = UploadState.Success
                 } else {
-                    // 🌍 Mapear el error al idioma actual
                     val responseBody = response.body()
-                    val backendMessage = responseBody?.message ?: "Error al subir selfie"
+                    val errorBody = response.errorBody()?.string()
+
+                    android.util.Log.e("RegisterViewModel", "Error subiendo selfie")
+                    android.util.Log.e("RegisterViewModel", "Response: $responseBody")
+                    android.util.Log.e("RegisterViewModel", "Error Body: $errorBody")
+
+                    val backendMessage = responseBody?.message ?: errorBody ?: "Error al subir selfie"
                     val statusCode = response.code()
 
-                    // Verificar si hay errores específicos de validación (422)
                     val localizedMessage = if (statusCode == 422 && responseBody?.errors != null) {
                         val errors = responseBody.errors
                         if (errors is Map<*, *>) {
@@ -289,6 +345,7 @@ class RegisterViewModel : ViewModel() {
                     _uploadSelfieState.value = UploadState.Error(localizedMessage)
                 }
             } catch (e: Exception) {
+                android.util.Log.e("RegisterViewModel", "Excepción subiendo selfie", e)
                 val localizedMessage = SelfieErrorMapper.mapSelfieError(
                     "Error de conexión: ${e.message}",
                     -1,
@@ -310,12 +367,14 @@ class RegisterViewModel : ViewModel() {
     }
 
     fun resetStates() {
+        android.util.Log.d("RegisterViewModel", "Reseteando estados...")
         _registerState.value = RegisterState.Idle
         _uploadDocumentsState.value = UploadState.Idle
         _uploadSelfieState.value = UploadState.Idle
     }
 
     fun clearSession() {
+        android.util.Log.d("RegisterViewModel", "Limpiando sesión temporal...")
         sessionManager?.clearAuthToken()
         userId = 0
         authToken = ""

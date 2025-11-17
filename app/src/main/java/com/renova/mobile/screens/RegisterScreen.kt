@@ -76,10 +76,11 @@ fun RegisterScreen(
     var showErrorDialog by remember { mutableStateOf(false) }
     var errorMessage by remember { mutableStateOf("") }
 
-    // Observar el estado del registro
+    // ✅ CORREGIDO: Observar el estado del registro SIN volver a llamar registerUser
     LaunchedEffect(registerState) {
         when (registerState) {
             is RegisterState.Success -> {
+                // Solo navegar a la siguiente pantalla
                 val data = RegisterData(
                     firstName = firstName,
                     lastName = lastName,
@@ -369,7 +370,8 @@ fun RegisterScreen(
                                     passwordValidation == ValidationState.VALID &&
                                     confirmPasswordValidation == ValidationState.VALID
 
-                            if (allValid) {
+                            // ✅ CORREGIDO: Solo registrar una vez
+                            if (allValid && registerState !is RegisterState.Loading) {
                                 val data = RegisterData(
                                     firstName = firstName,
                                     lastName = lastName,
@@ -601,6 +603,7 @@ fun validateCURP(curp: String): Boolean {
     val curpPattern = "^[A-Z]{4}\\d{6}[HM][A-Z]{2}[BCDFGHJKLMNPQRSTVWXYZ]{3}[0-9A-Z]\\d$"
     return curp.matches(curpPattern.toRegex())
 }
+
 
 fun validateConfirmPassword(password: String, confirmPassword: String): Boolean =
     password == confirmPassword && password.isNotEmpty()
