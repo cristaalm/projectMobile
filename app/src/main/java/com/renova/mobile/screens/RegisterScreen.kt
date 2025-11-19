@@ -55,13 +55,16 @@ fun RegisterScreen(
         viewModel.setSessionManager(context)
     }
 
-    var firstName by remember { mutableStateOf("") }
-    var lastName by remember { mutableStateOf("") }
-    var email by remember { mutableStateOf("") }
-    var phone by remember { mutableStateOf("") }
-    var curp by remember { mutableStateOf("") }
-    var password by remember { mutableStateOf("") }
-    var confirmPassword by remember { mutableStateOf("") }
+    // ✅ DESPUÉS: Obtener datos del ViewModel
+    val savedFormData by viewModel.formData.collectAsState()
+
+    var firstName by remember(savedFormData) { mutableStateOf(savedFormData.firstName) }
+    var lastName by remember(savedFormData) { mutableStateOf(savedFormData.lastName) }
+    var email by remember(savedFormData) { mutableStateOf(savedFormData.email) }
+    var phone by remember(savedFormData) { mutableStateOf(savedFormData.phone) }
+    var curp by remember(savedFormData) { mutableStateOf(savedFormData.curp) }
+    var password by remember(savedFormData) { mutableStateOf(savedFormData.password) }
+    var confirmPassword by remember(savedFormData) { mutableStateOf(savedFormData.password) }
     var passwordVisible by remember { mutableStateOf(false) }
     var confirmPasswordVisible by remember { mutableStateOf(false) }
 
@@ -370,7 +373,6 @@ fun RegisterScreen(
                                     passwordValidation == ValidationState.VALID &&
                                     confirmPasswordValidation == ValidationState.VALID
 
-                            // ✅ CORREGIDO: Solo registrar una vez
                             if (allValid && registerState !is RegisterState.Loading) {
                                 val data = RegisterData(
                                     firstName = firstName,
@@ -380,6 +382,8 @@ fun RegisterScreen(
                                     curp = curp,
                                     password = password
                                 )
+                                // ✅ Guardar en el ViewModel ANTES de registrar
+                                viewModel.updateFormData(data)
                                 viewModel.registerUser(data)
                             }
                         },

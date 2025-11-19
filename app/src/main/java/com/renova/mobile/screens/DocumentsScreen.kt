@@ -46,8 +46,11 @@ fun DocumentsScreen(
     val context = LocalContext.current
     val uploadState by viewModel.uploadDocumentsState.collectAsState()
 
-    var ineFrontUri by remember { mutableStateOf<Uri?>(null) }
-    var ineBackUri by remember { mutableStateOf<Uri?>(null) }
+    val savedUris by viewModel.documentsUris.collectAsState()
+
+    var ineFrontUri by remember(savedUris) { mutableStateOf(savedUris.first) }
+    var ineBackUri by remember(savedUris) { mutableStateOf(savedUris.second) }
+
 
     var ineFrontValidation by remember { mutableStateOf(ValidationState.IDLE) }
     var ineBackValidation by remember { mutableStateOf(ValidationState.IDLE) }
@@ -75,6 +78,7 @@ fun DocumentsScreen(
         if (uri != null) {
             if (validateFileSize(uri)) {
                 ineFrontUri = uri
+                viewModel.updateDocumentsUris(uri, ineBackUri) // ✅ Guardar
                 ineFrontValidation = ValidationState.VALID
             } else {
                 errorMessage = context.getString(R.string.error_file_too_large)

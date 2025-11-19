@@ -260,6 +260,8 @@ fun AuthNavigation(
                         currentScreen = "forgot_password"
                     },
                     onCreateAccount = {
+                        // ✅ Solo resetear estados de UI al iniciar
+                        registerViewModel.resetUIStates()
                         currentScreen = "register"
                     },
                     onLoginSuccess = { user, token, tokenType, expiresAt ->
@@ -283,6 +285,10 @@ fun AuthNavigation(
             "register" -> {
                 RegisterScreen(
                     onBackToLogin = {
+                        // ✅ Limpiar todo cuando vuelve al login
+                        registerViewModel.resetAll()
+                        registerData = null
+                        documentsData = null
                         currentScreen = "login"
                     },
                     onContinueToDocuments = { data ->
@@ -296,6 +302,9 @@ fun AuthNavigation(
                 DocumentsScreen(
                     registerData = registerData!!,
                     onBackToRegister = {
+                        // ✅ Solo resetear estado de documentos, mantener datos del registro
+                        registerViewModel.resetUIStates()
+                        documentsData = null
                         currentScreen = "register"
                     },
                     onContinueToVerification = { data ->
@@ -310,12 +319,15 @@ fun AuthNavigation(
                     registerData = registerData!!,
                     documentsData = documentsData!!,
                     onBackToDocuments = {
+                        // ✅ Solo resetear estado de selfie, mantener documentos
+                        registerViewModel.resetUIStates()
                         currentScreen = "register_documents"
                     },
                     onComplete = {
-                        // Limpiar la sesión temporal del registro
-                        registerViewModel.clearSession()
-                        registerViewModel.resetStates()
+                        // ✅ Limpiar todo al completar exitosamente
+                        registerViewModel.resetAll()
+                        registerData = null
+                        documentsData = null
                         currentScreen = "login"
                     },
                     viewModel = registerViewModel

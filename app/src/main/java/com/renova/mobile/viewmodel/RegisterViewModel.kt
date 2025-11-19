@@ -44,6 +44,25 @@ class RegisterViewModel : ViewModel() {
     private val _uploadSelfieState = MutableStateFlow<UploadState>(UploadState.Idle)
     val uploadSelfieState: StateFlow<UploadState> = _uploadSelfieState
 
+    // ✅ NUEVO: Estados para almacenar los datos del formulario
+    private val _formData = MutableStateFlow(RegisterData(
+        firstName = "",
+        lastName = "",
+        email = "",
+        phone = "",
+        curp = "",
+        password = ""
+    ))
+    val formData: StateFlow<RegisterData> = _formData
+
+    // ✅ NUEVO: Estados para almacenar URIs de documentos
+    private val _documentsUris = MutableStateFlow<Pair<Uri?, Uri?>>(null to null)
+    val documentsUris: StateFlow<Pair<Uri?, Uri?>> = _documentsUris
+
+    // ✅ NUEVO: Estado para almacenar URI de selfie
+    private val _selfieUri = MutableStateFlow<Uri?>(null)
+    val selfieUri: StateFlow<Uri?> = _selfieUri
+
     var userId: Int = 0
         private set
     var authToken: String = ""
@@ -61,6 +80,24 @@ class RegisterViewModel : ViewModel() {
             sessionManager = SessionManager(context)
             appContext = context.applicationContext
         }
+    }
+
+    // ✅ NUEVO: Actualizar datos del formulario
+    fun updateFormData(data: RegisterData) {
+        _formData.value = data
+        android.util.Log.d("RegisterViewModel", "Datos del formulario actualizados: ${data.email}")
+    }
+
+    // ✅ NUEVO: Guardar URIs de documentos
+    fun updateDocumentsUris(frontUri: Uri?, backUri: Uri?) {
+        _documentsUris.value = frontUri to backUri
+        android.util.Log.d("RegisterViewModel", "URIs de documentos actualizados")
+    }
+
+    // ✅ NUEVO: Guardar URI de selfie
+    fun updateSelfieUri(uri: Uri?) {
+        _selfieUri.value = uri
+        android.util.Log.d("RegisterViewModel", "URI de selfie actualizada")
     }
 
     fun registerUser(registerData: RegisterData) {
@@ -366,11 +403,33 @@ class RegisterViewModel : ViewModel() {
         return file
     }
 
+    // ✅ Resetear solo estados de UI, mantener datos del formulario y userId/token
+    fun resetUIStates() {
+        android.util.Log.d("RegisterViewModel", "Reseteando solo estados de UI...")
+        _registerState.value = RegisterState.Idle
+        _uploadDocumentsState.value = UploadState.Idle
+        _uploadSelfieState.value = UploadState.Idle
+        // NO reseteamos formData, documentsUris, selfieUri, userId, authToken, etc.
+    }
+
+    // Resetear estados de UI solamente
     fun resetStates() {
         android.util.Log.d("RegisterViewModel", "Reseteando estados...")
         _registerState.value = RegisterState.Idle
         _uploadDocumentsState.value = UploadState.Idle
         _uploadSelfieState.value = UploadState.Idle
+    }
+
+    // ✅ Limpiar TODO incluyendo datos del formulario
+    fun resetAll() {
+        android.util.Log.d("RegisterViewModel", "Limpiando completamente...")
+        _registerState.value = RegisterState.Idle
+        _uploadDocumentsState.value = UploadState.Idle
+        _uploadSelfieState.value = UploadState.Idle
+        _formData.value = RegisterData("", "", "", "", "", "")
+        _documentsUris.value = null to null
+        _selfieUri.value = null
+        clearSession()
     }
 
     fun clearSession() {
