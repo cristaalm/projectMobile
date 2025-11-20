@@ -789,4 +789,14 @@
     <string name="validation_err_curp_invalid">CURP inválido</string>
     <string name="validation_err_pwd_no_match">Las contraseñas no coinciden</string>
     <string name="validation_err_field_invalid">Campo inválido</string>
+
+    <string name="badges_load_error">No se pudieron cargar las insignias</string>
+    <string name="check_connection_try_again">Verifica tu conexión a internet e intenta nuevamente</string>
+    <string name="no_internet_connection">Sin conexión a internet</string>
+    <string name="session_not_found">No se encontró sesión activa</string>
+    <string name="error_loading_profile">Error al cargar el perfil</string>
+    <string name="session_expired">Sesión expirada</string>
+    <string name="error_loading_activity">Error al cargar la actividad</string>
+    <string name="error_loading_streak">Error loading activity</string>
+
 </resources>

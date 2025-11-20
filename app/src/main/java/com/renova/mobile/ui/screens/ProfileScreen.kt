@@ -4,10 +4,8 @@ import android.app.Activity
 import android.net.Uri
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
-// --- INICIO MODIFICACIÓN: Imports añadidos ---
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.ScrollState
-// --- FIN MODIFICACIÓN ---
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
@@ -47,13 +45,10 @@ import androidx.compose.material3.pulltorefresh.*
 import androidx.compose.ui.graphics.asImageBitmap
 import android.graphics.BitmapFactory
 import coil.compose.rememberAsyncImagePainter
-
-// --- IMPORTS AÑADIDOS DE LA RAMA 'tour' ---
 import androidx.compose.ui.layout.onGloballyPositioned
 import com.renova.mobile.ui.tour.LocalTourState
 import androidx.compose.runtime.DisposableEffect
-// --- FIN DE IMPORTS ---
-
+import androidx.compose.ui.unit.sp
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -66,11 +61,6 @@ fun ProfileScreen(
     val uiState by profileViewModel.uiState.collectAsState()
     val isRefreshing by profileViewModel.isRefreshing.collectAsState()
     val colors = LocalRenovaColors.current
-
-    // Lógica de ErrorModal de 'develop'
-    var showMainErrorModal by remember { mutableStateOf(false) }
-    var mainErrorMessage by remember { mutableStateOf("") }
-    var canRetryMainError by remember { mutableStateOf(true) }
 
     val pullToRefreshState = rememberPullToRefreshState()
 
@@ -109,38 +99,109 @@ fun ProfileScreen(
                 }
             }
 
-            // Lógica de Error avanzada de 'develop'
             is ProfileUiState.Error -> {
                 val errorState = uiState as ProfileUiState.Error
                 val isAuthError = errorState.message.contains("token", ignoreCase = true) ||
                         errorState.message.contains("autenticación", ignoreCase = true) ||
-                        errorState.message.contains("sesión", ignoreCase = true)
+                        errorState.message.contains("sesión", ignoreCase = true) ||
+                        errorState.message.contains("401", ignoreCase = true) ||
+                        errorState.message.contains("Unauthorized", ignoreCase = true)
 
-                LaunchedEffect(Unit) {
-                    mainErrorMessage = errorState.message
-                    canRetryMainError = !isAuthError
-                    showMainErrorModal = true
-                }
-                Box(modifier = Modifier.fillMaxSize())
+                ErrorStateFullScreen(
+                    errorMessage = errorState.message,
+                    colors = colors,
+                    title = stringResource(R.string.error_loading_profile),
+                    canRetry = !isAuthError,
+                    onRetry = {
+                        profileViewModel.retry()
+                    }
+                )
             }
         }
     }
+}
 
-    // Error modal principal (de 'develop')
-    ErrorModal(
-        isVisible = showMainErrorModal,
-        errorMessage = mainErrorMessage,
-        onDismiss = {
-            showMainErrorModal = false
-            mainErrorMessage = ""
-        },
-        onRetry = if (canRetryMainError) {
-            {
-                showMainErrorModal = false
-                profileViewModel.retry()
+@Composable
+private fun ErrorStateFullScreen(
+    errorMessage: String,
+    colors: com.renova.mobile.ui.theme.RenovaColorScheme,
+    title: String,
+    canRetry: Boolean,
+    onRetry: () -> Unit
+) {
+    Column(
+        modifier = Modifier
+            .fillMaxSize()
+            .padding(32.dp),
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.Center
+    ) {
+        Box(
+            modifier = Modifier
+                .size(100.dp)
+                .background(
+                    MaterialTheme.colorScheme.error.copy(alpha = 0.1f),
+                    shape = RoundedCornerShape(50.dp)
+                ),
+            contentAlignment = Alignment.Center
+        ) {
+            Icon(
+                imageVector = if (canRetry) Icons.Default.WifiOff else Icons.Default.Lock,
+                contentDescription = null,
+                tint = MaterialTheme.colorScheme.error.copy(alpha = 0.5f),
+                modifier = Modifier.size(50.dp)
+            )
+        }
+
+        Spacer(modifier = Modifier.height(24.dp))
+
+        Text(
+            text = if (canRetry)
+                title
+            else
+                stringResource(R.string.session_expired),
+            fontFamily = com.renova.mobile.ui.theme.PoppinsFontFamily,
+            fontWeight = FontWeight.Bold,
+            fontSize = 20.sp,
+            color = MaterialTheme.colorScheme.error,
+            textAlign = TextAlign.Center
+        )
+
+        Spacer(modifier = Modifier.height(12.dp))
+
+        Text(
+            text = errorMessage,
+            fontFamily = com.renova.mobile.ui.theme.PoppinsFontFamily,
+            fontSize = 14.sp,
+            color = colors.textSecondary,
+            textAlign = TextAlign.Center,
+            lineHeight = 20.sp
+        )
+
+        Spacer(modifier = Modifier.height(24.dp))
+
+        if (canRetry) {
+            Button(
+                onClick = onRetry,
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = colors.primaryColor
+                ),
+                shape = RoundedCornerShape(12.dp)
+            ) {
+                Icon(
+                    imageVector = Icons.Default.Refresh,
+                    contentDescription = null,
+                    modifier = Modifier.size(20.dp)
+                )
+                Spacer(modifier = Modifier.width(8.dp))
+                Text(
+                    text = stringResource(R.string.retry),
+                    fontFamily = com.renova.mobile.ui.theme.PoppinsFontFamily,
+                    fontWeight = FontWeight.SemiBold
+                )
             }
-        } else null
-    )
+        }
+    }
 }
 
 @Composable
@@ -155,12 +216,9 @@ private fun ProfileContent(
     val context = LocalContext.current
     val verificationStatus = VerificationStatus.fromCode(user.verification_status)
     val colors = LocalRenovaColors.current
-
-    // --- AÑADIDO: Obtener estado del Tour (de 'tour') ---
     val tourState = LocalTourState.current
-    // --- FIN ---
 
-    // Toda la lógica de ViewModel de 'develop'
+    // Estados del ViewModel
     val documentImages by profileViewModel.documentImages.collectAsState()
     val verificationRequestState by profileViewModel.verificationRequestState.collectAsState()
     val documentUploadState by profileViewModel.documentUploadState.collectAsState()
@@ -171,8 +229,14 @@ private fun ProfileContent(
     var showUploadSuccessDialog by remember { mutableStateOf(false) }
     var uploadedDocumentName by remember { mutableStateOf("") }
 
+    // 🛡️ Cargar imágenes de manera defensiva
     LaunchedEffect(Unit) {
-        profileViewModel.loadDocumentImages(user.id, identityVerification)
+        try {
+            profileViewModel.loadDocumentImages(user.id, identityVerification)
+        } catch (e: Exception) {
+            // Error silencioso, no es crítico
+            e.printStackTrace()
+        }
     }
 
     LaunchedEffect(verificationRequestState) {
@@ -231,32 +295,27 @@ private fun ProfileContent(
             )
         )
     }
-    // Fin de la lógica de 'develop'
 
-    // --- INICIO MODIFICACIÓN: Definir scrollState ---
     val scrollState = rememberScrollState()
-    // --- FIN MODIFICACIÓN ---
 
     Column(
         modifier = Modifier
             .fillMaxSize()
-            .verticalScroll(scrollState) // <-- Aplicar scrollState
+            .verticalScroll(scrollState)
     ) {
         ProfileHeader(
             user = user,
             verificationStatus = verificationStatus,
             languageViewModel = languageViewModel,
             selfieBytes = documentImages["selfie"],
-            scrollState = scrollState // <--- MODIFICACIÓN: Pasar scrollState
+            scrollState = scrollState
         )
         Spacer(modifier = Modifier.height(12.dp))
 
         Column(
             modifier = Modifier.padding(horizontal = 20.dp)
         ) {
-            // --- INICIO MODIFICACIÓN ---
             Box(modifier = Modifier.onGloballyPositioned { coords ->
-                // --- MODIFICADO: Pasar scrollState ---
                 tourState.registerTarget(
                     id = "profile_verification_banner",
                     coordinates = coords,
@@ -272,13 +331,10 @@ private fun ProfileContent(
             DisposableEffect("profile_verification_banner") {
                 onDispose { tourState.unregisterTarget("profile_verification_banner") }
             }
-            // --- FIN MODIFICACIÓN ---
 
             Spacer(modifier = Modifier.height(12.dp))
 
-            // --- MODIFICADO: Añadir wrapper del Tour (de 'tour') ---
             Box(modifier = Modifier.onGloballyPositioned { coords ->
-                // --- MODIFICADO: Pasar scrollState ---
                 tourState.registerTarget(
                     id = "profile_info_card",
                     coordinates = coords,
@@ -295,15 +351,11 @@ private fun ProfileContent(
             DisposableEffect("profile_info_card") {
                 onDispose { tourState.unregisterTarget("profile_info_card") }
             }
-            // --- FIN DE MODIFICACIÓN ---
 
             Spacer(modifier = Modifier.height(12.dp))
 
-            // --- Toda la sección de documentos de 'develop' ---
             if (identityVerification != null) {
-                // --- INICIO MODIFICACIÓN ---
                 Box(modifier = Modifier.onGloballyPositioned { coords ->
-                    // --- MODIFICADO: Pasar scrollState ---
                     tourState.registerTarget(
                         id = "profile_documents_section",
                         coordinates = coords,
@@ -323,7 +375,6 @@ private fun ProfileContent(
                 DisposableEffect("profile_documents_section") {
                     onDispose { tourState.unregisterTarget("profile_documents_section") }
                 }
-                // --- FIN MODIFICACIÓN ---
 
                 Spacer(modifier = Modifier.height(12.dp))
 
@@ -391,11 +442,10 @@ private fun ProfileContent(
 
                 Spacer(modifier = Modifier.height(12.dp))
             }
-            // --- Fin de la sección de documentos ---
         }
     }
 
-    // --- Diálogos de 'develop' ---
+    // Diálogos
     if (showSuccessDialog) {
         AlertDialog(
             onDismissRequest = { showSuccessDialog = false },

@@ -13,6 +13,8 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.async
+import kotlinx.coroutines.supervisorScope
+import kotlinx.coroutines.CancellationException
 import java.text.SimpleDateFormat
 import java.util.*
 
@@ -24,7 +26,8 @@ data class ActivityState(
     val totalAluminum: Int = 0,
     val totalPoints: Int = 0,
     val isLoading: Boolean = false,
-    val error: String? = null
+    val error: String? = null,
+    val hasLoadedOnce: Boolean = false
 )
 
 class ActivityViewModel(
@@ -43,54 +46,105 @@ class ActivityViewModel(
 
     fun loadHistory(page: Int = 1) {
         viewModelScope.launch {
-            _state.update { it.copy(isLoading = true, error = null) }
-
             try {
-                val historyDeferred = async { repository.getHistory(page = page, perPage = 6) }
-                val totalsDeferred = async {
-                    if (_state.value.totalPlastic == 0 && _state.value.totalAluminum == 0) {
-                        repository.getTotalScans()
-                    } else null
-                }
-                val pointsDeferred = async { repository.getUserPoints(sessionManager) }
+                _state.update { it.copy(isLoading = true, error = null) }
 
-                val historyResponse = historyDeferred.await()
-                val totalsResponse = totalsDeferred.await()
-                val userPoints = pointsDeferred.await()
-
-                if (historyResponse.success) {
-                    // Ordenar las actividades por fecha de creación (más reciente primero)
-                    val sortedActivities = historyResponse.data.data.sortedByDescending { activity ->
-                        try {
-                            parseActivityDate(activity.created_at)?.time ?: 0L
-                        } catch (e: Exception) {
-                            0L
+                // 🛡️ Usar supervisorScope para que un fallo no cancele todo
+                supervisorScope {
+                    try {
+                        val historyDeferred = async {
+                            try {
+                                repository.getHistory(page = page, perPage = 6)
+                            } catch (e: Exception) {
+                                Log.e("ActivityViewModel", "Error fetching history", e)
+                                throw e
+                            }
                         }
-                    }
 
-                    _state.update {
-                        it.copy(
-                            activities = sortedActivities,
-                            currentPage = historyResponse.data.current_page,
-                            totalPages = historyResponse.data.last_page,
-                            totalPoints = userPoints,
-                            totalPlastic = totalsResponse?.data?.plastic ?: it.totalPlastic,
-                            totalAluminum = totalsResponse?.data?.aluminum ?: it.totalAluminum,
-                            isLoading = false
-                        )
-                    }
-                } else {
-                    _state.update {
-                        it.copy(
-                            error = historyResponse.message,
-                            isLoading = false
-                        )
+                        val totalsDeferred = async {
+                            try {
+                                if (_state.value.totalPlastic == 0 && _state.value.totalAluminum == 0) {
+                                    repository.getTotalScans()
+                                } else null
+                            } catch (e: Exception) {
+                                Log.e("ActivityViewModel", "Error fetching totals", e)
+                                null // Si falla, no es crítico
+                            }
+                        }
+
+                        val pointsDeferred = async {
+                            try {
+                                repository.getUserPoints(sessionManager)
+                            } catch (e: Exception) {
+                                Log.e("ActivityViewModel", "Error fetching points", e)
+                                _state.value.totalPoints // Mantener puntos anteriores
+                            }
+                        }
+
+                        val historyResponse = historyDeferred.await()
+                        val totalsResponse = totalsDeferred.await()
+                        val userPoints = pointsDeferred.await()
+
+                        if (historyResponse.success) {
+                            // Ordenar las actividades por fecha de creación (más reciente primero)
+                            val sortedActivities = historyResponse.data.data.sortedByDescending { activity ->
+                                try {
+                                    parseActivityDate(activity.created_at)?.time ?: 0L
+                                } catch (e: Exception) {
+                                    Log.e("ActivityViewModel", "Error parsing date", e)
+                                    0L
+                                }
+                            }
+
+                            _state.update {
+                                it.copy(
+                                    activities = sortedActivities,
+                                    currentPage = historyResponse.data.current_page,
+                                    totalPages = historyResponse.data.last_page,
+                                    totalPoints = userPoints,
+                                    totalPlastic = totalsResponse?.data?.plastic ?: it.totalPlastic,
+                                    totalAluminum = totalsResponse?.data?.aluminum ?: it.totalAluminum,
+                                    isLoading = false,
+                                    hasLoadedOnce = true,
+                                    error = null
+                                )
+                            }
+                        } else {
+                            _state.update {
+                                it.copy(
+                                    error = historyResponse.message,
+                                    isLoading = false
+                                )
+                            }
+                        }
+                    } catch (e: CancellationException) {
+                        // No hacer nada, es una cancelación normal
+                        throw e
+                    } catch (e: Exception) {
+                        throw e // Re-lanzar para el catch externo
                     }
                 }
-            } catch (e: Exception){
+            } catch (e: CancellationException) {
+                // No actualizar el estado en cancelación
+                Log.d("ActivityViewModel", "Loading cancelled")
+            } catch (e: Exception) {
+                val errorMessage = when {
+                    e.message?.contains("Unable to resolve host", ignoreCase = true) == true ||
+                            e.message?.contains("timeout", ignoreCase = true) == true ||
+                            e.message?.contains("Failed to connect", ignoreCase = true) == true ||
+                            e.message?.contains("No address associated with hostname", ignoreCase = true) == true ->
+                        "Sin conexión a internet"
+                    e.message?.contains("401", ignoreCase = true) == true ||
+                            e.message?.contains("Unauthorized", ignoreCase = true) == true ->
+                        "Sesión expirada. Por favor, inicia sesión nuevamente"
+                    else -> "Error: ${e.message ?: "Error desconocido"}"
+                }
+
+                Log.e("ActivityViewModel", "Error loading history: $errorMessage", e)
+
                 _state.update {
                     it.copy(
-                        error = "Error: ${e.message}",
+                        error = errorMessage,
                         isLoading = false
                     )
                 }
@@ -120,6 +174,7 @@ class ActivityViewModel(
                 val date = sdfInput.parse(dateString)
                 if (date != null) return date
             } catch (_: Exception) {
+                // Continuar con el siguiente patrón
             }
         }
         return null
@@ -138,7 +193,7 @@ class ActivityViewModel(
     }
 
     fun retry() {
-        loadHistory(1)
+        loadHistory(_state.value.currentPage)
     }
 
     fun clearError() {

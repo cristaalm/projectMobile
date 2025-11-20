@@ -428,17 +428,6 @@ fun DetailSheet(activity: ActivityItem) {
 
         Spacer(modifier = Modifier.height(10.dp))
 
-        // Equivalente en MXN
-        Text(
-            text = "$${"%.2f".format(kotlin.math.abs(activity.points) * 0.01)} MXN",
-            fontFamily = PoppinsFontFamily,
-            fontWeight = FontWeight.SemiBold,
-            fontSize = 20.sp,
-            color = colors.textSecondary
-        )
-
-        Spacer(modifier = Modifier.height(10.dp))
-
         // Fecha
         Text(
             text = formatFriendlyDate(activity.created_at),

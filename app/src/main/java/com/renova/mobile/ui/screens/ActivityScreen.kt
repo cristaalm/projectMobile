@@ -1,6 +1,5 @@
 package com.renova.mobile.ui.screens
 
-import androidx.compose.animation.Crossfade
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
@@ -17,71 +16,28 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.Paint
-import androidx.compose.ui.graphics.drawscope.drawIntoCanvas
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
-import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.renova.mobile.R
 import com.renova.mobile.network.ActivityItem
 import com.renova.mobile.ui.theme.LocalRenovaColors
 import com.renova.mobile.ui.theme.PoppinsFontFamily
-import com.renova.mobile.ui.theme.RenovaColorScheme
 import com.renova.mobile.ui.theme.RenovaColors
 import com.renova.mobile.ui.viewmodels.ActivityViewModel
 import com.renova.mobile.ui.components.*
-import com.renova.mobile.ui.screens.AnimatedPointsCard
 import androidx.compose.ui.layout.onGloballyPositioned
 import com.renova.mobile.ui.tour.LocalTourState
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.derivedStateOf
-import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.window.Dialog
-import androidx.compose.ui.window.DialogProperties
 import kotlinx.coroutines.delay
-
-fun Modifier.greenShadow(
-    color: Color = Color(0xFF4CAF50),
-    alpha: Float = 0.15f,
-    borderRadius: Dp = 16.dp,
-    shadowRadius: Dp = 8.dp,
-    offsetX: Dp = 0.dp,
-    offsetY: Dp = 4.dp
-) = this.drawBehind {
-    val shadowColor = color.copy(alpha = alpha).toArgb()
-    val transparent = color.copy(alpha = 0f).toArgb()
-
-    drawIntoCanvas {
-        val paint = Paint()
-        val frameworkPaint = paint.asFrameworkPaint()
-        frameworkPaint.color = transparent
-        frameworkPaint.setShadowLayer(
-            shadowRadius.toPx(),
-            offsetX.toPx(),
-            offsetY.toPx(),
-            shadowColor
-        )
-        it.drawRoundRect(
-            0f,
-            0f,
-            size.width,
-            size.height,
-            borderRadius.toPx(),
-            borderRadius.toPx(),
-            paint
-        )
-    }
-}
-
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -92,34 +48,44 @@ fun ActivityScreen(
     val state by viewModel.state.collectAsState()
     val pullToRefreshState = rememberPullToRefreshState()
     var selectedActivity by remember { mutableStateOf<ActivityItem?>(null) }
-    var showErrorModal by remember { mutableStateOf(false) }
     var isFirstLoad by remember { mutableStateOf(true) }
 
+    // 🛡️ Cargar datos de forma segura
     LaunchedEffect(Unit) {
-        viewModel.loadHistory(1)
-    }
-
-    LaunchedEffect(state.activities.isNotEmpty()) {
-        if (state.activities.isNotEmpty() && isFirstLoad){
-            isFirstLoad = false
+        try {
+            viewModel.loadHistory(1)
+        } catch (e: Exception) {
+            // El ViewModel ya maneja el error
         }
     }
 
-    LaunchedEffect(state.error) {
-        if (state.error != null) {
-            showErrorModal = true
+    LaunchedEffect(state.activities.isNotEmpty()) {
+        if (state.activities.isNotEmpty() && isFirstLoad) {
+            isFirstLoad = false
         }
     }
 
     Box(modifier = Modifier.fillMaxSize()) {
         when {
-            state.isLoading && state.activities.isEmpty() -> {
+            // Caso 1: Primera carga y aún no hay error
+            state.isLoading && state.activities.isEmpty() && !state.hasLoadedOnce && state.error == null -> {
                 LoadingState(renovaColors)
             }
+
+            // Caso 2: Error crítico (primera carga falló) - PANTALLA COMPLETA
             state.error != null && state.activities.isEmpty() -> {
-                Box(modifier = Modifier.fillMaxSize())
+                ErrorStateFullScreen(
+                    errorMessage = state.error ?: stringResource(R.string.unknown_error),
+                    renovaColors = renovaColors,
+                    onRetry = {
+                        viewModel.clearError()
+                        viewModel.retry()
+                    }
+                )
             }
-            else -> {
+
+            // Caso 3: Mostrar contenido con pull-to-refresh
+            state.hasLoadedOnce || state.activities.isNotEmpty() -> {
                 PullToRefreshBox(
                     isRefreshing = state.isLoading && state.activities.isNotEmpty(),
                     onRefresh = {
@@ -156,10 +122,73 @@ fun ActivityScreen(
                         )
                     }
                 }
+
+                // ⚠️ MODIFICADO: Solo mostrar Snackbar para errores cuando ya hay datos
+                if (state.error != null && state.hasLoadedOnce && state.activities.isNotEmpty()) {
+                    LaunchedEffect(state.error) {
+                        // Mostrar un Snackbar simple en lugar de modal
+                        // Puedes usar SnackbarHost aquí si lo prefieres
+                        delay(3000)
+                        viewModel.clearError()
+                    }
+
+                    // Snackbar sutil en la parte inferior
+                    Box(
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .padding(16.dp),
+                        contentAlignment = Alignment.BottomCenter
+                    ) {
+                        Surface(
+                            modifier = Modifier.fillMaxWidth(),
+                            shape = RoundedCornerShape(12.dp),
+                            color = renovaColors.cardBackground,
+                            shadowElevation = 4.dp
+                        ) {
+                            Row(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(16.dp),
+                                verticalAlignment = Alignment.CenterVertically,
+                                horizontalArrangement = Arrangement.spacedBy(12.dp)
+                            ) {
+                                Icon(
+                                    imageVector = Icons.Default.WifiOff,
+                                    contentDescription = null,
+                                    tint = renovaColors.textSecondary,
+                                    modifier = Modifier.size(24.dp)
+                                )
+                                Text(
+                                    text = state.error ?: "",
+                                    style = MaterialTheme.typography.bodyMedium,
+                                    color = renovaColors.textPrimary,
+                                    modifier = Modifier.weight(1f)
+                                )
+                                TextButton(
+                                    onClick = {
+                                        viewModel.clearError()
+                                        viewModel.retry()
+                                    }
+                                ) {
+                                    Text(
+                                        text = stringResource(R.string.retry),
+                                        color = renovaColors.primaryColor
+                                    )
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+
+            // Caso 4: Estado por defecto (fallback)
+            else -> {
+                LoadingState(renovaColors)
             }
         }
     }
 
+    // Modal de detalle de actividad
     selectedActivity?.let { activity ->
         ModalBottomSheet(
             onDismissRequest = { selectedActivity = null },
@@ -171,26 +200,12 @@ fun ActivityScreen(
             DetailSheet(activity = activity)
         }
     }
-
-    RetryableErrorModal(
-        isVisible = showErrorModal,
-        errorMessage = state.error ?: stringResource(R.string.unknown_error),
-        onDismiss = {
-            showErrorModal = false
-            viewModel.clearError()
-        },
-        onRetry = {
-            showErrorModal = false
-            viewModel.clearError()
-            viewModel.retry()
-        }
-    )
 }
 
 @Composable
 private fun ActivityContent(
     state: com.renova.mobile.ui.viewmodels.ActivityState,
-    renovaColors: RenovaColorScheme,
+    renovaColors: com.renova.mobile.ui.theme.RenovaColorScheme,
     onPreviousPage: () -> Unit,
     onNextPage: () -> Unit,
     shouldAnimatePoints: Boolean = false,
@@ -456,10 +471,87 @@ private fun ActivityContent(
     }
 }
 
+// 🛡️ Componente de error pantalla completa (igual que ProfileScreen)
+@Composable
+private fun ErrorStateFullScreen(
+    errorMessage: String,
+    renovaColors: com.renova.mobile.ui.theme.RenovaColorScheme,
+    onRetry: () -> Unit
+) {
+    Column(
+        modifier = Modifier
+            .fillMaxSize()
+            .padding(32.dp),
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.Center
+    ) {
+        Box(
+            modifier = Modifier
+                .size(100.dp)
+                .background(
+                    MaterialTheme.colorScheme.error.copy(alpha = 0.1f),
+                    shape = RoundedCornerShape(50.dp)
+                ),
+            contentAlignment = Alignment.Center
+        ) {
+            Icon(
+                imageVector = Icons.Default.WifiOff,
+                contentDescription = null,
+                tint = MaterialTheme.colorScheme.error.copy(alpha = 0.5f),
+                modifier = Modifier.size(50.dp)
+            )
+        }
+
+        Spacer(modifier = Modifier.height(24.dp))
+
+        Text(
+            text = stringResource(R.string.error_loading_activity),
+            fontFamily = PoppinsFontFamily,
+            fontWeight = FontWeight.Bold,
+            fontSize = 20.sp,
+            color = MaterialTheme.colorScheme.error,
+            textAlign = TextAlign.Center
+        )
+
+        Spacer(modifier = Modifier.height(12.dp))
+
+        Text(
+            text = errorMessage,
+            fontFamily = PoppinsFontFamily,
+            fontSize = 14.sp,
+            color = renovaColors.textSecondary,
+            textAlign = TextAlign.Center,
+            lineHeight = 20.sp
+        )
+
+        Spacer(modifier = Modifier.height(24.dp))
+
+        Button(
+            onClick = onRetry,
+            colors = ButtonDefaults.buttonColors(
+                containerColor = renovaColors.primaryColor
+            ),
+            shape = RoundedCornerShape(12.dp)
+        ) {
+            Icon(
+                imageVector = Icons.Default.Refresh,
+                contentDescription = null,
+                modifier = Modifier.size(20.dp)
+            )
+            Spacer(modifier = Modifier.width(8.dp))
+            Text(
+                text = stringResource(R.string.retry),
+                fontFamily = PoppinsFontFamily,
+                fontWeight = FontWeight.SemiBold
+            )
+        }
+    }
+}
+
 @Composable
 fun ActivityHistoryCard(
     activity: ActivityItem,
-    colors: RenovaColorScheme,
+    colors: com.renova.mobile.ui.theme.RenovaColorScheme,
     onClick: () -> Unit = {}
 ) {
     val context = LocalContext.current
@@ -513,7 +605,7 @@ fun ActivityHistoryCard(
                 2 -> {
                     val materialName = activity.material_type?.name ?: ""
                     val baseName = when {
-                        materialName.contains("Plástico", ignoreCase = true)  ->
+                        materialName.contains("Plástico", ignoreCase = true) ->
                             context.getString(R.string.plastic)
                         materialName.contains("Aluminio", ignoreCase = true) ->
                             context.getString(R.string.aluminum)
@@ -547,7 +639,6 @@ fun ActivityHistoryCard(
         }
 
         Column(horizontalAlignment = Alignment.End) {
-            // Calcular puntos con formato de 2 decimales
             val displayPoints = activity.points
 
             val pointsColor = when (activity.type_history) {
@@ -577,8 +668,6 @@ private fun MaterialStatCard(
     showIcon: Boolean = true,
     modifier: Modifier = Modifier
 ) {
-    val renovaColors = LocalRenovaColors.current
-
     val fontSize = when {
         count >= 1000 -> 34.sp
         count >= 100 -> 38.sp
@@ -586,7 +675,6 @@ private fun MaterialStatCard(
         else -> 50.sp
     }
 
-    // Determinar si es la tarjeta de Total
     val isTotal = title.lowercase() == "total"
     val textColor = if (isTotal) RenovaColors.Secondary else Color.White
 
@@ -597,7 +685,6 @@ private fun MaterialStatCard(
         elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
     ) {
         Box(modifier = Modifier.fillMaxSize()) {
-            // Fondo con imagen (sin overlay)
             Image(
                 painter = painterResource(id = backgroundRes),
                 contentDescription = null,
@@ -614,7 +701,6 @@ private fun MaterialStatCard(
                 horizontalAlignment = Alignment.CenterHorizontally,
                 verticalArrangement = Arrangement.Center
             ) {
-                // Número grande en el centro
                 Text(
                     text = count.toString(),
                     fontSize = fontSize,
@@ -626,7 +712,6 @@ private fun MaterialStatCard(
 
                 Spacer(modifier = Modifier.height(8.dp))
 
-                // Título abajo
                 Text(
                     text = title,
                     fontSize = 14.sp,
@@ -644,7 +729,7 @@ private fun MaterialStatCard(
 
 @Composable
 fun EmptyStateInline(
-    renovaColors: RenovaColorScheme,
+    renovaColors: com.renova.mobile.ui.theme.RenovaColorScheme,
     modifier: Modifier = Modifier
 ) {
     Column(

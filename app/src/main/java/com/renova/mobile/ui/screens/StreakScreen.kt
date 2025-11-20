@@ -10,6 +10,9 @@ import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.WifiOff
+import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material3.*
 import androidx.compose.material3.CardDefaults.cardElevation
 import androidx.compose.runtime.*
@@ -28,6 +31,7 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.graphics.ColorMatrix
 import androidx.compose.ui.layout.onGloballyPositioned
+import androidx.compose.ui.text.style.TextAlign
 import coil.ImageLoader
 import coil.compose.AsyncImage
 import coil.decode.ImageDecoderDecoder
@@ -48,20 +52,6 @@ import com.renova.mobile.utils.SessionManager
 import kotlinx.coroutines.launch
 import java.text.SimpleDateFormat
 import java.util.*
-
-data class WeeklyChallenge(
-    val id: Int,
-    val title: String,
-    val titleEn: String,
-    val description: String,
-    val goal: String,
-    val rewardText: String,
-    val iconEmoji: String,
-    val expiresAt: Long,
-    val isAccepted: Boolean = false,
-    val currentProgress: Int = 0,
-    val targetProgress: Int = 100
-)
 
 data class MonthlyBadge(
     val id: Int,
@@ -102,6 +92,83 @@ fun getBadgeVisualConfig(badgeName: String): Triple<Int, Color, Color> {
             Color.White,
             Color(0xFF024653)
         )
+    }
+}
+
+// 🛡️ Componente de error pantalla completa (igual que ActivityScreen)
+@Composable
+private fun ErrorStateFullScreen(
+    errorMessage: String,
+    renovaColors: RenovaColorScheme,
+    onRetry: () -> Unit
+) {
+    Column(
+        modifier = Modifier
+            .fillMaxSize()
+            .padding(32.dp),
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.Center
+    ) {
+        Box(
+            modifier = Modifier
+                .size(100.dp)
+                .background(
+                    MaterialTheme.colorScheme.error.copy(alpha = 0.1f),
+                    shape = RoundedCornerShape(50.dp)
+                ),
+            contentAlignment = Alignment.Center
+        ) {
+            Icon(
+                imageVector = Icons.Default.WifiOff,
+                contentDescription = null,
+                tint = MaterialTheme.colorScheme.error.copy(alpha = 0.5f),
+                modifier = Modifier.size(50.dp)
+            )
+        }
+
+        Spacer(modifier = Modifier.height(24.dp))
+
+        Text(
+            text = stringResource(R.string.error_loading_streak),
+            fontFamily = PoppinsFontFamily,
+            fontWeight = FontWeight.Bold,
+            fontSize = 20.sp,
+            color = MaterialTheme.colorScheme.error,
+            textAlign = TextAlign.Center
+        )
+
+        Spacer(modifier = Modifier.height(12.dp))
+
+        Text(
+            text = errorMessage,
+            fontFamily = PoppinsFontFamily,
+            fontSize = 14.sp,
+            color = renovaColors.textSecondary,
+            textAlign = TextAlign.Center,
+            lineHeight = 20.sp
+        )
+
+        Spacer(modifier = Modifier.height(24.dp))
+
+        Button(
+            onClick = onRetry,
+            colors = ButtonDefaults.buttonColors(
+                containerColor = renovaColors.primaryColor
+            ),
+            shape = RoundedCornerShape(12.dp)
+        ) {
+            Icon(
+                imageVector = Icons.Default.Refresh,
+                contentDescription = null,
+                modifier = Modifier.size(20.dp)
+            )
+            Spacer(modifier = Modifier.width(8.dp))
+            Text(
+                text = stringResource(R.string.retry),
+                fontFamily = PoppinsFontFamily,
+                fontWeight = FontWeight.SemiBold
+            )
+        }
     }
 }
 
@@ -164,9 +231,11 @@ fun StreakScreen() {
     var weekData by remember { mutableStateOf(listOf<Int>()) }
     var isLoading by remember { mutableStateOf(true) }
     var errorMessage by remember { mutableStateOf("") }
+    var hasLoadedOnce by remember { mutableStateOf(false) }
 
     // Estados para badges desde el backend
     var monthlyBadges by remember { mutableStateOf<List<MonthlyBadge>>(emptyList()) }
+    var badgesLoadError by remember { mutableStateOf(false) }
 
     // Estados de UI
     var selectedBadge by remember { mutableStateOf<MonthlyBadge?>(null) }
@@ -182,154 +251,258 @@ fun StreakScreen() {
         }
     }
 
-    LaunchedEffect(Unit) {
-        isLoading = true
+    // 🔄 Función para cargar datos
+    fun loadStreakData() {
+        scope.launch {
+            isLoading = true
+            badgesLoadError = false
+            errorMessage = ""
 
-        try {
-            val token = sessionManager.getAccessToken()
+            try {
+                val token = sessionManager.getAccessToken()
 
-            if (token != null) {
-                // 1. Obtener datos del usuario
-                val identityResponse = ApiClient.apiService.identifyUser(
-                    IdentifyUserRequest(
-                        token = token,
-                        with_identity = false
-                    )
-                )
-
-                if (identityResponse.isSuccessful && identityResponse.body()?.success == true) {
-                    identityResponse.body()?.data?.user?.let { userData ->
-                        userId = userData.id
-                        currentMonthPoints = userData.points_month
-                        userBadges = userData.badge
-                        totalRecyclingDays = calculateDaysSinceRegistration(userData.created_at)
-                        sessionManager.saveUser(userData)
-                    }
-                }
-
-                // 2. Obtener badges desde el backend
-                val badgesResponse = ApiClient.apiService.getAllBadges(
-                    perPage = 100,
-                    status = 1 // Solo badges activos
-                )
-
-                if (badgesResponse.isSuccessful && badgesResponse.body()?.success == true) {
-                    badgesResponse.body()?.data?.data?.let { badges ->
-                        monthlyBadges = badges.map { badge ->
-                            val (iconRes, color, bgColor) = getBadgeVisualConfig(badge.name)
-                            val isClaimed = userBadges.isClaimed(badge.name)
-
-                            MonthlyBadge(
-                                id = badge.id,
-                                name = badge.name,
-                                pointsRequired = badge.pointsRequired,
-                                bonusPoints = badge.pointsAwarded,
-                                iconRes = iconRes,
-                                isActive = badge.status,
-                                isUnlocked = currentMonthPoints >= badge.pointsRequired,
-                                isClaimed = isClaimed,
-                                currentMonthProgress = currentMonthPoints.coerceAtMost(badge.pointsRequired)
+                if (token != null) {
+                    // 1. Obtener datos del usuario
+                    try {
+                        val identityResponse = ApiClient.apiService.identifyUser(
+                            IdentifyUserRequest(
+                                token = token,
+                                with_identity = false
                             )
-                        }.sortedBy { it.pointsRequired }
-                    }
-                }
+                        )
 
-                // 3. Obtener racha
-                val streakResponse = ApiClient.apiService.getStreak()
-                if (streakResponse.isSuccessful && streakResponse.body()?.success == true) {
-                    streakResponse.body()?.data?.let { streakData ->
-                        currentStreak = streakData.streak
-                        isStreakActive = streakData.is_active
-                        if (currentStreak > longestStreak) {
-                            longestStreak = currentStreak
+                        if (identityResponse.isSuccessful && identityResponse.body()?.success == true) {
+                            identityResponse.body()?.data?.user?.let { userData ->
+                                userId = userData.id
+                                currentMonthPoints = userData.points_month
+                                userBadges = userData.badge
+                                totalRecyclingDays = calculateDaysSinceRegistration(userData.created_at)
+                                sessionManager.saveUser(userData)
+                            }
                         }
+                    } catch (e: Exception) {
+                        e.printStackTrace()
+                        // Continuar aunque falle identityUser
                     }
-                }
 
-                // 4. Obtener datos de la semana
-                val scansResponse = ApiClient.apiService.getScansByDayOfWeek()
-                if (scansResponse.isSuccessful && scansResponse.body()?.success == true) {
-                    scansResponse.body()?.data?.let { scansList ->
-                        weekData = scansList.map { it.scans_count }
+                    // 2. Obtener badges desde el backend
+                    try {
+                        val badgesResponse = ApiClient.apiService.getAllBadges(
+                            perPage = 100,
+                            status = 1
+                        )
+
+                        if (badgesResponse.isSuccessful && badgesResponse.body()?.success == true) {
+                            badgesResponse.body()?.data?.data?.let { badges ->
+                                monthlyBadges = badges.map { badge ->
+                                    val (iconRes, color, bgColor) = getBadgeVisualConfig(badge.name)
+                                    val isClaimed = userBadges.isClaimed(badge.name)
+
+                                    MonthlyBadge(
+                                        id = badge.id,
+                                        name = badge.name,
+                                        pointsRequired = badge.pointsRequired,
+                                        bonusPoints = badge.pointsAwarded,
+                                        iconRes = iconRes,
+                                        isActive = badge.status,
+                                        isUnlocked = currentMonthPoints >= badge.pointsRequired,
+                                        isClaimed = isClaimed,
+                                        currentMonthProgress = currentMonthPoints.coerceAtMost(badge.pointsRequired)
+                                    )
+                                }.sortedBy { it.pointsRequired }
+                            }
+                        } else {
+                            badgesLoadError = true
+                        }
+                    } catch (e: Exception) {
+                        e.printStackTrace()
+                        badgesLoadError = true
                     }
+
+                    // 3. Obtener racha
+                    try {
+                        val streakResponse = ApiClient.apiService.getStreak()
+                        if (streakResponse.isSuccessful && streakResponse.body()?.success == true) {
+                            streakResponse.body()?.data?.let { streakData ->
+                                currentStreak = streakData.streak
+                                isStreakActive = streakData.is_active
+                                if (currentStreak > longestStreak) {
+                                    longestStreak = currentStreak
+                                }
+                            }
+                        }
+                    } catch (e: Exception) {
+                        e.printStackTrace()
+                    }
+
+                    // 4. Obtener datos de la semana
+                    try {
+                        val scansResponse = ApiClient.apiService.getScansByDayOfWeek()
+                        if (scansResponse.isSuccessful && scansResponse.body()?.success == true) {
+                            scansResponse.body()?.data?.let { scansList ->
+                                weekData = scansList.map { it.scans_count }
+                            }
+                        }
+                    } catch (e: Exception) {
+                        e.printStackTrace()
+                    }
+
+                    hasLoadedOnce = true
+                } else {
+                    errorMessage = context.getString(R.string.session_not_found)
                 }
-            } else {
-                errorMessage = "No se encontró sesión activa"
+            } catch (e: Exception) {
+                errorMessage = when {
+                    e.message?.contains("Unable to resolve host", ignoreCase = true) == true ||
+                            e.message?.contains("timeout", ignoreCase = true) == true ||
+                            e.message?.contains("Failed to connect", ignoreCase = true) == true ||
+                            e.message?.contains("No address associated with hostname", ignoreCase = true) == true ->
+                        context.getString(R.string.no_internet_connection)
+                    e.message?.contains("401", ignoreCase = true) == true ||
+                            e.message?.contains("Unauthorized", ignoreCase = true) == true ->
+                        "Sesión expirada. Por favor, inicia sesión nuevamente"
+                    else -> e.message ?: context.getString(R.string.unknown_error)
+                }
+                e.printStackTrace()
+            } finally {
+                isLoading = false
             }
-        } catch (e: Exception) {
-            errorMessage = e.message ?: context.getString(R.string.unknown_error)
-            e.printStackTrace()
-        } finally {
-            isLoading = false
         }
     }
 
-    if (isLoading) {
-        Box(
-            modifier = Modifier.fillMaxSize(),
-            contentAlignment = Alignment.Center
-        ) {
-            CircularProgressIndicator(color = MaterialTheme.colorScheme.primary)
-        }
-    } else {
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .background(MaterialTheme.colorScheme.background)
-        ) {
-            Column(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .verticalScroll(scrollState)
-                    .padding(bottom = 80.dp)
-            ) {
-                StreakCard(
-                    currentStreak = currentStreak,
-                    isStreakActive = isStreakActive,
-                    longestStreak = longestStreak,
-                    totalDays = totalRecyclingDays,
+    // Carga inicial
+    LaunchedEffect(Unit) {
+        loadStreakData()
+    }
+
+    // 🎯 Lógica de renderizado basada en estados (igual que ActivityScreen)
+    Box(modifier = Modifier.fillMaxSize()) {
+        when {
+            // Caso 1: Cargando por primera vez
+            isLoading && !hasLoadedOnce && errorMessage.isEmpty() -> {
+                LoadingState(renovaColors = renovaColors)
+            }
+
+            // Caso 2: Error sin datos previos - PANTALLA COMPLETA
+            errorMessage.isNotEmpty() && !hasLoadedOnce -> {
+                ErrorStateFullScreen(
+                    errorMessage = errorMessage,
                     renovaColors = renovaColors,
-                    scrollState = scrollState,
-                    tourState = tourState
+                    onRetry = {
+                        loadStreakData()
+                    }
                 )
+            }
 
-                Spacer(modifier = Modifier.height(16.dp))
-
-                Box(
-                    modifier = Modifier.onGloballyPositioned {
-                        tourState.registerTarget(
-                            id = "streak_monthly_badges",
-                            coordinates = it,
-                            scrollState = scrollState
-                        )
-                    }
+            // Caso 3: Contenido exitoso
+            hasLoadedOnce -> {
+                Column(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .background(MaterialTheme.colorScheme.background)
                 ) {
-                    MonthlyBadgesSectionV2(
-                        badges = monthlyBadges,
-                        currentMonthPoints = currentMonthPoints,
-                        renovaColors = renovaColors,
-                        onBadgeClick = { selectedBadge = it }
-                    )
-                }
-
-                Spacer(modifier = Modifier.height(16.dp))
-
-                if (weekData.isNotEmpty()) {
-                    Box(
-                        modifier = Modifier.onGloballyPositioned {
-                            tourState.registerTarget(
-                                id = "streak_weekly_progress",
-                                coordinates = it,
-                                scrollState = scrollState
-                            )
-                        }
+                    Column(
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .verticalScroll(scrollState)
+                            .padding(bottom = 80.dp)
                     ) {
-                        WeeklyProgressChart(
-                            weekData = weekData,
-                            renovaColors = renovaColors
+                        StreakCard(
+                            currentStreak = currentStreak,
+                            isStreakActive = isStreakActive,
+                            longestStreak = longestStreak,
+                            totalDays = totalRecyclingDays,
+                            renovaColors = renovaColors,
+                            scrollState = scrollState,
+                            tourState = tourState
                         )
+
+                        Spacer(modifier = Modifier.height(16.dp))
+
+                        Box(
+                            modifier = Modifier.onGloballyPositioned {
+                                tourState.registerTarget(
+                                    id = "streak_monthly_badges",
+                                    coordinates = it,
+                                    scrollState = scrollState
+                                )
+                            }
+                        ) {
+                            if (badgesLoadError) {
+                                Card(
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .padding(horizontal = 20.dp),
+                                    shape = RoundedCornerShape(16.dp),
+                                    colors = CardDefaults.cardColors(
+                                        containerColor = renovaColors.cardBackground
+                                    )
+                                ) {
+                                    Column(
+                                        modifier = Modifier
+                                            .fillMaxWidth()
+                                            .padding(24.dp),
+                                        horizontalAlignment = Alignment.CenterHorizontally
+                                    ) {
+                                        Icon(
+                                            painter = painterResource(id = R.drawable.ic_goal_1),
+                                            contentDescription = null,
+                                            tint = renovaColors.textSecondary.copy(alpha = 0.5f),
+                                            modifier = Modifier.size(48.dp)
+                                        )
+                                        Spacer(modifier = Modifier.height(12.dp))
+                                        Text(
+                                            text = stringResource(R.string.badges_load_error),
+                                            style = MaterialTheme.typography.titleMedium,
+                                            color = renovaColors.textPrimary,
+                                            fontWeight = FontWeight.Bold,
+                                            fontFamily = PoppinsFontFamily
+                                        )
+                                        Spacer(modifier = Modifier.height(8.dp))
+                                        Text(
+                                            text = stringResource(R.string.check_connection_try_again),
+                                            style = MaterialTheme.typography.bodyMedium,
+                                            color = renovaColors.textSecondary,
+                                            fontFamily = PoppinsFontFamily,
+                                            textAlign = TextAlign.Center
+                                        )
+                                    }
+                                }
+                            } else {
+                                MonthlyBadgesSectionV2(
+                                    badges = monthlyBadges,
+                                    currentMonthPoints = currentMonthPoints,
+                                    renovaColors = renovaColors,
+                                    onBadgeClick = { selectedBadge = it }
+                                )
+                            }
+                        }
+
+                        Spacer(modifier = Modifier.height(16.dp))
+
+                        if (weekData.isNotEmpty()) {
+                            Box(
+                                modifier = Modifier.onGloballyPositioned {
+                                    tourState.registerTarget(
+                                        id = "streak_weekly_progress",
+                                        coordinates = it,
+                                        scrollState = scrollState
+                                    )
+                                }
+                            ) {
+                                WeeklyProgressChart(
+                                    weekData = weekData,
+                                    renovaColors = renovaColors
+                                )
+                            }
+                        }
                     }
                 }
+            }
+
+            // Caso 4: Fallback
+            else -> {
+                LoadingState(renovaColors = renovaColors)
             }
         }
     }
@@ -388,7 +561,14 @@ fun StreakScreen() {
                             showErrorModal = true
                         }
                     } catch (e: Exception) {
-                        errorMessage = e.message ?: context.getString(R.string.unknown_error)
+                        errorMessage = when {
+                            e.message?.contains("Unable to resolve host", ignoreCase = true) == true ||
+                                    e.message?.contains("timeout", ignoreCase = true) == true ||
+                                    e.message?.contains("Failed to connect", ignoreCase = true) == true ||
+                                    e.message?.contains("No address associated with hostname", ignoreCase = true) == true ->
+                                context.getString(R.string.no_internet_connection)
+                            else -> e.message ?: context.getString(R.string.unknown_error)
+                        }
                         showErrorModal = true
                     } finally {
                         isClaimingBadge = false
@@ -398,53 +578,62 @@ fun StreakScreen() {
         )
     }
 
-    // Modal de error
-    RetryableErrorModal(
-        isVisible = showErrorModal,
-        errorMessage = errorMessage,
-        onDismiss = {
-            showErrorModal = false
-            errorMessage = ""
-        },
-        onRetry = {
-            showErrorModal = false
-            selectedBadge?.let { badge ->
-                scope.launch {
-                    isClaimingBadge = true
-                    try {
-                        val response = ApiClient.apiService.claimBadgeV2(
-                            ClaimBadgeRequestV2(
-                                userId = userId,
-                                badgeId = badge.id
+    // Modal de error (solo para errores secundarios, no para carga inicial)
+    if (showErrorModal) {
+        RetryableErrorModal(
+            isVisible = showErrorModal,
+            errorMessage = errorMessage,
+            onDismiss = {
+                showErrorModal = false
+                errorMessage = ""
+            },
+            onRetry = {
+                showErrorModal = false
+                selectedBadge?.let { badge ->
+                    scope.launch {
+                        isClaimingBadge = true
+                        try {
+                            val response = ApiClient.apiService.claimBadgeV2(
+                                ClaimBadgeRequestV2(
+                                    userId = userId,
+                                    badgeId = badge.id
+                                )
                             )
-                        )
 
-                        if (response.isSuccessful && response.body()?.success == true) {
-                            response.body()?.data?.user?.let { updatedUserData ->
-                                sessionManager.saveUser(updatedUserData)
-                                currentMonthPoints = updatedUserData.points_month
-                                userBadges = updatedUserData.badge
+                            if (response.isSuccessful && response.body()?.success == true) {
+                                response.body()?.data?.user?.let { updatedUserData ->
+                                    sessionManager.saveUser(updatedUserData)
+                                    currentMonthPoints = updatedUserData.points_month
+                                    userBadges = updatedUserData.badge
 
-                                monthlyBadges = monthlyBadges.map { b ->
-                                    if (b.id == badge.id) b.copy(isClaimed = true) else b
+                                    monthlyBadges = monthlyBadges.map { b ->
+                                        if (b.id == badge.id) b.copy(isClaimed = true) else b
+                                    }
                                 }
+                                selectedBadge = null
+                            } else {
+                                errorMessage = response.body()?.message
+                                    ?: context.getString(R.string.unknown_error)
+                                showErrorModal = true
                             }
-                            selectedBadge = null
-                        } else {
-                            errorMessage = response.body()?.message
-                                ?: context.getString(R.string.unknown_error)
+                        } catch (e: Exception) {
+                            errorMessage = when {
+                                e.message?.contains("Unable to resolve host", ignoreCase = true) == true ||
+                                        e.message?.contains("timeout", ignoreCase = true) == true ||
+                                        e.message?.contains("Failed to connect", ignoreCase = true) == true ||
+                                        e.message?.contains("No address associated with hostname", ignoreCase = true) == true ->
+                                    context.getString(R.string.no_internet_connection)
+                                else -> e.message ?: context.getString(R.string.unknown_error)
+                            }
                             showErrorModal = true
+                        } finally {
+                            isClaimingBadge = false
                         }
-                    } catch (e: Exception) {
-                        errorMessage = e.message ?: context.getString(R.string.unknown_error)
-                        showErrorModal = true
-                    } finally {
-                        isClaimingBadge = false
                     }
                 }
             }
-        }
-    )
+        )
+    }
 }
 
 @Composable
