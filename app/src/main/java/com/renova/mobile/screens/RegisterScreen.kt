@@ -55,7 +55,6 @@ fun RegisterScreen(
         viewModel.setSessionManager(context)
     }
 
-    // ✅ DESPUÉS: Obtener datos del ViewModel
     val savedFormData by viewModel.formData.collectAsState()
 
     var firstName by remember(savedFormData) { mutableStateOf(savedFormData.firstName) }
@@ -79,11 +78,9 @@ fun RegisterScreen(
     var showErrorDialog by remember { mutableStateOf(false) }
     var errorMessage by remember { mutableStateOf("") }
 
-    // ✅ CORREGIDO: Observar el estado del registro SIN volver a llamar registerUser
     LaunchedEffect(registerState) {
         when (registerState) {
             is RegisterState.Success -> {
-                // Solo navegar a la siguiente pantalla
                 val data = RegisterData(
                     firstName = firstName,
                     lastName = lastName,
@@ -104,7 +101,6 @@ fun RegisterScreen(
         }
     }
 
-    // Diálogo de error
     if (showErrorDialog) {
         AlertDialog(
             onDismissRequest = { showErrorDialog = false },
@@ -302,18 +298,14 @@ fun RegisterScreen(
 
                     Spacer(modifier = Modifier.height(16.dp))
 
-                    ValidatedTextField(
+                    PasswordFieldWithRequirements(
                         value = password,
                         onValueChange = {
                             if (it.length <= 14) password = it
                         },
                         label = stringResource(R.string.password),
-                        leadingIcon = R.drawable.ic_lock,
                         validationState = passwordValidation,
                         onValidationChange = { passwordValidation = it },
-                        validator = { validatePassword(it) },
-                        keyboardType = KeyboardType.Password,
-                        isPassword = true,
                         passwordVisible = passwordVisible,
                         onPasswordVisibilityChange = { passwordVisible = it },
                         colors = colors
@@ -382,7 +374,6 @@ fun RegisterScreen(
                                     curp = curp,
                                     password = password
                                 )
-                                // ✅ Guardar en el ViewModel ANTES de registrar
                                 viewModel.updateFormData(data)
                                 viewModel.registerUser(data)
                             }
@@ -417,6 +408,199 @@ fun RegisterScreen(
 
             Spacer(modifier = Modifier.height(32.dp))
         }
+    }
+}
+
+// ==================== CAMPO DE CONTRASEÑA CON REQUISITOS ====================
+
+@Composable
+fun PasswordFieldWithRequirements(
+    value: String,
+    onValueChange: (String) -> Unit,
+    label: String,
+    validationState: ValidationState,
+    onValidationChange: (ValidationState) -> Unit,
+    passwordVisible: Boolean,
+    onPasswordVisibilityChange: (Boolean) -> Unit,
+    colors: RenovaColorScheme
+) {
+    // Estados de validación individual
+    val hasMinLength = value.length >= 8
+    val hasNumber = value.any { it.isDigit() }
+    val hasSpecialChar = value.any { it in "!@#$%^&*()_+-=[]{};':\"\\|,.<>/?`~" }
+
+    val allValid = hasMinLength && hasNumber && hasSpecialChar
+
+    LaunchedEffect(value) {
+        if (value.isEmpty()) {
+            onValidationChange(ValidationState.IDLE)
+            return@LaunchedEffect
+        }
+
+        onValidationChange(ValidationState.VALIDATING)
+        delay(300)
+
+        onValidationChange(if (allValid) ValidationState.VALID else ValidationState.ERROR)
+    }
+
+    Column {
+        Text(
+            text = label,
+            color = colors.textPrimary,
+            fontSize = 14.sp,
+            fontWeight = FontWeight.Medium,
+            fontFamily = Poppins,
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(bottom = 4.dp)
+        )
+
+        OutlinedTextField(
+            value = value,
+            onValueChange = onValueChange,
+            leadingIcon = {
+                Icon(
+                    painter = painterResource(id = R.drawable.ic_lock),
+                    contentDescription = label,
+                    tint = colors.iconTint
+                )
+            },
+            trailingIcon = {
+                Row(
+                    horizontalArrangement = Arrangement.End,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    AnimatedVisibility(
+                        visible = validationState != ValidationState.IDLE,
+                        enter = fadeIn() + scaleIn(),
+                        exit = fadeOut() + scaleOut()
+                    ) {
+                        when (validationState) {
+                            ValidationState.VALIDATING -> {
+                                CircularProgressIndicator(
+                                    modifier = Modifier.size(20.dp),
+                                    color = CustomGreenColor,
+                                    strokeWidth = 2.dp
+                                )
+                            }
+
+                            ValidationState.VALID -> {
+                                Icon(
+                                    painter = painterResource(id = R.drawable.cheque),
+                                    contentDescription = stringResource(R.string.valid),
+                                    tint = CustomGreenColor,
+                                    modifier = Modifier.size(24.dp)
+                                )
+                            }
+
+                            ValidationState.ERROR -> {
+                                Icon(
+                                    painter = painterResource(id = R.drawable.ic_close_2),
+                                    contentDescription = stringResource(R.string.error),
+                                    tint = RenovaColors.Error,
+                                    modifier = Modifier.size(24.dp)
+                                )
+                            }
+
+                            else -> {}
+                        }
+                    }
+
+                    Spacer(modifier = Modifier.width(8.dp))
+                    IconButton(onClick = { onPasswordVisibilityChange(!passwordVisible) }) {
+                        Icon(
+                            painter = painterResource(
+                                id = if (passwordVisible) R.drawable.ic_visibility_off
+                                else R.drawable.ic_visibility
+                            ),
+                            contentDescription = if (passwordVisible)
+                                stringResource(R.string.hide)
+                            else
+                                stringResource(R.string.show),
+                            tint = colors.iconTint
+                        )
+                    }
+                }
+            },
+            visualTransformation = if (!passwordVisible)
+                PasswordVisualTransformation() else VisualTransformation.None,
+            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password),
+            singleLine = true,
+            modifier = Modifier.fillMaxWidth(),
+            shape = RoundedCornerShape(12.dp),
+            textStyle = TextStyle(
+                color = colors.textPrimary,
+                fontFamily = Poppins
+            ),
+            colors = RenovaComponentColors.textFieldColors(),
+            isError = validationState == ValidationState.ERROR && value.isNotEmpty()
+        )
+
+        // Lista de requisitos
+        AnimatedVisibility(
+            visible = value.isNotEmpty(),
+            enter = fadeIn() + expandVertically(),
+            exit = fadeOut() + shrinkVertically()
+        ) {
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(start = 16.dp, top = 8.dp, end = 16.dp)
+            ) {
+                PasswordRequirementItem(
+                    text = stringResource(R.string.validation_err_pwd_min_length),
+                    isMet = hasMinLength,
+                    colors = colors
+                )
+
+                Spacer(modifier = Modifier.height(4.dp))
+
+                PasswordRequirementItem(
+                    text = stringResource(R.string.validation_err_pwd_need_number),
+                    isMet = hasNumber,
+                    colors = colors
+                )
+
+                Spacer(modifier = Modifier.height(4.dp))
+
+                PasswordRequirementItem(
+                    text = stringResource(R.string.validation_err_pwd_need_special),
+                    isMet = hasSpecialChar,
+                    colors = colors
+                )
+            }
+        }
+    }
+}
+
+@Composable
+fun PasswordRequirementItem(
+    text: String,
+    isMet: Boolean,
+    colors: RenovaColorScheme
+) {
+    Row(
+        verticalAlignment = Alignment.CenterVertically,
+        modifier = Modifier.fillMaxWidth()
+    ) {
+        Icon(
+            painter = painterResource(
+                id = if (isMet) R.drawable.cheque else R.drawable.ic_close_2
+            ),
+            contentDescription = null,
+            tint = if (isMet) CustomGreenColor else RenovaColors.Error,
+            modifier = Modifier.size(16.dp)
+        )
+
+        Spacer(modifier = Modifier.width(8.dp))
+
+        Text(
+            text = text,
+            color = if (isMet) CustomGreenColor else colors.textSecondary,
+            fontSize = 12.sp,
+            fontFamily = Poppins,
+            fontWeight = if (isMet) FontWeight.Medium else FontWeight.Normal
+        )
     }
 }
 
@@ -555,9 +739,6 @@ fun ValidatedTextField(
             exit = fadeOut() + shrinkVertically()
         ) {
             val errorText = when {
-                label.contains(stringResource(R.string.password), ignoreCase = true) &&
-                        !label.contains(stringResource(R.string.confirm_password), ignoreCase = true) ->
-                    getPasswordError(value)
                 label.contains(stringResource(R.string.first_name), ignoreCase = true) ||
                         label.contains(stringResource(R.string.last_name), ignoreCase = true) ->
                     getNameError(value)
@@ -613,16 +794,6 @@ fun validateConfirmPassword(password: String, confirmPassword: String): Boolean 
     password == confirmPassword && password.isNotEmpty()
 
 // ==================== MENSAJES DE ERROR DINÁMICOS ====================
-@Composable
-fun getPasswordError(password: String): String {
-    return when {
-        password.length < 8 -> stringResource(R.string.validation_err_pwd_min_length)
-        !password.any { it.isDigit() } -> stringResource(R.string.validation_err_pwd_need_number)
-        !password.any { it in "!@#$%^&*()_+-=[]{};':\"\\|,.<>/?`~" } ->
-            stringResource(R.string.validation_err_pwd_need_special)
-        else -> ""
-    }
-}
 
 @Composable
 fun getNameError(name: String): String {
@@ -645,5 +816,4 @@ fun getErrorMessage(label: String): String {
         label.contains(stringResource(R.string.confirm_password), ignoreCase = true) ->
             stringResource(R.string.validation_err_pwd_no_match)
         else -> stringResource(R.string.validation_err_field_invalid)
-    }
-}
+    }}
