@@ -1,5 +1,7 @@
 package com.renova.mobile.ui.screens
 
+import androidx.compose.animation.core.FastOutSlowInEasing
+import androidx.compose.animation.core.animate
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
@@ -37,6 +39,7 @@ import com.renova.mobile.ui.tour.LocalTourState
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.ui.text.style.TextAlign
+import com.renova.mobile.ui.theme.RenovaColorScheme
 import kotlinx.coroutines.delay
 
 @Composable
@@ -270,7 +273,7 @@ private fun ActivityContent(
             .fillMaxSize()
             .background(Color.Transparent),
         contentPadding = PaddingValues(
-            top = 0.dp,
+            top = 14.dp,
             start = 20.dp,
             end = 20.dp,
             bottom = 80.dp
@@ -696,7 +699,7 @@ private fun MaterialStatCard(
         count >= 1000 -> 34.sp
         count >= 100 -> 38.sp
         count >= 10 -> 44.sp
-        else -> 50.sp
+        else -> 44.sp
     }
 
     val isTotal = title.lowercase() == "total"
@@ -734,7 +737,7 @@ private fun MaterialStatCard(
                     maxLines = 1
                 )
 
-                Spacer(modifier = Modifier.height(8.dp))
+                Spacer(modifier = Modifier.height(6.dp))
 
                 Text(
                     text = title,
@@ -801,5 +804,104 @@ fun EmptyStateInline(
             textAlign = TextAlign.Center,
             lineHeight = 20.sp
         )
+    }
+}
+
+@Composable
+private fun AnimatedPointsCard(
+    totalPoints: Int,
+    renovaColors: RenovaColorScheme
+) {
+    var animatedPoints by remember { mutableStateOf(0f) }
+
+    LaunchedEffect(totalPoints) {
+        animate(
+            initialValue = 0f,
+            targetValue = totalPoints.toFloat(),
+            animationSpec = tween(
+                durationMillis = 1500,
+                easing = FastOutSlowInEasing
+            )
+        ) { value, _ ->
+            animatedPoints = value
+        }
+    }
+
+    Card(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(bottom = 8.dp)
+            .height(135.dp),
+        shape = RoundedCornerShape(24.dp),
+        colors = CardDefaults.cardColors(containerColor = Color.Transparent),
+        elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
+    ) {
+        Box(modifier = Modifier.fillMaxSize()) {
+            Image(
+                painter = painterResource(id = R.drawable.fondo),
+                contentDescription = null,
+                contentScale = ContentScale.Crop,
+                colorFilter = androidx.compose.ui.graphics.ColorFilter.tint(
+                    Color(0xFF05D16E),
+                    blendMode = androidx.compose.ui.graphics.BlendMode.Modulate
+                ),
+                modifier = Modifier
+                    .matchParentSize()
+                    .clip(RoundedCornerShape(24.dp))
+            )
+
+            Row(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(24.dp),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Column(
+                    modifier = Modifier.weight(1f),
+                    verticalArrangement = Arrangement.Center
+                ) {
+                    Text(
+                        text = stringResource(R.string.total_points),
+                        style = MaterialTheme.typography.titleMedium,
+                        color = Color.White,
+                        fontWeight = FontWeight.SemiBold,
+                        fontSize = 16.sp
+                    )
+                    Spacer(modifier = Modifier.height(0.dp))
+                    Row {
+                        Text(
+                            text = java.text.NumberFormat.getIntegerInstance(
+                                java.util.Locale.forLanguageTag("es-MX")
+                            ).format(animatedPoints.toInt()),
+                            style = MaterialTheme.typography.displayLarge,
+                            color = Color.White,
+                            fontSize = 52.sp,
+                            fontWeight = FontWeight.Bold,
+                            lineHeight = 52.sp
+                        )
+                    }
+                }
+
+                Box(
+                    modifier = Modifier
+                        .size(90.dp)
+                        .background(
+                            Color.White.copy(alpha = 0.15f),
+                            shape = RoundedCornerShape(20.dp)
+                        ),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Image(
+                        painter = painterResource(id = R.drawable.leaf),
+                        contentDescription = null,
+                        modifier = Modifier.size(45.dp),
+                        colorFilter = androidx.compose.ui.graphics.ColorFilter.tint(
+                            Color.White.copy(alpha = 0.9f)
+                        )
+                    )
+                }
+            }
+        }
     }
 }
