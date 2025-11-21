@@ -507,9 +507,7 @@
     <string name="tour_title_welcome">¡Renova te da la bienvenida!</string>
     <string name="tour_desc_welcome">Estamos emocionados de tenerte aquí. Te mostraremos las funciones principales para que empieces a reciclar y ganar recompensas. Presiona \"Sig.\" para comenzar.</string>
     <string name="tour_title_menu_button">Menú de Opciones</string>
-    <string name="tour_desc_menu_button">Puedes tocar aquí para ver más opciones, como la ayuda y el cierre de sesión.</string>
-    <string name="tour_title_side_menu">Menú Principal</string>
-    <string name="tour_desc_side_menu">Aquí puedes cerrar sesión y encontrar preguntas frecuentes.</string>
+    <string name="tour_desc_menu_button">Aquí puedes cerrar sesión, encontrar preguntas frecuentes y acceder al manual de usuario.</string>
     <string name="tour_title_help_fab">Botón de Ayuda</string>
     <string name="tour_desc_help_fab_full">¡Has completado el tour! Recuerda que aquí puedes volver a consultarlo cuando lo necesites.</string>
     <string name="tour_desc_help_fab_home">Recuerda que aquí puedes volver a consultar el tour de esta pantalla.</string>
@@ -610,7 +608,7 @@
     <string name="tour_title_streak_button">Sección de Racha</string>
     <string name="tour_desc_streak_button">¡Genial! Ahora toca \"Sig.\" para ver tu progreso y rachas.</string>
     <string name="tour_title_streak_card">Tu Racha Actual</string>
-    <string name="tour_desc_streak_card">¡Mantén el ritmo! Esta tarjeta muestra tus días consecutivos reciclando y tu mejor racha.</string>
+    <string name="tour_desc_streak_card">¡Mantén el ritmo! Esta tarjeta muestra tus días consecutivos reciclando.</string>
     <string name="tour_title_streak_challenge">Reto Semanal</string>
     <string name="tour_desc_streak_challenge">¡Acepta retos semanales para ganar recompensas adicionales! Toca aquí para ver los detalles.</string>
     <string name="tour_title_streak_badges">Insignias Mensuales</string>

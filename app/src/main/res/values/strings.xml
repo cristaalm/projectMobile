@@ -504,9 +504,7 @@
     <string name="tour_title_welcome">Renova welcomes you!</string>
     <string name="tour_desc_welcome">We\'re excited to have you here. We\'ll show you the main features so you can start recycling and earning rewards. Press \"Next\" to begin.</string>
     <string name="tour_title_menu_button">Options Menu</string>
-    <string name="tour_desc_menu_button">You can tap here to see more options, like help and logging out.</string>
-    <string name="tour_title_side_menu">Main Menu</string>
-    <string name="tour_desc_side_menu">Here you can log out and find frequently asked questions. This is the last step of the tour!</string>
+    <string name="tour_desc_menu_button">Here you can log out, find frequently asked questions and access the user manual.</string>
     <string name="tour_title_help_fab">Help Button</string>
     <string name="tour_desc_help_fab_full">You\'ve completed the tour! Remember you can check it again here whenever you need.</string>
     <string name="tour_desc_help_fab_home">Remember you can check the tour for this screen again here.</string>
@@ -609,7 +607,7 @@
     <string name="tour_title_streak_button">Streak Section</string>
     <string name="tour_desc_streak_button">Great! Now tap "Next" to see your progress and streaks.</string>
     <string name="tour_title_streak_card">Your Current Streak</string>
-    <string name="tour_desc_streak_card">Keep it up! This card shows your consecutive recycling days and your best streak.</string>
+    <string name="tour_desc_streak_card">Keep it up! This card shows your consecutive recycling days.</string>
     <string name="tour_title_streak_challenge">Weekly Challenge</string>
     <string name="tour_desc_streak_challenge">Accept weekly challenges to earn additional rewards! Tap here to see the details.</string>
     <string name="tour_title_streak_badges">Monthly Badges</string>
