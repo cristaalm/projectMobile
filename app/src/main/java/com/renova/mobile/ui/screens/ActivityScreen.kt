@@ -1,5 +1,6 @@
 package com.renova.mobile.ui.screens
 
+import androidx.compose.animation.EnterTransition
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
@@ -36,9 +37,11 @@ import androidx.compose.ui.layout.onGloballyPositioned
 import com.renova.mobile.ui.tour.LocalTourState
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.derivedStateOf
+import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.text.style.TextAlign
 import kotlinx.coroutines.delay
 
+// 🔹 Función auxiliar para traducir errores (Traída del Block 1)
 @Composable
 private fun translateError(errorCode: String): String {
     return when (errorCode) {
@@ -63,6 +66,7 @@ fun ActivityScreen(
     // 🛡️ Cargar datos de forma segura
     LaunchedEffect(Unit) {
         try {
+            // Usamos la llamada robusta del Block 1
             viewModel.loadHistory(1, isManualRefresh = false)
         } catch (e: Exception) {
             // El ViewModel ya maneja el error
@@ -133,8 +137,9 @@ fun ActivityScreen(
                     }
                 }
 
+                // ⚠️ Snackbar para errores cuando ya hay datos (Lógica del Block 1)
                 if (state.error != null &&
-                    state.isManualRefresh &&
+                    state.isManualRefresh && // Chequeo extra del Block 1
                     state.hasLoadedOnce &&
                     state.activities.isNotEmpty()) {
 
@@ -149,7 +154,7 @@ fun ActivityScreen(
                         modifier = Modifier
                             .fillMaxSize()
                             .padding(16.dp),
-                        contentAlignment = Alignment.TopCenter
+                        contentAlignment = Alignment.BottomCenter
                     ) {
                         Surface(
                             modifier = Modifier.fillMaxWidth(),
@@ -167,7 +172,7 @@ fun ActivityScreen(
                                 Icon(
                                     imageVector = Icons.Default.WifiOff,
                                     contentDescription = null,
-                                    tint = MaterialTheme.colorScheme.error,
+                                    tint = renovaColors.textSecondary,
                                     modifier = Modifier.size(24.dp)
                                 )
                                 Text(
@@ -227,66 +232,55 @@ private fun ActivityContent(
     val lazyListState = rememberLazyListState()
 
     val isTourActive by tourState.isTourActive.collectAsState()
-    val currentStepIndex by tourState.currentStepIndex.collectAsState()
+    val targets by tourState.targets.collectAsState()
 
     val currentStepTargetId by remember(tourState) {
         derivedStateOf { tourState.currentStep?.targetId }
     }
 
-    LaunchedEffect(isTourActive, currentStepIndex, currentStepTargetId, state.activities.isNotEmpty()) {
+    // ---------------------------------------------------------------------------
+    // 🆕 ESTRATEGIA: Scroll inmediato cuando se activa el tour
+    // ---------------------------------------------------------------------------
+    LaunchedEffect(isTourActive, currentStepTargetId) {
         if (isTourActive && currentStepTargetId != null) {
-            delay(100)
+            val indexToScroll = when (currentStepTargetId) {
+                "activity_points_card" -> 0
+                "activity_materials_row" -> 1
+                "activity_history_title" -> 2
+                else -> null
+            }
 
-            val pointsCardIndex = 0
-            val materialsRowIndex = 1
-            val historySectionIndex = 2
-
-            when (currentStepTargetId) {
-                "activity_points_card" -> {
-                    lazyListState.animateScrollToItem(
-                        index = pointsCardIndex,
-                        scrollOffset = 0
-                    )
-                }
-                "activity_materials_row" -> {
-                    lazyListState.animateScrollToItem(
-                        index = materialsRowIndex,
-                        scrollOffset = 0
-                    )
-                }
-                "activity_history_title" -> {
-                    lazyListState.animateScrollToItem(
-                        index = historySectionIndex,
-                        scrollOffset = 0
-                    )
+            if (indexToScroll != null) {
+                var attempts = 0
+                while (attempts < 3) {
+                    try {
+                        delay(100L * (attempts + 1))
+                        lazyListState.scrollToItem(indexToScroll)
+                        break
+                    } catch (e: Exception) {
+                        attempts++
+                        if (attempts == 3) {
+                            try {
+                                lazyListState.animateScrollToItem(indexToScroll)
+                            } catch (e: Exception) {
+                            }
+                        }
+                    }
                 }
             }
         }
     }
 
-    LazyColumn(
-        state = lazyListState,
-        modifier = Modifier
-            .fillMaxSize()
-            .background(Color.Transparent),
-        contentPadding = PaddingValues(
-            top = 0.dp,
-            start = 20.dp,
-            end = 20.dp,
-            bottom = 80.dp
-        )
-    ) {
-        // ITEM 1: Tarjeta de puntos
-        item {
-            androidx.compose.animation.AnimatedVisibility(
-                visible = true,
-                enter = androidx.compose.animation.fadeIn(
-                    animationSpec = androidx.compose.animation.core.tween(durationMillis = 600)
-                ) + androidx.compose.animation.slideInVertically(
-                    initialOffsetY = { -40 },
-                    animationSpec = androidx.compose.animation.core.tween(durationMillis = 600)
-                )
-            ) {
+    Box {
+        LazyColumn(
+            state = lazyListState,
+            modifier = Modifier
+                .fillMaxSize()
+                .background(Color.Transparent),
+            contentPadding = PaddingValues(bottom = 16.dp)
+        ) {
+            // ITEM 0: Points Card
+            item {
                 Box(modifier = Modifier.onGloballyPositioned { coords ->
                     tourState.registerTarget(
                         id = "activity_points_card",
@@ -295,103 +289,120 @@ private fun ActivityContent(
                         itemIndex = 0
                     )
                 }) {
-                    AnimatedPointsCard(
-                        totalPoints = state.totalPoints,
-                        renovaColors = renovaColors
-                    )
-                }
-            }
-            DisposableEffect(Unit) {
-                onDispose { tourState.unregisterTarget("activity_points_card") }
-            }
-        }
-
-        // ITEM 2: Sección de materiales de reciclaje
-        item {
-            androidx.compose.animation.AnimatedVisibility(
-                visible = true,
-                enter = androidx.compose.animation.fadeIn(
-                    animationSpec = androidx.compose.animation.core.tween(durationMillis = 600, delayMillis = 100)
-                ) + androidx.compose.animation.slideInVertically(
-                    initialOffsetY = { -30 },
-                    animationSpec = androidx.compose.animation.core.tween(durationMillis = 600, delayMillis = 100)
-                )
-            ) {
-                Column(
-                    modifier = Modifier
-                        .padding(top = 16.dp)
-                        .onGloballyPositioned { coords ->
-                            tourState.registerTarget(
-                                id = "activity_materials_row",
-                                coordinates = coords,
-                                lazyListState = lazyListState,
-                                itemIndex = 1
+                    // ⚡ FIX SCROLL: Usamos EnterTransition.None si no es primera carga
+                    androidx.compose.animation.AnimatedVisibility(
+                        visible = true,
+                        enter = if (shouldAnimatePoints && !isTourActive) {
+                            androidx.compose.animation.fadeIn(
+                                animationSpec = androidx.compose.animation.core.tween(durationMillis = 600)
+                            ) + androidx.compose.animation.slideInVertically(
+                                initialOffsetY = { -40 },
+                                animationSpec = androidx.compose.animation.core.tween(durationMillis = 600)
                             )
+                        } else {
+                            EnterTransition.None
                         }
-                ) {
-                    // Título y subtítulo
-                    Text(
-                        text = stringResource(R.string.recycling_materials),
-                        style = MaterialTheme.typography.titleLarge,
-                        color = renovaColors.textPrimary,
-                        fontWeight = FontWeight.Bold,
-                        fontSize = 21.sp,
-                        fontFamily = PoppinsFontFamily
-                    )
-
-                    Spacer(modifier = Modifier.height(4.dp))
-
-                    Text(
-                        text = stringResource(R.string.earn_points_recycling),
-                        style = MaterialTheme.typography.bodyMedium,
-                        color = renovaColors.textSecondary,
-                        fontSize = 14.sp,
-                        fontFamily = PoppinsFontFamily
-                    )
-
-                    Spacer(modifier = Modifier.height(16.dp))
-
-                    // Tarjetas de estadísticas
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.spacedBy(12.dp)
                     ) {
-                        MaterialStatCard(
-                            title = stringResource(R.string.plastic),
-                            count = state.totalPlastic,
-                            icon = R.drawable.bottle,
-                            backgroundRes = R.drawable.fondo_chico,
-                            modifier = Modifier.weight(1f)
-                        )
-                        MaterialStatCard(
-                            title = stringResource(R.string.aluminum),
-                            count = state.totalAluminum,
-                            icon = R.drawable.can,
-                            backgroundRes = R.drawable.fondo_botella,
-                            modifier = Modifier.weight(1f)
-                        )
-                        MaterialStatCard(
-                            title = "Total",
-                            count = state.totalPlastic + state.totalAluminum,
-                            icon = R.drawable.bottle,
-                            backgroundRes = R.drawable.fondo_comercio,
-                            showIcon = false,
-                            modifier = Modifier.weight(1f)
+                        AnimatedPointsCard(
+                            totalPoints = state.totalPoints,
+                            renovaColors = renovaColors
                         )
                     }
                 }
+                DisposableEffect(Unit) {
+                    onDispose { tourState.unregisterTarget("activity_points_card") }
+                }
             }
-            DisposableEffect(Unit) {
-                onDispose { tourState.unregisterTarget("activity_materials_row") }
-            }
-        }
 
-        // ITEM 3: Sección de historial
-        item {
-            Column(
-                modifier = Modifier
-                    .padding(top = 24.dp)
-                    .onGloballyPositioned { coords ->
+            // ITEM 1: Recycling Materials (TITULO + CARDS)
+            item {
+                Column(
+                    modifier = Modifier.onGloballyPositioned { coords ->
+                        tourState.registerTarget(
+                            id = "activity_materials_row",
+                            coordinates = coords,
+                            lazyListState = lazyListState,
+                            itemIndex = 1
+                        )
+                    }
+                ) {
+                    androidx.compose.animation.AnimatedVisibility(
+                        visible = true,
+                        enter = if (shouldAnimatePoints && !isTourActive) {
+                            androidx.compose.animation.fadeIn(
+                                animationSpec = androidx.compose.animation.core.tween(durationMillis = 600, delayMillis = 100)
+                            ) + androidx.compose.animation.slideInVertically(
+                                initialOffsetY = { -30 },
+                                animationSpec = androidx.compose.animation.core.tween(durationMillis = 600, delayMillis = 100)
+                            )
+                        } else {
+                            EnterTransition.None
+                        }
+                    ) {
+                        // 🛡️ FIX OVERLAP: Column contenedor para Título y Row
+                        Column {
+                            Column(
+                                modifier = Modifier.padding(top = 0.dp, start = 20.dp, end = 20.dp, bottom = 8.dp)
+                            ) {
+                                Text(
+                                    text = stringResource(R.string.recycling_materials),
+                                    style = MaterialTheme.typography.titleLarge,
+                                    color = renovaColors.textPrimary,
+                                    fontWeight = FontWeight.Bold,
+                                    fontSize = 21.sp,
+                                    fontFamily = PoppinsFontFamily
+                                )
+                                Text(
+                                    text = stringResource(R.string.earn_points_recycling),
+                                    style = MaterialTheme.typography.bodyMedium,
+                                    color = renovaColors.textSecondary,
+                                    fontSize = 14.sp,
+                                    fontFamily = PoppinsFontFamily
+                                )
+                            }
+
+                            // Cards en Row
+                            Row(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(horizontal = 20.dp, vertical = 8.dp),
+                                horizontalArrangement = Arrangement.spacedBy(12.dp)
+                            ) {
+                                MaterialStatCard(
+                                    title = stringResource(R.string.plastic),
+                                    count = state.totalPlastic,
+                                    icon = R.drawable.bottle,
+                                    backgroundRes = R.drawable.fondo_chico,
+                                    modifier = Modifier.weight(1f)
+                                )
+                                MaterialStatCard(
+                                    title = stringResource(R.string.aluminum),
+                                    count = state.totalAluminum,
+                                    icon = R.drawable.can,
+                                    backgroundRes = R.drawable.fondo_botella,
+                                    modifier = Modifier.weight(1f)
+                                )
+                                MaterialStatCard(
+                                    title = "Total",
+                                    count = state.totalPlastic + state.totalAluminum,
+                                    icon = R.drawable.bottle,
+                                    backgroundRes = R.drawable.fondo_comercio,
+                                    showIcon = false,
+                                    modifier = Modifier.weight(1f)
+                                )
+                            }
+                        }
+                    }
+                }
+                DisposableEffect(Unit) {
+                    onDispose { tourState.unregisterTarget("activity_materials_row") }
+                }
+            }
+
+            // ITEM 2: History Title
+            item {
+                Column(
+                    modifier = Modifier.onGloballyPositioned { coords ->
                         tourState.registerTarget(
                             id = "activity_history_title",
                             coordinates = coords,
@@ -399,98 +410,158 @@ private fun ActivityContent(
                             itemIndex = 2
                         )
                     }
-            ) {
-                androidx.compose.animation.AnimatedVisibility(
-                    visible = true,
-                    enter = androidx.compose.animation.fadeIn(
-                        animationSpec = androidx.compose.animation.core.tween(durationMillis = 600, delayMillis = 300)
-                    ) + androidx.compose.animation.slideInVertically(
-                        initialOffsetY = { -20 },
-                        animationSpec = androidx.compose.animation.core.tween(durationMillis = 600, delayMillis = 300)
-                    )
                 ) {
-                    Column {
-                        Text(
-                            text = stringResource(R.string.history),
-                            style = MaterialTheme.typography.titleLarge,
-                            color = renovaColors.textPrimary,
-                            fontWeight = FontWeight.Bold,
-                            fontSize = 21.sp,
-                            fontFamily = PoppinsFontFamily
-                        )
-
-                        Spacer(modifier = Modifier.height(4.dp))
-
-                        Text(
-                            text = stringResource(R.string.activity_record),
-                            style = MaterialTheme.typography.bodyMedium,
-                            color = renovaColors.textSecondary,
-                            fontSize = 14.sp,
-                            fontFamily = PoppinsFontFamily
-                        )
-                    }
-                }
-
-                Spacer(modifier = Modifier.height(16.dp))
-
-                // Lista de actividades o estado vacío
-                Column(modifier = Modifier.fillMaxWidth()) {
-                    if (state.activities.isEmpty()) {
-                        EmptyStateInline(renovaColors = renovaColors)
-                    } else {
+                    androidx.compose.animation.AnimatedVisibility(
+                        visible = true,
+                        enter = if (shouldAnimatePoints && !isTourActive) {
+                            androidx.compose.animation.fadeIn(
+                                animationSpec = androidx.compose.animation.core.tween(durationMillis = 600, delayMillis = 300)
+                            ) + androidx.compose.animation.slideInVertically(
+                                initialOffsetY = { -20 },
+                                animationSpec = androidx.compose.animation.core.tween(durationMillis = 600, delayMillis = 300)
+                            )
+                        } else {
+                            EnterTransition.None
+                        }
+                    ) {
                         Column(
-                            modifier = Modifier.fillMaxWidth(),
-                            verticalArrangement = Arrangement.spacedBy(0.dp)
+                            modifier = Modifier
+                                .padding(start = 20.dp, top = 12.dp, bottom = 8.dp)
                         ) {
-                            state.activities.forEachIndexed { index, activity ->
-                                ActivityHistoryCard(
-                                    activity = activity,
-                                    colors = renovaColors,
-                                    onClick = {
-                                        onActivityClick(activity)
-                                    }
-                                )
-                                if (index < state.activities.size - 1) {
-                                    Divider(
-                                        color = RenovaColors.PrimaryColor,
-                                        thickness = 1.dp,
-                                        modifier = Modifier.padding(vertical = 3.dp)
+                            Text(
+                                text = stringResource(R.string.history),
+                                style = MaterialTheme.typography.titleLarge,
+                                color = renovaColors.textPrimary,
+                                fontWeight = FontWeight.Bold,
+                                fontSize = 21.sp,
+                                fontFamily = PoppinsFontFamily
+                            )
+                            Text(
+                                text = stringResource(R.string.activity_record),
+                                style = MaterialTheme.typography.bodyMedium,
+                                color = renovaColors.textSecondary,
+                                fontSize = 14.sp,
+                                fontFamily = PoppinsFontFamily
+                            )
+                        }
+                    }
+
+                    Spacer(modifier = Modifier.height(8.dp))
+
+                    Column(modifier = Modifier.fillMaxWidth()) {
+                        if (state.activities.isEmpty()) {
+                            EmptyStateInline(renovaColors = renovaColors)
+                        } else {
+                            Column(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(horizontal = 24.dp),
+                                verticalArrangement = Arrangement.spacedBy(0.dp)
+                            ) {
+                                state.activities.forEachIndexed { index, activity ->
+                                    ActivityHistoryCard(
+                                        activity = activity,
+                                        colors = renovaColors,
+                                        onClick = {
+                                            onActivityClick(activity)
+                                        }
                                     )
+                                    if (index < state.activities.size - 1) {
+                                        Divider(
+                                            color = RenovaColors.PrimaryColor,
+                                            thickness = 1.dp,
+                                            modifier = Modifier.padding(vertical = 3.dp)
+                                        )
+                                    }
                                 }
                             }
                         }
                     }
                 }
+
+                DisposableEffect(Unit) {
+                    onDispose {
+                        tourState.unregisterTarget("activity_history_title")
+                    }
+                }
             }
 
-            DisposableEffect(Unit) {
-                onDispose {
-                    tourState.unregisterTarget("activity_history_title")
+            if (state.activities.isNotEmpty()) {
+                item {
+                    androidx.compose.animation.AnimatedVisibility(
+                        visible = true,
+                        enter = androidx.compose.animation.fadeIn(
+                            animationSpec = androidx.compose.animation.core.tween(
+                                durationMillis = 600,
+                                delayMillis = 500 + (state.activities.size * 50)
+                            )
+                        )
+                    ) {
+                        PaginationControls(
+                            currentPage = state.currentPage,
+                            totalPages = state.totalPages,
+                            isLoading = state.isLoading,
+                            renovaColors = renovaColors,
+                            onPreviousPage = onPreviousPage,
+                            onNextPage = onNextPage
+                        )
+                    }
                 }
             }
         }
 
-        // ITEM 4: Controles de paginación
-        if (state.activities.isNotEmpty()) {
-            item {
-                androidx.compose.animation.AnimatedVisibility(
-                    visible = true,
-                    enter = androidx.compose.animation.fadeIn(
-                        animationSpec = androidx.compose.animation.core.tween(
-                            durationMillis = 600,
-                            delayMillis = 500 + (state.activities.size * 50)
-                        )
-                    )
-                ) {
-                    PaginationControls(
-                        currentPage = state.currentPage,
-                        totalPages = state.totalPages,
-                        isLoading = state.isLoading,
-                        renovaColors = renovaColors,
-                        onPreviousPage = onPreviousPage,
-                        onNextPage = onNextPage
-                    )
-                }
+        // 🛡️ FIX TOUR SCROLL: Targets invisibles para asegurar registro
+        if (isTourActive) {
+            Column(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .alpha(0f)
+            ) {
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(200.dp)
+                        .onGloballyPositioned { coords ->
+                            if (!targets.containsKey("activity_points_card")) {
+                                tourState.registerTarget(
+                                    id = "activity_points_card",
+                                    coordinates = coords,
+                                    lazyListState = lazyListState,
+                                    itemIndex = 0
+                                )
+                            }
+                        }
+                )
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(250.dp)
+                        .onGloballyPositioned { coords ->
+                            if (!targets.containsKey("activity_materials_row")) {
+                                tourState.registerTarget(
+                                    id = "activity_materials_row",
+                                    coordinates = coords,
+                                    lazyListState = lazyListState,
+                                    itemIndex = 1
+                                )
+                            }
+                        }
+                )
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(100.dp)
+                        .onGloballyPositioned { coords ->
+                            if (!targets.containsKey("activity_history_title")) {
+                                tourState.registerTarget(
+                                    id = "activity_history_title",
+                                    coordinates = coords,
+                                    lazyListState = lazyListState,
+                                    itemIndex = 2
+                                )
+                            }
+                        }
+                )
             }
         }
     }
@@ -525,9 +596,7 @@ private fun ErrorStateFullScreen(
                 modifier = Modifier.size(50.dp)
             )
         }
-
         Spacer(modifier = Modifier.height(24.dp))
-
         Text(
             text = stringResource(R.string.error_loading_activity),
             fontFamily = PoppinsFontFamily,
@@ -536,9 +605,7 @@ private fun ErrorStateFullScreen(
             color = MaterialTheme.colorScheme.error,
             textAlign = TextAlign.Center
         )
-
         Spacer(modifier = Modifier.height(12.dp))
-
         Text(
             text = errorMessage,
             fontFamily = PoppinsFontFamily,
@@ -547,14 +614,10 @@ private fun ErrorStateFullScreen(
             textAlign = TextAlign.Center,
             lineHeight = 20.sp
         )
-
         Spacer(modifier = Modifier.height(24.dp))
-
         Button(
             onClick = onRetry,
-            colors = ButtonDefaults.buttonColors(
-                containerColor = renovaColors.primaryColor
-            ),
+            colors = ButtonDefaults.buttonColors(containerColor = renovaColors.primaryColor),
             shape = RoundedCornerShape(12.dp)
         ) {
             Icon(
@@ -602,9 +665,7 @@ fun ActivityHistoryCard(
             tint = iconColor,
             modifier = Modifier.size(32.dp)
         )
-
         Spacer(modifier = Modifier.width(16.dp))
-
         Column(modifier = Modifier.weight(1f)) {
             Text(
                 text = when (activity.type_history) {
@@ -621,18 +682,14 @@ fun ActivityHistoryCard(
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis
             )
-
             Spacer(modifier = Modifier.height(4.dp))
-
             val subtitleText = when (activity.type_history) {
                 1 -> activity.alliance?.name ?: ""
                 2 -> {
                     val materialName = activity.material_type?.name ?: ""
                     val baseName = when {
-                        materialName.contains("Plástico", ignoreCase = true) ->
-                            context.getString(R.string.plastic)
-                        materialName.contains("Aluminio", ignoreCase = true) ->
-                            context.getString(R.string.aluminum)
+                        materialName.contains("Plástico", ignoreCase = true) -> context.getString(R.string.plastic)
+                        materialName.contains("Aluminio", ignoreCase = true) -> context.getString(R.string.aluminum)
                         else -> materialName
                     }
                     if (activity.scan?.is_crushed == true) "$baseName - ${context.getString(R.string.crushed)}" else baseName
@@ -640,31 +697,23 @@ fun ActivityHistoryCard(
                 3 -> context.getString(R.string.manual_adjustment)
                 else -> activity.alliance?.name ?: ""
             }
-
             if (subtitleText.isNotBlank()) {
                 Text(
                     text = subtitleText,
-                    style = MaterialTheme.typography.bodySmall.copy(
-                        fontFamily = PoppinsFontFamily
-                    ),
+                    style = MaterialTheme.typography.bodySmall.copy(fontFamily = PoppinsFontFamily),
                     color = colors.textSecondary,
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis
                 )
             }
-
             Text(
                 text = formatFriendlyDate(activity.created_at),
-                style = MaterialTheme.typography.bodySmall.copy(
-                    fontFamily = PoppinsFontFamily
-                ),
+                style = MaterialTheme.typography.bodySmall.copy(fontFamily = PoppinsFontFamily),
                 color = colors.textSecondary
             )
         }
-
         Column(horizontalAlignment = Alignment.End) {
             val displayPoints = activity.points
-
             val pointsColor = when (activity.type_history) {
                 1 -> colors.negativePoints
                 2 -> if (activity.points == 0) colors.textPrimary else colors.primaryColor
@@ -698,7 +747,6 @@ private fun MaterialStatCard(
         count >= 10 -> 44.sp
         else -> 50.sp
     }
-
     val isTotal = title.lowercase() == "total"
     val textColor = if (isTotal) RenovaColors.Secondary else Color.White
 
@@ -717,7 +765,6 @@ private fun MaterialStatCard(
                     .matchParentSize()
                     .clip(RoundedCornerShape(20.dp))
             )
-
             Column(
                 modifier = Modifier
                     .fillMaxSize()
@@ -733,9 +780,7 @@ private fun MaterialStatCard(
                     color = textColor,
                     maxLines = 1
                 )
-
                 Spacer(modifier = Modifier.height(8.dp))
-
                 Text(
                     text = title,
                     fontSize = 14.sp,
@@ -779,9 +824,7 @@ fun EmptyStateInline(
                 modifier = Modifier.size(50.dp)
             )
         }
-
         Spacer(modifier = Modifier.height(20.dp))
-
         Text(
             text = stringResource(R.string.no_activity_yet),
             fontFamily = PoppinsFontFamily,
@@ -790,9 +833,7 @@ fun EmptyStateInline(
             color = renovaColors.textPrimary,
             textAlign = TextAlign.Center
         )
-
         Spacer(modifier = Modifier.height(8.dp))
-
         Text(
             text = stringResource(R.string.no_activity_description),
             fontFamily = PoppinsFontFamily,
