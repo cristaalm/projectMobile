@@ -70,7 +70,7 @@ fun PaymentSimulationModal(
     val paypalRepository = remember { PayPalRepository() }
     val sessionManager = remember { SessionManager(context) }
 
-    val amountMXN = points * 0.01
+    val amountMXN = points * 0.1
     val amountFormatted = NumberFormat.getCurrencyInstance(Locale("es", "MX")).format(amountMXN)
     val minimumAmount = 50.0
     val canWithdraw = amountMXN >= minimumAmount

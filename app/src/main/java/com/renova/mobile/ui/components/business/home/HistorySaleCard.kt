@@ -33,7 +33,7 @@ import com.renova.mobile.ui.theme.RenovaColorScheme
 import java.text.NumberFormat
 import java.util.Locale
 
-private const val POINT_TO_MXN = 0.01
+private const val POINT_TO_MXN = 0.1
 
 @Composable
 fun HistorySaleCard(
