@@ -29,10 +29,10 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.renova.mobile.R
 import com.renova.mobile.ui.theme.*
-import kotlinx.coroutines.delay
 import com.renova.mobile.ui.viewmodels.RegisterState
 import com.renova.mobile.ui.viewmodels.RegisterViewModel
 import com.renova.mobile.ui.viewmodels.UploadState
+import com.renova.mobile.utils.ImageCompressionHelper
 
 @Composable
 fun DocumentsScreen(
@@ -51,53 +51,59 @@ fun DocumentsScreen(
     var ineFrontUri by remember(savedUris) { mutableStateOf(savedUris.first) }
     var ineBackUri by remember(savedUris) { mutableStateOf(savedUris.second) }
 
-
     var ineFrontValidation by remember { mutableStateOf(ValidationState.IDLE) }
     var ineBackValidation by remember { mutableStateOf(ValidationState.IDLE) }
 
     var showErrorDialog by remember { mutableStateOf(false) }
     var errorMessage by remember { mutableStateOf("") }
 
-    // Función para validar tamaño del archivo
-    fun validateFileSize(uri: Uri): Boolean {
-        try {
-            context.contentResolver.openInputStream(uri)?.use { inputStream ->
-                val fileSize = inputStream.available()
-                val maxSize = 5 * 1024 * 1024 // 5MB en bytes
-                return fileSize <= maxSize
-            }
-        } catch (e: Exception) {
-            return false
-        }
-        return false
-    }
-
+    // Launcher para INE Frontal con compresión automática
     val ineFrontLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.GetContent()
     ) { uri: Uri? ->
         if (uri != null) {
-            if (validateFileSize(uri)) {
-                ineFrontUri = uri
-                viewModel.updateDocumentsUris(uri, ineBackUri) // ✅ Guardar
-                ineFrontValidation = ValidationState.VALID
-            } else {
-                errorMessage = context.getString(R.string.error_file_too_large)
-                showErrorDialog = true
-            }
+            ineFrontValidation = ValidationState.VALIDATING
+
+            // SIEMPRE comprimir el documento
+            ImageCompressionHelper.compressImage(context, uri, "ine_front")
+                .onSuccess { compressedUri ->
+                    ineFrontUri = compressedUri
+                    viewModel.updateDocumentsUris(compressedUri, ineBackUri)
+                    ineFrontValidation = ValidationState.VALID
+                    android.util.Log.d("DocumentsScreen", "✅ INE frontal comprimida")
+                }
+                .onFailure { exception ->
+                    ineFrontValidation = ValidationState.ERROR
+                    errorMessage = exception.message
+                        ?: context.getString(R.string.error_compressing_image)
+                    showErrorDialog = true
+                    android.util.Log.e("DocumentsScreen", "Error comprimiendo INE frontal", exception)
+                }
         }
     }
 
+    // Launcher para INE Trasera con compresión automática
     val ineBackLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.GetContent()
     ) { uri: Uri? ->
         if (uri != null) {
-            if (validateFileSize(uri)) {
-                ineBackUri = uri
-                ineBackValidation = ValidationState.VALID
-            } else {
-                errorMessage = context.getString(R.string.error_file_too_large)
-                showErrorDialog = true
-            }
+            ineBackValidation = ValidationState.VALIDATING
+
+            // SIEMPRE comprimir el documento
+            ImageCompressionHelper.compressImage(context, uri, "ine_back")
+                .onSuccess { compressedUri ->
+                    ineBackUri = compressedUri
+                    viewModel.updateDocumentsUris(ineFrontUri, compressedUri)
+                    ineBackValidation = ValidationState.VALID
+                    android.util.Log.d("DocumentsScreen", "✅ INE trasera comprimida")
+                }
+                .onFailure { exception ->
+                    ineBackValidation = ValidationState.ERROR
+                    errorMessage = exception.message
+                        ?: context.getString(R.string.error_compressing_image)
+                    showErrorDialog = true
+                    android.util.Log.e("DocumentsScreen", "Error comprimiendo INE trasera", exception)
+                }
         }
     }
 
@@ -240,6 +246,7 @@ fun DocumentsScreen(
                         label = stringResource(R.string.upload_ine_front),
                         subtitle = stringResource(R.string.tap_to_select_file),
                         isUploaded = ineFrontUri != null,
+                        isValidating = ineFrontValidation == ValidationState.VALIDATING,
                         onClick = { ineFrontLauncher.launch("image/*") },
                         colors = colors
                     )
@@ -250,6 +257,7 @@ fun DocumentsScreen(
                         label = stringResource(R.string.upload_ine_back),
                         subtitle = stringResource(R.string.tap_to_select_file),
                         isUploaded = ineBackUri != null,
+                        isValidating = ineBackValidation == ValidationState.VALIDATING,
                         onClick = { ineBackLauncher.launch("image/*") },
                         colors = colors
                     )
@@ -298,7 +306,9 @@ fun DocumentsScreen(
                         colors = ButtonDefaults.buttonColors(
                             containerColor = CustomGreenColor
                         ),
-                        enabled = uploadState !is UploadState.Loading && ineFrontUri != null && ineBackUri != null
+                        enabled = uploadState !is UploadState.Loading &&
+                                ineFrontUri != null &&
+                                ineBackUri != null
                     ) {
                         if (uploadState is UploadState.Loading) {
                             CircularProgressIndicator(
@@ -329,6 +339,7 @@ fun DocumentUploadButton(
     label: String,
     subtitle: String,
     isUploaded: Boolean,
+    isValidating: Boolean = false,
     onClick: () -> Unit,
     colors: RenovaColorScheme
 ) {
@@ -346,20 +357,29 @@ fun DocumentUploadButton(
         ),
         border = if (isUploaded) null else ButtonDefaults.outlinedButtonBorder.copy(
             brush = RenovaGradients.cardBorderGradient()
-        )
+        ),
+        enabled = !isValidating
     ) {
         Column(
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.Center
         ) {
-            Icon(
-                painter = painterResource(
-                    id = if (isUploaded) R.drawable.cheque else R.drawable.subir
-                ),
-                contentDescription = label,
-                tint = if (isUploaded) CustomGreenColor else colors.iconTint,
-                modifier = Modifier.size(32.dp)
-            )
+            if (isValidating) {
+                CircularProgressIndicator(
+                    modifier = Modifier.size(32.dp),
+                    color = CustomGreenColor,
+                    strokeWidth = 3.dp
+                )
+            } else {
+                Icon(
+                    painter = painterResource(
+                        id = if (isUploaded) R.drawable.cheque else R.drawable.subir
+                    ),
+                    contentDescription = label,
+                    tint = if (isUploaded) CustomGreenColor else colors.iconTint,
+                    modifier = Modifier.size(32.dp)
+                )
+            }
 
             Spacer(modifier = Modifier.height(8.dp))
 
@@ -372,7 +392,11 @@ fun DocumentUploadButton(
             )
 
             Text(
-                text = if (isUploaded) stringResource(R.string.file_selected) else subtitle,
+                text = when {
+                    isValidating -> stringResource(R.string.compressing)
+                    isUploaded -> stringResource(R.string.file_selected)
+                    else -> subtitle
+                },
                 fontSize = 12.sp,
                 fontFamily = Poppins,
                 color = if (isUploaded) CustomGreenColor else colors.textSecondary

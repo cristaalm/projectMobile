@@ -799,4 +799,9 @@
     <string name="error_loading_activity">Error al cargar la actividad</string>
     <string name="error_loading_streak">Error loading activity</string>
 
+    <!-- Image Compression -->
+    <string name="compressing">Compressing…</string>
+    <string name="error_compressing_image">Error compressing image</string>
+    <string name="info_title_33">Information</string>
+
 </resources>

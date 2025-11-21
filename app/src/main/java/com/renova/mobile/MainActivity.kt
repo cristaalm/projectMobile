@@ -285,7 +285,7 @@ fun AuthNavigation(
             "register" -> {
                 RegisterScreen(
                     onBackToLogin = {
-                        // ✅ Limpiar todo cuando vuelve al login
+                        //  Limpiar todo cuando vuelve al login
                         registerViewModel.resetAll()
                         registerData = null
                         documentsData = null
@@ -319,20 +319,17 @@ fun AuthNavigation(
                     registerData = registerData!!,
                     documentsData = documentsData!!,
                     onBackToDocuments = {
-                        // ✅ Solo resetear estado de selfie, mantener documentos
+                        // Solo resetear estado de selfie, mantener documentos
                         registerViewModel.resetUIStates()
                         currentScreen = "register_documents"
                     },
                     onComplete = {
-                        // ✅ Limpiar todo al completar exitosamente
-                        registerViewModel.resetAll()
-                        registerData = null
-                        documentsData = null
+                        // SOLO navegar, NO limpiar todavía
                         currentScreen = "login"
+                        // La limpieza se hará desde VerificationScreen después de navegar
                     },
                     viewModel = registerViewModel
                 )
-            }
-        }
+            }}
     }
 }

@@ -794,4 +794,9 @@
     <string name="session_expired">Session expired</string>
     <string name="error_loading_activity">Error loading activity</string>
     <string name="error_loading_streak">Error loading streak</string>
+
+    <!-- Compresión de imágenes -->
+    <string name="compressing">Comprimiendo…</string>
+    <string name="error_compressing_image">Error al comprimir la imagen</string>
+    <string name="info_title_33">Información</string>
 </resources>
