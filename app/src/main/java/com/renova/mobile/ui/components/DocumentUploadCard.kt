@@ -401,7 +401,6 @@ fun DocumentsUploadSection(
 
     Surface(
         modifier = modifier
-            .padding(bottom = 80.dp)
             .fillMaxWidth(),
         shape = RoundedCornerShape(12.dp),
         color = colors.cardBackground,

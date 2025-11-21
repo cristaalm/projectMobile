@@ -795,7 +795,6 @@
     <string name="no_internet_connection">Sin conexión a internet</string>
     <string name="session_not_found">No se encontró sesión activa</string>
     <string name="error_loading_profile">Error al cargar el perfil</string>
-    <string name="session_expired">Sesión expirada</string>
     <string name="error_loading_activity">Error al cargar la actividad</string>
     <string name="error_loading_streak">Error loading activity</string>
 
@@ -804,4 +803,17 @@
     <string name="error_compressing_image">Error compressing image</string>
     <string name="info_title_33">Information</string>
 
+    <string name="error_profile_not_found">No se encontraron datos del perfil</string>
+    <string name="error_user_info">No se pudo obtener la información del usuario</string>
+    <string name="error_process_image">No se pudo procesar la imagen</string>
+    <string name="error_update_name">Error al actualizar nombre</string>
+    <string name="error_update_lastname">Error al actualizar apellido</string>
+    <string name="error_update_email">Error al actualizar email</string>
+    <string name="error_update_phone">Error al actualizar teléfono</string>
+    <string name="error_update_curp">Error al actualizar CURP</string>
+    <string name="error_request_verification">Error al solicitar verificación</string>
+    <string name="no_internet_retry_message">No hay conexión a internet. Por favor, verifica tu conexión e intenta nuevamente.</string>
+    <string name="session_expired">Sesión expirada. Por favor, inicia sesión nuevamente</string>
+    <string name="error_forbidden">No tienes permisos para realizar esta acción</string>
+    <string name="error_not_found">Recurso no encontrado</string>
 </resources>

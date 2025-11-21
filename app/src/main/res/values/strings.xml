@@ -791,7 +791,6 @@
     <string name="no_internet_connection">No internet connection</string>
     <string name="session_not_found">No active session found</string>
     <string name="error_loading_profile">Error loading profile</string>
-    <string name="session_expired">Session expired</string>
     <string name="error_loading_activity">Error loading activity</string>
     <string name="error_loading_streak">Error loading streak</string>
 
@@ -799,4 +798,17 @@
     <string name="compressing">Comprimiendo…</string>
     <string name="error_compressing_image">Error al comprimir la imagen</string>
     <string name="info_title_33">Información</string>
+    <string name="error_profile_not_found">Profile data not found</string>
+    <string name="error_user_info">Could not get user information</string>
+    <string name="error_process_image">Could not process image</string>
+    <string name="error_update_name">Error updating name</string>
+    <string name="error_update_lastname">Error updating last name</string>
+    <string name="error_update_email">Error updating email</string>
+    <string name="error_update_phone">Error updating phone</string>
+    <string name="error_update_curp">Error updating CURP</string>
+    <string name="error_request_verification">Error requesting verification</string>
+    <string name="no_internet_retry_message">No internet connection. Please check your connection and try again.</string>
+    <string name="session_expired">Session expired. Please log in again</string>
+    <string name="error_forbidden">You don\'t have permission to perform this action</string>
+    <string name="error_not_found">Resource not found</string>
 </resources>

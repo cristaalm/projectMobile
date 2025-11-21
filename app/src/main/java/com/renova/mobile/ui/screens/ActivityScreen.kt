@@ -39,6 +39,16 @@ import androidx.compose.runtime.derivedStateOf
 import androidx.compose.ui.text.style.TextAlign
 import kotlinx.coroutines.delay
 
+@Composable
+private fun translateError(errorCode: String): String {
+    return when (errorCode) {
+        "ERROR_NO_INTERNET" -> stringResource(R.string.no_internet_retry_message)
+        "ERROR_SESSION_EXPIRED" -> stringResource(R.string.session_expired)
+        "ERROR_UNKNOWN" -> stringResource(R.string.unknown_error)
+        else -> errorCode
+    }
+}
+
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ActivityScreen(
@@ -53,7 +63,7 @@ fun ActivityScreen(
     // 🛡️ Cargar datos de forma segura
     LaunchedEffect(Unit) {
         try {
-            viewModel.loadHistory(1)
+            viewModel.loadHistory(1, isManualRefresh = false)
         } catch (e: Exception) {
             // El ViewModel ya maneja el error
         }
@@ -75,7 +85,7 @@ fun ActivityScreen(
             // Caso 2: Error crítico (primera carga falló) - PANTALLA COMPLETA
             state.error != null && state.activities.isEmpty() -> {
                 ErrorStateFullScreen(
-                    errorMessage = state.error ?: stringResource(R.string.unknown_error),
+                    errorMessage = translateError(state.error ?: "ERROR_UNKNOWN"),
                     renovaColors = renovaColors,
                     onRetry = {
                         viewModel.clearError()
@@ -89,7 +99,7 @@ fun ActivityScreen(
                 PullToRefreshBox(
                     isRefreshing = state.isLoading && state.activities.isNotEmpty(),
                     onRefresh = {
-                        viewModel.loadHistory(state.currentPage)
+                        viewModel.loadHistory(state.currentPage, isManualRefresh = true)
                     },
                     state = pullToRefreshState,
                     indicator = {
@@ -123,21 +133,23 @@ fun ActivityScreen(
                     }
                 }
 
-                // ⚠️ MODIFICADO: Solo mostrar Snackbar para errores cuando ya hay datos
-                if (state.error != null && state.hasLoadedOnce && state.activities.isNotEmpty()) {
+                if (state.error != null &&
+                    state.isManualRefresh &&
+                    state.hasLoadedOnce &&
+                    state.activities.isNotEmpty()) {
+
+                    val translatedError = translateError(state.error ?: "ERROR_UNKNOWN")
+
                     LaunchedEffect(state.error) {
-                        // Mostrar un Snackbar simple en lugar de modal
-                        // Puedes usar SnackbarHost aquí si lo prefieres
                         delay(3000)
                         viewModel.clearError()
                     }
 
-                    // Snackbar sutil en la parte inferior
                     Box(
                         modifier = Modifier
                             .fillMaxSize()
                             .padding(16.dp),
-                        contentAlignment = Alignment.BottomCenter
+                        contentAlignment = Alignment.TopCenter
                     ) {
                         Surface(
                             modifier = Modifier.fillMaxWidth(),
@@ -155,11 +167,11 @@ fun ActivityScreen(
                                 Icon(
                                     imageVector = Icons.Default.WifiOff,
                                     contentDescription = null,
-                                    tint = renovaColors.textSecondary,
+                                    tint = MaterialTheme.colorScheme.error,
                                     modifier = Modifier.size(24.dp)
                                 )
                                 Text(
-                                    text = state.error ?: "",
+                                    text = translatedError,
                                     style = MaterialTheme.typography.bodyMedium,
                                     color = renovaColors.textPrimary,
                                     modifier = Modifier.weight(1f)
@@ -257,8 +269,14 @@ private fun ActivityContent(
         modifier = Modifier
             .fillMaxSize()
             .background(Color.Transparent),
-        contentPadding = PaddingValues(bottom = 16.dp)
+        contentPadding = PaddingValues(
+            top = 0.dp,
+            start = 20.dp,
+            end = 20.dp,
+            bottom = 80.dp
+        )
     ) {
+        // ITEM 1: Tarjeta de puntos
         item {
             androidx.compose.animation.AnimatedVisibility(
                 visible = true,
@@ -288,6 +306,7 @@ private fun ActivityContent(
             }
         }
 
+        // ITEM 2: Sección de materiales de reciclaje
         item {
             androidx.compose.animation.AnimatedVisibility(
                 visible = true,
@@ -299,39 +318,42 @@ private fun ActivityContent(
                 )
             ) {
                 Column(
-                    modifier = Modifier.onGloballyPositioned { coords ->
-                        tourState.registerTarget(
-                            id = "activity_materials_row",
-                            coordinates = coords,
-                            lazyListState = lazyListState,
-                            itemIndex = 1
-                        )
-                    }
+                    modifier = Modifier
+                        .padding(top = 16.dp)
+                        .onGloballyPositioned { coords ->
+                            tourState.registerTarget(
+                                id = "activity_materials_row",
+                                coordinates = coords,
+                                lazyListState = lazyListState,
+                                itemIndex = 1
+                            )
+                        }
                 ) {
-                    Column(
-                        modifier = Modifier.padding(top = 0.dp, start = 20.dp, end = 20.dp, bottom = 8.dp)
-                    ) {
-                        Text(
-                            text = stringResource(R.string.recycling_materials),
-                            style = MaterialTheme.typography.titleLarge,
-                            color = renovaColors.textPrimary,
-                            fontWeight = FontWeight.Bold,
-                            fontSize = 21.sp,
-                            fontFamily = PoppinsFontFamily
-                        )
-                        Text(
-                            text = stringResource(R.string.earn_points_recycling),
-                            style = MaterialTheme.typography.bodyMedium,
-                            color = renovaColors.textSecondary,
-                            fontSize = 14.sp,
-                            fontFamily = PoppinsFontFamily
-                        )
-                    }
+                    // Título y subtítulo
+                    Text(
+                        text = stringResource(R.string.recycling_materials),
+                        style = MaterialTheme.typography.titleLarge,
+                        color = renovaColors.textPrimary,
+                        fontWeight = FontWeight.Bold,
+                        fontSize = 21.sp,
+                        fontFamily = PoppinsFontFamily
+                    )
 
+                    Spacer(modifier = Modifier.height(4.dp))
+
+                    Text(
+                        text = stringResource(R.string.earn_points_recycling),
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = renovaColors.textSecondary,
+                        fontSize = 14.sp,
+                        fontFamily = PoppinsFontFamily
+                    )
+
+                    Spacer(modifier = Modifier.height(16.dp))
+
+                    // Tarjetas de estadísticas
                     Row(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(horizontal = 20.dp, vertical = 8.dp),
+                        modifier = Modifier.fillMaxWidth(),
                         horizontalArrangement = Arrangement.spacedBy(12.dp)
                     ) {
                         MaterialStatCard(
@@ -364,16 +386,19 @@ private fun ActivityContent(
             }
         }
 
+        // ITEM 3: Sección de historial
         item {
             Column(
-                modifier = Modifier.onGloballyPositioned { coords ->
-                    tourState.registerTarget(
-                        id = "activity_history_title",
-                        coordinates = coords,
-                        lazyListState = lazyListState,
-                        itemIndex = 2
-                    )
-                }
+                modifier = Modifier
+                    .padding(top = 24.dp)
+                    .onGloballyPositioned { coords ->
+                        tourState.registerTarget(
+                            id = "activity_history_title",
+                            coordinates = coords,
+                            lazyListState = lazyListState,
+                            itemIndex = 2
+                        )
+                    }
             ) {
                 androidx.compose.animation.AnimatedVisibility(
                     visible = true,
@@ -384,10 +409,7 @@ private fun ActivityContent(
                         animationSpec = androidx.compose.animation.core.tween(durationMillis = 600, delayMillis = 300)
                     )
                 ) {
-                    Column(
-                        modifier = Modifier
-                            .padding(start = 20.dp, top = 12.dp, bottom = 8.dp)
-                    ) {
+                    Column {
                         Text(
                             text = stringResource(R.string.history),
                             style = MaterialTheme.typography.titleLarge,
@@ -396,6 +418,9 @@ private fun ActivityContent(
                             fontSize = 21.sp,
                             fontFamily = PoppinsFontFamily
                         )
+
+                        Spacer(modifier = Modifier.height(4.dp))
+
                         Text(
                             text = stringResource(R.string.activity_record),
                             style = MaterialTheme.typography.bodyMedium,
@@ -406,16 +431,15 @@ private fun ActivityContent(
                     }
                 }
 
-                Spacer(modifier = Modifier.height(8.dp))
+                Spacer(modifier = Modifier.height(16.dp))
 
+                // Lista de actividades o estado vacío
                 Column(modifier = Modifier.fillMaxWidth()) {
                     if (state.activities.isEmpty()) {
                         EmptyStateInline(renovaColors = renovaColors)
                     } else {
                         Column(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .padding(horizontal = 24.dp),
+                            modifier = Modifier.fillMaxWidth(),
                             verticalArrangement = Arrangement.spacedBy(0.dp)
                         ) {
                             state.activities.forEachIndexed { index, activity ->
@@ -446,6 +470,7 @@ private fun ActivityContent(
             }
         }
 
+        // ITEM 4: Controles de paginación
         if (state.activities.isNotEmpty()) {
             item {
                 androidx.compose.animation.AnimatedVisibility(
@@ -471,7 +496,6 @@ private fun ActivityContent(
     }
 }
 
-// 🛡️ Componente de error pantalla completa (igual que ProfileScreen)
 @Composable
 private fun ErrorStateFullScreen(
     errorMessage: String,

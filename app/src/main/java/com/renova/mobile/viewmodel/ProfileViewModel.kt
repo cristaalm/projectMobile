@@ -5,6 +5,7 @@ import android.content.Context
 import android.net.Uri
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
+import com.renova.mobile.R
 import com.renova.mobile.data.repository.ProfileRepository
 import com.renova.mobile.network.IdentityVerification
 import com.renova.mobile.network.UserData
@@ -13,6 +14,7 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import okhttp3.MediaType.Companion.toMediaTypeOrNull
 import okhttp3.MultipartBody
@@ -23,9 +25,13 @@ sealed class ProfileUiState {
     object Loading : ProfileUiState()
     data class Success(
         val user: UserData,
-        val identityVerification: IdentityVerification?
+        val identityVerification: IdentityVerification?,
+        val isManualRefresh: Boolean = false  // ✅ NUEVO
     ) : ProfileUiState()
-    data class Error(val message: String) : ProfileUiState()
+    data class Error(
+        val message: String,
+        val isManualRefresh: Boolean = false  // ✅ NUEVO
+    ) : ProfileUiState()
 }
 
 enum class VerificationStatus(val code: Int) {
@@ -96,7 +102,7 @@ class ProfileViewModel(application: Application) : AndroidViewModel(application)
     }
 
     init {
-        loadProfile()
+        loadProfile(isManualRefresh = false)  // ✅ Primera carga NO es manual
     }
 
     private fun getErrorMessage(exception: Throwable): String {
@@ -105,30 +111,33 @@ class ProfileViewModel(application: Application) : AndroidViewModel(application)
                     exception.message?.contains("timeout", ignoreCase = true) == true ||
                     exception.message?.contains("Failed to connect", ignoreCase = true) == true ||
                     exception.message?.contains("No address associated with hostname", ignoreCase = true) == true ->
-                "Sin conexión a internet. Por favor, verifica tu conexión"
+                "ERROR_NO_INTERNET"
 
             exception.message?.contains("401", ignoreCase = true) == true ||
                     exception.message?.contains("Unauthorized", ignoreCase = true) == true ->
-                "Sesión expirada. Por favor, inicia sesión nuevamente"
+                "ERROR_SESSION_EXPIRED"
 
             exception.message?.contains("403", ignoreCase = true) == true ||
                     exception.message?.contains("Forbidden", ignoreCase = true) == true ->
-                "No tienes permisos para realizar esta acción"
+                "ERROR_FORBIDDEN"
 
             exception.message?.contains("404", ignoreCase = true) == true ->
-                "Recurso no encontrado"
+                "ERROR_NOT_FOUND"
 
             exception.message?.contains("500", ignoreCase = true) == true ||
                     exception.message?.contains("Internal Server Error", ignoreCase = true) == true ->
-                "Error en el servidor. Intenta más tarde"
+                "ERROR_SERVER"
 
-            else -> exception.message ?: "Error desconocido"
+            else -> exception.message ?: "ERROR_UNKNOWN"
         }
     }
 
-    fun loadProfile() {
+    fun loadProfile(isManualRefresh: Boolean = false) {  // ✅ Nuevo parámetro
         viewModelScope.launch {
-            _uiState.value = ProfileUiState.Loading
+            // Solo mostrar Loading si NO es refresh manual
+            if (!isManualRefresh) {
+                _uiState.value = ProfileUiState.Loading
+            }
 
             try {
                 repository.getProfile().fold(
@@ -136,18 +145,28 @@ class ProfileViewModel(application: Application) : AndroidViewModel(application)
                         response.data?.let { data ->
                             _uiState.value = ProfileUiState.Success(
                                 user = data.user,
-                                identityVerification = data.identityVerification.firstOrNull()
+                                identityVerification = data.identityVerification.firstOrNull(),
+                                isManualRefresh = false  // ✅ Resetear después de éxito
                             )
                         } ?: run {
-                            _uiState.value = ProfileUiState.Error("No se encontraron datos del perfil")
+                            _uiState.value = ProfileUiState.Error(
+                                message = "ERROR_PROFILE_NOT_FOUND",
+                                isManualRefresh = false
+                            )
                         }
                     },
                     onFailure = { exception ->
-                        _uiState.value = ProfileUiState.Error(getErrorMessage(exception))
+                        _uiState.value = ProfileUiState.Error(
+                            message = getErrorMessage(exception),
+                            isManualRefresh = isManualRefresh  // ✅ Mantener el flag
+                        )
                     }
                 )
             } catch (e: Exception) {
-                _uiState.value = ProfileUiState.Error(getErrorMessage(e))
+                _uiState.value = ProfileUiState.Error(
+                    message = getErrorMessage(e),
+                    isManualRefresh = isManualRefresh  // ✅ Mantener el flag
+                )
             }
         }
     }
@@ -162,16 +181,48 @@ class ProfileViewModel(application: Application) : AndroidViewModel(application)
                         response.data?.let { data ->
                             _uiState.value = ProfileUiState.Success(
                                 user = data.user,
-                                identityVerification = data.identityVerification.firstOrNull()
+                                identityVerification = data.identityVerification.firstOrNull(),
+                                isManualRefresh = false
                             )
                         }
                     },
                     onFailure = { exception ->
-                        _uiState.value = ProfileUiState.Error(getErrorMessage(exception))
+                        // ✅ En refresh, mantener los datos actuales si existen
+                        val currentState = _uiState.value
+                        if (currentState is ProfileUiState.Success) {
+                            _uiState.value = currentState.copy(
+                                isManualRefresh = true  // ✅ Marcar como manual para mostrar Snackbar
+                            )
+                            // Crear un estado de error temporal
+                            _uiState.update {
+                                ProfileUiState.Error(
+                                    message = getErrorMessage(exception),
+                                    isManualRefresh = true
+                                )
+                            }
+                        } else {
+                            _uiState.value = ProfileUiState.Error(
+                                message = getErrorMessage(exception),
+                                isManualRefresh = true
+                            )
+                        }
                     }
                 )
             } catch (e: Exception) {
-                _uiState.value = ProfileUiState.Error(getErrorMessage(e))
+                val currentState = _uiState.value
+                if (currentState is ProfileUiState.Success) {
+                    _uiState.update {
+                        ProfileUiState.Error(
+                            message = getErrorMessage(e),
+                            isManualRefresh = true
+                        )
+                    }
+                } else {
+                    _uiState.value = ProfileUiState.Error(
+                        message = getErrorMessage(e),
+                        isManualRefresh = true
+                    )
+                }
             } finally {
                 _isRefreshing.value = false
             }
@@ -179,12 +230,23 @@ class ProfileViewModel(application: Application) : AndroidViewModel(application)
     }
 
     fun retry() {
-        loadProfile()
+        loadProfile(isManualRefresh = true)  // ✅ Retry SI es manual
     }
 
     fun clearError() {
-        if (_uiState.value is ProfileUiState.Error) {
-            loadProfile()
+        _uiState.update { currentState ->
+            when (currentState) {
+                is ProfileUiState.Error -> {
+                    // Si hay error, intentar recargar
+                    loadProfile(isManualRefresh = false)
+                    currentState
+                }
+                is ProfileUiState.Success -> {
+                    // Si ya hay datos exitosos, solo resetear el flag
+                    currentState.copy(isManualRefresh = false)
+                }
+                else -> currentState
+            }
         }
     }
 
@@ -237,7 +299,7 @@ class ProfileViewModel(application: Application) : AndroidViewModel(application)
             if (currentState !is ProfileUiState.Success) {
                 _documentUploadState.value = DocumentUploadState.Error(
                     documentType,
-                    "No se pudo obtener la información del usuario"
+                    "ERROR_USER_INFO"
                 )
                 return@launch
             }
@@ -250,7 +312,7 @@ class ProfileViewModel(application: Application) : AndroidViewModel(application)
                 if (file == null) {
                     _documentUploadState.value = DocumentUploadState.Error(
                         documentType,
-                        "No se pudo procesar la imagen"
+                        "ERROR_PROCESS_IMAGE"
                     )
                     return@launch
                 }
@@ -330,7 +392,7 @@ class ProfileViewModel(application: Application) : AndroidViewModel(application)
                             }
                         } else {
                             _updateFieldState.value = UpdateFieldState.Error(
-                                response.message ?: "Error al actualizar nombre"
+                                "ERROR_UPDATE_NAME"
                             )
                         }
                     },
@@ -362,7 +424,7 @@ class ProfileViewModel(application: Application) : AndroidViewModel(application)
                             }
                         } else {
                             _updateFieldState.value = UpdateFieldState.Error(
-                                response.message ?: "Error al actualizar apellido"
+                                "ERROR_UPDATE_LASTNAME"
                             )
                         }
                     },
@@ -394,7 +456,7 @@ class ProfileViewModel(application: Application) : AndroidViewModel(application)
                             }
                         } else {
                             _updateFieldState.value = UpdateFieldState.Error(
-                                response.message ?: "Error al actualizar email"
+                                "ERROR_UPDATE_EMAIL"
                             )
                         }
                     },
@@ -426,7 +488,7 @@ class ProfileViewModel(application: Application) : AndroidViewModel(application)
                             }
                         } else {
                             _updateFieldState.value = UpdateFieldState.Error(
-                                response.message ?: "Error al actualizar teléfono"
+                                "ERROR_UPDATE_PHONE"
                             )
                         }
                     },
@@ -458,7 +520,7 @@ class ProfileViewModel(application: Application) : AndroidViewModel(application)
                             }
                         } else {
                             _updateFieldState.value = UpdateFieldState.Error(
-                                response.message ?: "Error al actualizar CURP"
+                                "ERROR_UPDATE_CURP"
                             )
                         }
                     },
@@ -483,7 +545,7 @@ class ProfileViewModel(application: Application) : AndroidViewModel(application)
             val currentState = _uiState.value
             if (currentState !is ProfileUiState.Success) {
                 _verificationRequestState.value = VerificationRequestState.Error(
-                    "No se pudo obtener la información del usuario"
+                    "ERROR_USER_INFO"
                 )
                 return@launch
             }
@@ -501,7 +563,7 @@ class ProfileViewModel(application: Application) : AndroidViewModel(application)
                             )
                         } else {
                             _verificationRequestState.value = VerificationRequestState.Error(
-                                response.message ?: "Error al solicitar verificación"
+                                "ERROR_REQUEST_VERIFICATION"
                             )
                         }
                     },

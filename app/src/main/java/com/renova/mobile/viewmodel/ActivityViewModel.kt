@@ -27,7 +27,8 @@ data class ActivityState(
     val totalPoints: Int = 0,
     val isLoading: Boolean = false,
     val error: String? = null,
-    val hasLoadedOnce: Boolean = false
+    val hasLoadedOnce: Boolean = false,
+    val isManualRefresh: Boolean = false  // ✅ NUEVO: indica si es refresh manual del usuario
 )
 
 class ActivityViewModel(
@@ -41,15 +42,36 @@ class ActivityViewModel(
     val state: StateFlow<ActivityState> = _state.asStateFlow()
 
     init {
-        loadHistory(1)
+        loadHistory(1, isManualRefresh = false)  // ✅ Primera carga NO es manual
     }
 
-    fun loadHistory(page: Int = 1) {
+    private fun getErrorMessage(e: Exception): String {
+        return when {
+            e.message?.contains("Unable to resolve host", ignoreCase = true) == true ||
+                    e.message?.contains("timeout", ignoreCase = true) == true ||
+                    e.message?.contains("Failed to connect", ignoreCase = true) == true ||
+                    e.message?.contains("No address associated with hostname", ignoreCase = true) == true ->
+                "ERROR_NO_INTERNET"
+
+            e.message?.contains("401", ignoreCase = true) == true ||
+                    e.message?.contains("Unauthorized", ignoreCase = true) == true ->
+                "ERROR_SESSION_EXPIRED"
+
+            else -> e.message ?: "ERROR_UNKNOWN"
+        }
+    }
+
+    fun loadHistory(page: Int = 1, isManualRefresh: Boolean = false) {  // ✅ Nuevo parámetro
         viewModelScope.launch {
             try {
-                _state.update { it.copy(isLoading = true, error = null) }
+                _state.update {
+                    it.copy(
+                        isLoading = true,
+                        error = null,
+                        isManualRefresh = isManualRefresh  // ✅ Guardar si es manual
+                    )
+                }
 
-                // 🛡️ Usar supervisorScope para que un fallo no cancele todo
                 supervisorScope {
                     try {
                         val historyDeferred = async {
@@ -68,7 +90,7 @@ class ActivityViewModel(
                                 } else null
                             } catch (e: Exception) {
                                 Log.e("ActivityViewModel", "Error fetching totals", e)
-                                null // Si falla, no es crítico
+                                null
                             }
                         }
 
@@ -77,7 +99,7 @@ class ActivityViewModel(
                                 repository.getUserPoints(sessionManager)
                             } catch (e: Exception) {
                                 Log.e("ActivityViewModel", "Error fetching points", e)
-                                _state.value.totalPoints // Mantener puntos anteriores
+                                _state.value.totalPoints
                             }
                         }
 
@@ -86,7 +108,6 @@ class ActivityViewModel(
                         val userPoints = pointsDeferred.await()
 
                         if (historyResponse.success) {
-                            // Ordenar las actividades por fecha de creación (más reciente primero)
                             val sortedActivities = historyResponse.data.data.sortedByDescending { activity ->
                                 try {
                                     parseActivityDate(activity.created_at)?.time ?: 0L
@@ -106,39 +127,29 @@ class ActivityViewModel(
                                     totalAluminum = totalsResponse?.data?.aluminum ?: it.totalAluminum,
                                     isLoading = false,
                                     hasLoadedOnce = true,
-                                    error = null
+                                    error = null,
+                                    isManualRefresh = false  // ✅ Resetear después de éxito
                                 )
                             }
                         } else {
                             _state.update {
                                 it.copy(
                                     error = historyResponse.message,
-                                    isLoading = false
+                                    isLoading = false,
+                                    isManualRefresh = false  // ✅ Resetear después de error
                                 )
                             }
                         }
                     } catch (e: CancellationException) {
-                        // No hacer nada, es una cancelación normal
                         throw e
                     } catch (e: Exception) {
-                        throw e // Re-lanzar para el catch externo
+                        throw e
                     }
                 }
             } catch (e: CancellationException) {
-                // No actualizar el estado en cancelación
                 Log.d("ActivityViewModel", "Loading cancelled")
             } catch (e: Exception) {
-                val errorMessage = when {
-                    e.message?.contains("Unable to resolve host", ignoreCase = true) == true ||
-                            e.message?.contains("timeout", ignoreCase = true) == true ||
-                            e.message?.contains("Failed to connect", ignoreCase = true) == true ||
-                            e.message?.contains("No address associated with hostname", ignoreCase = true) == true ->
-                        "Sin conexión a internet"
-                    e.message?.contains("401", ignoreCase = true) == true ||
-                            e.message?.contains("Unauthorized", ignoreCase = true) == true ->
-                        "Sesión expirada. Por favor, inicia sesión nuevamente"
-                    else -> "Error: ${e.message ?: "Error desconocido"}"
-                }
+                val errorMessage = getErrorMessage(e)
 
                 Log.e("ActivityViewModel", "Error loading history: $errorMessage", e)
 
@@ -146,6 +157,7 @@ class ActivityViewModel(
                     it.copy(
                         error = errorMessage,
                         isLoading = false
+                        // ✅ NO resetear isManualRefresh aquí, lo necesitamos en la UI
                     )
                 }
             }
@@ -174,7 +186,6 @@ class ActivityViewModel(
                 val date = sdfInput.parse(dateString)
                 if (date != null) return date
             } catch (_: Exception) {
-                // Continuar con el siguiente patrón
             }
         }
         return null
@@ -182,21 +193,26 @@ class ActivityViewModel(
 
     fun nextPage() {
         if (_state.value.currentPage < _state.value.totalPages && !_state.value.isLoading) {
-            loadHistory(_state.value.currentPage + 1)
+            loadHistory(_state.value.currentPage + 1, isManualRefresh = false)  // ✅ Paginación NO es manual
         }
     }
 
     fun previousPage() {
         if (_state.value.currentPage > 1 && !_state.value.isLoading) {
-            loadHistory(_state.value.currentPage - 1)
+            loadHistory(_state.value.currentPage - 1, isManualRefresh = false)  // ✅ Paginación NO es manual
         }
     }
 
     fun retry() {
-        loadHistory(_state.value.currentPage)
+        loadHistory(_state.value.currentPage, isManualRefresh = true)  // ✅ Retry SI es manual
     }
 
     fun clearError() {
-        _state.update { it.copy(error = null) }
+        _state.update {
+            it.copy(
+                error = null,
+                isManualRefresh = false  // ✅ También resetear el flag manual
+            )
+        }
     }
 }

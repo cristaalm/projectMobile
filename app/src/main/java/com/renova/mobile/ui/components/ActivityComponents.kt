@@ -101,7 +101,7 @@ fun LoadingState(
     }
 }
 
-// Controles de paginación
+// Controles de paginación - SIN PADDING INTERNO, se maneja desde ActivityContent
 @Composable
 fun PaginationControls(
     currentPage: Int,
@@ -114,7 +114,7 @@ fun PaginationControls(
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(start = 16.dp, top = 16.dp, end = 16.dp, bottom = 80.dp),
+            .padding(top = 16.dp), // Solo padding superior
         horizontalArrangement = Arrangement.SpaceBetween
     ) {
         Button(
@@ -373,11 +373,9 @@ fun DetailSheet(activity: ActivityItem) {
                             textAlign = TextAlign.Center
                         )
                     }
-
                 }
             }
             3 -> {
-
                 // Ajuste manual: Mostrar descripción si existe
                 Text(
                     text = context.getString(R.string.manual_adjustment),
@@ -436,112 +434,5 @@ fun DetailSheet(activity: ActivityItem) {
             color = colors.textSecondary,
             textAlign = TextAlign.Center
         )
-    }
-}
-
-@Composable
-fun AnimatedPointsCardActivity(
-    totalPoints: Float,
-    renovaColors: RenovaColorScheme,
-    shouldAnimate: Boolean = true
-) {
-    // Animación del contador de puntos
-    var animatedPoints by remember { mutableStateOf(if (shouldAnimate) 0f else totalPoints.toFloat()) }
-
-    LaunchedEffect(totalPoints, shouldAnimate) {
-        if (shouldAnimate) {
-            animate(
-                initialValue = 0f,
-                targetValue = totalPoints.toFloat(),
-                animationSpec = tween(
-                    durationMillis = 2500,
-                    easing = FastOutSlowInEasing
-                )
-            ) { value, _ ->
-                animatedPoints = value
-            }
-        } else {
-            animatedPoints = totalPoints.toFloat()
-        }
-    }
-
-    Card(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(top = 14.dp, start = 18.dp, end = 20.dp, bottom = 8.dp)
-            .height(135.dp),
-        shape = RoundedCornerShape(24.dp),
-        colors = CardDefaults.cardColors(containerColor = Color.Transparent),
-        elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
-    ) {
-        Box(modifier = Modifier.fillMaxSize()) {
-            Image(
-                painter = painterResource(id = R.drawable.fondo),
-                contentDescription = null,
-                contentScale = ContentScale.Crop,
-                colorFilter = androidx.compose.ui.graphics.ColorFilter.tint(
-                    Color(0xFF05D16E),
-                    blendMode = androidx.compose.ui.graphics.BlendMode.Modulate
-                ),
-                modifier = Modifier
-                    .matchParentSize()
-                    .clip(RoundedCornerShape(24.dp))
-            )
-
-            Row(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .padding(24.dp),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Column(
-                    modifier = Modifier.weight(1f),
-                    verticalArrangement = Arrangement.Center
-                ) {
-                    Text(
-                        text = stringResource(R.string.total_points),
-                        style = MaterialTheme.typography.titleMedium,
-                        color = Color.White,
-                        fontWeight = FontWeight.SemiBold,
-                        fontSize = 16.sp
-                    )
-                    Spacer(modifier = Modifier.height(4.dp))
-                    Row {
-                        Text(
-                            text = java.text.NumberFormat.getIntegerInstance(
-                                java.util.Locale.forLanguageTag("es-MX")
-                            ).format(animatedPoints.toFloat()),
-                            style = MaterialTheme.typography.displayLarge,
-                            color = Color.White,
-                            fontSize = 52.sp,
-                            fontWeight = FontWeight.Bold,
-                            lineHeight = 52.sp
-                        )
-                    }
-                }
-
-                Box(
-                    modifier = Modifier
-                        .size(90.dp)
-                        .background(
-                            Color.White.copy(alpha = 0.15f),
-                            shape = RoundedCornerShape(20.dp)
-                        ),
-                    contentAlignment = Alignment.BottomStart
-                ) {
-                    Image(
-                        painter = painterResource(id = R.drawable.leaf),
-                        contentDescription = null,
-                        modifier = Modifier
-                            .size(80.dp)
-                            .padding(start = 8.dp, bottom = 8.dp),
-                        colorFilter = androidx.compose.ui.graphics.ColorFilter.tint(
-                            Color.White.copy(alpha = 0.9f)
-                        )
-                    )
-                }
-            }
-        }
     }
 }

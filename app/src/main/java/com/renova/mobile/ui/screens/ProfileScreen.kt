@@ -1,6 +1,7 @@
 package com.renova.mobile.ui.screens
 
 import android.app.Activity
+import kotlinx.coroutines.delay
 import android.net.Uri
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
@@ -50,6 +51,28 @@ import com.renova.mobile.ui.tour.LocalTourState
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.ui.unit.sp
 
+@Composable
+private fun translateError(errorCode: String): String {
+    return when (errorCode) {
+        "ERROR_NO_INTERNET" -> stringResource(R.string.no_internet_retry_message)
+        "ERROR_SESSION_EXPIRED" -> stringResource(R.string.session_expired)
+        "ERROR_FORBIDDEN" -> stringResource(R.string.error_forbidden)
+        "ERROR_NOT_FOUND" -> stringResource(R.string.error_not_found)
+        "ERROR_SERVER" -> stringResource(R.string.error_server)
+        "ERROR_PROFILE_NOT_FOUND" -> stringResource(R.string.error_profile_not_found)
+        "ERROR_USER_INFO" -> stringResource(R.string.error_user_info)
+        "ERROR_PROCESS_IMAGE" -> stringResource(R.string.error_process_image)
+        "ERROR_UPDATE_NAME" -> stringResource(R.string.error_update_name)
+        "ERROR_UPDATE_LASTNAME" -> stringResource(R.string.error_update_lastname)
+        "ERROR_UPDATE_EMAIL" -> stringResource(R.string.error_update_email)
+        "ERROR_UPDATE_PHONE" -> stringResource(R.string.error_update_phone)
+        "ERROR_UPDATE_CURP" -> stringResource(R.string.error_update_curp)
+        "ERROR_REQUEST_VERIFICATION" -> stringResource(R.string.error_request_verification)
+        "ERROR_UNKNOWN" -> stringResource(R.string.unknown_error)
+        else -> errorCode
+    }
+}
+
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ProfileScreen(
@@ -97,25 +120,98 @@ fun ProfileScreen(
                         onRefresh = { profileViewModel.refreshProfile() }
                     )
                 }
+
+                if (state.isManualRefresh) {
+                    // Buscar si hay un error reciente
+                    val currentError = remember { mutableStateOf<String?>(null) }
+
+                    LaunchedEffect(state.isManualRefresh) {
+                        delay(50)
+                        val errorState = profileViewModel.uiState.value
+                        if (errorState is ProfileUiState.Error && errorState.isManualRefresh) {
+                            currentError.value = errorState.message
+                        }
+                    }
+
+                    currentError.value?.let { errorMsg ->
+                        val translatedError = translateError(errorMsg)
+
+                        LaunchedEffect(errorMsg) {
+                            delay(3000)
+                            profileViewModel.clearError()
+                            currentError.value = null
+                        }
+
+                        // Snackbar arriba de la pantalla
+                        Box(
+                            modifier = Modifier
+                                .fillMaxSize()
+                                .padding(16.dp),
+                            contentAlignment = Alignment.TopCenter
+                        ) {
+                            Surface(
+                                modifier = Modifier.fillMaxWidth(),
+                                shape = RoundedCornerShape(12.dp),
+                                color = colors.cardBackground,
+                                shadowElevation = 4.dp
+                            ) {
+                                Row(
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .padding(16.dp),
+                                    verticalAlignment = Alignment.CenterVertically,
+                                    horizontalArrangement = Arrangement.spacedBy(12.dp)
+                                ) {
+                                    Icon(
+                                        imageVector = Icons.Default.WifiOff,
+                                        contentDescription = null,
+                                        tint = MaterialTheme.colorScheme.error,
+                                        modifier = Modifier.size(24.dp)
+                                    )
+                                    Text(
+                                        text = translatedError,
+                                        style = MaterialTheme.typography.bodyMedium,
+                                        color = colors.textPrimary,
+                                        modifier = Modifier.weight(1f)
+                                    )
+                                    TextButton(
+                                        onClick = {
+                                            currentError.value = null
+                                            profileViewModel.retry()
+                                        }
+                                    ) {
+                                        Text(
+                                            text = stringResource(R.string.retry),
+                                            color = colors.primaryColor
+                                        )
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
             }
 
             is ProfileUiState.Error -> {
                 val errorState = uiState as ProfileUiState.Error
-                val isAuthError = errorState.message.contains("token", ignoreCase = true) ||
-                        errorState.message.contains("autenticación", ignoreCase = true) ||
-                        errorState.message.contains("sesión", ignoreCase = true) ||
-                        errorState.message.contains("401", ignoreCase = true) ||
-                        errorState.message.contains("Unauthorized", ignoreCase = true)
 
-                ErrorStateFullScreen(
-                    errorMessage = errorState.message,
-                    colors = colors,
-                    title = stringResource(R.string.error_loading_profile),
-                    canRetry = !isAuthError,
-                    onRetry = {
-                        profileViewModel.retry()
-                    }
-                )
+                // ✅ MODIFICADO: Solo mostrar pantalla completa si NO es refresh manual
+                if (!errorState.isManualRefresh) {
+                    val isAuthError = errorState.message.contains("SESSION_EXPIRED", ignoreCase = true)
+
+                    ErrorStateFullScreen(
+                        errorMessage = translateError(errorState.message),
+                        colors = colors,
+                        title = stringResource(R.string.error_loading_profile),
+                        canRetry = !isAuthError,
+                        onRetry = {
+                            profileViewModel.retry()
+                        }
+                    )
+                } else {
+                    // Si es manual refresh, mostrar lo que había antes (Success) con el Snackbar
+                    LoadingState(renovaColors = colors)
+                }
             }
         }
     }
@@ -302,6 +398,7 @@ private fun ProfileContent(
         modifier = Modifier
             .fillMaxSize()
             .verticalScroll(scrollState)
+            .padding(bottom = 80.dp)
     ) {
         ProfileHeader(
             user = user,
