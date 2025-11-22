@@ -281,7 +281,7 @@ private fun ActivityContent(
                 top = 14.dp,
                 start = 20.dp,
                 end = 20.dp,
-                bottom = 80.dp
+                bottom = 20.dp // Reducido porque ahora usaremos un Spacer al final
             )
         ) {
             // ITEM 1: Tarjeta de puntos
@@ -514,6 +514,11 @@ private fun ActivityContent(
                         )
                     }
                 }
+            }
+
+            // --- MODIFICACIÓN: Spacer final para dar espacio al FAB ---
+            item {
+                Spacer(modifier = Modifier.height(80.dp))
             }
         }
 
