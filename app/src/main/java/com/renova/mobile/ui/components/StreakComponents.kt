@@ -44,7 +44,6 @@ fun WeeklyProgressChart(
     val maxValue = weekData.maxOrNull() ?: 1
 
     Column(
-        modifier = Modifier.padding(horizontal = 24.dp)
     ) {
         Text(
             text = stringResource(R.string.this_week),

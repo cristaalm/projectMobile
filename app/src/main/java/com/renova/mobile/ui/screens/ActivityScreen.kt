@@ -737,7 +737,7 @@ private fun MaterialStatCard(
                     maxLines = 1
                 )
 
-                Spacer(modifier = Modifier.height(6.dp))
+                Spacer(modifier = Modifier.height(0.dp))
 
                 Text(
                     text = title,
@@ -830,7 +830,6 @@ private fun AnimatedPointsCard(
     Card(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(bottom = 8.dp)
             .height(135.dp),
         shape = RoundedCornerShape(24.dp),
         colors = CardDefaults.cardColors(containerColor = Color.Transparent),

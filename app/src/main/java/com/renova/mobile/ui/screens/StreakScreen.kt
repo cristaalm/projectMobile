@@ -169,7 +169,6 @@ private fun ErrorStateFullScreen(
                 contentDescription = null,
                 modifier = Modifier.size(20.dp)
             )
-            Spacer(modifier = Modifier.width(8.dp))
             Text(
                 text = stringResource(R.string.retry),
                 fontFamily = PoppinsFontFamily,
@@ -293,17 +292,19 @@ fun StreakScreen(
                             modifier = Modifier
                                 .fillMaxSize()
                                 .verticalScroll(scrollState)
-                                .padding(bottom = 80.dp)
+                                .padding(top = 20.dp,bottom = 80.dp)
                         ) {
-                            StreakCard(
-                                currentStreak = state.currentStreak,
-                                isStreakActive = state.isStreakActive,
-                                longestStreak = state.longestStreak,
-                                totalDays = state.totalRecyclingDays,
-                                renovaColors = renovaColors,
-                                scrollState = scrollState,
-                                tourState = tourState
-                            )
+                            Box(modifier = Modifier.padding(horizontal = 20.dp)) {
+                                StreakCard(
+                                    currentStreak = state.currentStreak,
+                                    isStreakActive = state.isStreakActive,
+                                    longestStreak = state.longestStreak,
+                                    totalDays = state.totalRecyclingDays,
+                                    renovaColors = renovaColors,
+                                    scrollState = scrollState,
+                                    tourState = tourState
+                                )
+                            }
 
                             Spacer(modifier = Modifier.height(16.dp))
 
@@ -368,20 +369,22 @@ fun StreakScreen(
 
                             Spacer(modifier = Modifier.height(16.dp))
 
-                            if (state.weekData.isNotEmpty()) {
-                                Box(
-                                    modifier = Modifier.onGloballyPositioned {
-                                        tourState.registerTarget(
-                                            id = "streak_weekly_progress",
-                                            coordinates = it,
-                                            scrollState = scrollState
+                            Box(modifier = Modifier.padding(horizontal = 20.dp)) {
+                                if (state.weekData.isNotEmpty()) {
+                                    Box(
+                                        modifier = Modifier.onGloballyPositioned {
+                                            tourState.registerTarget(
+                                                id = "streak_weekly_progress",
+                                                coordinates = it,
+                                                scrollState = scrollState
+                                            )
+                                        }
+                                    ) {
+                                        WeeklyProgressChart(
+                                            weekData = state.weekData,
+                                            renovaColors = renovaColors
                                         )
                                     }
-                                ) {
-                                    WeeklyProgressChart(
-                                        weekData = state.weekData,
-                                        renovaColors = renovaColors
-                                    )
                                 }
                             }
                         }
@@ -502,7 +505,6 @@ private fun StreakCard(
     Card(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(10.dp, 0.dp, 10.dp, 4.dp)
             .onGloballyPositioned {
                 tourState.registerTarget(
                     id = "streak_card_main",
@@ -518,7 +520,6 @@ private fun StreakCard(
         Box(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(8.dp, 18.dp, 8.dp, 0.dp)
         ){
             Image(
                 painter = painterResource(id = R.drawable.fondo_perfil),

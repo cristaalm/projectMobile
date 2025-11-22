@@ -891,7 +891,7 @@ fun ProfileHeader(
                                 .fillMaxWidth()
                                 .aspectRatio(1f),
                             shape = RoundedCornerShape(12.dp),
-                            shadowElevation = 4.dp
+                            shadowElevation = 0.dp
                         ) {
                             Image(
                                 bitmap = selfieBitmap.asImageBitmap(),
