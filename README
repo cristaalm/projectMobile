@@ -1,76 +1,78 @@
 # Renova Móvil
 
-Aplicación para fomentar el reciclaje en contenedores inteligentes, integrando desarrollo móvil, web, IoT e IA.
+Aplicación Android (Kotlin + Jetpack Compose) para fomentar el reciclaje mediante puntos, escaneo de códigos y flujo de comercio aliado.
 
-## Tecnologías utilizadas
+## Tecnologías
 
-- **Desarrollo móvil:** Kotlin Compose
-- **API:** Laravel (en la parte web)
-- **Base de datos:** PostgreSQL
+- Kotlin, Jetpack Compose, Material 3
+- Android Gradle Plugin (AGP), Gradle Wrapper
+- API web (Laravel)
+- PostgreSQL (backend)
 
 ## Características
 
-- Autenticación del usuario por parte del admin en la página web después de que el usuario ingrese los datos y esté esperando verificación
-- Integración con contenedores inteligentes para reciclaje
-- Desarrollo de una aplicación móvil para fomentar el reciclaje
+- Registro y verificación de usuarios
+- Escaneo de códigos y acumulación de puntos (ciudadano)
+- Módulo de comercio: ventas, historial y estadísticas (negocio)
+- Internacionalización: Español (México) y Inglés
 
-## Requisitos previos
+## Requisitos
 
-- Java instalado en el sistema
-- Android Studio instalado para desarrollo móvil
-- PostgreSQL instalado para base de datos
-- Kotlin Compose y dependencias necesarias para el desarrollo móvil (ver configuración del proyecto)
+- Android Studio (versión actual) y SDK Android
+- JDK compatible con el proyecto
+- Dispositivo físico o emulador con ADB habilitado
 
-## Instalación y configuración
+## Configuración
 
-1. **Clonar el repositorio de GitHub:**
-
-```bash
-git clone https://github.com/[tu-usuario]/Renova-Movil.git
-```
-
-2. **Instalar dependencias:**
+1. Clonar el repositorio:
 
 ```bash
-gradle build
-```
-(en la carpeta del proyecto)
-
-3. **Configurar variables de entorno:**
-
-```bash
-cp .env.example .env
+git clone https://github.com/<usuario>/renova-movil.git
 ```
 
-y editar el archivo `.env` con tus credenciales
+2. Abrir en Android Studio y sincronizar Gradle.
+3. (Opcional) Configurar mensajería push/FCM de acuerdo a tu entorno.
 
-4. **Iniciar la aplicación:**
+## Compilar y ejecutar (Windows)
 
-```bash
-gradle run
+- Compilar debug:
+
+```powershell
+ .\gradlew.bat :app:assembleDebug
 ```
-(en la carpeta del proyecto)
 
-## Paso a paso para la autenticación del usuario
+- Instalar en dispositivo conectado:
 
-1. El usuario ingresa sus datos en la aplicación móvil
-2. La aplicación móvil envía los datos al servidor web (Laravel) para verificar la autenticación
-3. El servidor web verifica los datos y envía un token de autenticación al usuario
-4. El usuario ingresa el token de autenticación en la aplicación móvil
-5. La aplicación móvil verifica el token de autenticación con el servidor web
-6. Si el token es válido, el usuario es autenticado y puede acceder a la aplicación
+```powershell
+ .\gradlew.bat :app:installDebug
+```
 
-## Estructura clave del proyecto
+- Limpiar build:
 
-- `app/`: Directorio principal de la aplicación móvil
-- `build.gradle`: Archivo de configuración de Gradle para el proyecto
-- `src/`: Directorio de código fuente de la aplicación móvil
-- `main/`: Directorio de código fuente principal de la aplicación móvil
-- `java/`: Directorio de código fuente en Java de la aplicación móvil
-- `res/`: Directorio de recursos de la aplicación móvil
+```powershell
+ .\gradlew.bat :app:clean
+```
+
+## Estructura
+
+- `app/` módulo principal de la app
+- `app/src/main/java/` código fuente Kotlin
+- `app/src/main/res/` recursos (`values/`, `values-es-rMX/`, layouts, drawables)
+
+## Internacionalización
+
+- Textos en `values/strings.xml` (inglés) y `values-es-rMX/strings.xml` (es-MX)
+- Gestión de idioma con `LocaleHelper` en `MainActivity`
+
+## Notas de seguridad
+
+- Bloqueo de capturas de pantalla activado únicamente en la pantalla de QR del ciudadano
 
 ## Comandos útiles
 
-- `gradle build`: Compilar la aplicación móvil
-- `gradle run`: Iniciar la aplicación móvil
-- `gradle clean`: Limpiar la carpeta de compilación de la aplicación móvil
+- `.\u005Cgradlew.bat :app:assembleRelease` compilar binario de producción
+- `.Cgradlew.bat :app:bundleRelease` generar Android App Bundle (AAB)
+
+---
+
+Para desarrollo, usa Android Studio (Run/Debug) y el Gradle Wrapper del proyecto.

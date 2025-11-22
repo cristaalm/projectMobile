@@ -410,7 +410,7 @@ fun CustomBottomBar(
                                     horizontalArrangement = Arrangement.SpaceBetween
                                 ) {
                                     Text(
-                                        text = "Menú",
+                                        text = stringResource(id = R.string.menu_title),
                                         color = Color.White,
                                         fontSize = 20.sp,
                                         fontWeight = FontWeight.Bold
@@ -431,7 +431,7 @@ fun CustomBottomBar(
                                     },
                                     colors = ButtonDefaults.textButtonColors(contentColor = Color.White)
                                 ) {
-                                    Text("Manual general (PDF)")
+                                    Text(stringResource(id = R.string.manual_general_pdf))
                                 }
 
                                 TextButton(
@@ -441,7 +441,7 @@ fun CustomBottomBar(
                                     },
                                     colors = ButtonDefaults.textButtonColors(contentColor = Color.White)
                                 ) {
-                                    Text("Preguntas frecuentes")
+                                    Text(stringResource(id = R.string.faq_title))
                                 }
 
                                 Divider(color = Color.White.copy(alpha = 0.3f))
@@ -456,7 +456,7 @@ fun CustomBottomBar(
                                         contentColor = Color(0xFF05D16E)
                                     )
                                 ) {
-                                    Text("Cerrar sesión")
+                                    Text(stringResource(id = R.string.modal_logout_title))
                                 }
                             }
                         }

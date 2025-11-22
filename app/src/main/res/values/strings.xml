@@ -809,4 +809,6 @@
     <string name="session_expired">Session expired. Please log in again</string>
     <string name="error_forbidden">You don\'t have permission to perform this action</string>
     <string name="error_not_found">Resource not found</string>
+    <string name="menu_title">Menu</string>
+    <string name="manual_general_pdf">General manual (PDF)</string>
 </resources>
