@@ -171,7 +171,7 @@ fun StoreScreen(
         LazyColumn(
             state = lazyListState,
             modifier = Modifier
-                .padding(horizontal = 16.dp)
+                .padding(horizontal = 24.dp)
                 .imePadding(),
             verticalArrangement = Arrangement.spacedBy(8.dp)
         ) {

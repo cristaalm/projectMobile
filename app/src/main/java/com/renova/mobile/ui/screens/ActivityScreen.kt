@@ -1,5 +1,6 @@
 package com.renova.mobile.ui.screens
 
+import androidx.compose.animation.EnterTransition
 import androidx.compose.animation.core.FastOutSlowInEasing
 import androidx.compose.animation.core.animate
 import androidx.compose.animation.core.tween
@@ -38,6 +39,7 @@ import androidx.compose.ui.layout.onGloballyPositioned
 import com.renova.mobile.ui.tour.LocalTourState
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.derivedStateOf
+import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.text.style.TextAlign
 import com.renova.mobile.ui.theme.RenovaColorScheme
 import kotlinx.coroutines.delay
@@ -136,6 +138,7 @@ fun ActivityScreen(
                     }
                 }
 
+                // Snackbar para errores cuando ya hay datos
                 if (state.error != null &&
                     state.isManualRefresh &&
                     state.hasLoadedOnce &&
@@ -230,66 +233,59 @@ private fun ActivityContent(
     val lazyListState = rememberLazyListState()
 
     val isTourActive by tourState.isTourActive.collectAsState()
-    val currentStepIndex by tourState.currentStepIndex.collectAsState()
+    val targets by tourState.targets.collectAsState()
 
     val currentStepTargetId by remember(tourState) {
         derivedStateOf { tourState.currentStep?.targetId }
     }
 
-    LaunchedEffect(isTourActive, currentStepIndex, currentStepTargetId, state.activities.isNotEmpty()) {
+    // 🆕 Scroll automático durante el tour
+    LaunchedEffect(isTourActive, currentStepTargetId) {
         if (isTourActive && currentStepTargetId != null) {
-            delay(100)
+            val indexToScroll = when (currentStepTargetId) {
+                "activity_points_card" -> 0
+                "activity_materials_row" -> 1
+                "activity_history_title" -> 2
+                else -> null
+            }
 
-            val pointsCardIndex = 0
-            val materialsRowIndex = 1
-            val historySectionIndex = 2
-
-            when (currentStepTargetId) {
-                "activity_points_card" -> {
-                    lazyListState.animateScrollToItem(
-                        index = pointsCardIndex,
-                        scrollOffset = 0
-                    )
-                }
-                "activity_materials_row" -> {
-                    lazyListState.animateScrollToItem(
-                        index = materialsRowIndex,
-                        scrollOffset = 0
-                    )
-                }
-                "activity_history_title" -> {
-                    lazyListState.animateScrollToItem(
-                        index = historySectionIndex,
-                        scrollOffset = 0
-                    )
+            if (indexToScroll != null) {
+                var attempts = 0
+                while (attempts < 3) {
+                    try {
+                        delay(100L * (attempts + 1))
+                        lazyListState.scrollToItem(indexToScroll)
+                        break
+                    } catch (e: Exception) {
+                        attempts++
+                        if (attempts == 3) {
+                            try {
+                                lazyListState.animateScrollToItem(indexToScroll)
+                            } catch (e: Exception) {
+                                // Último intento fallido
+                            }
+                        }
+                    }
                 }
             }
         }
     }
 
-    LazyColumn(
-        state = lazyListState,
-        modifier = Modifier
-            .fillMaxSize()
-            .background(Color.Transparent),
-        contentPadding = PaddingValues(
-            top = 14.dp,
-            start = 20.dp,
-            end = 20.dp,
-            bottom = 80.dp
-        )
-    ) {
-        // ITEM 1: Tarjeta de puntos
-        item {
-            androidx.compose.animation.AnimatedVisibility(
-                visible = true,
-                enter = androidx.compose.animation.fadeIn(
-                    animationSpec = androidx.compose.animation.core.tween(durationMillis = 600)
-                ) + androidx.compose.animation.slideInVertically(
-                    initialOffsetY = { -40 },
-                    animationSpec = androidx.compose.animation.core.tween(durationMillis = 600)
-                )
-            ) {
+    Box {
+        LazyColumn(
+            state = lazyListState,
+            modifier = Modifier
+                .fillMaxSize()
+                .background(Color.Transparent),
+            contentPadding = PaddingValues(
+                top = 14.dp,
+                start = 20.dp,
+                end = 20.dp,
+                bottom = 80.dp
+            )
+        ) {
+            // ITEM 1: Tarjeta de puntos
+            item {
                 Box(modifier = Modifier.onGloballyPositioned { coords ->
                     tourState.registerTarget(
                         id = "activity_points_card",
@@ -298,28 +294,32 @@ private fun ActivityContent(
                         itemIndex = 0
                     )
                 }) {
-                    AnimatedPointsCard(
-                        totalPoints = state.totalPoints,
-                        renovaColors = renovaColors
-                    )
+                    androidx.compose.animation.AnimatedVisibility(
+                        visible = true,
+                        enter = if (shouldAnimatePoints && !isTourActive) {
+                            androidx.compose.animation.fadeIn(
+                                animationSpec = androidx.compose.animation.core.tween(durationMillis = 600)
+                            ) + androidx.compose.animation.slideInVertically(
+                                initialOffsetY = { -40 },
+                                animationSpec = androidx.compose.animation.core.tween(durationMillis = 600)
+                            )
+                        } else {
+                            EnterTransition.None
+                        }
+                    ) {
+                        AnimatedPointsCard(
+                            totalPoints = state.totalPoints,
+                            renovaColors = renovaColors
+                        )
+                    }
+                }
+                DisposableEffect(Unit) {
+                    onDispose { tourState.unregisterTarget("activity_points_card") }
                 }
             }
-            DisposableEffect(Unit) {
-                onDispose { tourState.unregisterTarget("activity_points_card") }
-            }
-        }
 
-        // ITEM 2: Sección de materiales de reciclaje
-        item {
-            androidx.compose.animation.AnimatedVisibility(
-                visible = true,
-                enter = androidx.compose.animation.fadeIn(
-                    animationSpec = androidx.compose.animation.core.tween(durationMillis = 600, delayMillis = 100)
-                ) + androidx.compose.animation.slideInVertically(
-                    initialOffsetY = { -30 },
-                    animationSpec = androidx.compose.animation.core.tween(durationMillis = 600, delayMillis = 100)
-                )
-            ) {
+            // ITEM 2: Sección de materiales de reciclaje
+            item {
                 Column(
                     modifier = Modifier
                         .padding(top = 16.dp)
@@ -332,168 +332,243 @@ private fun ActivityContent(
                             )
                         }
                 ) {
-                    // Título y subtítulo
-                    Text(
-                        text = stringResource(R.string.recycling_materials),
-                        style = MaterialTheme.typography.titleLarge,
-                        color = renovaColors.textPrimary,
-                        fontWeight = FontWeight.Bold,
-                        fontSize = 21.sp,
-                        fontFamily = PoppinsFontFamily
-                    )
+                    androidx.compose.animation.AnimatedVisibility(
+                        visible = true,
+                        enter = if (shouldAnimatePoints && !isTourActive) {
+                            androidx.compose.animation.fadeIn(
+                                animationSpec = androidx.compose.animation.core.tween(durationMillis = 600, delayMillis = 100)
+                            ) + androidx.compose.animation.slideInVertically(
+                                initialOffsetY = { -30 },
+                                animationSpec = androidx.compose.animation.core.tween(durationMillis = 600, delayMillis = 100)
+                            )
+                        } else {
+                            EnterTransition.None
+                        }
+                    ) {
+                        Column {
+                            // Título y subtítulo
+                            Text(
+                                text = stringResource(R.string.recycling_materials),
+                                style = MaterialTheme.typography.titleLarge,
+                                color = renovaColors.textPrimary,
+                                fontWeight = FontWeight.Bold,
+                                fontSize = 21.sp,
+                                fontFamily = PoppinsFontFamily
+                            )
 
-                    Spacer(modifier = Modifier.height(4.dp))
+                            Spacer(modifier = Modifier.height(4.dp))
 
-                    Text(
-                        text = stringResource(R.string.earn_points_recycling),
-                        style = MaterialTheme.typography.bodyMedium,
-                        color = renovaColors.textSecondary,
-                        fontSize = 14.sp,
-                        fontFamily = PoppinsFontFamily
-                    )
+                            Text(
+                                text = stringResource(R.string.earn_points_recycling),
+                                style = MaterialTheme.typography.bodyMedium,
+                                color = renovaColors.textSecondary,
+                                fontSize = 14.sp,
+                                fontFamily = PoppinsFontFamily
+                            )
+
+                            Spacer(modifier = Modifier.height(16.dp))
+
+                            // Tarjetas de estadísticas
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                horizontalArrangement = Arrangement.spacedBy(12.dp)
+                            ) {
+                                MaterialStatCard(
+                                    title = stringResource(R.string.plastic),
+                                    count = state.totalPlastic,
+                                    icon = R.drawable.bottle,
+                                    backgroundRes = R.drawable.fondo_chico,
+                                    modifier = Modifier.weight(1f)
+                                )
+                                MaterialStatCard(
+                                    title = stringResource(R.string.aluminum),
+                                    count = state.totalAluminum,
+                                    icon = R.drawable.can,
+                                    backgroundRes = R.drawable.fondo_botella,
+                                    modifier = Modifier.weight(1f)
+                                )
+                                MaterialStatCard(
+                                    title = "Total",
+                                    count = state.totalPlastic + state.totalAluminum,
+                                    icon = R.drawable.bottle,
+                                    backgroundRes = R.drawable.fondo_comercio,
+                                    showIcon = false,
+                                    modifier = Modifier.weight(1f)
+                                )
+                            }
+                        }
+                    }
+                }
+                DisposableEffect(Unit) {
+                    onDispose { tourState.unregisterTarget("activity_materials_row") }
+                }
+            }
+
+            // ITEM 3: Sección de historial
+            item {
+                Column(
+                    modifier = Modifier
+                        .padding(top = 24.dp)
+                        .onGloballyPositioned { coords ->
+                            tourState.registerTarget(
+                                id = "activity_history_title",
+                                coordinates = coords,
+                                lazyListState = lazyListState,
+                                itemIndex = 2
+                            )
+                        }
+                ) {
+                    androidx.compose.animation.AnimatedVisibility(
+                        visible = true,
+                        enter = if (shouldAnimatePoints && !isTourActive) {
+                            androidx.compose.animation.fadeIn(
+                                animationSpec = androidx.compose.animation.core.tween(durationMillis = 600, delayMillis = 300)
+                            ) + androidx.compose.animation.slideInVertically(
+                                initialOffsetY = { -20 },
+                                animationSpec = androidx.compose.animation.core.tween(durationMillis = 600, delayMillis = 300)
+                            )
+                        } else {
+                            EnterTransition.None
+                        }
+                    ) {
+                        Column {
+                            Text(
+                                text = stringResource(R.string.history),
+                                style = MaterialTheme.typography.titleLarge,
+                                color = renovaColors.textPrimary,
+                                fontWeight = FontWeight.Bold,
+                                fontSize = 21.sp,
+                                fontFamily = PoppinsFontFamily
+                            )
+
+                            Spacer(modifier = Modifier.height(4.dp))
+
+                            Text(
+                                text = stringResource(R.string.activity_record),
+                                style = MaterialTheme.typography.bodyMedium,
+                                color = renovaColors.textSecondary,
+                                fontSize = 14.sp,
+                                fontFamily = PoppinsFontFamily
+                            )
+                        }
+                    }
 
                     Spacer(modifier = Modifier.height(16.dp))
 
-                    // Tarjetas de estadísticas
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.spacedBy(12.dp)
-                    ) {
-                        MaterialStatCard(
-                            title = stringResource(R.string.plastic),
-                            count = state.totalPlastic,
-                            icon = R.drawable.bottle,
-                            backgroundRes = R.drawable.fondo_chico,
-                            modifier = Modifier.weight(1f)
-                        )
-                        MaterialStatCard(
-                            title = stringResource(R.string.aluminum),
-                            count = state.totalAluminum,
-                            icon = R.drawable.can,
-                            backgroundRes = R.drawable.fondo_botella,
-                            modifier = Modifier.weight(1f)
-                        )
-                        MaterialStatCard(
-                            title = "Total",
-                            count = state.totalPlastic + state.totalAluminum,
-                            icon = R.drawable.bottle,
-                            backgroundRes = R.drawable.fondo_comercio,
-                            showIcon = false,
-                            modifier = Modifier.weight(1f)
-                        )
-                    }
-                }
-            }
-            DisposableEffect(Unit) {
-                onDispose { tourState.unregisterTarget("activity_materials_row") }
-            }
-        }
-
-        // ITEM 3: Sección de historial
-        item {
-            Column(
-                modifier = Modifier
-                    .padding(top = 24.dp)
-                    .onGloballyPositioned { coords ->
-                        tourState.registerTarget(
-                            id = "activity_history_title",
-                            coordinates = coords,
-                            lazyListState = lazyListState,
-                            itemIndex = 2
-                        )
-                    }
-            ) {
-                androidx.compose.animation.AnimatedVisibility(
-                    visible = true,
-                    enter = androidx.compose.animation.fadeIn(
-                        animationSpec = androidx.compose.animation.core.tween(durationMillis = 600, delayMillis = 300)
-                    ) + androidx.compose.animation.slideInVertically(
-                        initialOffsetY = { -20 },
-                        animationSpec = androidx.compose.animation.core.tween(durationMillis = 600, delayMillis = 300)
-                    )
-                ) {
-                    Column {
-                        Text(
-                            text = stringResource(R.string.history),
-                            style = MaterialTheme.typography.titleLarge,
-                            color = renovaColors.textPrimary,
-                            fontWeight = FontWeight.Bold,
-                            fontSize = 21.sp,
-                            fontFamily = PoppinsFontFamily
-                        )
-
-                        Spacer(modifier = Modifier.height(4.dp))
-
-                        Text(
-                            text = stringResource(R.string.activity_record),
-                            style = MaterialTheme.typography.bodyMedium,
-                            color = renovaColors.textSecondary,
-                            fontSize = 14.sp,
-                            fontFamily = PoppinsFontFamily
-                        )
-                    }
-                }
-
-                Spacer(modifier = Modifier.height(16.dp))
-
-                // Lista de actividades o estado vacío
-                Column(modifier = Modifier.fillMaxWidth()) {
-                    if (state.activities.isEmpty()) {
-                        EmptyStateInline(renovaColors = renovaColors)
-                    } else {
-                        Column(
-                            modifier = Modifier.fillMaxWidth(),
-                            verticalArrangement = Arrangement.spacedBy(0.dp)
-                        ) {
-                            state.activities.forEachIndexed { index, activity ->
-                                ActivityHistoryCard(
-                                    activity = activity,
-                                    colors = renovaColors,
-                                    onClick = {
-                                        onActivityClick(activity)
-                                    }
-                                )
-                                if (index < state.activities.size - 1) {
-                                    Divider(
-                                        color = RenovaColors.PrimaryColor,
-                                        thickness = 1.dp,
-                                        modifier = Modifier.padding(vertical = 3.dp)
+                    // Lista de actividades o estado vacío
+                    Column(modifier = Modifier.fillMaxWidth()) {
+                        if (state.activities.isEmpty()) {
+                            EmptyStateInline(renovaColors = renovaColors)
+                        } else {
+                            Column(
+                                modifier = Modifier.fillMaxWidth(),
+                                verticalArrangement = Arrangement.spacedBy(0.dp)
+                            ) {
+                                state.activities.forEachIndexed { index, activity ->
+                                    ActivityHistoryCard(
+                                        activity = activity,
+                                        colors = renovaColors,
+                                        onClick = {
+                                            onActivityClick(activity)
+                                        }
                                     )
+                                    if (index < state.activities.size - 1) {
+                                        Divider(
+                                            color = RenovaColors.PrimaryColor,
+                                            thickness = 1.dp,
+                                            modifier = Modifier.padding(vertical = 3.dp)
+                                        )
+                                    }
                                 }
                             }
                         }
                     }
                 }
+
+                DisposableEffect(Unit) {
+                    onDispose {
+                        tourState.unregisterTarget("activity_history_title")
+                    }
+                }
             }
 
-            DisposableEffect(Unit) {
-                onDispose {
-                    tourState.unregisterTarget("activity_history_title")
+            // ITEM 4: Controles de paginación
+            if (state.activities.isNotEmpty()) {
+                item {
+                    androidx.compose.animation.AnimatedVisibility(
+                        visible = true,
+                        enter = androidx.compose.animation.fadeIn(
+                            animationSpec = androidx.compose.animation.core.tween(
+                                durationMillis = 600,
+                                delayMillis = 500 + (state.activities.size * 50)
+                            )
+                        )
+                    ) {
+                        PaginationControls(
+                            currentPage = state.currentPage,
+                            totalPages = state.totalPages,
+                            isLoading = state.isLoading,
+                            renovaColors = renovaColors,
+                            onPreviousPage = onPreviousPage,
+                            onNextPage = onNextPage
+                        )
+                    }
                 }
             }
         }
 
-        // ITEM 4: Controles de paginación
-        if (state.activities.isNotEmpty()) {
-            item {
-                androidx.compose.animation.AnimatedVisibility(
-                    visible = true,
-                    enter = androidx.compose.animation.fadeIn(
-                        animationSpec = androidx.compose.animation.core.tween(
-                            durationMillis = 600,
-                            delayMillis = 500 + (state.activities.size * 50)
-                        )
-                    )
-                ) {
-                    PaginationControls(
-                        currentPage = state.currentPage,
-                        totalPages = state.totalPages,
-                        isLoading = state.isLoading,
-                        renovaColors = renovaColors,
-                        onPreviousPage = onPreviousPage,
-                        onNextPage = onNextPage
-                    )
-                }
+        // 🛡️ Targets invisibles para el tour (aseguran registro)
+        if (isTourActive) {
+            Column(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .alpha(0f)
+            ) {
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(200.dp)
+                        .onGloballyPositioned { coords ->
+                            if (!targets.containsKey("activity_points_card")) {
+                                tourState.registerTarget(
+                                    id = "activity_points_card",
+                                    coordinates = coords,
+                                    lazyListState = lazyListState,
+                                    itemIndex = 0
+                                )
+                            }
+                        }
+                )
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(250.dp)
+                        .onGloballyPositioned { coords ->
+                            if (!targets.containsKey("activity_materials_row")) {
+                                tourState.registerTarget(
+                                    id = "activity_materials_row",
+                                    coordinates = coords,
+                                    lazyListState = lazyListState,
+                                    itemIndex = 1
+                                )
+                            }
+                        }
+                )
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(100.dp)
+                        .onGloballyPositioned { coords ->
+                            if (!targets.containsKey("activity_history_title")) {
+                                tourState.registerTarget(
+                                    id = "activity_history_title",
+                                    coordinates = coords,
+                                    lazyListState = lazyListState,
+                                    itemIndex = 2
+                                )
+                            }
+                        }
+                )
             }
         }
     }

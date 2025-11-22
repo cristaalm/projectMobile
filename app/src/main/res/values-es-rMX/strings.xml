@@ -507,9 +507,7 @@
     <string name="tour_title_welcome">¡Renova te da la bienvenida!</string>
     <string name="tour_desc_welcome">Estamos emocionados de tenerte aquí. Te mostraremos las funciones principales para que empieces a reciclar y ganar recompensas. Presiona \"Sig.\" para comenzar.</string>
     <string name="tour_title_menu_button">Menú de Opciones</string>
-    <string name="tour_desc_menu_button">Puedes tocar aquí para ver más opciones, como la ayuda y el cierre de sesión.</string>
-    <string name="tour_title_side_menu">Menú Principal</string>
-    <string name="tour_desc_side_menu">Aquí puedes cerrar sesión y encontrar preguntas frecuentes.</string>
+    <string name="tour_desc_menu_button">Aquí puedes cerrar sesión, encontrar preguntas frecuentes y acceder al manual de usuario.</string>
     <string name="tour_title_help_fab">Botón de Ayuda</string>
     <string name="tour_desc_help_fab_full">¡Has completado el tour! Recuerda que aquí puedes volver a consultarlo cuando lo necesites.</string>
     <string name="tour_desc_help_fab_home">Recuerda que aquí puedes volver a consultar el tour de esta pantalla.</string>
@@ -585,14 +583,14 @@
     <string name="faq_a4">Por cada material reciclable que deposites en nuestros contenedores inteligentes, acumulas puntos RENOVA. El contenedor usa inteligencia artificial (GPT-4o) para identificar automáticamente si depositaste plástico PET o aluminio. Los puntos se agregan instantáneamente a tu cuenta y puedes canjearlos por recompensas en comercios aliados (10 puntos = $1.00 MXN).</string>
     <string name="faq_a5">Actualmente aceptamos dos materiales: botellas de plástico PET y latas de aluminio. El sistema de inteligencia artificial del contenedor identifica automáticamente el material que depositas mediante visión por computadora. Próximamente ampliaremos a más tipos de materiales reciclables.</string>
     <string name="faq_a6">En la app encontrarás un mapa con todos los contenedores inteligentes RENOVA cercanos a tu ubicación. Los contenedores están equipados con Raspberry Pi 4, cámaras y sensores para clasificación automática. También puedes ver el nivel de llenado de cada contenedor antes de visitarlo.</string>
-    <string name="faq_a7">El valor en puntos es:\n• Botella de plástico PET normal: +10 puntos ($1.00 MXN)\n• Botella de plástico PET aplastada: +15 puntos ($1.50 MXN)\n• Lata de aluminio normal: +30 puntos ($3.00 MXN)\n• Lata de aluminio aplastada: +35 puntos ($3.50 MXN)\n\n\nGanas puntos extra si aplastas tus materiales antes de depositarlos, en caso de ser otro material, no se sumarán puntos.</string>
+    <string name="faq_a7">El valor en puntos es:\n• Botella de plástico PET normal: +10 puntos ($1.00 MXN)\n• Botella de plástico PET aplastada: +15 puntos ($1.50 MXN)\n• Lata de aluminio normal: +30 puntos ($3.00 MXN)\n• Lata de aluminio aplastada: +35 puntos ($3.50 MXN)\nGanas puntos extra si aplastas tus materiales antes de depositarlos, en caso de ser otro material, no se sumarán puntos.</string>
     <string name="faq_a8">No, los puntos acumulados por reciclaje no tienen fecha de vencimiento. Puedes usarlos cuando desees. Sin embargo, algunas recompensas especiales de comercios aliados pueden tener disponibilidad limitada por tiempo.</string>
     <string name="faq_a9">Ve a la sección de \'TIenda\' en la app, navega por el catálogo de comercios aliados y busca la recompensa que desees. Si tienes suficientes puntos, dirígete a ese comercio (puedes ver la dirección del comercio en la información de la recompensa) ve con el cajero, identificate y elige el producto que desees.</string>
     <string name="faq_a10">Ofrecemos una amplia variedad de recompensas en comercios aliados: descuentos en productos, cupones de consumo en restaurantes y cafeterías, productos de limpieza, acceso a servicios y más. El catálogo se actualiza constantemente. También puedes desbloquear insignias especiales: Eco Warrior (100 pts), Recycler Pro (500 pts), Green Hero (1000 pts) y Planet Saver (2500 pts), entre otras.</string>
     <string name="faq_a11">Las recompensas canjeadas no son reembolsables. Una vez que se genera el canje de recompensa, los puntos son descontados permanentemente de tu cuenta. Asegúrate de revisar bien los detalles de la recompensa.</string>
     <string name="faq_a12">Una alianza comercial es un negocio o empresa que se une a RENOVA para ofrecer recompensas a nuestros usuarios. Como alianza, recibes clientes comprometidos con el medio ambiente, aumentas tu visibilidad en la app y contribuyes a la sostenibilidad de tu comunidad. Los puntos que recibes se pueden gestionar desde el panel web administrativo.</string>
     <string name="faq_a13">Contáctanos a través de nuestro correo electrónico \'soyrenovaapp@gmail.com\' ponte en contacto con nosotros e iniciaremos el proceso de registro de tu negocio como aliado de Renova.</string>
-    <string name="faq_a14">Como negocio aliado, cuando un usuario canjea puntos en tu establecimiento, esos puntos se convierten a pesos mexicanos a razón de 100 puntos = $1.00 MXN. Puedes consultar tu saldo y transacciones.</string>
+    <string name="faq_a14">Como negocio aliado, cuando un usuario canjea puntos en tu establecimiento, esos puntos se convierten a pesos mexicanos a razón de 10 puntos = $1.00 MXN. Puedes consultar tu saldo y transacciones.</string>
     <string name="faq_a15">Puedes consultar tu saldo acumulado en cualquier momento desde tu aplicación. El proceso de retiro se gestiona a través de la plataforma, puedes retirar cuando quieras. Contacta a nuestro equipo para más detalles sobre el proceso de pago.</string>
     <string name="faq_a16">No, RENOVA es completamente gratuita para usuarios que reciclan. No hay cuotas de inscripción ni mensualidades. Para negocios aliados, el registro también es gratuito.</string>
     <string name="faq_a17">Puedes contactarnos a través de: correo electrónico soyrenovaapp@gmail.com. Nuestro equipo está disponible para resolver tus dudas.</string>
@@ -610,7 +608,7 @@
     <string name="tour_title_streak_button">Sección de Racha</string>
     <string name="tour_desc_streak_button">¡Genial! Ahora toca \"Sig.\" para ver tu progreso y rachas.</string>
     <string name="tour_title_streak_card">Tu Racha Actual</string>
-    <string name="tour_desc_streak_card">¡Mantén el ritmo! Esta tarjeta muestra tus días consecutivos reciclando y tu mejor racha.</string>
+    <string name="tour_desc_streak_card">¡Mantén el ritmo! Esta tarjeta muestra tus días consecutivos reciclando.</string>
     <string name="tour_title_streak_challenge">Reto Semanal</string>
     <string name="tour_desc_streak_challenge">¡Acepta retos semanales para ganar recompensas adicionales! Toca aquí para ver los detalles.</string>
     <string name="tour_title_streak_badges">Insignias Mensuales</string>

@@ -2,10 +2,8 @@ package com.renova.mobile.ui.tour
 
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.tween
-// --- INICIO MODIFICACIÓN: Imports añadidos ---
 import androidx.compose.foundation.ScrollState
 import androidx.compose.foundation.lazy.LazyListState
-// --- FIN MODIFICACIÓN ---
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
@@ -30,6 +28,7 @@ import androidx.compose.ui.unit.Density
 import androidx.compose.ui.unit.IntSize
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import kotlinx.coroutines.delay
 import com.renova.mobile.R
 import com.renova.mobile.ui.theme.PoppinsFontFamily
 import com.renova.mobile.ui.theme.LocalRenovaColors
@@ -62,12 +61,26 @@ fun TourOverlay(
         }
     }
 
-    // Lógica de Auto-Scroll (para ScrollState y LazyListState)
+    LaunchedEffect(currentStep, isStepOnCorrectScreen, targets) {
+        // Solo ejecutamos si hay un paso activo, estamos en la pantalla correcta
+        if (currentStep != null && isStepOnCorrectScreen && !currentStep!!.isWelcomeStep) {
+            if (targets.containsKey(currentStep!!.targetId)) return@LaunchedEffect
+            delay(3000)
+
+            // Si después del tiempo sigue sin aparecer en la lista de targets
+            if (!targets.containsKey(currentStep!!.targetId)) {
+                // Terminamos el tour para evitar que la app se quede bloqueada
+                tourState.endTour()
+                println("TourOverlay: Target ${currentStep!!.targetId} no encontrado. Tour finalizado (Break).")
+            }
+        }
+    }
+
+    // Lógica de Auto-Scroll MEJORADA para scroll hacia arriba
     val configuration = LocalConfiguration.current
     val density = LocalDensity.current
     val screenHeightPx = with(density) { configuration.screenHeightDp.dp.toPx() }
 
-    // Lanzado por currentStep y targets para arreglar race condition
     LaunchedEffect(
         currentStep,
         targets,
@@ -83,8 +96,7 @@ fun TourOverlay(
         val currentTargetInfo = targets[currentStep.targetId]
 
         if (currentTargetInfo == null) {
-            // El target aún no está en el mapa (probablemente off-screen),
-            // el efecto se volverá a ejecutar cuando 'targets' se actualice.
+            // El target aún no está en el mapa (probablemente off-screen)
             return@LaunchedEffect
         }
 
@@ -93,10 +105,9 @@ fun TourOverlay(
         val lazyState = currentTargetInfo.lazyListState
         val itemIndex = currentTargetInfo.itemIndex
 
-
         // Márgenes (TopBar e BottomBar) para definir la "zona visible"
-        val topMargin = with(density) { 100.dp.toPx() } // Altura aprox TopBar
-        val bottomMargin = with(density) { 180.dp.toPx() } // Altura aprox BottomBar + FAB
+        val topMargin = with(density) { 120.dp.toPx() } // Altura aprox TopBar + margen
+        val bottomMargin = with(density) { 200.dp.toPx() } // Altura aprox BottomBar + FAB + margen
 
         val visibleAreaTop = topMargin
         val visibleAreaBottom = screenHeightPx - bottomMargin
@@ -104,21 +115,50 @@ fun TourOverlay(
         val isOffScreenTop = rect.top < visibleAreaTop // El item está "por encima" de la zona visible
         val isOffScreenBottom = rect.bottom > visibleAreaBottom // El item está "por debajo" de la zona visible
 
+        // Solo hacer scroll si el elemento está fuera de la zona visible
         if (isOffScreenBottom || isOffScreenTop) {
+            // Pequeño delay para coordinación
+            delay(150)
+
             // Comprobar qué tipo de scroll usar
             if (scrollState != null) {
                 // --- Lógica para ScrollState ---
-                val scrollAmount = (rect.top - topMargin).toInt()
-                scrollState.animateScrollTo(scrollAmount.coerceAtLeast(0))
+                if (isOffScreenTop) {
+                    // SCROLL HACIA ARRIBA: El target está por encima del área visible
+                    val extraOffset = with(density) { 50.dp.toPx() }
+                    val scrollAmount = (rect.top - topMargin - extraOffset).toInt()
+                    scrollState.animateScrollTo(scrollAmount.coerceAtLeast(0))
+                } else if (isOffScreenBottom) {
+                    // SCROLL HACIA ABAJO: El target está por debajo del área visible
+                    val scrollAmount = (rect.top - topMargin).toInt()
+                    scrollState.animateScrollTo(scrollAmount.coerceAtLeast(0))
+                }
 
             } else if (lazyState != null && itemIndex != null) {
                 // --- Lógica para LazyListState ---
-                lazyState.animateScrollToItem(itemIndex)
+                try {
+                    if (isOffScreenTop) {
+                        // SCROLL HACIA ARRIBA: Para elementos que están por encima
+                        // Hacemos scroll al item pero con un offset negativo para subir más
+                        lazyState.animateScrollToItem(
+                            index = itemIndex,
+                            scrollOffset = -100 // Offset negativo para subir más arriba
+                        )
+                    } else {
+                        // SCROLL HACIA ABAJO: Comportamiento normal
+                        lazyState.animateScrollToItem(itemIndex)
+                    }
+                } catch (e: Exception) {
+                    // Fallback seguro
+                    try {
+                        lazyState.scrollToItem(itemIndex)
+                    } catch (e: Exception) {
+                        // Si falla, no hacer nada - evitar bloqueos
+                    }
+                }
             }
         }
     }
-    // --- FIN MODIFICACIÓN ---
-
 
     val shouldShowScrim = isTourActive && isStepOnCorrectScreen &&
             (targetRect != null || currentStep?.isWelcomeStep == true)
@@ -147,12 +187,12 @@ fun TourOverlay(
         ) {
             drawRect(color = scrimColor.copy(alpha = scrimAlpha))
 
-            if (targetInfo != null && // Usar targetInfo en lugar de rect/step por separado
+            if (targetInfo != null &&
                 isStepOnCorrectScreen &&
                 scrimAlpha > 0.1f &&
                 currentStep?.isWelcomeStep != true
             ) {
-                //  Recorte más pequeño
+                // Recorte más pequeño
                 val inflatedRect = targetInfo!!.rect.inflate(with(density) { 0.4.dp.toPx() })
 
                 drawRoundRect(
@@ -165,7 +205,6 @@ fun TourOverlay(
             }
         }
 
-
         if (currentStep != null &&
             isStepOnCorrectScreen &&
             isTourActive
@@ -174,7 +213,7 @@ fun TourOverlay(
                 // Caso normal: El target es válido y está en el mapa
                 TooltipBox(
                     step = currentStep!!,
-                    targetRect = targetInfo!!.rect, // Usar el rect de targetInfo
+                    targetRect = targetInfo!!.rect,
                     isFirstStep = tourState.isFirstStepOfTour(),
                     isLastStep = tourState.isLastStepOfTour(),
                     onNext = { tourState.nextStep() },
@@ -193,11 +232,7 @@ fun TourOverlay(
                     onEnd = { tourState.endTour() }
                 )
             }
-            // Si targetInfo es null Y no es el paso de bienvenida,
-            // no se muestra nada (esperando al auto-scroll y actualización de 'targets')
-            // Esto arregla el bug de la "imagen imposible".
         }
-        // --- FIN MODIFICACIÓN ---
     }
 }
 
@@ -211,7 +246,6 @@ private fun TooltipBox(
     onPrev: () -> Unit,
     onEnd: () -> Unit
 ) {
-    // ... (El Composable TooltipBox se mantiene igual) ...
     val renovaColors = LocalRenovaColors.current
 
     var tooltipSize by remember { mutableStateOf(IntSize.Zero) }

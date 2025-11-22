@@ -212,6 +212,7 @@ fun FaqContent(
         modifier = Modifier
             .fillMaxSize()
             .statusBarsPadding()
+            .padding(bottom = 44.dp)
     ) {
         Box {
             // Header
