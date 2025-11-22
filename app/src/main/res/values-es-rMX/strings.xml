@@ -814,4 +814,6 @@
     <string name="session_expired">Sesión expirada. Por favor, inicia sesión nuevamente</string>
     <string name="error_forbidden">No tienes permisos para realizar esta acción</string>
     <string name="error_not_found">Recurso no encontrado</string>
+    <string name="menu_title">Menú</string>
+    <string name="manual_general_pdf">Manual general (PDF)</string>
 </resources>

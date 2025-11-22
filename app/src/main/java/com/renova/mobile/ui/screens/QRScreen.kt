@@ -26,6 +26,7 @@ import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
@@ -57,6 +58,8 @@ import androidx.compose.material3.pulltorefresh.PullToRefreshBox // <-- de v2
 import androidx.compose.material3.pulltorefresh.rememberPullToRefreshState // <-- de v2
 import androidx.compose.material.icons.filled.Star // <-- de v2
 import androidx.compose.animation.core.animateIntAsState // <-- de v2
+import android.app.Activity
+import android.view.WindowManager
 
 // --- NUEVO: Imports para el Tour (de v1) ---
 import androidx.compose.ui.layout.onGloballyPositioned
@@ -70,6 +73,7 @@ fun QRScreen(
     viewModel: QRViewModel = androidx.lifecycle.viewmodel.compose.viewModel() // <-- de v2
 ) {
     val context = LocalContext.current
+    val view = LocalView.current
     val sessionManager = remember { SessionManager(context) }
     // val loginRepository = remember { LoginRepository() } // <-- de v1
 
@@ -81,6 +85,18 @@ fun QRScreen(
     val uiState by viewModel.state.collectAsState()
     val pullToRefreshState = rememberPullToRefreshState()
     // --- Fin lógica v2 ---
+
+    DisposableEffect(Unit) {
+        val activity = view.context as? Activity
+        val window = activity?.window
+        window?.setFlags(
+            WindowManager.LayoutParams.FLAG_SECURE,
+            WindowManager.LayoutParams.FLAG_SECURE
+        )
+        onDispose {
+            window?.clearFlags(WindowManager.LayoutParams.FLAG_SECURE)
+        }
+    }
 
     val user = sessionManager.getUser()
     val accessToken = sessionManager.getAccessToken()

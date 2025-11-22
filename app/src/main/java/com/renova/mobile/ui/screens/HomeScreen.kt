@@ -178,7 +178,7 @@ fun HomeScreen(
 
     // Estado para el modal de actividad
     var selectedActivity by remember { mutableStateOf<ActivityItem?>(null) }
-    val sheetState = rememberModalBottomSheetState()
+    val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
 
     // Estados para datos del usuario
     var currentMonthPoints by remember { mutableStateOf(0) }
@@ -461,7 +461,8 @@ fun HomeScreen(
             onDismissRequest = { selectedActivity = null },
             sheetState = sheetState,
             containerColor = renovaColors.cardBackground,
-            shape = RoundedCornerShape(topStart = 24.dp, topEnd = 24.dp)
+            shape = RoundedCornerShape(topStart = 24.dp, topEnd = 24.dp),
+            scrimColor = Color.Black.copy(alpha = 0.32f)
         ) {
             DetailSheet(activity = activity)
         }

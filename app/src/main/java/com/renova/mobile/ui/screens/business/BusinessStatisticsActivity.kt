@@ -11,6 +11,8 @@ import com.renova.mobile.ui.screens.business.statistics.BusinessStatisticsScreen
 import com.renova.mobile.ui.theme.RenovaTheme
 import com.renova.mobile.utils.LocaleHelper
 import androidx.core.view.WindowCompat
+import com.renova.mobile.utils.SessionManager
+import com.renova.mobile.MainActivity
 
 class BusinessStatisticsActivity : ComponentActivity() {
 
@@ -53,7 +55,13 @@ class BusinessStatisticsActivity : ComponentActivity() {
                 Surface(color = MaterialTheme.colorScheme.background) {
                     BusinessStatisticsScreen(
                         allianceId = allianceId, // ✅ Ahora se pasa el parámetro
-                        onLogout = {},
+                        onLogout = {
+                            val sessionManager = SessionManager(this@BusinessStatisticsActivity)
+                            sessionManager.clearFcmToken()
+                            sessionManager.logout()
+                            finishAffinity()
+                            startActivity(Intent(this@BusinessStatisticsActivity, MainActivity::class.java))
+                        },
                         onNavigateBack = { finish() }
                     )
                 }

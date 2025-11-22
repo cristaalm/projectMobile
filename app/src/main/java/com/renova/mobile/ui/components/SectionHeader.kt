@@ -55,6 +55,8 @@ import androidx.compose.runtime.LaunchedEffect
 import kotlinx.coroutines.delay
 import androidx.compose.material.icons.filled.Dashboard
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.res.stringResource
+import com.renova.mobile.R
 
 @Composable
 fun SectionHeader(
@@ -192,7 +194,7 @@ fun RightMenuAction(
                                 horizontalArrangement = Arrangement.SpaceBetween
                             ) {
                                 Text(
-                                    text = "Menú",
+                                    text = stringResource(id = R.string.menu_title),
                                     color = Color.White,
                                     fontSize = 20.sp,
                                     fontWeight = FontWeight.Bold
@@ -208,7 +210,7 @@ fun RightMenuAction(
                                 },
                                 colors = ButtonDefaults.textButtonColors(contentColor = Color.White)
                             ) {
-                                Text("Manual general (PDF)")
+                                Text(stringResource(id = R.string.manual_general_pdf))
                             }
                             TextButton(
                                 onClick = {
@@ -217,7 +219,7 @@ fun RightMenuAction(
                                 },
                                 colors = ButtonDefaults.textButtonColors(contentColor = Color.White)
                             ) {
-                                Text("Preguntas frecuentes")
+                                Text(stringResource(id = R.string.faq_title))
                             }
                             Divider(color = Color.White.copy(alpha = 0.3f))
                             Button(
@@ -227,7 +229,7 @@ fun RightMenuAction(
                                 },
                                 colors = ButtonDefaults.buttonColors(containerColor = Color.White, contentColor = Color(0xFF05D16E))
                             ) {
-                                Text("Cerrar sesión")
+                                Text(stringResource(id = R.string.modal_logout_title))
                             }
                         }
                     }
