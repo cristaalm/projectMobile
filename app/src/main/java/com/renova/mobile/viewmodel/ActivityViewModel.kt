@@ -85,7 +85,7 @@ class ActivityViewModel(
 
                         val totalsDeferred = async {
                             try {
-                                if (_state.value.totalPlastic == 0 && _state.value.totalAluminum == 0) {
+                                if (isManualRefresh || (_state.value.totalPlastic == 0 && _state.value.totalAluminum == 0)) {
                                     repository.getTotalScans()
                                 } else null
                             } catch (e: Exception) {
