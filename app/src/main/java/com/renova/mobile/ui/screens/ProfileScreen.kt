@@ -325,7 +325,7 @@ private fun ProfileContent(
     var showUploadSuccessDialog by remember { mutableStateOf(false) }
     var uploadedDocumentName by remember { mutableStateOf("") }
 
-    // 🛡️ Cargar imágenes de manera defensiva
+    // Cargar imágenes de manera defensiva
     LaunchedEffect(Unit) {
         try {
             profileViewModel.loadDocumentImages(user.id, identityVerification)
@@ -636,16 +636,14 @@ fun ProfileHeader(
     verificationStatus: VerificationStatus? = null,
     languageViewModel: LanguageViewModel,
     selfieBytes: ByteArray? = null,
-    scrollState: ScrollState // <--- MODIFICACIÓN: Aceptar scrollState
+    scrollState: ScrollState
 ) {
     val currentLanguage by languageViewModel.currentLanguage.collectAsState()
     val isSpanish = currentLanguage == "es"
     val context = LocalContext.current
     val colors = LocalRenovaColors.current
 
-    // --- AÑADIDO: Obtener estado del Tour (de 'tour') ---
     val tourState = LocalTourState.current
-    // --- FIN ---
 
     var showImageZoom by remember { mutableStateOf(false) }
 
@@ -822,7 +820,9 @@ fun ProfileHeader(
                             modifier = Modifier.size(20.dp)
                         )
                         Text(
-                            text = "${user.total_points}",
+                            text = java.text.NumberFormat.getIntegerInstance(
+                                java.util.Locale.forLanguageTag("es-MX")
+                            ).format(user.total_points),
                             color = Color.White,
                             style = MaterialTheme.typography.headlineMedium,
                             fontWeight = FontWeight.W700
