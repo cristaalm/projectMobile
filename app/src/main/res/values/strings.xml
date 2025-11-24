@@ -42,7 +42,7 @@
     <string name="search_allied_stores">Allied Stores</string>
     <string name="search_icon">Search stores</string>
     <string name="featured_stores">Featured Stores</string>
-    <string name="store_subtitle">Choose your store to discover its rewards</string>
+    <string name="store_subtitle">Choose a category to discover its stores</string>
     <string name="no_category">No category</string>
     <string name="all_categories">All</string>
     <string name="categories">Categories</string>
