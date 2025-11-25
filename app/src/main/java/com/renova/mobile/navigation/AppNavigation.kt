@@ -3,7 +3,7 @@ package com.renova.mobile.navigation
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
+import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
@@ -43,10 +43,8 @@ import com.renova.mobile.ui.viewmodels.LanguageViewModel
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.background
-// --- IMPORTS AÑADIDOS ---
 import androidx.compose.foundation.ScrollState
 import androidx.compose.foundation.rememberScrollState
-// --- FIN IMPORTS ---
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.ui.Alignment
@@ -84,18 +82,6 @@ object StoreGraph {
     const val REWARDS = "reward_screen/{allianceId}"
 }
 
-/**
- * Helper para recordar el valor anterior de un estado en Compose.
- */
-@Composable
-private fun <T> rememberPrevious(current: T): T? {
-    val ref = remember { mutableStateOf<T?>(null) }
-    SideEffect {
-        ref.value = current
-    }
-    return ref.value
-}
-
 @Composable
 fun AppNavigation(
     sessionManager: SessionManager,
@@ -115,30 +101,68 @@ fun AppNavigation(
     val tourState = LocalTourState.current
     val isTourActive by tourState.isTourActive.collectAsState()
 
-    // --- INICIO MODIFICACIÓN: Leer el flow de pasos ---
     val currentStepIndex by tourState.currentStepIndex.collectAsState()
-    val tourSteps by tourState.tourSteps.collectAsState() // <-- Obtiene la lista activa
+    val tourSteps by tourState.tourSteps.collectAsState()
     val currentStep by remember(currentStepIndex, tourSteps) {
         derivedStateOf { tourSteps.getOrNull(currentStepIndex) }
     }
-    // --- FIN MODIFICACIÓN ---
 
-    // --- LÓGICA DEL TOUR MEJORADA ---
-    // ... (Tu lógica de API y firstLogin se mantiene igual)
+    // --- LÓGICA DEL TOUR COMPLETAMENTE REDISEÑADA ---
     val currentUserId = sessionManager.getUserId()
-    val isFirstLoginForCurrentUser = remember(currentUserId) {
-        sessionManager.isFirstLogin()
-    }
+
+    // Estados para controlar el flujo del tour
+    var hasCheckedTour by remember { mutableStateOf(false) }
+    var shouldStartTour by remember { mutableStateOf(false) }
+
     val scope = rememberCoroutineScope()
     val context = LocalContext.current.applicationContext
-    var apiCallMade by remember { mutableStateOf(false) }
-    val previousIsTourActive = rememberPrevious(isTourActive)
-    LaunchedEffect(isTourActive, currentUserId) {
-        if (previousIsTourActive == true && !isTourActive && !apiCallMade) {
-            if (isFirstLoginForCurrentUser && currentUserId != null) {
-                Log.d("AppNavigation", "Tour finalizado para userId=$currentUserId (primera vez). Llamando API...")
-                apiCallMade = true
+
+    // NUEVO: Efecto para verificar el estado del tour SOLO UNA VEZ por sesión
+    LaunchedEffect(currentUserId, contentVisible) {
+        if (currentUserId != null && contentVisible && !hasCheckedTour && !isTourActive) {
+            hasCheckedTour = true
+
+            // Forzar limpieza de verificación previa para asegurar chequeo fresco
+            sessionManager.clearTourVerification()
+
+            // Verificar el estado real del tour
+            val isFirstLogin = sessionManager.isFirstLogin()
+
+            Log.d("AppNavigation", "🔍 Verificación INICIAL de tour - userId: $currentUserId, isFirstLogin: $isFirstLogin")
+
+            if (isFirstLogin) {
+                Log.d("AppNavigation", "🎯 Usuario $currentUserId necesita tour (primer login)")
+                shouldStartTour = true
+            } else {
+                Log.d("AppNavigation", "✅ Usuario $currentUserId YA completó el tour anteriormente")
+                shouldStartTour = false
+            }
+        }
+    }
+
+    // NUEVO: Efecto separado para iniciar el tour después de la verificación
+    LaunchedEffect(shouldStartTour, isTourActive) {
+        if (shouldStartTour && !isTourActive && currentUserId != null) {
+            Log.d("AppNavigation", "🚀 Iniciando tour para userId=$currentUserId")
+            delay(800) // Esperar a que la UI esté completamente cargada
+            tourState.startTour()
+            shouldStartTour = false // Prevenir múltiples inicios
+        }
+    }
+
+    // NUEVO: Efecto para manejar la finalización del tour
+    LaunchedEffect(isTourActive) {
+        if (!isTourActive && currentUserId != null) {
+            // Verificar si acabamos de completar un tour
+            val wasFirstLogin = sessionManager.isFirstLogin()
+
+            if (wasFirstLogin) {
+                Log.d("AppNavigation", "🏁 Tour COMPLETADO para userId=$currentUserId")
+
+                // NUEVO: Actualizar inmediatamente el estado local
                 sessionManager.setFirstLoginComplete()
+
+                // Llamar a la API para sincronizar
                 scope.launch(Dispatchers.IO) {
                     try {
                         ApiClient.init(context)
@@ -146,6 +170,8 @@ fun AppNavigation(
                         val response = ApiClient.apiService.completeTour(currentUserId, request)
                         if (response.isSuccessful && response.body()?.success == true) {
                             Log.i("AppNavigation", "✅ API tourComplete exitosa para userId=$currentUserId")
+                            // Forzar nueva verificación en el próximo inicio
+                            sessionManager.clearTourVerification()
                         } else {
                             Log.w("AppNavigation", "⚠️ API tourComplete falló: ${response.code()} - ${response.errorBody()?.string()}")
                         }
@@ -153,21 +179,15 @@ fun AppNavigation(
                         Log.e("AppNavigation", "❌ Excepción al llamar API tourComplete", e)
                     }
                 }
-            } else {
-                Log.d("AppNavigation", "Tour finalizado pero no era primera vez o userId es nulo. No se llama a API.")
             }
         }
     }
-    LaunchedEffect(currentUserId, isFirstLoginForCurrentUser) {
+
+    // Efecto para mostrar contenido
+    LaunchedEffect(Unit) {
+        delay(300)
         contentVisible = true
-        apiCallMade = false
-        if (isFirstLoginForCurrentUser && !isTourActive) {
-            Log.d("AppNavigation", "🎯 Primer login detectado para userId=$currentUserId. Iniciando tour...")
-            delay(500)
-            tourState.startTour()
-        } else {
-            Log.d("AppNavigation", "No es primer login para userId=$currentUserId o tour ya activo.")
-        }
+        Log.d("AppNavigation", "📱 Contenido visible: true")
     }
     // --- FIN LÓGICA DEL TOUR ---
 
@@ -176,16 +196,13 @@ fun AppNavigation(
 
     val renovaColors = LocalRenovaColors.current
 
-    // --- INICIO MODIFICACIÓN: Lógica de 'currentRouteHasSteps' ---
     val currentRouteHasSteps by remember(currentRoute, tourState.screenSpecificTourSteps) {
         derivedStateOf {
             currentRoute?.let { route ->
-                // Revisa si existe una entrada en el MAPA de tours por pantalla
                 tourState.screenSpecificTourSteps.containsKey(route)
             } ?: false
         }
     }
-    // --- FIN MODIFICACIÓN ---
 
     Box(modifier = Modifier.fillMaxSize()) {
         Scaffold(
@@ -219,7 +236,7 @@ fun AppNavigation(
                     startDestination = if (isBusiness) NavigationItemBusiness.Home.route else NavigationItem.Home.route,
                     modifier = Modifier.padding(innerPadding)
                 ) {
-                    // ... (Todas tus rutas 'composable' y 'navigation' van aquí)
+                    // ... (Todas las rutas composable se mantienen igual) ...
                     val enterAnimation = slideInHorizontally(
                         initialOffsetX = { 1000 },
                         animationSpec = tween(400)
@@ -286,7 +303,6 @@ fun AppNavigation(
                         )
                     }
 
-                    // Nueva ruta: Perfil del comercio
                     composable(
                         route = "business/profile",
                         enterTransition = { enterAnimation },
@@ -429,12 +445,12 @@ fun AppNavigation(
             }
         }
 
-        // --- Lógica de visibilidad del FAB (ya la tenías, ahora usa 'currentStep') ---
+        // Lógica de visibilidad del FAB
         val isStepOnCorrectScreen = currentStep?.screenRoute == currentRoute
         val isFabStep = isTourActive && currentStep?.targetId == "help_fab" && isStepOnCorrectScreen
         val shouldShowFab = (!isTourActive && currentRouteHasSteps) || isFabStep
 
-        // Overlay del Tour (Se dibuja PRIMERO)
+        // Overlay del Tour
         if (isTourActive) {
             TourOverlay(
                 tourState = tourState,
@@ -453,7 +469,7 @@ fun AppNavigation(
             )
         }
 
-        // Botón flotante (Se dibuja DESPUÉS)
+        // Botón flotante
         if (shouldShowFab) {
             FloatingActionButton(
                 onClick = {
@@ -468,9 +484,7 @@ fun AppNavigation(
                     .padding(16.dp)
                     .padding(bottom = 80.dp)
                     .onGloballyPositioned { coords ->
-                        // --- INICIO MODIFICACIÓN: Añadido null para scrollState ---
                         tourState.registerTarget("help_fab", coords, null)
-                        // --- FIN MODIFICACIÓN ---
                     },
                 containerColor = renovaColors.primaryColor,
                 contentColor = Color.White
