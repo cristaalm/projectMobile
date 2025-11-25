@@ -6,11 +6,9 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.renova.mobile.network.*
 import com.renova.mobile.screens.DocumentsData
+import com.renova.mobile.screens.ErrorMessageMapper
 import com.renova.mobile.screens.RegisterData
 import com.renova.mobile.utils.SessionManager
-import com.renova.mobile.utils.RegisterErrorMapper
-import com.renova.mobile.utils.DocumentsErrorMapper
-import com.renova.mobile.utils.SelfieErrorMapper
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
@@ -153,7 +151,7 @@ class RegisterViewModel : ViewModel() {
                     } else {
                         android.util.Log.e("RegisterViewModel", "❌ Data es null")
                         val errorMsg = appContext?.let { ctx ->
-                            RegisterErrorMapper.mapRegisterError(
+                            ErrorMessageMapper.mapRegisterError(
                                 "Error: datos de usuario no disponibles",
                                 -1,
                                 ctx
@@ -162,49 +160,40 @@ class RegisterViewModel : ViewModel() {
                         _registerState.value = RegisterState.Error(errorMsg)
                     }
                 } else {
-                    val responseBody = response.body()
-                    val errorBody = response.errorBody()?.string()
-
-                    android.util.Log.e("RegisterViewModel", "=== ERROR EN REGISTRO ===")
-                    android.util.Log.e("RegisterViewModel", "Status Code: ${response.code()}")
-                    android.util.Log.e("RegisterViewModel", "Response Body: $responseBody")
-                    android.util.Log.e("RegisterViewModel", "Error Body: $errorBody")
-                    android.util.Log.e("RegisterViewModel", "Message: ${responseBody?.message}")
-                    android.util.Log.e("RegisterViewModel", "Errors: ${responseBody?.errors}")
-
-                    val backendMessage = responseBody?.message ?: errorBody ?: "Error al registrar usuario"
+                    // 🔥 CAMBIO IMPORTANTE: Leer errorBody primero y parsear JSON
+                    val errorBodyString = response.errorBody()?.string()
                     val statusCode = response.code()
 
-                    val localizedMessage = if (statusCode == 422 && responseBody?.errors != null) {
-                        val errors = responseBody.errors
+                    android.util.Log.e("RegisterViewModel", "=== ERROR EN REGISTRO ===")
+                    android.util.Log.e("RegisterViewModel", "Status Code: $statusCode")
+                    android.util.Log.e("RegisterViewModel", "Error Body String: $errorBodyString")
 
-                        if (errors is Map<*, *>) {
-                            val errorsMap = errors as? Map<String, List<String>>
-                            val firstError = errorsMap?.entries?.firstOrNull()
-
-                            if (firstError != null && firstError.value.isNotEmpty()) {
-                                val fieldName = firstError.key
-                                val errorMessage = firstError.value.first()
-
-                                android.util.Log.d("RegisterViewModel", "Campo con error: $fieldName")
-                                android.util.Log.d("RegisterViewModel", "Mensaje de error: $errorMessage")
-
-                                appContext?.let { ctx ->
-                                    RegisterErrorMapper.mapValidationError(fieldName, errorMessage, ctx)
-                                } ?: errorMessage
-                            } else {
-                                appContext?.let { ctx ->
-                                    RegisterErrorMapper.mapRegisterError(backendMessage, statusCode, ctx)
-                                } ?: backendMessage
-                            }
-                        } else {
-                            appContext?.let { ctx ->
-                                RegisterErrorMapper.mapRegisterError(backendMessage, statusCode, ctx)
-                            } ?: backendMessage
+                    // Intentar parsear el error body como JSON
+                    val backendMessage = if (!errorBodyString.isNullOrEmpty()) {
+                        try {
+                            val gson = com.google.gson.Gson()
+                            val errorResponse = gson.fromJson(errorBodyString, RegisterResponse::class.java)
+                            android.util.Log.d("RegisterViewModel", "Error parseado - Message: ${errorResponse.message}")
+                            android.util.Log.d("RegisterViewModel", "Error parseado - Errors: ${errorResponse.errors}")
+                            errorResponse.message ?: "Error al registrar usuario"
+                        } catch (e: Exception) {
+                            android.util.Log.e("RegisterViewModel", "No se pudo parsear error JSON", e)
+                            errorBodyString
                         }
                     } else {
+                        "Error al registrar usuario"
+                    }
+
+                    android.util.Log.d("RegisterViewModel", "Backend Message: $backendMessage")
+
+                    // Mapear el error
+                    val localizedMessage = if (statusCode == 422) {
                         appContext?.let { ctx ->
-                            RegisterErrorMapper.mapRegisterError(backendMessage, statusCode, ctx)
+                            ErrorMessageMapper.mapRegisterError(backendMessage, statusCode, ctx)
+                        } ?: backendMessage
+                    } else {
+                        appContext?.let { ctx ->
+                            ErrorMessageMapper.mapRegisterError(backendMessage, statusCode, ctx)
                         } ?: backendMessage
                     }
 
@@ -218,7 +207,7 @@ class RegisterViewModel : ViewModel() {
                 android.util.Log.e("RegisterViewModel", "Causa: ${e.cause}")
 
                 val errorMsg = appContext?.let { ctx ->
-                    RegisterErrorMapper.mapRegisterError(
+                    ErrorMessageMapper.mapRegisterError(
                         "Error de conexión: ${e.message}",
                         -1,
                         ctx
@@ -291,22 +280,22 @@ class RegisterViewModel : ViewModel() {
 
                             if (firstError != null && firstError.value.isNotEmpty()) {
                                 val errorMessage = firstError.value.first()
-                                DocumentsErrorMapper.mapDocumentValidationError(errorMessage, context)
+                                ErrorMessageMapper.mapDocumentValidationError(errorMessage, context)
                             } else {
-                                DocumentsErrorMapper.mapDocumentsError(backendMessage, statusCode, context)
+                                ErrorMessageMapper.mapDocumentsError(backendMessage, statusCode, context)
                             }
                         } else {
-                            DocumentsErrorMapper.mapDocumentsError(backendMessage, statusCode, context)
+                            ErrorMessageMapper.mapDocumentsError(backendMessage, statusCode, context)
                         }
                     } else {
-                        DocumentsErrorMapper.mapDocumentsError(backendMessage, statusCode, context)
+                        ErrorMessageMapper.mapDocumentsError(backendMessage, statusCode, context)
                     }
 
                     _uploadDocumentsState.value = UploadState.Error(localizedMessage)
                 }
             } catch (e: Exception) {
                 android.util.Log.e("RegisterViewModel", "Excepción subiendo documentos", e)
-                val localizedMessage = DocumentsErrorMapper.mapDocumentsError(
+                val localizedMessage = ErrorMessageMapper.mapDocumentsError(
                     "Error de conexión: ${e.message}",
                     -1,
                     context
@@ -370,22 +359,22 @@ class RegisterViewModel : ViewModel() {
 
                             if (firstError != null && firstError.value.isNotEmpty()) {
                                 val errorMessage = firstError.value.first()
-                                SelfieErrorMapper.mapSelfieValidationError(errorMessage, context)
+                                ErrorMessageMapper.mapSelfieValidationError(errorMessage, context)
                             } else {
-                                SelfieErrorMapper.mapSelfieError(backendMessage, statusCode, context)
+                                ErrorMessageMapper.mapSelfieError(backendMessage, statusCode, context)
                             }
                         } else {
-                            SelfieErrorMapper.mapSelfieError(backendMessage, statusCode, context)
+                            ErrorMessageMapper.mapSelfieError(backendMessage, statusCode, context)
                         }
                     } else {
-                        SelfieErrorMapper.mapSelfieError(backendMessage, statusCode, context)
+                        ErrorMessageMapper.mapSelfieError(backendMessage, statusCode, context)
                     }
 
                     _uploadSelfieState.value = UploadState.Error(localizedMessage)
                 }
             } catch (e: Exception) {
                 android.util.Log.e("RegisterViewModel", "Excepción subiendo selfie", e)
-                val localizedMessage = SelfieErrorMapper.mapSelfieError(
+                val localizedMessage = ErrorMessageMapper.mapSelfieError(
                     "Error de conexión: ${e.message}",
                     -1,
                     context
@@ -439,7 +428,7 @@ class RegisterViewModel : ViewModel() {
      * Se llama cuando el usuario va a ser redirigido al login
      */
     fun clearAfterSuccessfulRegistration() {
-        android.util.Log.d("RegisterViewModel", " Limpiando datos después de registro exitoso...")
+        android.util.Log.d("RegisterViewModel", "🧹 Limpiando datos después de registro exitoso...")
 
         // Limpiar estados
         _registerState.value = RegisterState.Idle
@@ -454,7 +443,7 @@ class RegisterViewModel : ViewModel() {
         // Limpiar sesión temporal
         clearSession()
 
-        android.util.Log.d("RegisterViewModel", "Usuario puede iniciar sesión ahora")
+        android.util.Log.d("RegisterViewModel", "✅ Usuario puede iniciar sesión ahora")
     }
 
     fun clearSession() {

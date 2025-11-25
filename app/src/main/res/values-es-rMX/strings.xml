@@ -816,4 +816,42 @@
     <string name="error_not_found">Recurso no encontrado</string>
     <string name="menu_title">Menú</string>
     <string name="manual_general_pdf">Manual general (PDF)</string>
+
+    <!-- ==================== ERRORES DE REGISTRO ==================== -->
+    <!-- Errores de duplicados -->
+    <string name="err_reg_email_duplicate">Este correo electrónico ya está registrado</string>
+    <string name="err_reg_curp_duplicate">Este CURP ya está registrado</string>
+    <string name="err_reg_phone_duplicate">Este número de teléfono ya está registrado</string>
+
+    <!-- Errores de validación de campos -->
+    <string name="err_reg_password_requirements">La contraseña no cumple con los requisitos</string>
+    <string name="err_reg_email_format">El correo electrónico no es válido</string>
+    <string name="err_reg_curp_format">El CURP no es válido</string>
+    <string name="err_reg_phone_format">El número de teléfono no es válido</string>
+    <string name="err_reg_name_format">El nombre no es válido</string>
+    <string name="err_reg_field_generic">El campo %1$s no es válido</string>
+
+    <!-- ==================== ERRORES DE DOCUMENTOS INE ==================== -->
+    <string name="err_doc_invalid_image">La imagen del documento no es válida</string>
+    <string name="err_doc_file_too_large">El archivo es demasiado grande (máx. 5MB)</string>
+    <string name="err_doc_upload_failed">Error al subir el documento. Intenta nuevamente</string>
+    <string name="err_doc_required">El documento es requerido</string>
+
+    <!-- ==================== ERRORES DE SELFIE ==================== -->
+    <string name="err_selfie_invalid_image">La selfie no es válida</string>
+    <string name="err_selfie_upload_failed">Error al subir la selfie. Intenta nuevamente</string>
+    <string name="err_selfie_required">La selfie es requerida</string>
+
+    <!-- ==================== ERRORES HTTP GENERALES ==================== -->
+    <string name="err_http_bad_request">Solicitud incorrecta. Verifica los datos ingresados</string>
+    <string name="err_http_validation_failed">Error de validación. Verifica todos los campos</string>
+    <string name="err_http_server_internal">Error interno del servidor</string>
+    <string name="err_http_server_error">Error en el servidor. Intenta más tarde</string>
+    <string name="err_http_network">Error de conexión. Verifica tu internet</string>
+    <string name="err_http_generic">Ha ocurrido un error. Intenta nuevamente</string>
+
+    <!-- ==================== ERRORES DE LOGIN (EXISTENTES - RENOMBRADOS) ==================== -->
+    <string name="err_login_invalid_credentials">Correo o contraseña incorrectos</string>
+    <string name="err_login_account_disabled">Tu cuenta ha sido desactivada</string>
+
 </resources>

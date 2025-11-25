@@ -811,4 +811,42 @@
     <string name="error_not_found">Resource not found</string>
     <string name="menu_title">Menu</string>
     <string name="manual_general_pdf">General manual (PDF)</string>
+
+    <!-- ==================== REGISTER ERRORS ==================== -->
+    <!-- Duplicate errors -->
+    <string name="err_reg_email_duplicate">This email is already registered</string>
+    <string name="err_reg_curp_duplicate">This CURP is already registered</string>
+    <string name="err_reg_phone_duplicate">This phone number is already registered</string>
+
+    <!-- Field validation errors -->
+    <string name="err_reg_password_requirements">Password does not meet requirements</string>
+    <string name="err_reg_email_format">Email is not valid</string>
+    <string name="err_reg_curp_format">CURP is not valid</string>
+    <string name="err_reg_phone_format">Phone number is not valid</string>
+    <string name="err_reg_name_format">Name is not valid</string>
+    <string name="err_reg_field_generic">Field %1$s is not valid</string>
+
+    <!-- ==================== INE DOCUMENT ERRORS ==================== -->
+    <string name="err_doc_invalid_image">The document image is not valid</string>
+    <string name="err_doc_file_too_large">File is too large (max. 5MB)</string>
+    <string name="err_doc_upload_failed">Error uploading document. Please try again</string>
+    <string name="err_doc_required">Document is required</string>
+
+    <!-- ==================== SELFIE ERRORS ==================== -->
+    <string name="err_selfie_invalid_image">The selfie is not valid</string>
+    <string name="err_selfie_upload_failed">Error uploading selfie. Please try again</string>
+    <string name="err_selfie_required">Selfie is required</string>
+
+    <!-- ==================== GENERAL HTTP ERRORS ==================== -->
+    <string name="err_http_bad_request">Bad request. Please check your data</string>
+    <string name="err_http_validation_failed">Validation error. Please check all fields</string>
+    <string name="err_http_server_internal">Internal server error</string>
+    <string name="err_http_server_error">Server error. Please try again later</string>
+    <string name="err_http_network">Connection error. Check your internet</string>
+    <string name="err_http_generic">An error occurred. Please try again</string>
+
+    <!-- ==================== LOGIN ERRORS (EXISTING - RENAMED) ==================== -->
+    <string name="err_login_invalid_credentials">Invalid email or password</string>
+    <string name="err_login_account_disabled">Your account has been disabled</string>
+
 </resources>
