@@ -65,6 +65,8 @@ dependencies {
     implementation(libs.androidx.compose.foundation.layout)
     implementation(libs.androidx.foundation)
     implementation(libs.androidx.compose.ui)
+    implementation(libs.androidx.exifinterface)
+    implementation(libs.foundation)
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)

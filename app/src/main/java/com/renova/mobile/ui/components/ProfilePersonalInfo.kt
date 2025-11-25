@@ -27,9 +27,21 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.animation.*
 import androidx.compose.animation.core.*
 import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.ui.text.input.PasswordVisualTransformation
+import androidx.compose.ui.text.input.VisualTransformation
 import com.renova.mobile.screens.ValidationState
+import androidx.compose.ui.graphics.Color
 import kotlinx.coroutines.delay
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.tween
+import androidx.compose.animation.expandVertically
+import androidx.compose.animation.shrinkVertically
+import androidx.compose.foundation.clickable
+import androidx.compose.ui.draw.rotate
+
 
 @Composable
 fun ProfileField(
@@ -403,13 +415,19 @@ fun PersonalInfoCard(
     val updateFieldState by viewModel.updateFieldState.collectAsState()
     val isLoading = updateFieldState is UpdateFieldState.Loading
 
+    // ⭐ NUEVO: Rastrear el último error para revertir el campo correcto
+    var lastErrorField by remember { mutableStateOf<String?>(null) }
+
     LaunchedEffect(updateFieldState) {
         when (updateFieldState) {
             is UpdateFieldState.Success -> {
                 delay(1000)
                 viewModel.resetUpdateState()
+                lastErrorField = null
             }
             is UpdateFieldState.Error -> {
+                // Guardar el campo que tuvo error
+                lastErrorField = (updateFieldState as UpdateFieldState.Error).field
                 delay(3000)
                 viewModel.resetUpdateState()
             }
@@ -484,13 +502,21 @@ fun PersonalInfoCard(
                 modifier = Modifier.padding(16.dp),
                 verticalArrangement = Arrangement.spacedBy(16.dp)
             ) {
-                // NOMBRE - Siempre mostrar
+                // NOMBRE
                 if (canEditBasicInfo) {
                     var nameValue by remember { mutableStateOf(user.name) }
                     var isEditingName by remember { mutableStateOf(false) }
 
+                    // ⭐ NUEVO: Revertir al valor original cuando hay error
                     LaunchedEffect(user.name) {
                         nameValue = user.name
+                    }
+
+                    LaunchedEffect(lastErrorField) {
+                        if (lastErrorField == "name") {
+                            nameValue = user.name
+                            isEditingName = false
+                        }
                     }
 
                     EditableProfileField(
@@ -514,7 +540,6 @@ fun PersonalInfoCard(
                         isLoading = isLoading
                     )
                 } else {
-                    // Mostrar solo lectura para usuarios verificados
                     ProfileField(
                         label = stringResource(R.string.first_name),
                         value = user.name,
@@ -523,13 +548,21 @@ fun PersonalInfoCard(
                     )
                 }
 
-                // APELLIDO - Siempre mostrar
+                // APELLIDO
                 if (canEditBasicInfo) {
                     var lastNameValue by remember { mutableStateOf(user.last_name) }
                     var isEditingLastName by remember { mutableStateOf(false) }
 
                     LaunchedEffect(user.last_name) {
                         lastNameValue = user.last_name
+                    }
+
+                    // ⭐ NUEVO: Revertir cuando hay error
+                    LaunchedEffect(lastErrorField) {
+                        if (lastErrorField == "last_name") {
+                            lastNameValue = user.last_name
+                            isEditingLastName = false
+                        }
                     }
 
                     EditableProfileField(
@@ -561,13 +594,21 @@ fun PersonalInfoCard(
                     )
                 }
 
-                // EMAIL - Siempre mostrar
+                // EMAIL
                 if (canEditContactInfo) {
                     var emailValue by remember { mutableStateOf(user.email) }
                     var isEditingEmail by remember { mutableStateOf(false) }
 
                     LaunchedEffect(user.email) {
                         emailValue = user.email
+                    }
+
+                    // ⭐ NUEVO: Revertir cuando hay error
+                    LaunchedEffect(lastErrorField) {
+                        if (lastErrorField == "email") {
+                            emailValue = user.email
+                            isEditingEmail = false
+                        }
                     }
 
                     EditableProfileField(
@@ -600,13 +641,21 @@ fun PersonalInfoCard(
                     )
                 }
 
-                // TELÉFONO - Siempre mostrar
+                // TELÉFONO
                 if (canEditContactInfo) {
                     var phoneValue by remember { mutableStateOf(user.phone) }
                     var isEditingPhone by remember { mutableStateOf(false) }
 
                     LaunchedEffect(user.phone) {
                         phoneValue = user.phone
+                    }
+
+                    // ⭐ NUEVO: Revertir cuando hay error
+                    LaunchedEffect(lastErrorField) {
+                        if (lastErrorField == "phone") {
+                            phoneValue = user.phone
+                            isEditingPhone = false
+                        }
                     }
 
                     EditableProfileField(
@@ -644,13 +693,21 @@ fun PersonalInfoCard(
                     )
                 }
 
-                // CURP - Siempre mostrar
+                // CURP
                 if (canEditBasicInfo) {
                     var curpValue by remember { mutableStateOf(user.curp) }
                     var isEditingCurp by remember { mutableStateOf(false) }
 
                     LaunchedEffect(user.curp) {
                         curpValue = user.curp
+                    }
+
+                    // ⭐ NUEVO: Revertir cuando hay error
+                    LaunchedEffect(lastErrorField) {
+                        if (lastErrorField == "curp") {
+                            curpValue = user.curp
+                            isEditingCurp = false
+                        }
                     }
 
                     EditableProfileField(
@@ -684,6 +741,402 @@ fun PersonalInfoCard(
                         verificationStatus = verificationStatus,
                         isMono = true
                     )
+                }
+            }
+        }
+    }
+}
+
+@Composable
+fun SecurityCard(
+    viewModel: ProfileViewModel,
+    verificationStatus: VerificationStatus // ⭐ NUEVO PARÁMETRO
+) {
+    val colors = LocalRenovaColors.current
+    val passwordResetState by viewModel.passwordResetState.collectAsState()
+
+    var currentPassword by remember { mutableStateOf("") }
+    var newPassword by remember { mutableStateOf("") }
+    var confirmPassword by remember { mutableStateOf("") }
+
+    var showCurrentPassword by remember { mutableStateOf(false) }
+    var showNewPassword by remember { mutableStateOf(false) }
+    var showConfirmPassword by remember { mutableStateOf(false) }
+
+    var currentPasswordError by remember { mutableStateOf<String?>(null) }
+    var newPasswordError by remember { mutableStateOf<String?>(null) }
+    var confirmPasswordError by remember { mutableStateOf<String?>(null) }
+
+    var isExpanded by remember { mutableStateOf(false) }
+
+    val arrowRotation by animateFloatAsState(
+        targetValue = if (isExpanded) 180f else 0f,
+        animationSpec = tween(300),
+        label = "arrow"
+    )
+
+    val isLoading = passwordResetState is ProfileViewModel.PasswordResetState.Loading
+
+    LaunchedEffect(passwordResetState) {
+        if (passwordResetState is ProfileViewModel.PasswordResetState.Success) {
+            currentPassword = ""
+            newPassword = ""
+            confirmPassword = ""
+            currentPasswordError = null
+            newPasswordError = null
+            confirmPasswordError = null
+            showCurrentPassword = false
+            showNewPassword = false
+            showConfirmPassword = false
+        }
+    }
+
+    val errorPasswordTooShort = stringResource(R.string.error_password_too_short)
+    val errorPasswordNoNumber = stringResource(R.string.error_password_no_number)
+    val errorPasswordNoSpecial = stringResource(R.string.error_password_no_special)
+    val errorPasswordMismatch = stringResource(R.string.error_password_mismatch)
+
+    LaunchedEffect(newPassword) {
+        if (newPassword.isNotEmpty()) {
+            newPasswordError = when {
+                newPassword.length < 8 -> errorPasswordTooShort
+                !newPassword.any { it.isDigit() } -> errorPasswordNoNumber
+                !newPassword.any { it in "!@#$%^&*()_+-=[]{}|;:,.<>?" } -> errorPasswordNoSpecial
+                else -> null
+            }
+        } else {
+            newPasswordError = null
+        }
+    }
+
+    LaunchedEffect(confirmPassword) {
+        if (confirmPassword.isNotEmpty()) {
+            confirmPasswordError = if (confirmPassword != newPassword) {
+                errorPasswordMismatch
+            } else null
+        } else {
+            confirmPasswordError = null
+        }
+    }
+
+    val isFormValid = currentPassword.isNotEmpty() &&
+            newPassword.isNotEmpty() &&
+            confirmPassword.isNotEmpty() &&
+            newPasswordError == null &&
+            confirmPasswordError == null &&
+            !isLoading
+
+    // ⭐ NUEVO: Definir colores según el estado de verificación
+    val headerBackgroundColor = when (verificationStatus) {
+        VerificationStatus.REJECTED -> RenovaColors.Error.copy(alpha = 0.125f)
+        VerificationStatus.VERIFIED -> colors.primaryColor.copy(alpha = 0.125f)
+        VerificationStatus.PENDING -> RenovaColors.Warning.copy(alpha = 0.125f)
+        else -> colors.textSecondary.copy(alpha = 0.125f)
+    }
+
+    val iconTint = when (verificationStatus) {
+        VerificationStatus.REJECTED -> RenovaColors.Error
+        VerificationStatus.VERIFIED -> colors.primaryColor
+        VerificationStatus.PENDING -> RenovaColors.Warning
+        else -> colors.textSecondary
+    }
+
+    val borderColor = when (verificationStatus) {
+        VerificationStatus.REJECTED -> RenovaColors.Error
+        VerificationStatus.VERIFIED -> colors.primaryColor
+        VerificationStatus.PENDING -> RenovaColors.Warning
+        else -> colors.textSecondary
+    }
+
+    Surface(
+        modifier = Modifier.fillMaxWidth(),
+        shape = RoundedCornerShape(12.dp),
+        color = colors.cardBackground,
+        border = androidx.compose.foundation.BorderStroke(
+            width = 1.5.dp,
+            color = borderColor // ⭐ MODIFICADO: Color dinámico
+        )
+    ) {
+        Column {
+            Surface(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .clickable { isExpanded = !isExpanded },
+                color = headerBackgroundColor // ⭐ MODIFICADO: Color dinámico
+            ) {
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(16.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.SpaceBetween
+                ) {
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(8.dp),
+                        modifier = Modifier.weight(1f)
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.Lock,
+                            contentDescription = null,
+                            tint = iconTint, // ⭐ MODIFICADO: Color dinámico
+                            modifier = Modifier.size(16.dp)
+                        )
+                        Text(
+                            text = stringResource(R.string.security_section),
+                            style = MaterialTheme.typography.titleSmall,
+                            color = colors.textPrimary
+                        )
+                    }
+
+                    Icon(
+                        imageVector = Icons.Default.KeyboardArrowDown,
+                        contentDescription = "Toggle",
+                        tint = iconTint, // ⭐ MODIFICADO: Color dinámico
+                        modifier = Modifier
+                            .size(32.dp)
+                            .rotate(arrowRotation)
+                    )
+                }
+            }
+
+            AnimatedVisibility(
+                visible = isExpanded,
+                enter = expandVertically(tween(300)),
+                exit = shrinkVertically(tween(300))
+            ) {
+                Column(
+                    modifier = Modifier.padding(16.dp),
+                    verticalArrangement = Arrangement.spacedBy(16.dp)
+                ) {
+                    // Contraseña Actual
+                    Column {
+                        Text(
+                            text = stringResource(R.string.current_password),
+                            style = MaterialTheme.typography.labelMedium,
+                            color = colors.textSecondary,
+                            modifier = Modifier.padding(bottom = 4.dp)
+                        )
+
+                        OutlinedTextField(
+                            value = currentPassword,
+                            onValueChange = {
+                                currentPassword = it
+                                currentPasswordError = null
+                            },
+                            modifier = Modifier.fillMaxWidth(),
+                            singleLine = true,
+                            visualTransformation = if (showCurrentPassword)
+                                VisualTransformation.None
+                            else
+                                PasswordVisualTransformation(),
+                            leadingIcon = {
+                                Icon(
+                                    imageVector = Icons.Default.Lock,
+                                    contentDescription = null,
+                                    tint = colors.textSecondary
+                                )
+                            },
+                            trailingIcon = {
+                                IconButton(onClick = { showCurrentPassword = !showCurrentPassword }) {
+                                    Icon(
+                                        imageVector = if (showCurrentPassword)
+                                            Icons.Default.Visibility
+                                        else
+                                            Icons.Default.VisibilityOff,
+                                        contentDescription = if (showCurrentPassword)
+                                            "Ocultar contraseña"
+                                        else
+                                            "Mostrar contraseña",
+                                        tint = colors.textSecondary
+                                    )
+                                }
+                            },
+                            isError = currentPasswordError != null,
+                            enabled = !isLoading,
+                            colors = OutlinedTextFieldDefaults.colors(
+                                focusedBorderColor = colors.borderFocused,
+                                unfocusedBorderColor = colors.border,
+                                errorBorderColor = RenovaColors.Error,
+                                cursorColor = colors.primaryColor,
+                                focusedTextColor = colors.textPrimary,
+                                unfocusedTextColor = colors.textPrimary
+                            )
+                        )
+
+                        currentPasswordError?.let { error ->
+                            Text(
+                                text = error,
+                                color = RenovaColors.Error,
+                                style = MaterialTheme.typography.bodySmall,
+                                modifier = Modifier.padding(start = 16.dp, top = 4.dp)
+                            )
+                        }
+                    }
+
+                    // Nueva Contraseña
+                    Column {
+                        Text(
+                            text = stringResource(R.string.new_password),
+                            style = MaterialTheme.typography.labelMedium,
+                            color = colors.textSecondary,
+                            modifier = Modifier.padding(bottom = 4.dp)
+                        )
+
+                        OutlinedTextField(
+                            value = newPassword,
+                            onValueChange = { newPassword = it },
+                            modifier = Modifier.fillMaxWidth(),
+                            singleLine = true,
+                            visualTransformation = if (showNewPassword)
+                                VisualTransformation.None
+                            else
+                                PasswordVisualTransformation(),
+                            leadingIcon = {
+                                Icon(
+                                    imageVector = Icons.Default.Lock,
+                                    contentDescription = null,
+                                    tint = colors.textSecondary
+                                )
+                            },
+                            trailingIcon = {
+                                IconButton(onClick = { showNewPassword = !showNewPassword }) {
+                                    Icon(
+                                        imageVector = if (showNewPassword)
+                                            Icons.Default.Visibility
+                                        else
+                                            Icons.Default.VisibilityOff,
+                                        contentDescription = if (showNewPassword)
+                                            "Ocultar contraseña"
+                                        else
+                                            "Mostrar contraseña",
+                                        tint = colors.textSecondary
+                                    )
+                                }
+                            },
+                            isError = newPasswordError != null,
+                            enabled = !isLoading,
+                            colors = OutlinedTextFieldDefaults.colors(
+                                focusedBorderColor = colors.borderFocused,
+                                unfocusedBorderColor = colors.border,
+                                errorBorderColor = RenovaColors.Error,
+                                cursorColor = colors.primaryColor,
+                                focusedTextColor = colors.textPrimary,
+                                unfocusedTextColor = colors.textPrimary
+                            )
+                        )
+
+                        newPasswordError?.let { error ->
+                            Text(
+                                text = error,
+                                color = RenovaColors.Error,
+                                style = MaterialTheme.typography.bodySmall,
+                                modifier = Modifier.padding(start = 16.dp, top = 4.dp)
+                            )
+                        }
+                    }
+
+                    // Confirmar Nueva Contraseña
+                    Column {
+                        Text(
+                            text = stringResource(R.string.confirm_new_password),
+                            style = MaterialTheme.typography.labelMedium,
+                            color = colors.textSecondary,
+                            modifier = Modifier.padding(bottom = 4.dp)
+                        )
+
+                        OutlinedTextField(
+                            value = confirmPassword,
+                            onValueChange = { confirmPassword = it },
+                            modifier = Modifier.fillMaxWidth(),
+                            singleLine = true,
+                            visualTransformation = if (showConfirmPassword)
+                                VisualTransformation.None
+                            else
+                                PasswordVisualTransformation(),
+                            leadingIcon = {
+                                Icon(
+                                    imageVector = Icons.Default.Lock,
+                                    contentDescription = null,
+                                    tint = colors.textSecondary
+                                )
+                            },
+                            trailingIcon = {
+                                IconButton(onClick = { showConfirmPassword = !showConfirmPassword }) {
+                                    Icon(
+                                        imageVector = if (showConfirmPassword)
+                                            Icons.Default.Visibility
+                                        else
+                                            Icons.Default.VisibilityOff,
+                                        contentDescription = if (showConfirmPassword)
+                                            "Ocultar contraseña"
+                                        else
+                                            "Mostrar contraseña",
+                                        tint = colors.textSecondary
+                                    )
+                                }
+                            },
+                            isError = confirmPasswordError != null,
+                            enabled = !isLoading,
+                            colors = OutlinedTextFieldDefaults.colors(
+                                focusedBorderColor = colors.borderFocused,
+                                unfocusedBorderColor = colors.border,
+                                errorBorderColor = RenovaColors.Error,
+                                cursorColor = colors.primaryColor,
+                                focusedTextColor = colors.textPrimary,
+                                unfocusedTextColor = colors.textPrimary
+                            )
+                        )
+
+                        confirmPasswordError?.let { error ->
+                            Text(
+                                text = error,
+                                color = RenovaColors.Error,
+                                style = MaterialTheme.typography.bodySmall,
+                                modifier = Modifier.padding(start = 16.dp, top = 4.dp)
+                            )
+                        }
+                    }
+
+                    // Botón de Actualizar
+                    Button(
+                        onClick = {
+                            viewModel.resetPassword(
+                                currentPassword = currentPassword,
+                                newPassword = newPassword,
+                                newPasswordConfirmation = confirmPassword
+                            )
+                        },
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(48.dp),
+                        enabled = isFormValid,
+                        colors = ButtonDefaults.buttonColors(
+                            containerColor = colors.primaryColor,
+                            disabledContainerColor = colors.textSecondary.copy(alpha = 0.3f)
+                        ),
+                        shape = RoundedCornerShape(12.dp)
+                    ) {
+                        if (isLoading) {
+                            CircularProgressIndicator(
+                                modifier = Modifier.size(20.dp),
+                                color = Color.White,
+                                strokeWidth = 2.dp
+                            )
+                        } else {
+                            Icon(
+                                imageVector = Icons.Default.Check,
+                                contentDescription = null,
+                                modifier = Modifier.size(20.dp)
+                            )
+                            Spacer(modifier = Modifier.width(8.dp))
+                            Text(
+                                text = stringResource(R.string.update_password),
+                                style = MaterialTheme.typography.titleMedium,
+                                fontWeight = FontWeight.SemiBold
+                            )
+                        }
+                    }
                 }
             }
         }

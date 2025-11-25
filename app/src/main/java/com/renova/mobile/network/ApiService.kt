@@ -654,6 +654,12 @@ data class SendNotificationResponse(
     val message: String
 )
 
+data class ResetPasswordRequest(
+    @SerializedName("current_password") val current_password: String,
+    @SerializedName("password") val password: String,
+    @SerializedName("password_confirmation") val password_confirmation: String
+)
+
 // ======= FCM TOKEN REGISTER =======
 data class RegisterFcmTokenRequest(
     @SerializedName("user_id") val userId: Int,
@@ -802,6 +808,11 @@ interface ApiService {
         @Part document_front: MultipartBody.Part,
         @Part document_back: MultipartBody.Part
     ): Response<UploadDocumentsResponse>
+
+    @POST("api/users/resetPassword")
+    suspend fun resetPassword(
+        @Body request: ResetPasswordRequest
+    ): Response<UpdateFieldResponse>
 
     @Multipart
     @POST("api/users/uploadSelfie")

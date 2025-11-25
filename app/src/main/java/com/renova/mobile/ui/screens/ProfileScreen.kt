@@ -69,9 +69,23 @@ private fun translateError(errorCode: String): String {
         "ERROR_UPDATE_CURP" -> stringResource(R.string.error_update_curp)
         "ERROR_REQUEST_VERIFICATION" -> stringResource(R.string.error_request_verification)
         "ERROR_UNKNOWN" -> stringResource(R.string.unknown_error)
+        "ERROR_EMAIL_ALREADY_EXISTS" -> stringResource(R.string.error_email_already_exists)
+        "ERROR_PHONE_ALREADY_EXISTS" -> stringResource(R.string.error_phone_already_exists)
+        "ERROR_CURP_ALREADY_EXISTS" -> stringResource(R.string.error_curp_already_exists)
+        "ERROR_DUPLICATE_DATA" -> stringResource(R.string.error_duplicate_data)
+        "ERROR_VALIDATION" -> stringResource(R.string.error_validation)
+        "ERROR_CURRENT_PASSWORD_INCORRECT" -> stringResource(R.string.error_current_password_incorrect)
+        "ERROR_PASSWORD_TOO_SHORT" -> stringResource(R.string.error_password_too_short)
+        "ERROR_PASSWORD_NO_NUMBER" -> stringResource(R.string.error_password_no_number)
+        "ERROR_PASSWORD_NO_SPECIAL" -> stringResource(R.string.error_password_no_special)
+        "ERROR_PASSWORD_MISMATCH" -> stringResource(R.string.error_password_mismatch)
+        "ERROR_PASSWORD_SAME_AS_OLD" -> stringResource(R.string.error_password_same_as_old)
+        "ERROR_RESET_PASSWORD" -> stringResource(R.string.error_reset_password)
+        "ERROR_PASSWORD_VALIDATION_FAILED" -> stringResource(R.string.error_password_validation_failed)
         else -> errorCode
     }
 }
+
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -122,7 +136,6 @@ fun ProfileScreen(
                 }
 
                 if (state.isManualRefresh) {
-                    // Buscar si hay un error reciente
                     val currentError = remember { mutableStateOf<String?>(null) }
 
                     LaunchedEffect(state.isManualRefresh) {
@@ -134,15 +147,17 @@ fun ProfileScreen(
                     }
 
                     currentError.value?.let { errorMsg ->
+                        // ✅ FIX: Translate error HERE (in @Composable context)
                         val translatedError = translateError(errorMsg)
 
+                        // ✅ FIX: LaunchedEffect WITHOUT translateError call inside
                         LaunchedEffect(errorMsg) {
                             delay(3000)
                             profileViewModel.clearError()
                             currentError.value = null
                         }
 
-                        // Snackbar arriba de la pantalla
+                        // Snackbar at top of screen
                         Box(
                             modifier = Modifier
                                 .fillMaxSize()
@@ -195,7 +210,7 @@ fun ProfileScreen(
             is ProfileUiState.Error -> {
                 val errorState = uiState as ProfileUiState.Error
 
-                // ✅ MODIFICADO: Solo mostrar pantalla completa si NO es refresh manual
+                // ✅ Solo mostrar pantalla completa si NO es refresh manual
                 if (!errorState.isManualRefresh) {
                     val isAuthError = errorState.message.contains("SESSION_EXPIRED", ignoreCase = true)
 
@@ -318,19 +333,48 @@ private fun ProfileContent(
     val documentImages by profileViewModel.documentImages.collectAsState()
     val verificationRequestState by profileViewModel.verificationRequestState.collectAsState()
     val documentUploadState by profileViewModel.documentUploadState.collectAsState()
+    val passwordResetState by profileViewModel.passwordResetState.collectAsState()
 
     var showSuccessDialog by remember { mutableStateOf(false) }
     var showErrorDialog by remember { mutableStateOf(false) }
     var errorMessage by remember { mutableStateOf("") }
     var showUploadSuccessDialog by remember { mutableStateOf(false) }
     var uploadedDocumentName by remember { mutableStateOf("") }
+    var showPasswordSuccessDialog by remember { mutableStateOf(false) }
+
+    // ✅ FIX: Observar passwordResetState y traducir ANTES del LaunchedEffect
+    val passwordErrorTranslated = remember(passwordResetState) {
+        when (passwordResetState) {
+            is ProfileViewModel.PasswordResetState.Error ->
+                (passwordResetState as ProfileViewModel.PasswordResetState.Error).message
+            else -> null
+        }
+    }
+
+    // ✅ FIX: Traducir el error en el contexto @Composable
+    passwordErrorTranslated?.let { errorCode ->
+        val translated = translateError(errorCode)
+
+        LaunchedEffect(errorCode) {
+            errorMessage = translated
+            showErrorDialog = true
+            profileViewModel.resetPasswordResetState()
+        }
+    }
+
+    // ✅ FIX: Observar el estado Success por separado
+    LaunchedEffect(passwordResetState) {
+        if (passwordResetState is ProfileViewModel.PasswordResetState.Success) {
+            showPasswordSuccessDialog = true
+            profileViewModel.resetPasswordResetState()
+        }
+    }
 
     // Cargar imágenes de manera defensiva
     LaunchedEffect(Unit) {
         try {
             profileViewModel.loadDocumentImages(user.id, identityVerification)
         } catch (e: Exception) {
-            // Error silencioso, no es crítico
             e.printStackTrace()
         }
     }
@@ -347,6 +391,35 @@ private fun ProfileContent(
                 profileViewModel.resetVerificationRequestState()
             }
             else -> {}
+        }
+    }
+
+    // ⭐ Observar cambios en updateFieldState
+    val updateFieldState by profileViewModel.updateFieldState.collectAsState()
+
+    // ✅ FIX: Traducir error de updateField
+    val updateFieldErrorTranslated = remember(updateFieldState) {
+        when (updateFieldState) {
+            is ProfileViewModel.UpdateFieldState.Error ->
+                (updateFieldState as ProfileViewModel.UpdateFieldState.Error).message
+            else -> null
+        }
+    }
+
+    updateFieldErrorTranslated?.let { errorCode ->
+        val translated = translateError(errorCode)
+
+        LaunchedEffect(errorCode) {
+            errorMessage = translated
+            showErrorDialog = true
+            profileViewModel.resetUpdateState()
+        }
+    }
+
+    LaunchedEffect(updateFieldState) {
+        if (updateFieldState is ProfileViewModel.UpdateFieldState.Success) {
+            delay(1000)
+            profileViewModel.resetUpdateState()
         }
     }
 
@@ -451,6 +524,13 @@ private fun ProfileContent(
 
             Spacer(modifier = Modifier.height(12.dp))
 
+            SecurityCard(
+                viewModel = profileViewModel,
+                verificationStatus = verificationStatus
+            )
+
+            Spacer(modifier = Modifier.height(12.dp))
+
             if (identityVerification != null) {
                 Box(modifier = Modifier.onGloballyPositioned { coords ->
                     tourState.registerTarget(
@@ -542,7 +622,46 @@ private fun ProfileContent(
         }
     }
 
-    // Diálogos
+    // ⭐ Diálogo de éxito de cambio de contraseña
+    if (showPasswordSuccessDialog) {
+        AlertDialog(
+            onDismissRequest = { showPasswordSuccessDialog = false },
+            icon = {
+                Icon(
+                    imageVector = Icons.Default.CheckCircle,
+                    contentDescription = null,
+                    tint = colors.primaryColor,
+                    modifier = Modifier.size(48.dp)
+                )
+            },
+            title = {
+                Text(
+                    text = stringResource(R.string.password_updated_title),
+                    style = MaterialTheme.typography.titleLarge,
+                    textAlign = TextAlign.Center
+                )
+            },
+            text = {
+                Text(
+                    text = stringResource(R.string.password_updated_message),
+                    style = MaterialTheme.typography.bodyMedium,
+                    textAlign = TextAlign.Center,
+                    color = colors.textSecondary
+                )
+            },
+            confirmButton = {
+                TextButton(
+                    onClick = { showPasswordSuccessDialog = false }
+                ) {
+                    Text(stringResource(R.string.understood))
+                }
+            },
+            containerColor = colors.surface,
+            shape = RoundedCornerShape(16.dp)
+        )
+    }
+
+    // Diálogos existentes
     if (showSuccessDialog) {
         AlertDialog(
             onDismissRequest = { showSuccessDialog = false },

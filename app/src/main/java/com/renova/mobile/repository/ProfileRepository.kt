@@ -154,6 +154,38 @@ class ProfileRepository(private val context: Context) {
             Result.failure(e)
         }
     }
+    suspend fun resetPassword(
+        currentPassword: String,
+        newPassword: String,
+        newPasswordConfirmation: String
+    ): Result<UpdateFieldResponse> = withContext(Dispatchers.IO) {
+        try {
+            val request = ResetPasswordRequest(
+                current_password = currentPassword,
+                password = newPassword,
+                password_confirmation = newPasswordConfirmation
+            )
+
+            val response = apiService.resetPassword(request)
+
+            if (response.isSuccessful) {
+                response.body()?.let {
+                    if (it.success) {
+                        Result.success(it)
+                    } else {
+                        Result.failure(Exception(it.message))
+                    }
+                } ?: Result.failure(Exception("Respuesta vacía"))
+            } else {
+                val errorBody = response.errorBody()?.string()
+                Log.d("ProfileRepository", "Error resetPassword: ${response.code()} - $errorBody")
+                Result.failure(Exception("Error ${response.code()}: ${response.message()}"))
+            }
+        } catch (e: Exception) {
+            Log.e("ProfileRepository", "Exception resetPassword", e)
+            Result.failure(e)
+        }
+    }
 
     suspend fun uploadSingleDocument(
         type: String,

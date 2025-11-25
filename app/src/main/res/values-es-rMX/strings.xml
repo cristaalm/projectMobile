@@ -787,6 +787,27 @@
     <string name="validation_err_curp_invalid">CURP inválido</string>
     <string name="validation_err_pwd_no_match">Las contraseñas no coinciden</string>
     <string name="validation_err_field_invalid">Campo inválido</string>
+    <string name="error_email_already_exists">Este correo electrónico ya está registrado</string>
+    <string name="error_phone_already_exists">Este teléfono ya está registrado</string>
+    <string name="error_curp_already_exists">Este CURP ya está registrado</string>
+    <string name="error_duplicate_data">Este dato ya existe en el sistema</string>
+    <string name="error_validation">Error de validación. Verifica los datos ingresados</string>
+    <string name="change_password">Cambiar Contraseña</string>
+    <string name="security_section">Seguridad</string>
+    <string name="current_password">Contraseña Actual</string>
+    <string name="new_password">Nueva Contraseña</string>
+    <string name="confirm_new_password">Confirmar Nueva Contraseña</string>
+    <string name="update_password">Actualizar Contraseña</string>
+    <string name="password_updated_title">Contraseña Actualizada</string>
+    <string name="password_updated_message">Tu contraseña ha sido cambiada exitosamente</string>
+    <string name="error_current_password_incorrect">La contraseña actual es incorrecta</string>
+    <string name="error_password_too_short">La contraseña debe tener al menos 8 caracteres</string>
+    <string name="error_password_no_number">La contraseña debe contener al menos un número</string>
+    <string name="error_password_no_special">La contraseña debe incluir un carácter especial (!@#$%…)</string>
+    <string name="error_password_mismatch">Las contraseñas no coinciden</string>
+    <string name="error_password_same_as_old">La nueva contraseña no puede ser igual a la actual</string>
+    <string name="error_reset_password">Error al cambiar la contraseña. Intenta de nuevo</string>
+    <string name="error_password_validation_failed">Datos inválidos para restablecer la contraseña</string>
 
     <string name="badges_load_error">No se pudieron cargar las insignias</string>
     <string name="check_connection_try_again">Verifica tu conexión a internet e intenta nuevamente</string>
@@ -814,6 +835,7 @@
     <string name="session_expired">Sesión expirada. Por favor, inicia sesión nuevamente</string>
     <string name="error_forbidden">No tienes permisos para realizar esta acción</string>
     <string name="error_not_found">Recurso no encontrado</string>
+
     <string name="menu_title">Menú</string>
     <string name="manual_general_pdf">Manual general (PDF)</string>
 

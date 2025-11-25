@@ -20,17 +20,18 @@ import okhttp3.MediaType.Companion.toMediaTypeOrNull
 import okhttp3.MultipartBody
 import okhttp3.RequestBody.Companion.asRequestBody
 import java.io.File
+import android.util.Log
 
 sealed class ProfileUiState {
     object Loading : ProfileUiState()
     data class Success(
         val user: UserData,
         val identityVerification: IdentityVerification?,
-        val isManualRefresh: Boolean = false  // ✅ NUEVO
+        val isManualRefresh: Boolean = false
     ) : ProfileUiState()
     data class Error(
         val message: String,
-        val isManualRefresh: Boolean = false  // ✅ NUEVO
+        val isManualRefresh: Boolean = false
     ) : ProfileUiState()
 }
 
@@ -73,6 +74,9 @@ class ProfileViewModel(application: Application) : AndroidViewModel(application)
     private val _documentUploadState = MutableStateFlow<DocumentUploadState>(DocumentUploadState.Idle)
     val documentUploadState: StateFlow<DocumentUploadState> = _documentUploadState.asStateFlow()
 
+    private val _passwordResetState = MutableStateFlow<PasswordResetState>(PasswordResetState.Idle)
+    val passwordResetState: StateFlow<PasswordResetState> = _passwordResetState.asStateFlow()
+
     sealed class UploadState {
         object Idle : UploadState()
         object Loading : UploadState()
@@ -84,7 +88,10 @@ class ProfileViewModel(application: Application) : AndroidViewModel(application)
         object Idle : UpdateFieldState()
         object Loading : UpdateFieldState()
         object Success : UpdateFieldState()
-        data class Error(val message: String) : UpdateFieldState()
+        data class Error(
+            val message: String,
+            val field: String
+        ) : UpdateFieldState()
     }
 
     sealed class VerificationRequestState {
@@ -101,8 +108,15 @@ class ProfileViewModel(application: Application) : AndroidViewModel(application)
         data class Error(val documentType: DocumentType, val message: String) : DocumentUploadState()
     }
 
+    sealed class PasswordResetState {
+        object Idle : PasswordResetState()
+        object Loading : PasswordResetState()
+        object Success : PasswordResetState()
+        data class Error(val message: String) : PasswordResetState()
+    }
+
     init {
-        loadProfile(isManualRefresh = false)  // ✅ Primera carga NO es manual
+        loadProfile(isManualRefresh = false)
     }
 
     private fun getErrorMessage(exception: Throwable): String {
@@ -124,6 +138,30 @@ class ProfileViewModel(application: Application) : AndroidViewModel(application)
             exception.message?.contains("404", ignoreCase = true) == true ->
                 "ERROR_NOT_FOUND"
 
+            exception.message?.contains("422", ignoreCase = true) == true -> {
+                Log.d("ProfileViewModel", "Error de validacion del campo")
+                when {
+                    exception.message?.contains("email", ignoreCase = true) == true ||
+                            exception.message?.contains("correo", ignoreCase = true) == true ->
+                        "ERROR_EMAIL_ALREADY_EXISTS"
+
+                    exception.message?.contains("phone", ignoreCase = true) == true ||
+                            exception.message?.contains("teléfono", ignoreCase = true) == true ||
+                            exception.message?.contains("telefono", ignoreCase = true) == true ->
+                        "ERROR_PHONE_ALREADY_EXISTS"
+
+                    exception.message?.contains("curp", ignoreCase = true) == true ->
+                        "ERROR_CURP_ALREADY_EXISTS"
+
+                    exception.message?.contains("already", ignoreCase = true) == true ||
+                            exception.message?.contains("ya existe", ignoreCase = true) == true ||
+                            exception.message?.contains("duplicate", ignoreCase = true) == true ->
+                        "ERROR_DUPLICATE_DATA"
+
+                    else -> "ERROR_VALIDATION"
+                }
+            }
+
             exception.message?.contains("500", ignoreCase = true) == true ||
                     exception.message?.contains("Internal Server Error", ignoreCase = true) == true ->
                 "ERROR_SERVER"
@@ -132,9 +170,8 @@ class ProfileViewModel(application: Application) : AndroidViewModel(application)
         }
     }
 
-    fun loadProfile(isManualRefresh: Boolean = false) {  // ✅ Nuevo parámetro
+    fun loadProfile(isManualRefresh: Boolean = false) {
         viewModelScope.launch {
-            // Solo mostrar Loading si NO es refresh manual
             if (!isManualRefresh) {
                 _uiState.value = ProfileUiState.Loading
             }
@@ -146,7 +183,7 @@ class ProfileViewModel(application: Application) : AndroidViewModel(application)
                             _uiState.value = ProfileUiState.Success(
                                 user = data.user,
                                 identityVerification = data.identityVerification.firstOrNull(),
-                                isManualRefresh = false  // ✅ Resetear después de éxito
+                                isManualRefresh = false
                             )
                         } ?: run {
                             _uiState.value = ProfileUiState.Error(
@@ -158,14 +195,14 @@ class ProfileViewModel(application: Application) : AndroidViewModel(application)
                     onFailure = { exception ->
                         _uiState.value = ProfileUiState.Error(
                             message = getErrorMessage(exception),
-                            isManualRefresh = isManualRefresh  // ✅ Mantener el flag
+                            isManualRefresh = isManualRefresh
                         )
                     }
                 )
             } catch (e: Exception) {
                 _uiState.value = ProfileUiState.Error(
                     message = getErrorMessage(e),
-                    isManualRefresh = isManualRefresh  // ✅ Mantener el flag
+                    isManualRefresh = isManualRefresh
                 )
             }
         }
@@ -187,13 +224,11 @@ class ProfileViewModel(application: Application) : AndroidViewModel(application)
                         }
                     },
                     onFailure = { exception ->
-                        // ✅ En refresh, mantener los datos actuales si existen
                         val currentState = _uiState.value
                         if (currentState is ProfileUiState.Success) {
                             _uiState.value = currentState.copy(
-                                isManualRefresh = true  // ✅ Marcar como manual para mostrar Snackbar
+                                isManualRefresh = true
                             )
-                            // Crear un estado de error temporal
                             _uiState.update {
                                 ProfileUiState.Error(
                                     message = getErrorMessage(exception),
@@ -230,19 +265,17 @@ class ProfileViewModel(application: Application) : AndroidViewModel(application)
     }
 
     fun retry() {
-        loadProfile(isManualRefresh = true)  // ✅ Retry SI es manual
+        loadProfile(isManualRefresh = true)
     }
 
     fun clearError() {
         _uiState.update { currentState ->
             when (currentState) {
                 is ProfileUiState.Error -> {
-                    // Si hay error, intentar recargar
                     loadProfile(isManualRefresh = false)
                     currentState
                 }
                 is ProfileUiState.Success -> {
-                    // Si ya hay datos exitosos, solo resetear el flag
                     currentState.copy(isManualRefresh = false)
                 }
                 else -> currentState
@@ -259,6 +292,8 @@ class ProfileViewModel(application: Application) : AndroidViewModel(application)
             if (bitmap == null) {
                 return null
             }
+
+            bitmap = correctImageOrientation(context, uri, bitmap)
 
             val maxDimension = 1920
             if (bitmap.width > maxDimension || bitmap.height > maxDimension) {
@@ -288,6 +323,32 @@ class ProfileViewModel(application: Application) : AndroidViewModel(application)
             return file
         } catch (e: Exception) {
             return null
+        }
+    }
+
+    private fun correctImageOrientation(context: Context, uri: Uri, bitmap: android.graphics.Bitmap): android.graphics.Bitmap {
+        try {
+            val inputStream = context.contentResolver.openInputStream(uri)
+            val exif = androidx.exifinterface.media.ExifInterface(inputStream!!)
+            inputStream.close()
+
+            val orientation = exif.getAttributeInt(
+                androidx.exifinterface.media.ExifInterface.TAG_ORIENTATION,
+                androidx.exifinterface.media.ExifInterface.ORIENTATION_NORMAL
+            )
+
+            val matrix = android.graphics.Matrix()
+            when (orientation) {
+                androidx.exifinterface.media.ExifInterface.ORIENTATION_ROTATE_90 -> matrix.postRotate(90f)
+                androidx.exifinterface.media.ExifInterface.ORIENTATION_ROTATE_180 -> matrix.postRotate(180f)
+                androidx.exifinterface.media.ExifInterface.ORIENTATION_ROTATE_270 -> matrix.postRotate(270f)
+                androidx.exifinterface.media.ExifInterface.ORIENTATION_FLIP_HORIZONTAL -> matrix.postScale(-1f, 1f)
+                androidx.exifinterface.media.ExifInterface.ORIENTATION_FLIP_VERTICAL -> matrix.postScale(1f, -1f)
+            }
+
+            return android.graphics.Bitmap.createBitmap(bitmap, 0, 0, bitmap.width, bitmap.height, matrix, true)
+        } catch (e: Exception) {
+            return bitmap
         }
     }
 
@@ -392,16 +453,23 @@ class ProfileViewModel(application: Application) : AndroidViewModel(application)
                             }
                         } else {
                             _updateFieldState.value = UpdateFieldState.Error(
-                                "ERROR_UPDATE_NAME"
+                                message = "ERROR_UPDATE_NAME",
+                                field = "name" // ⭐ AÑADIDO
                             )
                         }
                     },
                     onFailure = { exception ->
-                        _updateFieldState.value = UpdateFieldState.Error(getErrorMessage(exception))
+                        _updateFieldState.value = UpdateFieldState.Error(
+                            message = getErrorMessage(exception),
+                            field = "name" // ⭐ AÑADIDO
+                        )
                     }
                 )
             } catch (e: Exception) {
-                _updateFieldState.value = UpdateFieldState.Error(getErrorMessage(e))
+                _updateFieldState.value = UpdateFieldState.Error(
+                    message = getErrorMessage(e),
+                    field = "name" // ⭐ AÑADIDO
+                )
             }
         }
     }
@@ -424,16 +492,23 @@ class ProfileViewModel(application: Application) : AndroidViewModel(application)
                             }
                         } else {
                             _updateFieldState.value = UpdateFieldState.Error(
-                                "ERROR_UPDATE_LASTNAME"
+                                message = "ERROR_UPDATE_LASTNAME",
+                                field = "last_name" // ⭐ AÑADIDO
                             )
                         }
                     },
                     onFailure = { exception ->
-                        _updateFieldState.value = UpdateFieldState.Error(getErrorMessage(exception))
+                        _updateFieldState.value = UpdateFieldState.Error(
+                            message = getErrorMessage(exception),
+                            field = "last_name" // ⭐ AÑADIDO
+                        )
                     }
                 )
             } catch (e: Exception) {
-                _updateFieldState.value = UpdateFieldState.Error(getErrorMessage(e))
+                _updateFieldState.value = UpdateFieldState.Error(
+                    message = getErrorMessage(e),
+                    field = "last_name" // ⭐ AÑADIDO
+                )
             }
         }
     }
@@ -441,13 +516,16 @@ class ProfileViewModel(application: Application) : AndroidViewModel(application)
     fun updateEmail(newEmail: String) {
         viewModelScope.launch {
             _updateFieldState.value = UpdateFieldState.Loading
+            Log.d("ProfileViewModel", "🔵 Iniciando actualización de email: $newEmail")
 
             try {
                 repository.updateUserField("email", newEmail).fold(
                     onSuccess = { response ->
+                        Log.d("ProfileViewModel", "🟢 Respuesta recibida: success=${response.success}")
+                        Log.d("ProfileViewModel", "🟢 Message: ${response.message}")
+
                         if (response.success) {
                             _updateFieldState.value = UpdateFieldState.Success
-
                             val currentState = _uiState.value
                             if (currentState is ProfileUiState.Success) {
                                 _uiState.value = currentState.copy(
@@ -455,17 +533,44 @@ class ProfileViewModel(application: Application) : AndroidViewModel(application)
                                 )
                             }
                         } else {
+                            val errorCode = when {
+                                response.message?.contains("correo", ignoreCase = true) == true ||
+                                        response.message?.contains("email", ignoreCase = true) == true ||
+                                        response.message?.contains("registrado", ignoreCase = true) == true ->
+                                    "ERROR_EMAIL_ALREADY_EXISTS"
+                                else -> "ERROR_UPDATE_EMAIL"
+                            }
+                            Log.d("ProfileViewModel", "🔴 Error detectado: $errorCode")
                             _updateFieldState.value = UpdateFieldState.Error(
-                                "ERROR_UPDATE_EMAIL"
+                                message = errorCode,
+                                field = "email" // ⭐ AÑADIDO
                             )
                         }
                     },
                     onFailure = { exception ->
-                        _updateFieldState.value = UpdateFieldState.Error(getErrorMessage(exception))
+                        Log.d("ProfileViewModel", "🔴 Exception: ${exception.message}")
+                        val errorCode = if (exception.message?.contains("422") == true) {
+                            "ERROR_EMAIL_ALREADY_EXISTS"
+                        } else {
+                            getErrorMessage(exception)
+                        }
+                        _updateFieldState.value = UpdateFieldState.Error(
+                            message = errorCode,
+                            field = "email" // ⭐ AÑADIDO
+                        )
                     }
                 )
             } catch (e: Exception) {
-                _updateFieldState.value = UpdateFieldState.Error(getErrorMessage(e))
+                Log.d("ProfileViewModel", "🔴 Catch Exception: ${e.message}")
+                val errorCode = if (e.message?.contains("422") == true) {
+                    "ERROR_EMAIL_ALREADY_EXISTS"
+                } else {
+                    getErrorMessage(e)
+                }
+                _updateFieldState.value = UpdateFieldState.Error(
+                    message = errorCode,
+                    field = "email" // ⭐ AÑADIDO
+                )
             }
         }
     }
@@ -479,7 +584,6 @@ class ProfileViewModel(application: Application) : AndroidViewModel(application)
                     onSuccess = { response ->
                         if (response.success) {
                             _updateFieldState.value = UpdateFieldState.Success
-
                             val currentState = _uiState.value
                             if (currentState is ProfileUiState.Success) {
                                 _uiState.value = currentState.copy(
@@ -487,17 +591,42 @@ class ProfileViewModel(application: Application) : AndroidViewModel(application)
                                 )
                             }
                         } else {
+                            val errorCode = when {
+                                response.message?.contains("teléfono", ignoreCase = true) == true ||
+                                        response.message?.contains("telefono", ignoreCase = true) == true ||
+                                        response.message?.contains("phone", ignoreCase = true) == true ||
+                                        response.message?.contains("registrado", ignoreCase = true) == true ->
+                                    "ERROR_PHONE_ALREADY_EXISTS"
+                                else -> "ERROR_UPDATE_PHONE"
+                            }
                             _updateFieldState.value = UpdateFieldState.Error(
-                                "ERROR_UPDATE_PHONE"
+                                message = errorCode,
+                                field = "phone" // ⭐ AÑADIDO
                             )
                         }
                     },
                     onFailure = { exception ->
-                        _updateFieldState.value = UpdateFieldState.Error(getErrorMessage(exception))
+                        val errorCode = if (exception.message?.contains("422") == true) {
+                            "ERROR_PHONE_ALREADY_EXISTS"
+                        } else {
+                            getErrorMessage(exception)
+                        }
+                        _updateFieldState.value = UpdateFieldState.Error(
+                            message = errorCode,
+                            field = "phone" // ⭐ AÑADIDO
+                        )
                     }
                 )
             } catch (e: Exception) {
-                _updateFieldState.value = UpdateFieldState.Error(getErrorMessage(e))
+                val errorCode = if (e.message?.contains("422") == true) {
+                    "ERROR_PHONE_ALREADY_EXISTS"
+                } else {
+                    getErrorMessage(e)
+                }
+                _updateFieldState.value = UpdateFieldState.Error(
+                    message = errorCode,
+                    field = "phone" // ⭐ AÑADIDO
+                )
             }
         }
     }
@@ -511,7 +640,6 @@ class ProfileViewModel(application: Application) : AndroidViewModel(application)
                     onSuccess = { response ->
                         if (response.success) {
                             _updateFieldState.value = UpdateFieldState.Success
-
                             val currentState = _uiState.value
                             if (currentState is ProfileUiState.Success) {
                                 _uiState.value = currentState.copy(
@@ -519,19 +647,105 @@ class ProfileViewModel(application: Application) : AndroidViewModel(application)
                                 )
                             }
                         } else {
+                            val errorCode = when {
+                                response.message?.contains("curp", ignoreCase = true) == true ||
+                                        response.message?.contains("registrado", ignoreCase = true) == true ->
+                                    "ERROR_CURP_ALREADY_EXISTS"
+                                else -> "ERROR_UPDATE_CURP"
+                            }
                             _updateFieldState.value = UpdateFieldState.Error(
-                                "ERROR_UPDATE_CURP"
+                                message = errorCode,
+                                field = "curp" // ⭐ AÑADIDO
                             )
                         }
                     },
                     onFailure = { exception ->
-                        _updateFieldState.value = UpdateFieldState.Error(getErrorMessage(exception))
+                        val errorCode = if (exception.message?.contains("422") == true) {
+                            "ERROR_CURP_ALREADY_EXISTS"
+                        } else {
+                            getErrorMessage(exception)
+                        }
+                        _updateFieldState.value = UpdateFieldState.Error(
+                            message = errorCode,
+                            field = "curp" // ⭐ AÑADIDO
+                        )
                     }
                 )
             } catch (e: Exception) {
-                _updateFieldState.value = UpdateFieldState.Error(getErrorMessage(e))
+                val errorCode = if (e.message?.contains("422") == true) {
+                    "ERROR_CURP_ALREADY_EXISTS"
+                } else {
+                    getErrorMessage(e)
+                }
+                _updateFieldState.value = UpdateFieldState.Error(
+                    message = errorCode,
+                    field = "curp" // ⭐ AÑADIDO
+                )
             }
         }
+    }
+
+    fun resetPassword(currentPassword: String, newPassword: String, newPasswordConfirmation: String) {
+        viewModelScope.launch {
+            _passwordResetState.value = PasswordResetState.Loading
+
+            try {
+                repository.resetPassword(
+                    currentPassword = currentPassword,
+                    newPassword = newPassword,
+                    newPasswordConfirmation = newPasswordConfirmation
+                ).fold(
+                    onSuccess = { response ->
+                        if (response.success) {
+                            _passwordResetState.value = PasswordResetState.Success
+                        } else {
+                            val errorCode = when {
+                                response.message?.contains("actual incorrecta", ignoreCase = true) == true ||
+                                        response.message?.contains("credenciales incorrectas", ignoreCase = true) == true ->
+                                    "ERROR_CURRENT_PASSWORD_INCORRECT"
+
+                                response.message?.contains("8 caracteres", ignoreCase = true) == true ->
+                                    "ERROR_PASSWORD_TOO_SHORT"
+
+                                response.message?.contains("número", ignoreCase = true) == true ->
+                                    "ERROR_PASSWORD_NO_NUMBER"
+
+                                response.message?.contains("especial", ignoreCase = true) == true ->
+                                    "ERROR_PASSWORD_NO_SPECIAL"
+
+                                response.message?.contains("no coincide", ignoreCase = true) == true ||
+                                        response.message?.contains("confirmation", ignoreCase = true) == true ->
+                                    "ERROR_PASSWORD_MISMATCH"
+
+                                response.message?.contains("igual", ignoreCase = true) == true ->
+                                    "ERROR_PASSWORD_SAME_AS_OLD"
+
+                                else -> "ERROR_RESET_PASSWORD"
+                            }
+                            _passwordResetState.value = PasswordResetState.Error(errorCode)
+                        }
+                    },
+                    onFailure = { exception ->
+                        val errorCode = when {
+                            exception.message?.contains("401") == true ->
+                                "ERROR_CURRENT_PASSWORD_INCORRECT"
+
+                            exception.message?.contains("422") == true ->
+                                "ERROR_PASSWORD_VALIDATION_FAILED"
+
+                            else -> getErrorMessage(exception)
+                        }
+                        _passwordResetState.value = PasswordResetState.Error(errorCode)
+                    }
+                )
+            } catch (e: Exception) {
+                _passwordResetState.value = PasswordResetState.Error(getErrorMessage(e))
+            }
+        }
+    }
+
+    fun resetPasswordResetState() {
+        _passwordResetState.value = PasswordResetState.Idle
     }
 
     fun resetUpdateState() {

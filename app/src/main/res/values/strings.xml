@@ -791,6 +791,27 @@
     <string name="error_loading_profile">Error loading profile</string>
     <string name="error_loading_activity">Error loading activity</string>
     <string name="error_loading_streak">Error loading streak</string>
+    <string name="error_email_already_exists">This email is already registered</string>
+    <string name="error_phone_already_exists">This phone number is already registered</string>
+    <string name="error_curp_already_exists">This CURP is already registered</string>
+    <string name="error_duplicate_data">This data already exists in the system</string>
+    <string name="error_validation">Validation error. Please check the entered data</string>
+    <string name="change_password">Change Password</string>
+    <string name="security_section">Security</string>
+    <string name="current_password">Current Password</string>
+    <string name="new_password">New Password</string>
+    <string name="confirm_new_password">Confirm New Password</string>
+    <string name="update_password">Update Password</string>
+    <string name="password_updated_title">Password Updated</string>
+    <string name="password_updated_message">Your password has been changed successfully</string>
+    <string name="error_current_password_incorrect">Current password is incorrect</string>
+    <string name="error_password_too_short">Password must be at least 8 characters</string>
+    <string name="error_password_no_number">Password must contain at least one number</string>
+    <string name="error_password_no_special">Password must include a special character (!@#$%…)</string>
+    <string name="error_password_mismatch">Passwords do not match</string>
+    <string name="error_password_same_as_old">New password cannot be the same as current</string>
+    <string name="error_reset_password">Error changing password. Please try again</string>
+    <string name="error_password_validation_failed">Invalid data for password reset</string>
 
     <!-- Compresión de imágenes -->
     <string name="compressing">Comprimiendo…</string>

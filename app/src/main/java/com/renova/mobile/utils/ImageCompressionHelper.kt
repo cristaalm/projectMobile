@@ -7,6 +7,8 @@ import android.net.Uri
 import androidx.core.content.FileProvider
 import java.io.File
 import android.util.Log
+import androidx.exifinterface.media.ExifInterface
+import android.graphics.Matrix
 
 object ImageCompressionHelper {
     private const val TAG = "ImageCompression"
@@ -34,14 +36,16 @@ object ImageCompressionHelper {
                 return Result.failure(Exception("No se pudo decodificar la imagen"))
             }
 
+            val correctedBitmap = correctImageOrientation(context, uri, originalBitmap)
+
             // 2. Calcular nueva resolución si es muy grande
             val maxDimension = 1920 // Full HD
-            val scaledBitmap = if (originalBitmap.width > maxDimension ||
-                originalBitmap.height > maxDimension) {
-                Log.d(TAG, "Redimensionando imagen de ${originalBitmap.width}x${originalBitmap.height}")
-                scaleBitmap(originalBitmap, maxDimension)
+            val scaledBitmap = if (correctedBitmap.width > maxDimension ||
+                correctedBitmap.height > maxDimension) {
+                Log.d(TAG, "Redimensionando imagen de ${correctedBitmap.width}x${correctedBitmap.height}")
+                scaleBitmap(correctedBitmap, maxDimension)
             } else {
-                originalBitmap
+                correctedBitmap
             }
 
             // 3. Crear archivo temporal
@@ -69,8 +73,11 @@ object ImageCompressionHelper {
             } while (quality >= MIN_QUALITY && attempt < 10)
 
             // 5. Liberar recursos
-            if (scaledBitmap != originalBitmap) {
+            if (scaledBitmap != correctedBitmap) {
                 scaledBitmap.recycle()
+            }
+            if (correctedBitmap != originalBitmap) {
+                correctedBitmap.recycle()
             }
             originalBitmap.recycle()
 
@@ -117,6 +124,36 @@ object ImageCompressionHelper {
         val newHeight = (height * scale).toInt()
 
         return Bitmap.createScaledBitmap(bitmap, newWidth, newHeight, true)
+    }
+
+    /**
+     * Corrige la orientación de una imagen según sus metadatos EXIF
+     */
+    private fun correctImageOrientation(context: Context, uri: Uri, bitmap: Bitmap): Bitmap {
+        return try {
+            val inputStream = context.contentResolver.openInputStream(uri)
+            val exif = ExifInterface(inputStream!!)
+            inputStream.close()
+
+            val orientation = exif.getAttributeInt(
+                ExifInterface.TAG_ORIENTATION,
+                ExifInterface.ORIENTATION_NORMAL
+            )
+
+            val matrix = Matrix()
+            when (orientation) {
+                ExifInterface.ORIENTATION_ROTATE_90 -> matrix.postRotate(90f)
+                ExifInterface.ORIENTATION_ROTATE_180 -> matrix.postRotate(180f)
+                ExifInterface.ORIENTATION_ROTATE_270 -> matrix.postRotate(270f)
+                ExifInterface.ORIENTATION_FLIP_HORIZONTAL -> matrix.postScale(-1f, 1f)
+                ExifInterface.ORIENTATION_FLIP_VERTICAL -> matrix.postScale(1f, -1f)
+            }
+
+            Bitmap.createBitmap(bitmap, 0, 0, bitmap.width, bitmap.height, matrix, true)
+        } catch (e: Exception) {
+            Log.e(TAG, "Error corrigiendo orientación", e)
+            bitmap // Si falla, devolver bitmap original
+        }
     }
 
     /**
