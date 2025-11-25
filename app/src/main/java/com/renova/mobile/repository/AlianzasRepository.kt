@@ -11,18 +11,37 @@ class AlianzasRepository {
     suspend fun getAllAlianzas(): Result<List<Alianza>> {
         return withContext(Dispatchers.IO) {
             try {
-                val response = ApiClient.apiService.getAllAlianzas(status = 1)
+                val allAlianzas = mutableListOf<Alianza>()
+                var currentPage = 1
+                var hasMorePages = true
 
-                if (response.isSuccessful) {
-                    val body = response.body()
-                    if (body?.success == true && body.data != null) {
-                        Result.success(body.data.data)
+                while (hasMorePages) {
+                    val response = ApiClient.apiService.getAllAlianzas(
+                        status = 1,
+                        page = currentPage,
+                        per_page = 100 // Máximo permitido para obtener más datos por página
+                    )
+
+                    if (response.isSuccessful) {
+                        val body = response.body()
+                        if (body?.success == true && body.data != null) {
+                            val pageAlianzas = body.data.data
+                            allAlianzas.addAll(pageAlianzas)
+
+                            // Verificar si hay más páginas
+                            val lastPage = body.data.last_page
+                            hasMorePages = currentPage < lastPage
+                            currentPage++
+
+                        } else {
+                            return@withContext Result.failure(Exception(body?.message ?: "Respuesta inválida del servidor"))
+                        }
                     } else {
-                        Result.failure(Exception(body?.message ?: "Respuesta inválida del servidor"))
+                        return@withContext Result.failure(Exception("Error HTTP: ${response.code()}"))
                     }
-                } else {
-                    Result.failure(Exception("Error HTTP: ${response.code()}"))
                 }
+
+                Result.success(allAlianzas)
             } catch (e: Exception) {
                 Result.failure(e)
             }
