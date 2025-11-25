@@ -213,7 +213,6 @@ class TourState(private val sessionManager: SessionManager) {
             screenRoute = TourRoutes.PROFILE,
             targetId = "profile_language_toggle"
         ),
-        // --- INICIO MODIFICACIÓN DE ORDEN: Arreglado (14 y 15 invertidos) ---
         // 14. PERFIL - ESTADO DE VERIFICACIÓN
         TourStep(
             id = "step_profile_verification",
@@ -230,7 +229,15 @@ class TourState(private val sessionManager: SessionManager) {
             screenRoute = TourRoutes.PROFILE,
             targetId = "profile_info_card"
         ),
-        // 16. PERFIL - DOCUMENTOS
+        // 16. PERFIL - SEGURIDAD (NUEVO)
+        TourStep(
+            id = "step_profile_security",
+            titleResId = R.string.tour_title_profile_security,
+            descriptionResId = R.string.tour_desc_profile_security,
+            screenRoute = TourRoutes.PROFILE,
+            targetId = "profile_security_card"
+        ),
+        // 17. PERFIL - DOCUMENTOS
         TourStep(
             id = "step_profile_documents",
             titleResId = R.string.tour_title_profile_documents,
@@ -238,8 +245,7 @@ class TourState(private val sessionManager: SessionManager) {
             screenRoute = TourRoutes.PROFILE,
             targetId = "profile_documents_section"
         ),
-        // --- FIN DE MODIFICACIÓN DE ORDEN ---
-        // 17. NAV (PERFIL -> ACTIVIDAD)
+        // 18. NAV (PERFIL -> ACTIVIDAD)
         TourStep(
             id = "step11_profile_to_topbar",
             titleResId = R.string.tour_title_activity_button,
@@ -247,7 +253,7 @@ class TourState(private val sessionManager: SessionManager) {
             screenRoute = TourRoutes.PROFILE,
             targetId = "top_bar_activity_button"
         ),
-        // 18. ACTIVIDAD - PUNTOS
+        // 19. ACTIVIDAD - PUNTOS
         TourStep(
             id = "step13_activity_points",
             titleResId = R.string.tour_title_activity_points,
@@ -255,7 +261,7 @@ class TourState(private val sessionManager: SessionManager) {
             screenRoute = TourRoutes.ACTIVITY,
             targetId = "activity_points_card"
         ),
-        // 19. ACTIVIDAD - MATERIALES
+        // 20. ACTIVIDAD - MATERIALES
         TourStep(
             id = "step14_activity_materials",
             titleResId = R.string.tour_title_activity_materials,
@@ -263,7 +269,7 @@ class TourState(private val sessionManager: SessionManager) {
             screenRoute = TourRoutes.ACTIVITY,
             targetId = "activity_materials_row"
         ),
-        // 20. ACTIVIDAD - HISTORIAL
+        // 21. ACTIVIDAD - HISTORIAL
         TourStep(
             id = "step15_activity_history",
             titleResId = R.string.tour_title_activity_history,
@@ -271,7 +277,7 @@ class TourState(private val sessionManager: SessionManager) {
             screenRoute = TourRoutes.ACTIVITY,
             targetId = "activity_history_title"
         ),
-        // 21. NAV (ACTIVIDAD -> RACHA)
+        // 22. NAV (ACTIVIDAD -> RACHA)
         TourStep(
             id = "step_activity_to_streak",
             titleResId = R.string.tour_title_streak_button,
@@ -279,7 +285,7 @@ class TourState(private val sessionManager: SessionManager) {
             screenRoute = TourRoutes.ACTIVITY,
             targetId = "top_bar_streak_button"
         ),
-        // 22. RACHA - TARJETA
+        // 23. RACHA - TARJETA
         TourStep(
             id = "step_streak_card",
             titleResId = R.string.tour_title_streak_card,
@@ -288,7 +294,7 @@ class TourState(private val sessionManager: SessionManager) {
             targetId = "streak_card_main"
         ),
         // --- INICIO MODIFICACIÓN: Paso eliminado porque el componente no existe ---
-        // 23. RACHA - RETO
+        // 24. RACHA - RETO
         /*
         TourStep(
             id = "step_streak_challenge",
@@ -299,7 +305,7 @@ class TourState(private val sessionManager: SessionManager) {
         ),
         */
         // --- FIN MODIFICACIÓN ---
-        // 24. RACHA - INSIGNIAS
+        // 25. RACHA - INSIGNIAS
         TourStep(
             id = "step_streak_badges",
             titleResId = R.string.tour_title_streak_badges,
@@ -307,7 +313,7 @@ class TourState(private val sessionManager: SessionManager) {
             screenRoute = TourRoutes.STREAK,
             targetId = "streak_monthly_badges"
         ),
-        // 25. RACHA - PROGRESO
+        // 26. RACHA - PROGRESO
         TourStep(
             id = "step_streak_progress",
             titleResId = R.string.tour_title_streak_progress,
@@ -428,7 +434,15 @@ class TourState(private val sessionManager: SessionManager) {
                 screenRoute = TourRoutes.PROFILE,
                 targetId = "profile_info_card"
             ),
-            // 4. Sección de Documentos
+            // 4. Sección de Seguridad (NUEVO)
+            TourStep(
+                id = "step_profile_security",
+                titleResId = R.string.tour_title_profile_security,
+                descriptionResId = R.string.tour_desc_profile_security,
+                screenRoute = TourRoutes.PROFILE,
+                targetId = "profile_security_card"
+            ),
+            // 5. Sección de Documentos
             TourStep(
                 id = "step_profile_documents",
                 titleResId = R.string.tour_title_profile_documents,
