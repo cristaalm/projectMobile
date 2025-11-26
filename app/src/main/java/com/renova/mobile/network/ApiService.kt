@@ -809,7 +809,12 @@ interface ApiService {
 
     @GET("api/alianzas/getAll")
     suspend fun getAllAlianzas(
-        @Query("status") status: Int
+        @Query("status") status: Int,
+        @Query("page") page: Int? = null,
+        @Query("per_page") per_page: Int? = null,
+        @Query("query") query: String? = null,
+        @Query("key") key: String? = null,
+        @Query("order") order: String? = null
     ): Response<AlianzasResponse>
 
     @GET("api/typeShop/catalog")

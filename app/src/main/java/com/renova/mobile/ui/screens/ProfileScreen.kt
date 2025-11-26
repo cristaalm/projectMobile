@@ -524,10 +524,22 @@ private fun ProfileContent(
 
             Spacer(modifier = Modifier.height(12.dp))
 
-            SecurityCard(
-                viewModel = profileViewModel,
-                verificationStatus = verificationStatus
-            )
+            // --- NUEVO: Añadir wrapper del tour para SecurityCard ---
+            Box(modifier = Modifier.onGloballyPositioned { coords ->
+                tourState.registerTarget(
+                    id = "profile_security_card",
+                    coordinates = coords,
+                    scrollState = scrollState
+                )
+            }) {
+                SecurityCard(
+                    viewModel = profileViewModel,
+                    verificationStatus = verificationStatus
+                )
+            }
+            DisposableEffect("profile_security_card") {
+                onDispose { tourState.unregisterTarget("profile_security_card") }
+            }
 
             Spacer(modifier = Modifier.height(12.dp))
 

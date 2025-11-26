@@ -532,6 +532,7 @@ fun InstructionSection() {
 
 @Composable
 fun SuccessModal() {
+    val colors = MaterialTheme.renovaColors
     var showProgress by remember { mutableStateOf(true) }
     var showCheck by remember { mutableStateOf(false) }
 
@@ -573,7 +574,7 @@ fun SuccessModal() {
                 },
             shape = RoundedCornerShape(20.dp),
             colors = CardDefaults.cardColors(
-                containerColor = Color.White
+                containerColor = colors.cardBackground
             ),
             elevation = CardDefaults.cardElevation(defaultElevation = 16.dp)
         ) {

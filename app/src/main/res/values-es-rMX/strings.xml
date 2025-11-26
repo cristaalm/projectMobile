@@ -615,6 +615,8 @@
     <string name="tour_desc_streak_badges">Acumula puntos durante el mes para desbloquear estas insignias y ganar puntos de bonificación.</string>
     <string name="tour_title_streak_progress">Progreso Semanal</string>
     <string name="tour_desc_streak_progress">Finalmente, aquí puedes ver un gráfico de tus actividades de reciclaje durante la semana.</string>
+    <string name="tour_title_profile_security">Seguridad de la Cuenta</string>
+    <string name="tour_desc_profile_security">Aquí puedes cambiar tu contraseña para mantener tu cuenta segura.</string>
     <string name="user_manual">Manual de Usuario</string>
     <string name="view_online">Ver en línea</string>
     <string name="view_online_description">Manual interactivo con efecto de pasar páginas</string>

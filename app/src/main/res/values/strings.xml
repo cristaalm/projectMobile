@@ -614,6 +614,8 @@
     <string name="tour_desc_streak_badges">Accumulate points during the month to unlock these badges and earn bonus points.</string>
     <string name="tour_title_streak_progress">Weekly Progress</string>
     <string name="tour_desc_streak_progress">Finally, here you can see a graph of your recycling activities during the week.</string>
+    <string name="tour_title_profile_security">Account Security</string>
+    <string name="tour_desc_profile_security">Here you can change your password to keep your account secure.</string>
     <string name="user_manual">User Manual</string>
     <string name="view_online">View Online</string>
     <string name="view_online_description">Interactive manual with page-turning effects</string>
