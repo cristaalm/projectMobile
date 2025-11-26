@@ -343,31 +343,6 @@ fun VerificationScreen(
 
             Spacer(modifier = Modifier.height(24.dp))
 
-            OutlinedButton(
-                onClick = { onBackToDocuments() },
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(50.dp),
-                shape = RoundedCornerShape(12.dp),
-                colors = ButtonDefaults.outlinedButtonColors(
-                    containerColor = colors.cardBackground
-                ),
-                border = ButtonDefaults.outlinedButtonBorder.copy(
-                    brush = RenovaGradients.cardBorderGradient()
-                ),
-                enabled = uploadState !is UploadState.Loading && !isCompressing
-            ) {
-                Text(
-                    text = stringResource(R.string.back),
-                    fontSize = 16.sp,
-                    fontWeight = FontWeight.Bold,
-                    fontFamily = Poppins,
-                    color = CustomGreenColor
-                )
-            }
-
-            Spacer(modifier = Modifier.height(12.dp))
-
             Button(
                 onClick = {
                     if (selfieUri != null) {
@@ -400,6 +375,31 @@ fun VerificationScreen(
                         color = Color.White
                     )
                 }
+            }
+
+            Spacer(modifier = Modifier.height(12.dp))
+
+            OutlinedButton(
+                onClick = { onBackToDocuments() },
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(50.dp),
+                shape = RoundedCornerShape(12.dp),
+                colors = ButtonDefaults.outlinedButtonColors(
+                    containerColor = colors.cardBackground
+                ),
+                border = ButtonDefaults.outlinedButtonBorder.copy(
+                    brush = RenovaGradients.cardBorderGradient()
+                ),
+                enabled = uploadState !is UploadState.Loading && !isCompressing
+            ) {
+                Text(
+                    text = stringResource(R.string.back),
+                    fontSize = 16.sp,
+                    fontWeight = FontWeight.Bold,
+                    fontFamily = Poppins,
+                    color = CustomGreenColor
+                )
             }
 
             Spacer(modifier = Modifier.height(32.dp))

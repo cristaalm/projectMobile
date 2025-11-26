@@ -264,29 +264,6 @@ fun DocumentsScreen(
 
                     Spacer(modifier = Modifier.height(24.dp))
 
-                    OutlinedButton(
-                        onClick = { onBackToRegister() },
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .height(50.dp),
-                        shape = RoundedCornerShape(12.dp),
-                        colors = RenovaComponentColors.secondaryButtonColors(),
-                        border = ButtonDefaults.outlinedButtonBorder.copy(
-                            brush = RenovaGradients.cardBorderGradient()
-                        ),
-                        enabled = uploadState !is UploadState.Loading
-                    ) {
-                        Text(
-                            text = stringResource(R.string.back),
-                            fontSize = 16.sp,
-                            fontWeight = FontWeight.Bold,
-                            fontFamily = Poppins,
-                            color = CustomGreenColor
-                        )
-                    }
-
-                    Spacer(modifier = Modifier.height(12.dp))
-
                     Button(
                         onClick = {
                             val allValid = ineFrontUri != null && ineBackUri != null
@@ -325,6 +302,29 @@ fun DocumentsScreen(
                                 color = Color.White
                             )
                         }
+                    }
+
+                    Spacer(modifier = Modifier.height(12.dp))
+
+                    OutlinedButton(
+                        onClick = { onBackToRegister() },
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(50.dp),
+                        shape = RoundedCornerShape(12.dp),
+                        colors = RenovaComponentColors.secondaryButtonColors(),
+                        border = ButtonDefaults.outlinedButtonBorder.copy(
+                            brush = RenovaGradients.cardBorderGradient()
+                        ),
+                        enabled = uploadState !is UploadState.Loading
+                    ) {
+                        Text(
+                            text = stringResource(R.string.back),
+                            fontSize = 16.sp,
+                            fontWeight = FontWeight.Bold,
+                            fontFamily = Poppins,
+                            color = CustomGreenColor
+                        )
                     }
                 }
             }
