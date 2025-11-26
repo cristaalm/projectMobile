@@ -877,5 +877,7 @@
     <!-- ==================== ERRORES DE LOGIN (EXISTENTES - RENOMBRADOS) ==================== -->
     <string name="err_login_invalid_credentials">Correo o contraseña incorrectos</string>
     <string name="err_login_account_disabled">Tu cuenta ha sido desactivada</string>
+    <string name="badge_claimed_success">¡Insignia Reclamada!</string>
+    <string name="points_added_to_profile">Puntos añadidos a tu perfil</string>
 
 </resources>

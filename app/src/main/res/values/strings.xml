@@ -872,4 +872,7 @@
     <string name="err_login_invalid_credentials">Invalid email or password</string>
     <string name="err_login_account_disabled">Your account has been disabled</string>
 
+    <string name="badge_claimed_success">Badge Claimed!</string>
+    <string name="points_added_to_profile">Points added to your profile</string>
+
 </resources>

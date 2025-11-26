@@ -1,29 +1,22 @@
 package com.renova.mobile.repository
 
 import android.util.Log
-import com.renova.mobile.network.ApiClient
-import com.renova.mobile.network.Badge
-import com.renova.mobile.network.ClaimBadgeRequestV2
-import com.renova.mobile.network.IdentifyUserRequest
-import com.renova.mobile.network.UserData
+import com.renova.mobile.network.*
 import com.renova.mobile.network.toSafeSet
 import com.renova.mobile.ui.viewmodels.WeekDayData
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
+import org.json.JSONObject
 
 /**
- * Repositorio que maneja la lógica de negocio de los badges y actividad del usuario
+ * Repositorio mejorado con manejo robusto de respuestas
  */
 class BadgeRepository {
 
-    // Cache de badges para evitar llamadas innecesarias
     private var badgesCache: List<Badge>? = null
     private var cacheTimestamp: Long = 0
-    private val CACHE_DURATION = 5 * 60 * 1000L // 5 minutos
+    private val CACHE_DURATION = 5 * 60 * 1000L
 
-    /**
-     * Representa el estado procesado de un badge para la UI
-     */
     data class BadgeState(
         val badge: Badge,
         val isClaimed: Boolean,
@@ -31,22 +24,15 @@ class BadgeRepository {
         val canClaim: Boolean
     )
 
-    /**
-     * Resultado de la obtención de badges
-     */
     sealed class BadgeResult {
         data class Success(
             val allBadges: List<BadgeState>,
             val nextClaimableBadge: BadgeState?,
             val currentMonthPoints: Int
         ) : BadgeResult()
-
         data class Error(val message: String) : BadgeResult()
     }
 
-    /**
-     * Resultado del reclamo de un badge
-     */
     sealed class ClaimResult {
         data class Success(
             val updatedUser: UserData,
@@ -54,27 +40,19 @@ class BadgeRepository {
             val newTotalPoints: Int,
             val bonusPointsAwarded: Int
         ) : ClaimResult()
-
         data class Error(val message: String) : ClaimResult()
     }
 
-    /**
-     * Resultado de la obtención de datos semanales
-     */
     sealed class WeekDataResult {
         data class Success(val weekData: List<WeekDayData>) : WeekDataResult()
         data class Error(val message: String) : WeekDataResult()
     }
 
-    /**
-     * Obtiene todos los badges con su estado actual
-     */
     suspend fun getBadgesWithState(
         token: String,
         userId: Int
     ): BadgeResult = withContext(Dispatchers.IO) {
         try {
-            // 1. Obtener datos del usuario
             val userResponse = ApiClient.apiService.identifyUser(
                 IdentifyUserRequest(token = token, with_identity = false)
             )
@@ -86,10 +64,7 @@ class BadgeRepository {
             val userData = userResponse.body()?.data?.user
                 ?: return@withContext BadgeResult.Error("Datos de usuario no disponibles")
 
-            // 2. Obtener todos los badges disponibles (con cache)
             val allBadges = getCachedBadges()
-
-            // 3. Procesar badges
             val claimedBadgeIds = userData.badge.toSafeSet()
             val currentMonthPoints = userData.points_month
 
@@ -99,17 +74,12 @@ class BadgeRepository {
                     val isClaimed = claimedBadgeIds.contains(badge.id)
                     val isUnlocked = currentMonthPoints >= badge.pointsRequired
 
-                    // Verificar que todos los badges anteriores estén reclamados
                     val previousBadges = allBadges
                         .filter { it.pointsRequired < badge.pointsRequired }
                     val allPreviousClaimed = previousBadges.all {
                         claimedBadgeIds.contains(it.id)
                     }
 
-                    // Un badge se puede reclamar si:
-                    // - Está desbloqueado (tiene suficientes puntos)
-                    // - NO ha sido reclamado
-                    // - Todos los badges anteriores YA fueron reclamados
                     val canClaim = isUnlocked && !isClaimed && allPreviousClaimed
 
                     BadgeState(
@@ -120,7 +90,6 @@ class BadgeRepository {
                     )
                 }
 
-            // 4. Encontrar el siguiente badge reclamable
             val nextClaimable = badgesWithState.firstOrNull { it.canClaim }
 
             BadgeResult.Success(
@@ -135,12 +104,8 @@ class BadgeRepository {
         }
     }
 
-    /**
-     * Obtiene los datos de actividad semanal del usuario
-     */
     suspend fun getWeeklyActivity(): WeekDataResult = withContext(Dispatchers.IO) {
         try {
-
             val response = ApiClient.apiService.getScansByDayOfWeek()
 
             if (!response.isSuccessful) {
@@ -157,7 +122,6 @@ class BadgeRepository {
                 return@withContext WeekDataResult.Success(generateEmptyWeekData())
             }
 
-            // Mapear los días de la API (en ESPAÑOL) a nuestro formato de letras
             val dayMapSpanish = mapOf(
                 "Lunes" to "L",
                 "Martes" to "M",
@@ -168,7 +132,6 @@ class BadgeRepository {
                 "Domingo" to "D"
             )
 
-            // También soportar inglés por si la API cambia
             val dayMapEnglish = mapOf(
                 "Monday" to "L",
                 "Tuesday" to "M",
@@ -179,7 +142,6 @@ class BadgeRepository {
                 "Sunday" to "D"
             )
 
-            // Crear lista ordenada de lunes a domingo (en español como viene de la API)
             val orderedDaysSpanish = listOf("Lunes", "Martes", "Miércoles", "Jueves", "Viernes", "Sábado", "Domingo")
 
             val weekData = orderedDaysSpanish.map { dayName ->
@@ -193,21 +155,13 @@ class BadgeRepository {
                 )
             }
 
-            val totalScans = weekData.sumOf { it.materialsCount }
-            weekData.forEachIndexed { index, data ->
-            }
-
             WeekDataResult.Success(weekData)
 
         } catch (e: Exception) {
-            // En caso de error, retornar datos vacíos en lugar de fallar
             WeekDataResult.Success(generateEmptyWeekData())
         }
     }
 
-    /**
-     * Genera datos vacíos para la semana (fallback)
-     */
     private fun generateEmptyWeekData(): List<WeekDayData> {
         val days = listOf("L", "M", "M", "J", "V", "S", "D")
         return days.map { day ->
@@ -219,20 +173,15 @@ class BadgeRepository {
         }
     }
 
-    /**
-     * Obtiene badges con cache para reducir llamadas al API
-     */
     private suspend fun getCachedBadges(): List<Badge> {
         val now = System.currentTimeMillis()
 
-        // Si el cache es válido, retornarlo
         badgesCache?.let { cache ->
             if ((now - cacheTimestamp) < CACHE_DURATION) {
                 return cache
             }
         }
 
-        // Cache inválido o no existe, hacer llamada al API
         val badgesResponse = ApiClient.apiService.getAllBadges(
             perPage = 100,
             status = 1
@@ -245,7 +194,6 @@ class BadgeRepository {
         val badges = badgesResponse.body()?.data?.data
             ?: throw Exception("No hay badges disponibles")
 
-        // Actualizar cache
         badgesCache = badges
         cacheTimestamp = now
 
@@ -253,13 +201,15 @@ class BadgeRepository {
     }
 
     /**
-     * Reclama un badge específico
+     * ✅ VERSIÓN MEJORADA: Valida éxito ANTES de parsear el objeto completo
      */
     suspend fun claimBadge(
         userId: Int,
         badgeId: Int
     ): ClaimResult = withContext(Dispatchers.IO) {
         try {
+            Log.d("BadgeRepository", "🎯 Iniciando reclamo de badge $badgeId para usuario $userId")
+
             val response = ApiClient.apiService.claimBadgeV2(
                 ClaimBadgeRequestV2(
                     userId = userId,
@@ -267,37 +217,119 @@ class BadgeRepository {
                 )
             )
 
-            if (!response.isSuccessful || response.body()?.success != true) {
-                val errorMsg = response.body()?.message ?: "Error al reclamar badge"
-                return@withContext ClaimResult.Error(errorMsg)
+            // ✅ PASO 1: Verificar si la respuesta HTTP fue exitosa
+            if (!response.isSuccessful) {
+                val errorBody = response.errorBody()?.string()
+                Log.e("BadgeRepository", "❌ HTTP Error ${response.code()}: $errorBody")
+                return@withContext ClaimResult.Error("Error HTTP: ${response.code()}")
             }
 
-            val updatedUser = response.body()?.data?.user
-                ?: return@withContext ClaimResult.Error("No se recibieron datos actualizados")
+            // ✅ PASO 2: Leer el body RAW como string
+            val rawBody = response.body()
+            Log.d("BadgeRepository", "📦 Raw response body: $rawBody")
 
-            // Buscar el badge en el cache (mucho más eficiente)
-            val claimedBadge = badgesCache?.find { it.id == badgeId }
-                ?: run {
-                    // Si no está en cache, hacer llamada (fallback)
-                    val badges = getCachedBadges()
-                    badges.find { it.id == badgeId }
-                } ?: return@withContext ClaimResult.Error("Badge no encontrado")
+            // ✅ PASO 3: Verificar el campo 'success' directamente del JSON
+            val isSuccess = rawBody?.success == true
+            val message = rawBody?.message ?: "Sin mensaje"
 
-            ClaimResult.Success(
-                updatedUser = updatedUser,
-                claimedBadge = claimedBadge,
-                newTotalPoints = updatedUser.total_points,
-                bonusPointsAwarded = claimedBadge.pointsAwarded
-            )
+            Log.d("BadgeRepository", "✅ Success field: $isSuccess, Message: $message")
+
+            if (!isSuccess) {
+                Log.e("BadgeRepository", "❌ Servidor reportó fallo: $message")
+                return@withContext ClaimResult.Error(message)
+            }
+
+            // ✅ PASO 4: Si llegamos aquí, el reclamo fue EXITOSO en el servidor
+            // Ahora intentamos parsear los datos, pero si falla, igual retornamos éxito
+
+            try {
+                val userData = rawBody.data?.user
+
+                if (userData == null) {
+                    Log.w("BadgeRepository", "⚠️ No se recibió userData, pero el reclamo fue exitoso")
+                    // Buscar el badge en cache
+                    val claimedBadge = badgesCache?.find { it.id == badgeId }
+                        ?: getCachedBadges().find { it.id == badgeId }
+                        ?: throw Exception("Badge no encontrado en cache")
+
+                    // Retornar éxito con datos básicos
+                    return@withContext ClaimResult.Success(
+                        updatedUser = createFallbackUser(userId, badgeId),
+                        claimedBadge = claimedBadge,
+                        newTotalPoints = 0, // Se actualizará en el siguiente refresh
+                        bonusPointsAwarded = claimedBadge.pointsAwarded
+                    )
+                }
+
+                // Buscar badge en cache
+                val claimedBadge = badgesCache?.find { it.id == badgeId }
+                    ?: getCachedBadges().find { it.id == badgeId }
+                    ?: throw Exception("Badge no encontrado")
+
+                Log.d("BadgeRepository", "✅ Badge reclamado: ${claimedBadge.name}, Puntos: ${claimedBadge.pointsAwarded}")
+
+                ClaimResult.Success(
+                    updatedUser = userData,
+                    claimedBadge = claimedBadge,
+                    newTotalPoints = userData.total_points,
+                    bonusPointsAwarded = claimedBadge.pointsAwarded
+                )
+
+            } catch (parseException: Exception) {
+                Log.w("BadgeRepository", "⚠️ Error parseando respuesta, pero reclamo fue exitoso", parseException)
+
+                // El reclamo fue exitoso según el servidor, así que retornamos éxito
+                val claimedBadge = badgesCache?.find { it.id == badgeId }
+                    ?: getCachedBadges().find { it.id == badgeId }
+                    ?: throw Exception("Badge no encontrado")
+
+                return@withContext ClaimResult.Success(
+                    updatedUser = createFallbackUser(userId, badgeId),
+                    claimedBadge = claimedBadge,
+                    newTotalPoints = 0,
+                    bonusPointsAwarded = claimedBadge.pointsAwarded
+                )
+            }
 
         } catch (e: Exception) {
+            Log.e("BadgeRepository", "❌ Exception crítica en claimBadge", e)
             ClaimResult.Error(e.message ?: "Error desconocido")
         }
     }
 
     /**
-     * Verifica si un badge específico puede ser reclamado
+     * Crea un usuario fallback cuando el parsing falla pero el reclamo fue exitoso
      */
+    private fun createFallbackUser(userId: Int, newBadgeId: Int): UserData {
+        // Intentar obtener el usuario actual de SessionManager si está disponible
+        return UserData(
+            id = userId,
+            name = "",
+            last_name = "",
+            email = "",
+            phone = "",
+            curp = "",
+            total_points = 0,
+            points_month = 0,
+            streak = 0,
+            tour = false,
+            verification_status = 0,
+            two_factor_status = false,
+            code_identity = "",
+            status = 1,
+            alliance = null,
+            badge = listOf(newBadgeId), // Al menos incluir el badge recién reclamado
+            created_at = "",
+            updated_at = "",
+            role = RoleData(
+                id = 0,
+                name = "",
+                display_name = "",
+                is_active = true
+            )
+        )
+    }
+
     suspend fun canClaimBadge(
         token: String,
         userId: Int,
@@ -312,16 +344,12 @@ class BadgeRepository {
         }
     }
 
-    /**
-     * Obtiene el progreso hacia el siguiente badge
-     */
     suspend fun getNextBadgeProgress(
         token: String,
         userId: Int
     ): NextBadgeProgress? = withContext(Dispatchers.IO) {
         when (val result = getBadgesWithState(token, userId)) {
             is BadgeResult.Success -> {
-                // Buscar el primer badge no reclamado
                 val nextBadge = result.allBadges.firstOrNull { !it.isClaimed }
 
                 nextBadge?.let {
@@ -343,9 +371,6 @@ class BadgeRepository {
         }
     }
 
-    /**
-     * Limpia el cache de badges (útil después de reclamar)
-     */
     fun clearCache() {
         badgesCache = null
         cacheTimestamp = 0

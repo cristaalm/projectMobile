@@ -1,6 +1,7 @@
 package com.renova.mobile.network
 
 import android.content.Context
+import com.google.gson.Gson
 import com.google.gson.annotations.SerializedName
 import okhttp3.OkHttpClient
 import okhttp3.logging.HttpLoggingInterceptor
@@ -14,6 +15,8 @@ import java.util.concurrent.TimeUnit
 import com.renova.mobile.data.model.AllianceStatsResponse
 import com.renova.mobile.data.model.ActivityByDayResponse
 import com.renova.mobile.data.model.TopRewardsResponse
+import com.google.gson.GsonBuilder
+import com.google.gson.reflect.TypeToken
 
 data class CashCutResponse(
     val success: Boolean,
@@ -731,6 +734,13 @@ data class ClaimBadgeRequestV2(
     @SerializedName("badge") val badgeId: Int
 )
 
+private val gson = GsonBuilder()
+    .registerTypeAdapter(
+        object : TypeToken<BadgeCollection?>() {}.type,
+        BadgeCollectionDeserializer()
+    )
+    .create()
+
 // ========== INTERFAZ ApiService (COMBINADA) ==========
 interface ApiService {
 
@@ -922,7 +932,6 @@ object ApiClient {
         level = HttpLoggingInterceptor.Level.BODY
     }
 
-    // ✅ Lista de endpoints que NO requieren autenticación
     private val publicEndpoints = listOf(
         "/api/users/register",
         "/api/auth/login",
@@ -934,7 +943,7 @@ object ApiClient {
     private val client: OkHttpClient
         get() {
             if (sessionManager == null) {
-                throw IllegalStateException("ApiClient no ha sido inicializado. Llama a ApiClient.init(context) en tu Application o Activity.")
+                throw IllegalStateException("ApiClient no ha sido inicializado")
             }
 
             return OkHttpClient.Builder()
@@ -942,27 +951,15 @@ object ApiClient {
                 .addInterceptor { chain ->
                     val original = chain.request()
                     val url = original.url.toString()
-
-                    // ✅ Verificar si es un endpoint público
-                    val isPublicEndpoint = publicEndpoints.any { endpoint ->
-                        url.contains(endpoint)
-                    }
-
+                    val isPublicEndpoint = publicEndpoints.any { url.contains(it) }
                     val builder = original.newBuilder()
 
-                    // ✅ Solo añadir token si NO es un endpoint público
                     if (!isPublicEndpoint) {
                         val token = sessionManager?.getAuthToken()
                         val tokenType = sessionManager?.getTokenType() ?: "Bearer"
-
                         if (!token.isNullOrEmpty()) {
-                            android.util.Log.d("ApiClient", "🔐 Endpoint protegido: ${original.url.encodedPath} - Añadiendo token")
                             builder.addHeader("Authorization", "$tokenType $token")
-                        } else {
-                            android.util.Log.w("ApiClient", "⚠️ Token no disponible para: ${original.url.encodedPath}")
                         }
-                    } else {
-                        android.util.Log.d("ApiClient", "🔓 Endpoint público: ${original.url.encodedPath} - Sin token")
                     }
 
                     chain.proceed(builder.build())
@@ -973,11 +970,26 @@ object ApiClient {
                 .build()
         }
 
+    // ✅ CONFIGURACIÓN CRÍTICA: Gson con deserializador personalizado
+    private val gson: Gson by lazy {
+        GsonBuilder()
+            .registerTypeAdapter(
+                object : TypeToken<BadgeCollection?>() {}.type,
+                BadgeCollectionDeserializer()
+            )
+            .registerTypeAdapter(
+                ClaimBadgeResponse::class.java,
+                ClaimBadgeResponseDeserializer()
+            )
+            .setLenient()
+            .create()
+    }
+
     val apiService: ApiService by lazy {
         Retrofit.Builder()
             .baseUrl(BASE_URL)
             .client(client)
-            .addConverterFactory(GsonConverterFactory.create())
+            .addConverterFactory(GsonConverterFactory.create(gson))
             .build()
             .create(ApiService::class.java)
     }
