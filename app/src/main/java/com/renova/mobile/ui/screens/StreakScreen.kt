@@ -579,7 +579,8 @@ private fun StreakCard(
                             style = MaterialTheme.typography.titleLarge,
                             color = Color.White.copy(alpha = 0.8f),
                             fontSize = 20.sp,
-                            modifier = Modifier.padding(bottom = 8.dp),
+                            lineHeight = 56.sp,
+                            modifier = Modifier.padding(bottom = 13.dp),
                             fontFamily = PoppinsFontFamily
                         )
                     }
