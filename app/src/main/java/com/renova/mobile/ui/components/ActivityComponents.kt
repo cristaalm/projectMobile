@@ -242,7 +242,7 @@ fun DetailSheet(activity: ActivityItem) {
     val pointsColor = when (activity.type_history) {
         1 -> colors.negativePoints // Canjeo - siempre rojo
         2 -> if (activity.points == 0) colors.textPrimary else colors.primaryColor
-        3 -> if (activity.points < 0) colors.negativePoints else colors.primaryColor
+        3 -> colors.primaryColor
         else -> if (activity.points < 0) colors.negativePoints else colors.primaryColor
     }
 
@@ -250,8 +250,8 @@ fun DetailSheet(activity: ActivityItem) {
     val pointsText = when (activity.type_history) {
         1 -> if ("${activity.points}".startsWith("-")) "${activity.points}" else "-${activity.points}"
         2 -> if (activity.points == 0) "-${activity.points}-" else "+${activity.points}"
-        3 -> if (activity.points < 0) "${activity.points}" else "+${activity.points}"
-        else -> if (activity.points < 0) "${activity.points}" else "+${activity.points * -1}"
+        3 -> "${activity.points}"
+        else -> if (activity.points < 0) "+${activity.points}" else "${activity.points * -1}"
     }
 
     Column(
