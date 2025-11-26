@@ -148,7 +148,7 @@ data class User(
     val verification_status: Int?,
     val total_points: Int?,
     val points_month: Int = 0,
-    val badge: BadgeCollection? = null,
+    @SerializedName("badge") val badge: BadgeCollection? = null,
     val code_identity: String?,
     val role: Role?,
     val alliance_id: Int?,
@@ -432,17 +432,28 @@ data class UserData( // Versión de DEVELOP (más completa)
     @SerializedName("curp") val curp: String,
     val total_points: Int,
     val points_month: Int,
+    val streak: Int = 0,
     val tour: Boolean = false,
     val verification_status: Int, // 0=pendiente, 1=aprobado, 2=rechazado, 3=sin docs
     val two_factor_status: Boolean,
     val code_identity: String,
     val status: Int,
-    val alliance: Alliance?, // Esta línea es la diferencia (objeto vs id)
-    val badge: BadgeCollection = BadgeCollection(),
+    val alliance: Alliance?,
+    @SerializedName("badge") val badge: BadgeCollection? = null,
     val created_at: String,
     val updated_at: String,
     val role: RoleData
 )
+
+typealias BadgeCollection = List<Int>
+
+fun BadgeCollection?.containsBadge(badgeId: Int): Boolean {
+    return this?.contains(badgeId) ?: false
+}
+
+fun BadgeCollection?.toSafeSet(): Set<Int> {
+    return this?.toSet() ?: emptySet()
+}
 
 // Rol del usuario
 data class RoleData(
@@ -499,51 +510,17 @@ data class DayScanData(
     val scans_count: Int
 )
 
-data class BadgeCollection(
-    @SerializedName("Eco Warrior") val ecoWarrior: Boolean = false,
-    @SerializedName("Recycler Pro") val recyclerPro: Boolean = false,
-    @SerializedName("Green Hero") val greenHero: Boolean = false,
-    @SerializedName("Planet Saver") val planetSaver: Boolean = false
-) {
-    /**
-     * Verifica si un badge específico está reclamado
-     */
-    fun isClaimed(badgeName: String): Boolean {
-        return when (badgeName) {
-            "Eco Warrior" -> ecoWarrior
-            "Recycler Pro" -> recyclerPro
-            "Green Hero" -> greenHero
-            "Planet Saver" -> planetSaver
-            else -> false
-        }
-    }
-
-    fun toList(): List<BadgeInfo> {
-        return listOf(
-            BadgeInfo(name = "Eco Warrior", claimed = ecoWarrior),
-            BadgeInfo(name = "Recycler Pro", claimed = recyclerPro),
-            BadgeInfo(name = "Green Hero", claimed = greenHero),
-            BadgeInfo(name = "Planet Saver", claimed = planetSaver)
-        )
-    }
-}
-
-// Request para reclamar badge
-data class ClaimBadgeRequest(
-    @SerializedName("user_id") val userId: Int,
-    @SerializedName("badge_name") val badgeName: String
-)
-
 data class ClaimBadgeResponse(
     val success: Boolean,
     val message: String,
     val data: ClaimBadgeData?,
     val errors: Any?,
-    val status: Int
+    val code: Int
 )
 
 data class ClaimBadgeData(
-    val user: UserData
+    val user: UserData,
+    val badge: Badge
 )
 
 // ========== REWARD CLAIM (Versión de DEVELOP) ==========
@@ -921,9 +898,6 @@ interface ApiService {
         @Path("userId") userId: Int,
         @Body request: TourCompleteRequest
     ): Response<TourCompleteResponse>
-
-    @POST("api/users/update-badge")
-    suspend fun claimBadge(@Body request: ClaimBadgeRequest): Response<ClaimBadgeResponse>
 
     @GET("api/users/getStreak")
     suspend fun getStreak(): Response<StreakResponse>

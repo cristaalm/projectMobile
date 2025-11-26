@@ -626,7 +626,7 @@
     <string name="unlimited">Ilimitado</string>
     <string name="available_to_claim">Disponible para reclamar</string>
     <string name="claimed">Reclamado</string>
-    <string name="claim_reward">Reclamar Recompensa</string>
+    <string name="claim_reward">Reclamar</string>
     <string name="bonus">bonus</string>
     <string name="weekly_activity">Actividad semanal</string>
     <string name="monday_short">L</string>
@@ -793,7 +793,7 @@
     <string name="error_duplicate_data">Este dato ya existe en el sistema</string>
     <string name="error_validation">Error de validación. Verifica los datos ingresados</string>
     <string name="change_password">Cambiar Contraseña</string>
-    <string name="security_section">Seguridad</string>
+    <string name="security_section">Cambiar contraseña</string>
     <string name="current_password">Contraseña Actual</string>
     <string name="new_password">Nueva Contraseña</string>
     <string name="confirm_new_password">Confirmar Nueva Contraseña</string>

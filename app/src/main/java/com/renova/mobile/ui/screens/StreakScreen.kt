@@ -38,7 +38,6 @@ import coil.compose.AsyncImage
 import coil.decode.ImageDecoderDecoder
 import coil.request.ImageRequest
 import com.renova.mobile.R
-import com.renova.mobile.network.BadgeCollection
 import com.renova.mobile.ui.components.*
 import com.renova.mobile.ui.theme.LocalRenovaColors
 import com.renova.mobile.ui.theme.PoppinsFontFamily
@@ -298,8 +297,6 @@ fun StreakScreen(
                                 StreakCard(
                                     currentStreak = state.currentStreak,
                                     isStreakActive = state.isStreakActive,
-                                    longestStreak = state.longestStreak,
-                                    totalDays = state.totalRecyclingDays,
                                     renovaColors = renovaColors,
                                     scrollState = scrollState,
                                     tourState = tourState
@@ -496,8 +493,6 @@ fun StreakScreen(
 private fun StreakCard(
     currentStreak: Int,
     isStreakActive: Boolean,
-    longestStreak: Int,
-    totalDays: Int,
     renovaColors: RenovaColorScheme,
     scrollState: ScrollState,
     tourState: TourState

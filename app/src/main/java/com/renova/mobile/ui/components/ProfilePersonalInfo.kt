@@ -41,6 +41,7 @@ import androidx.compose.animation.expandVertically
 import androidx.compose.animation.shrinkVertically
 import androidx.compose.foundation.clickable
 import androidx.compose.ui.draw.rotate
+import com.renova.mobile.ui.theme.RenovaColorScheme
 
 
 @Composable
@@ -750,7 +751,7 @@ fun PersonalInfoCard(
 @Composable
 fun SecurityCard(
     viewModel: ProfileViewModel,
-    verificationStatus: VerificationStatus // ⭐ NUEVO PARÁMETRO
+    verificationStatus: VerificationStatus
 ) {
     val colors = LocalRenovaColors.current
     val passwordResetState by viewModel.passwordResetState.collectAsState()
@@ -791,19 +792,17 @@ fun SecurityCard(
         }
     }
 
-    val errorPasswordTooShort = stringResource(R.string.error_password_too_short)
-    val errorPasswordNoNumber = stringResource(R.string.error_password_no_number)
-    val errorPasswordNoSpecial = stringResource(R.string.error_password_no_special)
+    // Estados de validación individual para nueva contraseña
+    val hasMinLength = newPassword.length >= 8
+    val hasNumber = newPassword.any { it.isDigit() }
+    val hasSpecialChar = newPassword.any { it in "!@#$%^&*()_+-=[]{};':\"\\|,.<>/?`~" }
+    val allPasswordRequirementsMet = hasMinLength && hasNumber && hasSpecialChar
+
     val errorPasswordMismatch = stringResource(R.string.error_password_mismatch)
 
     LaunchedEffect(newPassword) {
         if (newPassword.isNotEmpty()) {
-            newPasswordError = when {
-                newPassword.length < 8 -> errorPasswordTooShort
-                !newPassword.any { it.isDigit() } -> errorPasswordNoNumber
-                !newPassword.any { it in "!@#$%^&*()_+-=[]{}|;:,.<>?" } -> errorPasswordNoSpecial
-                else -> null
-            }
+            newPasswordError = if (!allPasswordRequirementsMet) "Requisitos no cumplidos" else null
         } else {
             newPasswordError = null
         }
@@ -826,7 +825,7 @@ fun SecurityCard(
             confirmPasswordError == null &&
             !isLoading
 
-    // ⭐ NUEVO: Definir colores según el estado de verificación
+    // Definir colores según el estado de verificación
     val headerBackgroundColor = when (verificationStatus) {
         VerificationStatus.REJECTED -> RenovaColors.Error.copy(alpha = 0.125f)
         VerificationStatus.VERIFIED -> colors.primaryColor.copy(alpha = 0.125f)
@@ -854,7 +853,7 @@ fun SecurityCard(
         color = colors.cardBackground,
         border = androidx.compose.foundation.BorderStroke(
             width = 1.5.dp,
-            color = borderColor // ⭐ MODIFICADO: Color dinámico
+            color = borderColor
         )
     ) {
         Column {
@@ -862,7 +861,7 @@ fun SecurityCard(
                 modifier = Modifier
                     .fillMaxWidth()
                     .clickable { isExpanded = !isExpanded },
-                color = headerBackgroundColor // ⭐ MODIFICADO: Color dinámico
+                color = headerBackgroundColor
             ) {
                 Row(
                     modifier = Modifier
@@ -879,7 +878,7 @@ fun SecurityCard(
                         Icon(
                             imageVector = Icons.Default.Lock,
                             contentDescription = null,
-                            tint = iconTint, // ⭐ MODIFICADO: Color dinámico
+                            tint = iconTint,
                             modifier = Modifier.size(16.dp)
                         )
                         Text(
@@ -892,7 +891,7 @@ fun SecurityCard(
                     Icon(
                         imageVector = Icons.Default.KeyboardArrowDown,
                         contentDescription = "Toggle",
-                        tint = iconTint, // ⭐ MODIFICADO: Color dinámico
+                        tint = iconTint,
                         modifier = Modifier
                             .size(32.dp)
                             .rotate(arrowRotation)
@@ -985,7 +984,7 @@ fun SecurityCard(
 
                         OutlinedTextField(
                             value = newPassword,
-                            onValueChange = { newPassword = it },
+                            onValueChange = { if (it.length <= 14) newPassword = it },
                             modifier = Modifier.fillMaxWidth(),
                             singleLine = true,
                             visualTransformation = if (showNewPassword)
@@ -1000,21 +999,49 @@ fun SecurityCard(
                                 )
                             },
                             trailingIcon = {
-                                IconButton(onClick = { showNewPassword = !showNewPassword }) {
-                                    Icon(
-                                        imageVector = if (showNewPassword)
-                                            Icons.Default.Visibility
-                                        else
-                                            Icons.Default.VisibilityOff,
-                                        contentDescription = if (showNewPassword)
-                                            "Ocultar contraseña"
-                                        else
-                                            "Mostrar contraseña",
-                                        tint = colors.textSecondary
-                                    )
+                                Row(
+                                    horizontalArrangement = Arrangement.End,
+                                    verticalAlignment = Alignment.CenterVertically
+                                ) {
+                                    AnimatedVisibility(
+                                        visible = newPassword.isNotEmpty(),
+                                        enter = fadeIn() + scaleIn(),
+                                        exit = fadeOut() + scaleOut()
+                                    ) {
+                                        if (allPasswordRequirementsMet) {
+                                            Icon(
+                                                imageVector = Icons.Default.CheckCircle,
+                                                contentDescription = "Valid",
+                                                tint = colors.primaryColor,
+                                                modifier = Modifier.size(20.dp)
+                                            )
+                                        } else {
+                                            Icon(
+                                                imageVector = Icons.Default.Error,
+                                                contentDescription = "Error",
+                                                tint = RenovaColors.Error,
+                                                modifier = Modifier.size(20.dp)
+                                            )
+                                        }
+                                    }
+
+                                    Spacer(modifier = Modifier.width(8.dp))
+                                    IconButton(onClick = { showNewPassword = !showNewPassword }) {
+                                        Icon(
+                                            imageVector = if (showNewPassword)
+                                                Icons.Default.Visibility
+                                            else
+                                                Icons.Default.VisibilityOff,
+                                            contentDescription = if (showNewPassword)
+                                                "Ocultar contraseña"
+                                            else
+                                                "Mostrar contraseña",
+                                            tint = colors.textSecondary
+                                        )
+                                    }
                                 }
                             },
-                            isError = newPasswordError != null,
+                            isError = newPasswordError != null && newPassword.isNotEmpty(),
                             enabled = !isLoading,
                             colors = OutlinedTextFieldDefaults.colors(
                                 focusedBorderColor = colors.borderFocused,
@@ -1026,13 +1053,39 @@ fun SecurityCard(
                             )
                         )
 
-                        newPasswordError?.let { error ->
-                            Text(
-                                text = error,
-                                color = RenovaColors.Error,
-                                style = MaterialTheme.typography.bodySmall,
-                                modifier = Modifier.padding(start = 16.dp, top = 4.dp)
-                            )
+                        // Lista de requisitos animada
+                        AnimatedVisibility(
+                            visible = newPassword.isNotEmpty(),
+                            enter = fadeIn() + expandVertically(),
+                            exit = fadeOut() + shrinkVertically()
+                        ) {
+                            Column(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(start = 16.dp, top = 8.dp, end = 16.dp)
+                            ) {
+                                PasswordRequirementItem(
+                                    text = stringResource(R.string.validation_err_pwd_min_length),
+                                    isMet = hasMinLength,
+                                    colors = colors
+                                )
+
+                                Spacer(modifier = Modifier.height(4.dp))
+
+                                PasswordRequirementItem(
+                                    text = stringResource(R.string.validation_err_pwd_need_number),
+                                    isMet = hasNumber,
+                                    colors = colors
+                                )
+
+                                Spacer(modifier = Modifier.height(4.dp))
+
+                                PasswordRequirementItem(
+                                    text = stringResource(R.string.validation_err_pwd_need_special),
+                                    isMet = hasSpecialChar,
+                                    colors = colors
+                                )
+                            }
                         }
                     }
 
@@ -1047,7 +1100,7 @@ fun SecurityCard(
 
                         OutlinedTextField(
                             value = confirmPassword,
-                            onValueChange = { confirmPassword = it },
+                            onValueChange = { if (it.length <= 14) confirmPassword = it },
                             modifier = Modifier.fillMaxWidth(),
                             singleLine = true,
                             visualTransformation = if (showConfirmPassword)
@@ -1062,18 +1115,46 @@ fun SecurityCard(
                                 )
                             },
                             trailingIcon = {
-                                IconButton(onClick = { showConfirmPassword = !showConfirmPassword }) {
-                                    Icon(
-                                        imageVector = if (showConfirmPassword)
-                                            Icons.Default.Visibility
-                                        else
-                                            Icons.Default.VisibilityOff,
-                                        contentDescription = if (showConfirmPassword)
-                                            "Ocultar contraseña"
-                                        else
-                                            "Mostrar contraseña",
-                                        tint = colors.textSecondary
-                                    )
+                                Row(
+                                    horizontalArrangement = Arrangement.End,
+                                    verticalAlignment = Alignment.CenterVertically
+                                ) {
+                                    AnimatedVisibility(
+                                        visible = confirmPassword.isNotEmpty(),
+                                        enter = fadeIn() + scaleIn(),
+                                        exit = fadeOut() + scaleOut()
+                                    ) {
+                                        if (confirmPasswordError == null && confirmPassword.isNotEmpty()) {
+                                            Icon(
+                                                imageVector = Icons.Default.CheckCircle,
+                                                contentDescription = "Valid",
+                                                tint = colors.primaryColor,
+                                                modifier = Modifier.size(20.dp)
+                                            )
+                                        } else if (confirmPasswordError != null) {
+                                            Icon(
+                                                imageVector = Icons.Default.Error,
+                                                contentDescription = "Error",
+                                                tint = RenovaColors.Error,
+                                                modifier = Modifier.size(20.dp)
+                                            )
+                                        }
+                                    }
+
+                                    Spacer(modifier = Modifier.width(8.dp))
+                                    IconButton(onClick = { showConfirmPassword = !showConfirmPassword }) {
+                                        Icon(
+                                            imageVector = if (showConfirmPassword)
+                                                Icons.Default.Visibility
+                                            else
+                                                Icons.Default.VisibilityOff,
+                                            contentDescription = if (showConfirmPassword)
+                                                "Ocultar contraseña"
+                                            else
+                                                "Mostrar contraseña",
+                                            tint = colors.textSecondary
+                                        )
+                                    }
                                 }
                             },
                             isError = confirmPasswordError != null,
@@ -1140,6 +1221,34 @@ fun SecurityCard(
                 }
             }
         }
+    }
+}
+
+@Composable
+fun PasswordRequirementItem(
+    text: String,
+    isMet: Boolean,
+    colors: RenovaColorScheme
+) {
+    Row(
+        verticalAlignment = Alignment.CenterVertically,
+        modifier = Modifier.fillMaxWidth()
+    ) {
+        Icon(
+            imageVector = if (isMet) Icons.Default.CheckCircle else Icons.Default.Error,
+            contentDescription = null,
+            tint = if (isMet) colors.primaryColor else RenovaColors.Error,
+            modifier = Modifier.size(16.dp)
+        )
+
+        Spacer(modifier = Modifier.width(8.dp))
+
+        Text(
+            text = text,
+            color = if (isMet) colors.primaryColor else colors.textSecondary,
+            style = MaterialTheme.typography.bodySmall,
+            fontWeight = if (isMet) FontWeight.Medium else FontWeight.Normal
+        )
     }
 }
 

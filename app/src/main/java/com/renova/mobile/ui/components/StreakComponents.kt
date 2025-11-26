@@ -32,95 +32,80 @@ import com.renova.mobile.ui.screens.MonthlyBadge
 import com.renova.mobile.ui.theme.PoppinsFontFamily
 import com.renova.mobile.ui.theme.RenovaColorScheme
 import com.renova.mobile.ui.theme.RenovaColors
+import com.renova.mobile.ui.viewmodels.WeekDayData
 
 
 // WeeklyProgressChart
 @Composable
 fun WeeklyProgressChart(
-    weekData: List<Int>,
+    weekData: List<WeekDayData>,
     renovaColors: RenovaColorScheme
 ) {
-    val days = listOf("L", "M", "M", "J", "V", "S", "D")
-    val maxValue = weekData.maxOrNull() ?: 1
-
-    Column(
+    Card(
+        modifier = Modifier.fillMaxWidth(),
+        shape = RoundedCornerShape(16.dp),
+        colors = CardDefaults.cardColors(
+            containerColor = renovaColors.cardBackground
+        )
     ) {
-        Text(
-            text = stringResource(R.string.this_week),
-            style = MaterialTheme.typography.titleLarge,
-            color = renovaColors.textPrimary,
-            fontWeight = FontWeight.Bold,
-            fontSize = 21.sp,
-            fontFamily = PoppinsFontFamily
-        )
-
-        Spacer(modifier = Modifier.height(3.dp))
-
-        Text(
-            text = stringResource(R.string.recycling_activities_per_day),
-            style = MaterialTheme.typography.bodyMedium,
-            color = renovaColors.textSecondary,
-            fontSize = 14.sp,
-            fontFamily = PoppinsFontFamily
-        )
-
-        Spacer(modifier = Modifier.height(16.dp))
-
-        Card(
-            modifier = Modifier.fillMaxWidth(),
-            shape = RoundedCornerShape(20.dp),
-            colors = CardDefaults.cardColors(
-                containerColor = renovaColors.cardBackground
-            ),
-            elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(20.dp)
         ) {
+            Text(
+                text = stringResource(R.string.weekly_activity),
+                style = MaterialTheme.typography.titleMedium,
+                color = renovaColors.textPrimary,
+                fontWeight = FontWeight.Bold,
+                fontFamily = PoppinsFontFamily
+            )
+
+            Spacer(modifier = Modifier.height(16.dp))
+
             Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(20.dp),
-                horizontalArrangement = Arrangement.SpaceBetween,
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceEvenly,
                 verticalAlignment = Alignment.Bottom
             ) {
-                weekData.forEachIndexed { index, value ->
+                weekData.forEach { day ->
                     Column(
                         horizontalAlignment = Alignment.CenterHorizontally,
-                        verticalArrangement = Arrangement.Bottom,
                         modifier = Modifier.weight(1f)
                     ) {
-                        Text(
-                            text = "$value",
-                            style = MaterialTheme.typography.bodySmall,
-                            color = renovaColors.textSecondary,
-                            fontSize = 11.sp,
-                            fontWeight = FontWeight.SemiBold,
-                            fontFamily = PoppinsFontFamily
-                        )
-
-                        Spacer(modifier = Modifier.height(4.dp))
-
+                        // Barra de progreso
                         Box(
                             modifier = Modifier
-                                .width(24.dp)
-                                .height(((value.toFloat() / maxValue) * 80).dp.coerceAtLeast(8.dp))
+                                .width(32.dp)
+                                .height(
+                                    if (day.isActive) 100.dp else 20.dp
+                                )
                                 .background(
-                                    brush = Brush.verticalGradient(
-                                        colors = listOf(
-                                            RenovaColors.PrimaryColor,
-                                            RenovaColors.PrimaryColor.copy(alpha = 0.7f)
-                                        )
-                                    ),
-                                    shape = RoundedCornerShape(topStart = 8.dp, topEnd = 8.dp)
+                                    color = if (day.isActive)
+                                        renovaColors.primaryColor
+                                    else
+                                        renovaColors.textSecondary.copy(alpha = 0.2f),
+                                    shape = RoundedCornerShape(
+                                        topStart = 8.dp,
+                                        topEnd = 8.dp
+                                    )
                                 )
                         )
 
-                        Spacer(modifier = Modifier.height(6.dp))
+                        Spacer(modifier = Modifier.height(8.dp))
 
+                        // Etiqueta del día
                         Text(
-                            text = days[index],
+                            text = day.day,
                             style = MaterialTheme.typography.bodySmall,
-                            color = renovaColors.textSecondary,
-                            fontSize = 12.sp,
-                            fontWeight = FontWeight.Medium,
+                            color = if (day.isActive)
+                                renovaColors.textPrimary
+                            else
+                                renovaColors.textSecondary,
+                            fontWeight = if (day.isActive)
+                                FontWeight.Bold
+                            else
+                                FontWeight.Normal,
                             fontFamily = PoppinsFontFamily
                         )
                     }

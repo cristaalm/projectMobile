@@ -625,7 +625,7 @@
     <string name="unlimited">Unlimited</string>
     <string name="available_to_claim">Available to claim</string>
     <string name="claimed">Claimed</string>
-    <string name="claim_reward">Claim Reward</string>
+    <string name="claim_reward">Claim</string>
     <string name="bonus">bonus</string>
     <string name="weekly_activity">Actividad semanal</string>
     <string name="monday_short">M</string>
@@ -797,7 +797,7 @@
     <string name="error_duplicate_data">This data already exists in the system</string>
     <string name="error_validation">Validation error. Please check the entered data</string>
     <string name="change_password">Change Password</string>
-    <string name="security_section">Security</string>
+    <string name="security_section">Change Password</string>
     <string name="current_password">Current Password</string>
     <string name="new_password">New Password</string>
     <string name="confirm_new_password">Confirm New Password</string>
