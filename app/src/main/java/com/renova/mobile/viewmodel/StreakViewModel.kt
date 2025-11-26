@@ -7,7 +7,6 @@ import com.renova.mobile.network.ApiClient
 import com.renova.mobile.network.IdentifyUserRequest
 import com.renova.mobile.repository.BadgeRepository
 import com.renova.mobile.ui.screens.MonthlyBadge
-import com.renova.mobile.ui.screens.calculateDaysSinceRegistration
 import com.renova.mobile.ui.screens.getBadgeVisualConfig
 import com.renova.mobile.utils.SessionManager
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -15,10 +14,12 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import android.util.Log
 
 data class WeekDayData(
     val day: String,
-    val isActive: Boolean
+    val isActive: Boolean,
+    val materialsCount: Int = 0
 )
 
 data class StreakState(
@@ -75,37 +76,69 @@ class StreakViewModel(application: Application) : AndroidViewModel(application) 
                     return@launch
                 }
 
-                // 1. Obtener datos del usuario
+                // 1. Obtener datos básicos del usuario (puntos, badges)
                 val identityResponse = ApiClient.apiService.identifyUser(
                     IdentifyUserRequest(token = token, with_identity = false)
                 )
 
-                if (identityResponse.isSuccessful && identityResponse.body()?.success == true) {
-                    val userData = identityResponse.body()?.data?.user
-
-                    if (userData != null) {
-                        // Calcular días desde registro
-                        val daysSinceRegistration = calculateDaysSinceRegistration(userData.created_at)
-
-                        _state.update {
-                            it.copy(
-                                currentStreak = userData.streak,
-                                isStreakActive = userData.streak > 0,
-                                currentMonthPoints = userData.points_month,
-                                userId = userData.id
-                            )
-                        }
-
-                        sessionManager.saveUser(userData)
+                if (!identityResponse.isSuccessful || identityResponse.body()?.success != true) {
+                    _state.update {
+                        it.copy(
+                            error = "ERROR_UNKNOWN",
+                            isLoading = false
+                        )
                     }
+                    return@launch
                 }
 
-                // 2. Cargar badges
+                val userData = identityResponse.body()?.data?.user
+                if (userData == null) {
+                    _state.update {
+                        it.copy(
+                            error = "ERROR_UNKNOWN",
+                            isLoading = false
+                        )
+                    }
+                    return@launch
+                }
+
+                // 2. Obtener la racha desde el endpoint específico (OBLIGATORIO)
+                var currentStreak = 0
+                var isStreakActive = false
+
+                try {
+                    val streakResponse = ApiClient.apiService.getStreak()
+                    if (streakResponse.isSuccessful && streakResponse.body()?.success == true) {
+                        val streakData = streakResponse.body()?.data
+                        currentStreak = streakData?.streak ?: 0
+                        isStreakActive = streakData?.is_active ?: false
+                    } else {
+                        Log.w("StreakViewModel", "⚠️ Error obteniendo racha: ${streakResponse.code()}")
+                    }
+                } catch (e: Exception) {
+                    Log.e("StreakViewModel", "❌ Error llamando a getStreak(): ${e.message}")
+                }
+
+                // 3. Actualizar estado con datos de usuario y racha
+                _state.update {
+                    it.copy(
+                        currentStreak = currentStreak,
+                        isStreakActive = isStreakActive,
+                        currentMonthPoints = userData.points_month,
+                        userId = userData.id
+                    )
+                }
+
+                // Guardar usuario con racha actualizada
+                sessionManager.saveUser(userData.copy(streak = currentStreak))
+
+                // 4. Cargar badges
                 loadBadges()
 
-                // 3. Generar datos de la semana (simulados por ahora)
-                val weekData = generateWeekData()
+                // 5. Cargar datos de la semana desde el repositorio
+                val weekData = loadWeekData()
 
+                // 6. Actualizar estado final
                 _state.update {
                     it.copy(
                         weekData = weekData,
@@ -187,14 +220,28 @@ class StreakViewModel(application: Application) : AndroidViewModel(application) 
         }
     }
 
-    private fun generateWeekData(): List<WeekDayData> {
+    private suspend fun loadWeekData(): List<WeekDayData> {
+        return try {
+            when (val result = badgeRepository.getWeeklyActivity()) {
+                is BadgeRepository.WeekDataResult.Success -> {
+                    result.weekData
+                }
+                is BadgeRepository.WeekDataResult.Error -> {
+                    generateEmptyWeekData()
+                }
+            }
+        } catch (e: Exception) {
+            generateEmptyWeekData()
+        }
+    }
+
+    private fun generateEmptyWeekData(): List<WeekDayData> {
         val days = listOf("L", "M", "M", "J", "V", "S", "D")
-        // Por ahora, generamos datos aleatorios
-        // En producción, esto vendría del backend
         return days.map { day ->
             WeekDayData(
                 day = day,
-                isActive = (0..1).random() == 1
+                isActive = false,
+                materialsCount = 0
             )
         }
     }
@@ -230,7 +277,6 @@ class StreakViewModel(application: Application) : AndroidViewModel(application) 
                             )
                         }
 
-                        // Recargar datos para reflejar cambios
                         loadStreakData(isManualRefresh = false)
                     }
                     is BadgeRepository.ClaimResult.Error -> {

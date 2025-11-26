@@ -41,6 +41,9 @@ fun WeeklyProgressChart(
     weekData: List<WeekDayData>,
     renovaColors: RenovaColorScheme
 ) {
+    // Encontrar el máximo para escalar las barras proporcionalmente
+    val maxMaterials = weekData.maxOfOrNull { it.materialsCount } ?: 1
+
     Card(
         modifier = Modifier.fillMaxWidth(),
         shape = RoundedCornerShape(16.dp),
@@ -73,15 +76,34 @@ fun WeeklyProgressChart(
                         horizontalAlignment = Alignment.CenterHorizontally,
                         modifier = Modifier.weight(1f)
                     ) {
-                        // Barra de progreso
+                        // Cantidad de materiales arriba de la barra
+                        if (day.materialsCount > 0) {
+                            Text(
+                                text = "${day.materialsCount}",
+                                style = MaterialTheme.typography.bodySmall,
+                                color = renovaColors.primaryColor,
+                                fontWeight = FontWeight.Bold,
+                                fontSize = 12.sp,
+                                fontFamily = PoppinsFontFamily
+                            )
+                            Spacer(modifier = Modifier.height(4.dp))
+                        } else {
+                            Spacer(modifier = Modifier.height(20.dp))
+                        }
+
+                        // Barra de progreso con altura proporcional
+                        val barHeight = if (day.materialsCount > 0) {
+                            20.dp + (80.dp * (day.materialsCount.toFloat() / maxMaterials.toFloat()))
+                        } else {
+                            20.dp
+                        }
+
                         Box(
                             modifier = Modifier
                                 .width(32.dp)
-                                .height(
-                                    if (day.isActive) 100.dp else 20.dp
-                                )
+                                .height(barHeight)
                                 .background(
-                                    color = if (day.isActive)
+                                    color = if (day.materialsCount > 0)
                                         renovaColors.primaryColor
                                     else
                                         renovaColors.textSecondary.copy(alpha = 0.2f),
@@ -98,11 +120,11 @@ fun WeeklyProgressChart(
                         Text(
                             text = day.day,
                             style = MaterialTheme.typography.bodySmall,
-                            color = if (day.isActive)
+                            color = if (day.materialsCount > 0)
                                 renovaColors.textPrimary
                             else
                                 renovaColors.textSecondary,
-                            fontWeight = if (day.isActive)
+                            fontWeight = if (day.materialsCount > 0)
                                 FontWeight.Bold
                             else
                                 FontWeight.Normal,
@@ -114,6 +136,7 @@ fun WeeklyProgressChart(
         }
     }
 }
+
 
 @Composable
 fun MonthlyBadgesSectionV2(

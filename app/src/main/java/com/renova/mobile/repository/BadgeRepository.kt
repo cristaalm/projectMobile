@@ -7,11 +7,12 @@ import com.renova.mobile.network.ClaimBadgeRequestV2
 import com.renova.mobile.network.IdentifyUserRequest
 import com.renova.mobile.network.UserData
 import com.renova.mobile.network.toSafeSet
+import com.renova.mobile.ui.viewmodels.WeekDayData
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 
 /**
- * Repositorio que maneja la lógica de negocio de los badges
+ * Repositorio que maneja la lógica de negocio de los badges y actividad del usuario
  */
 class BadgeRepository {
 
@@ -55,6 +56,14 @@ class BadgeRepository {
         ) : ClaimResult()
 
         data class Error(val message: String) : ClaimResult()
+    }
+
+    /**
+     * Resultado de la obtención de datos semanales
+     */
+    sealed class WeekDataResult {
+        data class Success(val weekData: List<WeekDayData>) : WeekDataResult()
+        data class Error(val message: String) : WeekDataResult()
     }
 
     /**
@@ -127,6 +136,90 @@ class BadgeRepository {
     }
 
     /**
+     * Obtiene los datos de actividad semanal del usuario
+     */
+    suspend fun getWeeklyActivity(): WeekDataResult = withContext(Dispatchers.IO) {
+        try {
+
+            val response = ApiClient.apiService.getScansByDayOfWeek()
+
+            if (!response.isSuccessful) {
+                return@withContext WeekDataResult.Success(generateEmptyWeekData())
+            }
+
+            if (response.body()?.success != true) {
+                return@withContext WeekDataResult.Success(generateEmptyWeekData())
+            }
+
+            val scansByDay = response.body()?.data
+
+            if (scansByDay.isNullOrEmpty()) {
+                return@withContext WeekDataResult.Success(generateEmptyWeekData())
+            }
+
+            // Mapear los días de la API (en ESPAÑOL) a nuestro formato de letras
+            val dayMapSpanish = mapOf(
+                "Lunes" to "L",
+                "Martes" to "M",
+                "Miércoles" to "M",
+                "Jueves" to "J",
+                "Viernes" to "V",
+                "Sábado" to "S",
+                "Domingo" to "D"
+            )
+
+            // También soportar inglés por si la API cambia
+            val dayMapEnglish = mapOf(
+                "Monday" to "L",
+                "Tuesday" to "M",
+                "Wednesday" to "M",
+                "Thursday" to "J",
+                "Friday" to "V",
+                "Saturday" to "S",
+                "Sunday" to "D"
+            )
+
+            // Crear lista ordenada de lunes a domingo (en español como viene de la API)
+            val orderedDaysSpanish = listOf("Lunes", "Martes", "Miércoles", "Jueves", "Viernes", "Sábado", "Domingo")
+
+            val weekData = orderedDaysSpanish.map { dayName ->
+                val dayData = scansByDay.find { it.day == dayName }
+                val scansCount = dayData?.scans_count ?: 0
+
+                WeekDayData(
+                    day = dayMapSpanish[dayName] ?: dayMapEnglish[dayName] ?: dayName.first().toString(),
+                    isActive = scansCount > 0,
+                    materialsCount = scansCount
+                )
+            }
+
+            val totalScans = weekData.sumOf { it.materialsCount }
+            weekData.forEachIndexed { index, data ->
+            }
+
+            WeekDataResult.Success(weekData)
+
+        } catch (e: Exception) {
+            // En caso de error, retornar datos vacíos en lugar de fallar
+            WeekDataResult.Success(generateEmptyWeekData())
+        }
+    }
+
+    /**
+     * Genera datos vacíos para la semana (fallback)
+     */
+    private fun generateEmptyWeekData(): List<WeekDayData> {
+        val days = listOf("L", "M", "M", "J", "V", "S", "D")
+        return days.map { day ->
+            WeekDayData(
+                day = day,
+                isActive = false,
+                materialsCount = 0
+            )
+        }
+    }
+
+    /**
      * Obtiene badges con cache para reducir llamadas al API
      */
     private suspend fun getCachedBadges(): List<Badge> {
@@ -135,13 +228,11 @@ class BadgeRepository {
         // Si el cache es válido, retornarlo
         badgesCache?.let { cache ->
             if ((now - cacheTimestamp) < CACHE_DURATION) {
-                Log.d("BadgeRepository", "Using cached badges")
                 return cache
             }
         }
 
         // Cache inválido o no existe, hacer llamada al API
-        Log.d("BadgeRepository", "Fetching badges from API")
         val badgesResponse = ApiClient.apiService.getAllBadges(
             perPage = 100,
             status = 1
@@ -188,7 +279,6 @@ class BadgeRepository {
             val claimedBadge = badgesCache?.find { it.id == badgeId }
                 ?: run {
                     // Si no está en cache, hacer llamada (fallback)
-                    Log.w("BadgeRepository", "Badge not in cache, fetching from API")
                     val badges = getCachedBadges()
                     badges.find { it.id == badgeId }
                 } ?: return@withContext ClaimResult.Error("Badge no encontrado")
@@ -201,7 +291,6 @@ class BadgeRepository {
             )
 
         } catch (e: Exception) {
-            Log.e("BadgeRepository", "Error in claimBadge", e)
             ClaimResult.Error(e.message ?: "Error desconocido")
         }
     }

@@ -182,7 +182,7 @@ fun BadgeDialogV2(
                                 Text(
                                     text = stringResource(R.string.requirement),
                                     style = MaterialTheme.typography.bodySmall,
-                                    color = Color.White.copy(alpha = 0.7f),
+                                    color = Color.White,
                                     fontSize = 12.sp,
                                     fontFamily = PoppinsFontFamily
                                 )
@@ -210,7 +210,7 @@ fun BadgeDialogV2(
                                 Text(
                                     text = stringResource(R.string.reward_bonus),
                                     style = MaterialTheme.typography.bodySmall,
-                                    color = Color.White.copy(alpha = 0.7f),
+                                    color = Color.White,
                                     fontSize = 12.sp,
                                     fontFamily = PoppinsFontFamily
                                 )
