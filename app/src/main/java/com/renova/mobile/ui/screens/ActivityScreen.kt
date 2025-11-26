@@ -776,8 +776,8 @@ private fun MaterialStatCard(
     modifier: Modifier = Modifier
 ) {
     val fontSize = when {
-        count >= 1000 -> 34.sp
-        count >= 100 -> 38.sp
+        count >= 1000 -> 30.sp
+        count >= 100 -> 35.sp
         count >= 10 -> 44.sp
         else -> 44.sp
     }
