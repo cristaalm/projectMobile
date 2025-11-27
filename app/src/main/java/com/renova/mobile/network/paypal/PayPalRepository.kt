@@ -5,13 +5,13 @@ import android.util.Log
 import com.google.gson.Gson
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
+import java.util.Locale
 
 class PayPalRepository {
 
     private val apiService = PayPalRetrofitClient.apiService
     private val gson = Gson()
 
-    // ⚠️ IMPORTANTE: Reemplaza estas credenciales con las tuyas de:
     // https://developer.paypal.com/dashboard/applications/sandbox
     private val clientId = "AThNUpnQi_MZ9LRx8PxEOWohM-ltsTk8_YXt8gixL48zAOPz-fqLrIzW3wWx0ZHpxA8vC-I0H3OU1jUR"
     private val secret = "ENreADRRUNpj4Cr5qY6042JafhNRYLEPJ51jCZAOMJwVnP-L19I_eEORjZn5fRNMu9ZSRp9FnQLyRFeD"
@@ -99,8 +99,8 @@ class PayPalRepository {
                     PayoutItem(
                         recipientType = "EMAIL",
                         amount = PayoutAmount(
-                            value = String.format("%.2f", amountUSD),
-                            currency = "USD" // ⚠️ CAMBIO CRÍTICO: USD en lugar de MXN
+                            value = String.format(Locale.US, "%.2f", amountUSD),
+                            currency = "USD"
                         ),
                         receiver = recipientEmail,
                         note = "Cobro de puntos Renova - ID: $transactionId",
