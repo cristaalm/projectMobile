@@ -62,34 +62,33 @@ data class MonthlyBadge(
     val currentMonthProgress: Int = 0
 )
 
-fun getBadgeVisualConfig(badgeName: String): Triple<Int, Color, Color> {
-    return when (badgeName) {
-        "Eco Warrior" -> Triple(
-            R.drawable.ic_goal_1,
-            Color.White,
-            Color(0xFF024653)
-        )
-        "Recycler Pro" -> Triple(
-            R.drawable.ic_goal_2,
-            Color.White,
-            Color(0xFF01C851)
-        )
-        "Green Hero" -> Triple(
-            R.drawable.ic_goal_3,
-            Color.White,
-            Color(0xFF024653)
-        )
-        "Planet Saver" -> Triple(
-            R.drawable.ic_goal_4,
-            Color.White,
-            Color(0xFF01C851)
-        )
-        else -> Triple(
-            R.drawable.ic_goal_1,
-            Color.White,
-            Color(0xFF024653)
-        )
-    }
+fun getBadgeVisualConfig(badgeId: Int): Triple<Int, Color, Color> {
+    // ✅ Tus 4 iconos actuales
+    val availableIcons = listOf(
+        R.drawable.ic_goal_1,
+        R.drawable.ic_goal_2,
+        R.drawable.ic_goal_3,
+        R.drawable.ic_goal_4
+    )
+
+    // ✅ Colores variados para hacer más interesante
+    val availableColors = listOf(
+        Pair(Color.White, Color(0xFF024653)),  // Verde azulado oscuro
+        Pair(Color.White, Color(0xFF01C851)),  // Verde brillante
+        Pair(Color.White, Color(0xFF1976D2)),  // Azul
+        Pair(Color.White, Color(0xFF388E3C)),  // Verde medio
+        Pair(Color.White, Color(0xFF00897B)),  // Turquesa
+        Pair(Color.White, Color(0xFF5E35B1))   // Morado
+    )
+
+    // ✅ Usa el ID del badge para elegir (siempre será el mismo para cada badge)
+    val iconIndex = badgeId % availableIcons.size
+    val colorIndex = badgeId % availableColors.size
+
+    val selectedIcon = availableIcons[iconIndex]
+    val (textColor, bgColor) = availableColors[colorIndex]
+
+    return Triple(selectedIcon, textColor, bgColor)
 }
 
 @Composable
@@ -245,6 +244,20 @@ fun StreakScreen(
             showClaimErrorModal = true
         }
     }
+
+    LaunchedEffect(state.monthlyBadges, state.isClaimingBadge) {
+        selectedBadge?.let { currentBadge ->
+            android.util.Log.d("StreakScreen", "📦 Estado actualizado - isClaimingBadge: ${state.isClaimingBadge}")
+
+            // Buscar el badge actualizado en el nuevo estado
+            val updatedBadge = state.monthlyBadges.find { it.id == currentBadge.id }
+            if (updatedBadge != null) {
+                android.util.Log.d("StreakScreen", "🔄 Badge actualizado - isClaimed: ${updatedBadge.isClaimed}, isUnlocked: ${updatedBadge.isUnlocked}")
+                selectedBadge = updatedBadge // ✅ Actualizar con el nuevo estado
+            }
+        }
+    }
+
 
     Box(modifier = Modifier.fillMaxSize()) {
         when {
@@ -458,13 +471,14 @@ fun StreakScreen(
     // Dialog del badge seleccionado
     selectedBadge?.let { badge ->
         BadgeDialogV2(
-            badge = badge,
+            badge = badge, // Este badge se actualizará automáticamente
             currentMonthPoints = state.currentMonthPoints,
             isClaimingBadge = state.isClaimingBadge,
-            onDismiss = { selectedBadge = null },
+            onDismiss = {
+                selectedBadge = null
+            },
             onClaim = {
                 viewModel.claimBadge(badge.id)
-                selectedBadge = null
             }
         )
     }

@@ -2,15 +2,10 @@ package com.renova.mobile.repository
 
 import android.util.Log
 import com.renova.mobile.network.*
-import com.renova.mobile.network.toSafeSet
 import com.renova.mobile.ui.viewmodels.WeekDayData
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
-import org.json.JSONObject
 
-/**
- * Repositorio mejorado con manejo robusto de respuestas
- */
 class BadgeRepository {
 
     private var badgesCache: List<Badge>? = null
@@ -48,6 +43,43 @@ class BadgeRepository {
         data class Error(val message: String) : WeekDataResult()
     }
 
+    /**
+     * ✅ NUEVA FUNCIÓN: Obtiene badges del servidor sin procesar estado del usuario
+     */
+    suspend fun getAllBadgesFromServer(): List<Badge> = withContext(Dispatchers.IO) {
+        try {
+            val now = System.currentTimeMillis()
+            badgesCache?.let { cache ->
+                if ((now - cacheTimestamp) < CACHE_DURATION) {
+                    Log.d("BadgeRepository", "📦 Usando badges desde cache")
+                    return@withContext cache
+                }
+            }
+
+            Log.d("BadgeRepository", "📡 Obteniendo badges desde servidor...")
+            val badgesResponse = ApiClient.apiService.getAllBadges(
+                perPage = 100,
+                status = 1
+            )
+
+            if (!badgesResponse.isSuccessful || badgesResponse.body()?.success != true) {
+                throw Exception("Error al obtener badges del servidor")
+            }
+
+            val badges = badgesResponse.body()?.data?.data
+                ?: throw Exception("No hay badges disponibles")
+
+            badgesCache = badges
+            cacheTimestamp = now
+
+            Log.d("BadgeRepository", "✅ Badges obtenidos desde servidor: ${badges.size}")
+            return@withContext badges
+        } catch (e: Exception) {
+            Log.e("BadgeRepository", "❌ Error en getAllBadgesFromServer", e)
+            emptyList()
+        }
+    }
+
     suspend fun getBadgesWithState(
         token: String,
         userId: Int
@@ -64,7 +96,7 @@ class BadgeRepository {
             val userData = userResponse.body()?.data?.user
                 ?: return@withContext BadgeResult.Error("Datos de usuario no disponibles")
 
-            val allBadges = getCachedBadges()
+            val allBadges = getAllBadgesFromServer()
             val claimedBadgeIds = userData.badge.toSafeSet()
             val currentMonthPoints = userData.points_month
 
@@ -173,36 +205,6 @@ class BadgeRepository {
         }
     }
 
-    private suspend fun getCachedBadges(): List<Badge> {
-        val now = System.currentTimeMillis()
-
-        badgesCache?.let { cache ->
-            if ((now - cacheTimestamp) < CACHE_DURATION) {
-                return cache
-            }
-        }
-
-        val badgesResponse = ApiClient.apiService.getAllBadges(
-            perPage = 100,
-            status = 1
-        )
-
-        if (!badgesResponse.isSuccessful || badgesResponse.body()?.success != true) {
-            throw Exception("Error al obtener badges del servidor")
-        }
-
-        val badges = badgesResponse.body()?.data?.data
-            ?: throw Exception("No hay badges disponibles")
-
-        badgesCache = badges
-        cacheTimestamp = now
-
-        return badges
-    }
-
-    /**
-     * ✅ VERSIÓN MEJORADA: Valida éxito ANTES de parsear el objeto completo
-     */
     suspend fun claimBadge(
         userId: Int,
         badgeId: Int
@@ -217,18 +219,15 @@ class BadgeRepository {
                 )
             )
 
-            // ✅ PASO 1: Verificar si la respuesta HTTP fue exitosa
             if (!response.isSuccessful) {
                 val errorBody = response.errorBody()?.string()
                 Log.e("BadgeRepository", "❌ HTTP Error ${response.code()}: $errorBody")
                 return@withContext ClaimResult.Error("Error HTTP: ${response.code()}")
             }
 
-            // ✅ PASO 2: Leer el body RAW como string
             val rawBody = response.body()
             Log.d("BadgeRepository", "📦 Raw response body: $rawBody")
 
-            // ✅ PASO 3: Verificar el campo 'success' directamente del JSON
             val isSuccess = rawBody?.success == true
             val message = rawBody?.message ?: "Sin mensaje"
 
@@ -239,31 +238,25 @@ class BadgeRepository {
                 return@withContext ClaimResult.Error(message)
             }
 
-            // ✅ PASO 4: Si llegamos aquí, el reclamo fue EXITOSO en el servidor
-            // Ahora intentamos parsear los datos, pero si falla, igual retornamos éxito
-
             try {
                 val userData = rawBody.data?.user
 
                 if (userData == null) {
                     Log.w("BadgeRepository", "⚠️ No se recibió userData, pero el reclamo fue exitoso")
-                    // Buscar el badge en cache
                     val claimedBadge = badgesCache?.find { it.id == badgeId }
-                        ?: getCachedBadges().find { it.id == badgeId }
+                        ?: getAllBadgesFromServer().find { it.id == badgeId }
                         ?: throw Exception("Badge no encontrado en cache")
 
-                    // Retornar éxito con datos básicos
                     return@withContext ClaimResult.Success(
                         updatedUser = createFallbackUser(userId, badgeId),
                         claimedBadge = claimedBadge,
-                        newTotalPoints = 0, // Se actualizará en el siguiente refresh
+                        newTotalPoints = 0,
                         bonusPointsAwarded = claimedBadge.pointsAwarded
                     )
                 }
 
-                // Buscar badge en cache
                 val claimedBadge = badgesCache?.find { it.id == badgeId }
-                    ?: getCachedBadges().find { it.id == badgeId }
+                    ?: getAllBadgesFromServer().find { it.id == badgeId }
                     ?: throw Exception("Badge no encontrado")
 
                 Log.d("BadgeRepository", "✅ Badge reclamado: ${claimedBadge.name}, Puntos: ${claimedBadge.pointsAwarded}")
@@ -278,9 +271,8 @@ class BadgeRepository {
             } catch (parseException: Exception) {
                 Log.w("BadgeRepository", "⚠️ Error parseando respuesta, pero reclamo fue exitoso", parseException)
 
-                // El reclamo fue exitoso según el servidor, así que retornamos éxito
                 val claimedBadge = badgesCache?.find { it.id == badgeId }
-                    ?: getCachedBadges().find { it.id == badgeId }
+                    ?: getAllBadgesFromServer().find { it.id == badgeId }
                     ?: throw Exception("Badge no encontrado")
 
                 return@withContext ClaimResult.Success(
@@ -297,11 +289,7 @@ class BadgeRepository {
         }
     }
 
-    /**
-     * Crea un usuario fallback cuando el parsing falla pero el reclamo fue exitoso
-     */
     private fun createFallbackUser(userId: Int, newBadgeId: Int): UserData {
-        // Intentar obtener el usuario actual de SessionManager si está disponible
         return UserData(
             id = userId,
             name = "",
@@ -318,7 +306,7 @@ class BadgeRepository {
             code_identity = "",
             status = 1,
             alliance = null,
-            badge = listOf(newBadgeId), // Al menos incluir el badge recién reclamado
+            badge = listOf(newBadgeId),
             created_at = "",
             updated_at = "",
             role = RoleData(
@@ -384,4 +372,16 @@ class BadgeRepository {
         val progress: Float,
         val isUnlocked: Boolean
     )
+}
+
+// ============================================
+// Extension function
+// ============================================
+fun Any?.toSafeSet(): Set<Int> {
+    return when (this) {
+        is List<*> -> this.filterIsInstance<Number>().map { it.toInt() }.toSet()
+        is Int -> setOf(this)
+        null -> emptySet()
+        else -> emptySet()
+    }
 }

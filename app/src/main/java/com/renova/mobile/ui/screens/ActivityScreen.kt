@@ -1,5 +1,6 @@
 package com.renova.mobile.ui.screens
 
+import android.util.Log
 import androidx.compose.animation.EnterTransition
 import androidx.compose.animation.core.FastOutSlowInEasing
 import androidx.compose.animation.core.animate
@@ -671,7 +672,7 @@ fun ActivityHistoryCard(
         verticalAlignment = Alignment.CenterVertically
     ) {
         val iconData = when (activity.type_history) {
-            1 -> Pair(Icons.Default.ShoppingCart, RenovaColors.PrimaryColor)
+            1 -> Pair(Icons.Default.ShoppingCart, colors.negativePoints)
             2 -> Pair(Icons.Default.Recycling, RenovaColors.PrimaryColor)
             3 -> Pair(Icons.Default.Person, RenovaColors.PrimaryColor)
             else -> Pair(Icons.Default.History, RenovaColors.PrimaryColor)
@@ -751,9 +752,10 @@ fun ActivityHistoryCard(
             val pointsColor = when (activity.type_history) {
                 1 -> colors.negativePoints
                 2 -> if (activity.points == 0) colors.textPrimary else colors.primaryColor
-                3 -> if (activity.points < 0) colors.negativePoints else colors.primaryColor
+                3 -> RenovaColors.PrimaryColor
                 else -> if (activity.points == 0) colors.textPrimary else colors.primaryColor
             }
+
             Text(
                 text = "$displayPoints",
                 style = MaterialTheme.typography.bodyLarge.copy(

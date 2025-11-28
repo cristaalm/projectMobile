@@ -1,5 +1,6 @@
 package com.renova.mobile.ui.components
 
+import android.util.Log
 import com.renova.mobile.ui.screens.*
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
@@ -26,6 +27,7 @@ import com.renova.mobile.R
 import com.renova.mobile.ui.theme.PoppinsFontFamily
 import com.renova.mobile.ui.theme.RenovaColors
 import com.renova.mobile.ui.theme.RenovaColorScheme
+import com.renova.mobile.ui.theme.LocalRenovaColors
 import kotlinx.coroutines.delay
 
 @Composable
@@ -36,21 +38,32 @@ fun BadgeDialogV2(
     onDismiss: () -> Unit,
     onClaim: () -> Unit
 ) {
-    val dark = isSystemInDarkTheme() == true
+    val dark = isSystemInDarkTheme()
+    val colors = LocalRenovaColors.current
 
-    // Estados para mostrar el éxito
-    var showSuccessState by remember { mutableStateOf(false) }
-    var previousClaimingState by remember { mutableStateOf(isClaimingBadge) }
+    // ✅ SOLUCIÓN: Guardar el estado de "claiming" de forma estable
+    var claimingSnapshot by remember(badge.id) { mutableStateOf(false) }
+    var showSuccessState by remember(badge.id) { mutableStateOf(false) }
 
-    // Detectar cuando termina de reclamar exitosamente
-    LaunchedEffect(isClaimingBadge, badge.isClaimed) {
-        if (previousClaimingState && !isClaimingBadge && badge.isClaimed) {
-            // Cambió de "cargando" a "no cargando" y el badge está reclamado
-            showSuccessState = true
-            delay(2000) // Mostrar éxito por 2 segundos
-            onDismiss() // Cerrar el diálogo
+    // Actualizar snapshot cuando cambia isClaimingBadge
+    LaunchedEffect(isClaimingBadge) {
+        Log.d("BadgeDialog", "📊 isClaimingBadge cambió a: $isClaimingBadge")
+        if (isClaimingBadge) {
+            claimingSnapshot = true
         }
-        previousClaimingState = isClaimingBadge
+    }
+
+    // Detectar cuando el reclamo termina exitosamente
+    LaunchedEffect(isClaimingBadge, badge.isClaimed) {
+        Log.d("BadgeDialog", "🔍 Estado - isClaimingBadge: $isClaimingBadge, isClaimed: ${badge.isClaimed}, claimingSnapshot: $claimingSnapshot")
+
+        if (claimingSnapshot && !isClaimingBadge && badge.isClaimed) {
+            Log.d("BadgeDialog", "✅ ¡Badge reclamado exitosamente! Mostrando pantalla de éxito")
+            showSuccessState = true
+            delay(2500)
+            Log.d("BadgeDialog", "🚪 Cerrando diálogo")
+            onDismiss()
+        }
     }
 
     val backgroundColor = when {
@@ -61,99 +74,86 @@ fun BadgeDialogV2(
 
     val textColor = Color.White
 
-       Dialog(
-           onDismissRequest = {
-               if (!showSuccessState && !isClaimingBadge) onDismiss()
-           }
-       ) {
-        Card(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(horizontal = 24.dp),
-            shape = RoundedCornerShape(24.dp),
-            colors = if (!dark) CardDefaults.cardColors(containerColor = Color.White) else CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
-            elevation = CardDefaults.cardElevation(defaultElevation = 8.dp)
-        ) {
-            Column(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalAlignment = Alignment.CenterHorizontally
-            ) {
-                // Header con color de fondo
-                Box(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .background(
-                            color = backgroundColor,
-                            shape = RoundedCornerShape(topStart = 24.dp, topEnd = 24.dp)
-                        )
-                        .padding(32.dp),
-                    contentAlignment = Alignment.Center
+    // ✅ MOSTRAR DIÁLOGO DE ÉXITO USANDO EL MISMO ESTILO DEL PERFIL
+    if (showSuccessState) {
+        AlertDialog(
+            onDismissRequest = { }, // No permitir cerrar manualmente
+            icon = {
+                Icon(
+                    imageVector = Icons.Default.EmojiEvents,
+                    contentDescription = null,
+                    tint = colors.primaryColor,
+                    modifier = Modifier.size(64.dp)
+                )
+            },
+            title = {
+                Text(
+                    text = stringResource(R.string.badge_claimed_success),
+                    style = MaterialTheme.typography.titleLarge,
+                    textAlign = TextAlign.Center,
+                    fontWeight = FontWeight.Bold,
+                    fontFamily = PoppinsFontFamily
+                )
+            },
+            text = {
+                Column(
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    modifier = Modifier.fillMaxWidth()
                 ) {
-                    Column(
-                        horizontalAlignment = Alignment.CenterHorizontally
+                    Text(
+                        text = badge.name,
+                        style = MaterialTheme.typography.titleMedium,
+                        textAlign = TextAlign.Center,
+                        color = colors.textSecondary,
+                        fontFamily = PoppinsFontFamily
+                    )
+                }
+            },
+            confirmButton = {
+                // El diálogo se cierra automáticamente después del delay
+            },
+            containerColor = colors.surface,
+            shape = RoundedCornerShape(16.dp)
+        )
+    } else {
+        // DIÁLOGO NORMAL DEL BADGE
+        Dialog(
+            onDismissRequest = {
+                if (!isClaimingBadge) onDismiss()
+            }
+        ) {
+            Card(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 24.dp),
+                shape = RoundedCornerShape(24.dp),
+                colors = if (!dark) CardDefaults.cardColors(containerColor = Color.White)
+                else CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
+                elevation = CardDefaults.cardElevation(defaultElevation = 8.dp)
+            ) {
+                Column(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalAlignment = Alignment.CenterHorizontally
+                ) {
+                    Box(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .background(
+                                color = backgroundColor,
+                                shape = RoundedCornerShape(topStart = 24.dp, topEnd = 24.dp)
+                            )
+                            .padding(32.dp),
+                        contentAlignment = Alignment.Center
                     ) {
-                        // Mostrar estado de éxito o normal
-                        if (showSuccessState) {
-                            // ✅ ESTADO DE ÉXITO
-                            Icon(
-                                imageVector = Icons.Default.CheckCircle,
-                                contentDescription = null,
-                                tint = Color(0xFF01C851),
-                                modifier = Modifier.size(80.dp)
-                            )
-
-                            Spacer(modifier = Modifier.height(16.dp))
-
-                            Text(
-                                text = stringResource(R.string.badge_claimed_success),
-                                style = MaterialTheme.typography.headlineSmall,
-                                color = textColor,
-                                fontWeight = FontWeight.Bold,
-                                fontSize = 24.sp,
-                                textAlign = TextAlign.Center,
-                                fontFamily = PoppinsFontFamily
-                            )
-
-                            Spacer(modifier = Modifier.height(12.dp))
-
-                            Row(
-                                verticalAlignment = Alignment.CenterVertically,
-                                horizontalArrangement = Arrangement.Center
-                            ) {
-                                Icon(
-                                    imageVector = Icons.Default.Star,
-                                    contentDescription = null,
-                                    tint = Color(0xFFFFD700),
-                                    modifier = Modifier.size(24.dp)
-                                )
-                                Spacer(modifier = Modifier.width(8.dp))
-                                Text(
-                                    text = "+${badge.bonusPoints} ${stringResource(R.string.points)}",
-                                    style = MaterialTheme.typography.titleLarge,
-                                    color = Color(0xFFFFD700),
-                                    fontWeight = FontWeight.Bold,
-                                    fontSize = 28.sp,
-                                    fontFamily = PoppinsFontFamily
-                                )
-                            }
-
-                            Spacer(modifier = Modifier.height(8.dp))
-
-                            Text(
-                                text = stringResource(R.string.points_added_to_profile),
-                                style = MaterialTheme.typography.bodyMedium,
-                                color = textColor.copy(alpha = 0.9f),
-                                fontSize = 14.sp,
-                                fontFamily = PoppinsFontFamily,
-                                textAlign = TextAlign.Center
-                            )
-                        } else {
-                            // 📋 ESTADO NORMAL (Badge info)
+                        Column(
+                            horizontalAlignment = Alignment.CenterHorizontally
+                        ) {
                             Box(
                                 modifier = Modifier
                                     .size(100.dp)
                                     .background(
-                                        color = if (!dark) Color.White.copy(alpha = 0.45f) else Color.Black.copy(alpha = 0.45f),
+                                        color = if (!dark) Color.White.copy(alpha = 0.45f)
+                                        else Color.Black.copy(alpha = 0.45f),
                                         shape = CircleShape
                                     ),
                                 contentAlignment = Alignment.Center
@@ -202,7 +202,6 @@ fun BadgeDialogV2(
                                             fontFamily = PoppinsFontFamily
                                         )
                                     }
-
                                     badge.isUnlocked -> {
                                         Icon(
                                             imageVector = Icons.Default.Stars,
@@ -220,7 +219,6 @@ fun BadgeDialogV2(
                                             fontFamily = PoppinsFontFamily
                                         )
                                     }
-
                                     else -> {
                                         Icon(
                                             imageVector = Icons.Default.Lock,
@@ -263,10 +261,7 @@ fun BadgeDialogV2(
                                         fontFamily = PoppinsFontFamily
                                     )
                                     Text(
-                                        text = stringResource(
-                                            R.string.points_format,
-                                            badge.pointsRequired
-                                        ),
+                                        text = stringResource(R.string.points_format, badge.pointsRequired),
                                         style = MaterialTheme.typography.titleLarge,
                                         color = Color.White,
                                         fontWeight = FontWeight.Bold,
@@ -315,13 +310,8 @@ fun BadgeDialogV2(
                             if (!badge.isUnlocked && !badge.isClaimed) {
                                 Spacer(modifier = Modifier.height(20.dp))
 
-                                val progress =
-                                    (currentMonthPoints.toFloat() / badge.pointsRequired.toFloat()).coerceIn(
-                                        0f,
-                                        1f
-                                    )
-                                val pointsNeeded =
-                                    (badge.pointsRequired - currentMonthPoints).coerceAtLeast(0)
+                                val progress = (currentMonthPoints.toFloat() / badge.pointsRequired.toFloat()).coerceIn(0f, 1f)
+                                val pointsNeeded = (badge.pointsRequired - currentMonthPoints).coerceAtLeast(0)
 
                                 Column(
                                     modifier = Modifier.fillMaxWidth(),

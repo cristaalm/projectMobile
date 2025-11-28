@@ -681,7 +681,7 @@
     <string name="name_label">Nombre:</string>
     <string name="consumer_label">Consumidor:</string>
     <string name="quantity_label">Cantidad:</string>
-    <string name="total_points_label">Total de puntos: %1$d</string>
+    <string name="total_points_label">Total de puntos: </string>
     <string name="available_points_label">Puntos disponibles:</string>
     <string name="ticket">Recibo</string>
     <string name="add_reward">Agregar recompensa</string>
@@ -730,7 +730,7 @@
     <string name="hist_sale_generic_title">Actividad</string>
     <string name="hist_sale_points_withdrawal">Retiro de puntos</string>
     <string name="hist_sale_equivalent_mxn">equivalente MXN</string>
-    <string name="view_full_detail">View full detail</string>
+    <string name="view_full_detail">Ver el detalle completo</string>
     <string name="expired_reward_in_ticket">Expired reward in ticket</string>
 
     <!-- HistorySaleDetailBottomSheet strings -->

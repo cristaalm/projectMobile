@@ -36,6 +36,7 @@ import com.renova.mobile.ui.theme.LocalRenovaColors
 import com.renova.mobile.ui.theme.PoppinsFontFamily
 import com.renova.mobile.ui.theme.RenovaColorScheme
 import com.renova.mobile.ui.theme.RenovaColors
+import com.renova.mobile.ui.theme.RenovaTheme
 import java.text.SimpleDateFormat
 
 // Componente del indicador de refresco personalizado
@@ -242,7 +243,7 @@ fun DetailSheet(activity: ActivityItem) {
     val pointsColor = when (activity.type_history) {
         1 -> colors.negativePoints // Canjeo - siempre rojo
         2 -> if (activity.points == 0) colors.textPrimary else colors.primaryColor
-        3 -> colors.primaryColor
+        3 -> RenovaColors.PrimaryColor
         else -> if (activity.points < 0) colors.negativePoints else colors.primaryColor
     }
 
@@ -251,7 +252,7 @@ fun DetailSheet(activity: ActivityItem) {
         1 -> if ("${activity.points}".startsWith("-")) "${activity.points}" else "-${activity.points}"
         2 -> if (activity.points == 0) "-${activity.points}-" else "+${activity.points}"
         3 -> "${activity.points}"
-        else -> if (activity.points < 0) "+${activity.points}" else "${activity.points * -1}"
+        else -> "${activity.points}"
     }
 
     Column(
@@ -263,9 +264,9 @@ fun DetailSheet(activity: ActivityItem) {
     ) {
         // Icono según el tipo de actividad
         val (icon, iconColor) = when (activity.type_history) {
-            1 -> Icons.Default.ShoppingCart to colors.primaryColor
+            1 -> Icons.Default.ShoppingCart to colors.negativePoints
             2 -> Icons.Default.Recycling to colors.primaryColor
-            3 -> Icons.Default.Person to colors.primaryColor
+            3 -> Icons.Default.Person to RenovaColors.PrimaryColor
             else -> Icons.Default.History to colors.primaryColor
         }
 

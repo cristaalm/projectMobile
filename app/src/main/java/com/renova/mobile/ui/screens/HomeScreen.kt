@@ -156,7 +156,14 @@ fun HomeScreen(
         }
     }
 
-    // ... resto del código ...
+    LaunchedEffect(streakState.monthlyBadges) {
+        selectedBadge?.let { currentBadge ->
+            val updatedBadge = streakState.monthlyBadges.find { it.id == currentBadge.id }
+            if (updatedBadge != null) {
+                selectedBadge = updatedBadge
+            }
+        }
+    }
 
     Column(
         modifier = Modifier
@@ -412,7 +419,6 @@ fun HomeScreen(
             onDismiss = { selectedBadge = null },
             onClaim = {
                 streakViewModel.claimBadge(badge.id)
-                selectedBadge = null
             }
         )
     }
@@ -457,7 +463,7 @@ fun HistoryActivityCard(
         verticalAlignment = Alignment.CenterVertically
     ) {
         val iconData = when (activity.type_history) {
-            1 -> Pair(Icons.Default.ShoppingCart, RenovaColors.PrimaryColor)
+            1 -> Pair(Icons.Default.ShoppingCart, colors.negativePoints)
             2 -> Pair(Icons.Default.Recycling, RenovaColors.PrimaryColor)
             3 -> Pair(Icons.Default.Person, RenovaColors.PrimaryColor)
             else -> Pair(Icons.Default.History, RenovaColors.PrimaryColor)
@@ -537,7 +543,7 @@ fun HistoryActivityCard(
             val pointsColor = when (activity.type_history) {
                 1 -> colors.negativePoints
                 2 -> if (activity.points == 0) colors.textPrimary else colors.primaryColor
-                3 -> if (activity.points < 0) colors.negativePoints else colors.primaryColor
+                3 -> RenovaColors.PrimaryColor
                 else -> if (activity.points == 0) colors.textPrimary else colors.primaryColor
             }
             val pointsText = when (activity.type_history) {
@@ -545,8 +551,7 @@ fun HistoryActivityCard(
                 else "-${activity.points}"
                 2 -> if (activity.points == 0) "-${activity.points}-"
                 else "+${activity.points}"
-                3 -> if (activity.points < 0) "${activity.points}"
-                else "+${activity.points}"
+                3 -> "${activity.points}"
                 else -> if (activity.points == 0) "${activity.points}"
                 else "+${activity.points}"
             }
