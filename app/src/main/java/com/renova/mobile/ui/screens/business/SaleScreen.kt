@@ -480,11 +480,10 @@ fun BusinessStoreScreen(onLogout: () -> Unit, vm: BusinessSaleViewModel = viewMo
                 }
             }
         }
-
-        // Sale detail modal should only render if summary is non-null
+ 
         if (showSaleDetail && lastSaleSummary != null) {
             SaleDetailModal(
-                summary = lastSaleSummary!!,
+                viewModel = vm, // ✅ Ahora pasamos el ViewModel directamente
                 onClose = {
                     showSaleDetail = false
                     vm.finalizeSale()

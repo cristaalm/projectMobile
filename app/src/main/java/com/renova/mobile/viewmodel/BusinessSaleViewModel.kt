@@ -306,6 +306,15 @@ class BusinessSaleViewModel(application: Application) : AndroidViewModel(applica
 
         viewModelScope.launch {
             try {
+                // ✅ CAPTURAR EL NOMBRE DEL CLIENTE ANTES DE CUALQUIER OPERACIÓN
+                val consumerName = "${currentUser.name ?: ""} ${currentUser.last_name ?: ""}".trim()
+                    .ifBlank { getApplication<Application>().getString(R.string.unknown_client) }
+
+                val allianceName = _businessAlliance.value?.name
+
+                android.util.Log.d("ClaimReward", "Cliente capturado: '$consumerName'")
+                android.util.Log.d("ClaimReward", "Alianza: '$allianceName'")
+
                 // Agrupar por id de recompensa para obtener cantidades
                 val grouped = currentTicket.groupBy { it.id }
                 val results = mutableListOf<String>()
@@ -319,13 +328,11 @@ class BusinessSaleViewModel(application: Application) : AndroidViewModel(applica
                 )
 
                 for ((rewardId, group) in grouped) {
-                    // El backend debe usar los tokens registrados por user_id en lugar del token enviado
-                    // ya que la app no tiene acceso al token FCM del cliente escaneado
                     val req = ClaimRewardRequest(
                         user_id = currentUser.id,
                         reward_id = rewardId,
                         quantity = group.size,
-                        token = null // El backend debe obtener el token del cliente por user_id
+                        token = null
                     )
                     android.util.Log.d(
                         "ClaimReward",
@@ -336,14 +343,13 @@ class BusinessSaleViewModel(application: Application) : AndroidViewModel(applica
                         "ClaimReward",
                         "Response: HTTP ${resp.code()}, isSuccessful=${resp.isSuccessful}, message='${resp.message()}'"
                     )
-                    
-                    // Log detallado de la respuesta para monitorear notificaciones
+
+                    // Log detallado de la respuesta
                     resp.body()?.let { body ->
                         android.util.Log.d("ClaimReward", "Response body: success=${body.success}, message='${body.message}'")
                         body.data?.let { data ->
                             android.util.Log.d("ClaimReward", "Reward data: id=${data.reward?.id}, user_id=${data.reward?.user_id}, quantity=${data.reward?.quantity}")
-                            
-                            // Log de notificaciones enviadas
+
                             data.notifications?.let { notifications ->
                                 notifications.client?.let { client ->
                                     android.util.Log.d("ClaimReward", "Cliente - Intentos: ${client.attempted}, Enviados: ${client.sent?.size ?: 0}, Errores: ${client.errors?.size ?: 0}")
@@ -366,7 +372,7 @@ class BusinessSaleViewModel(application: Application) : AndroidViewModel(applica
                             }
                         }
                     }
-                    
+
                     if (!resp.isSuccessful || resp.body()?.success != true) {
                         val errBody = resp.errorBody()?.string()
                         val err = resp.body()?.message ?: resp.message() ?: "Error al reclamar recompensa"
@@ -379,7 +385,7 @@ class BusinessSaleViewModel(application: Application) : AndroidViewModel(applica
                         val redeemedQty = ((data?.reward?.quantity ?: -1).takeIf { it > 0 } ?: group.size)
                         val rewardName = group.first().name
                         results.add("${redeemedQty} x ${rewardName}")
-                        // Construir resumen con cantidades reales del backend
+
                         val pointsEach = group.first().pointsRequired
                         summaryItems.add(
                             com.renova.mobile.ui.components.SaleItem(
@@ -393,8 +399,6 @@ class BusinessSaleViewModel(application: Application) : AndroidViewModel(applica
                     }
                 }
 
-                val consumerName = currentUser.name
-                val allianceName = _businessAlliance.value?.name
                 val msg = buildString {
                     append("Venta exitosa para ")
                     append(consumerName)
@@ -407,18 +411,20 @@ class BusinessSaleViewModel(application: Application) : AndroidViewModel(applica
                 }
                 val backendMessageJoined = backendMessages.joinToString(" | ")
 
-                // No enviar push desde el cliente (evita 403 y duplicados). El backend se encarga.
-
-                // Actualizar último resumen de venta con cantidades del backend
+                // ✅ ACTUALIZAR EL RESUMEN CON LOS DATOS CAPTURADOS
                 _lastSaleSummary.value = com.renova.mobile.ui.components.SaleSummary(
                     id = System.currentTimeMillis().toString(),
                     allianceName = allianceName ?: "N/A",
-                    consumerName = consumerName,
+                    consumerName = consumerName, // ✅ Usar el nombre capturado al inicio
                     totalPoints = totalPointsSum,
                     items = summaryItems
                 )
+
+                android.util.Log.d("ClaimReward", "Summary guardado: alliance='${allianceName}', consumer='${consumerName}', points=${totalPointsSum}, items=${summaryItems.size}")
+
                 onSuccess(backendMessageJoined.ifBlank { msg })
             } catch (e: Exception) {
+                android.util.Log.e("ClaimReward", "Excepción en claimRewards", e)
                 onError("Error de conexión: ${e.message}")
             }
         }

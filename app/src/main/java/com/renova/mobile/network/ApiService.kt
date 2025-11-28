@@ -365,19 +365,19 @@ data class MaterialType(
 
 data class HistoryReward(
     val id: Int,
-    val alliance_id: Int,
+    @SerializedName("alliance_id") val allianceId: Int,
     val name: String,
     val description: String,
-    val points_required: Int,
+    @SerializedName("points_required") val pointsRequired: Int,
     val image: Boolean,
     val ext: String,
     val stock: Int,
-    val single_use: Boolean,
+    @SerializedName("single_use") val singleUse: Boolean,
     val code: String,
-    val is_active: Boolean,
-    val expires_at: String,
-    val created_at: String,
-    val updated_at: String
+    @SerializedName("is_active") val isActive: Boolean,
+    @SerializedName("expires_at") val expiresAt: String,
+    @SerializedName("created_at") val createdAt: String,
+    @SerializedName("updated_at") val updatedAt: String
 )
 
 data class Scan(

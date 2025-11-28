@@ -416,6 +416,7 @@
     <string name="tour_desc_profile_language">You can change the app\'s language from here.</string>
     <string name="tour_title_profile_info">Your Information</string>
     <string name="tour_desc_profile_info">Here you can see your personal data.</string>
+    <string name="unknown_client">Unknown client</string>
 
     <string name="tour_title_activity_points">Points Summary</string>
     <string name="tour_desc_activity_points">Here is the total number of points you have accumulated.</string>

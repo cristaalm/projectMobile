@@ -150,7 +150,7 @@ class BusinessHistoryViewModel : ViewModel() {
                 material_type = null,
                 reward = aggregatedReward ?: firstItem.reward,
                 scan = null,
-                user = null,
+                user = firstItem.user,
             )
             result.add(aggregated)
             currentGroup.clear()

@@ -18,6 +18,9 @@ import androidx.compose.ui.platform.LocalContext
 import com.renova.mobile.ui.theme.PoppinsFontFamily
 import com.renova.mobile.ui.theme.RenovaColors
 import com.renova.mobile.R
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
+import com.renova.mobile.viewmodel.BusinessSaleViewModel
 
 // Modelo de detalle de compra reutilizable
 data class SaleItem(
@@ -36,18 +39,72 @@ data class SaleSummary(
 
 @Composable
 fun SaleDetailModal(
-    summary: SaleSummary,
+    viewModel: BusinessSaleViewModel,
     onClose: () -> Unit,
     onPrint: () -> Unit,
 ) {
     val context = LocalContext.current
-    Dialog(onDismissRequest = onClose) {
-        Card(shape = androidx.compose.foundation.shape.RoundedCornerShape(12.dp), colors = CardDefaults.cardColors(containerColor = Color.White)) {
-            Column(modifier = Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
-                // Encabezado con botón de cierre arriba a la derecha
-                Row(modifier = Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
+
+    // ✅ Obtener datos directamente del ViewModel
+    val summary by viewModel.lastSaleSummary.collectAsState()
+
+    // Log de debug
+    android.util.Log.d("SaleDetailModal", "=== Datos del ViewModel ===")
+    android.util.Log.d("SaleDetailModal", "Summary: $summary")
+    android.util.Log.d("SaleDetailModal", "Consumer: ${summary?.consumerName}")
+    android.util.Log.d("SaleDetailModal", "Alliance: ${summary?.allianceName}")
+    android.util.Log.d("SaleDetailModal", "Points: ${summary?.totalPoints}")
+    android.util.Log.d("SaleDetailModal", "Items: ${summary?.items?.size}")
+
+    if (summary == null) {
+        // Si no hay datos, mostrar error y cerrar
+        Dialog(onDismissRequest = onClose) {
+            Card(
+                shape = androidx.compose.foundation.shape.RoundedCornerShape(12.dp),
+                colors = CardDefaults.cardColors(containerColor = Color.White)
+            ) {
+                Column(
+                    modifier = Modifier
+                        .padding(24.dp)
+                        .fillMaxWidth(),
+                    horizontalAlignment = Alignment.CenterHorizontally
+                ) {
                     Text(
-                        text = context.getString(   R.string.purchase_detail),
+                        text = "No hay datos de venta disponibles",
+                        style = MaterialTheme.typography.bodyLarge.copy(
+                            fontFamily = PoppinsFontFamily,
+                            fontWeight = FontWeight.Medium
+                        ),
+                        color = Color.Gray
+                    )
+                    Spacer(modifier = Modifier.height(16.dp))
+                    Button(onClick = onClose) {
+                        Text("Cerrar")
+                    }
+                }
+            }
+        }
+        return
+    }
+
+    Dialog(onDismissRequest = onClose) {
+        Card(
+            shape = androidx.compose.foundation.shape.RoundedCornerShape(12.dp),
+            colors = CardDefaults.cardColors(containerColor = Color.White)
+        ) {
+            Column(
+                modifier = Modifier
+                    .padding(16.dp)
+                    .fillMaxWidth(),
+                verticalArrangement = Arrangement.spacedBy(12.dp)
+            ) {
+                // Encabezado con botón de cierre
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Text(
+                        text = context.getString(R.string.purchase_detail),
                         color = RenovaColors.Primary,
                         fontSize = 22.sp,
                         fontWeight = FontWeight.Bold,
@@ -55,20 +112,25 @@ fun SaleDetailModal(
                         modifier = Modifier.weight(1f)
                     )
                     IconButton(onClick = onClose) {
-                        Icon(imageVector = Icons.Filled.Close, contentDescription = "Cerrar", tint = RenovaColors.Primary)
+                        Icon(
+                            imageVector = Icons.Filled.Close,
+                            contentDescription = "Cerrar",
+                            tint = RenovaColors.Primary
+                        )
                     }
                 }
 
-                // Hora de la venta debajo del título
+                // Hora de la venta
                 val timeText = runCatching {
-                    val millis = summary.id.toLong()
+                    val millis = summary!!.id.toLong()
                     val fmt = java.text.SimpleDateFormat("HH:mm", java.util.Locale.getDefault())
                     fmt.format(java.util.Date(millis))
                 }.getOrNull()
+
                 if (timeText != null) {
                     Spacer(modifier = Modifier.height(4.dp))
                     Text(
-                        text = context.getString(R.string.hist_detail_time_label, timeText),
+                        text = "Hora: $timeText",
                         style = MaterialTheme.typography.bodySmall.copy(fontFamily = PoppinsFontFamily),
                         color = Color.DarkGray
                     )
@@ -76,48 +138,100 @@ fun SaleDetailModal(
 
                 // Resumen general
                 Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
-                    // Eliminado: ID de la venta
-                    if (summary.allianceName != null) {
-                        Text(
-                            text = context.getString(R.string.hist_detail_business_label, summary.allianceName),
-                            style = MaterialTheme.typography.bodyMedium.copy(fontFamily = PoppinsFontFamily),
-                            color = RenovaColors.Primary
-                        )
+                    // Mostrar alianza
+                    summary!!.allianceName?.let { alliance ->
+                        if (alliance.isNotBlank() && alliance != "N/A") {
+                            Text(
+                                text = "Comercio: $alliance",
+                                style = MaterialTheme.typography.bodyMedium.copy(fontFamily = PoppinsFontFamily),
+                                color = RenovaColors.Primary
+                            )
+                        }
                     }
-                    if (summary.consumerName != null) {
-                        Text(
-                            text = context.getString(R.string.hist_detail_client_label, summary.consumerName),
-                            style = MaterialTheme.typography.bodyMedium.copy(fontFamily = PoppinsFontFamily),
-                            color = RenovaColors.Primary
-                        )
+
+                    // ✅ Mostrar nombre del cliente
+                    summary!!.consumerName?.let { consumer ->
+                        if (consumer.isNotBlank()) {
+                            Text(
+                                text = "Cliente: $consumer",
+                                style = MaterialTheme.typography.bodyMedium.copy(
+                                    fontFamily = PoppinsFontFamily,
+                                    fontWeight = FontWeight.SemiBold
+                                ),
+                                color = RenovaColors.Primary
+                            )
+                            android.util.Log.d("SaleDetailModal", "✅ Mostrando cliente: $consumer")
+                        } else {
+                            android.util.Log.w("SaleDetailModal", "⚠️ Consumer name está vacío")
+                        }
+                    } ?: run {
+                        android.util.Log.w("SaleDetailModal", "⚠️ Consumer name es null")
                     }
+
+                    // Total de puntos
                     Text(
-                        text = context.getString(R.string.total_points_label, summary.totalPoints),
+                        text = "Total: ${summary!!.totalPoints} puntos",
                         style = MaterialTheme.typography.bodyMedium.copy(
                             fontFamily = PoppinsFontFamily,
-                            fontWeight = FontWeight.SemiBold
+                            fontWeight = FontWeight.Bold
                         ),
                         color = RenovaColors.Primary
                     )
                 }
 
-                Divider()
+                HorizontalDivider()
 
                 // Lista de items
-                LazyColumn(modifier = Modifier.heightIn(max = 280.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                    items(summary.items) { item ->
-                        Row(modifier = Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
-                            Column(modifier = Modifier.weight(1f)) {
-                                Text(text = item.name, style = MaterialTheme.typography.bodyMedium.copy(fontFamily = PoppinsFontFamily, fontWeight = FontWeight.SemiBold), color = Color.Black)
-                                Text(text = context.getString(R.string.points_required, item.pointsRequired), style = MaterialTheme.typography.bodySmall.copy(fontFamily = PoppinsFontFamily), color = Color.DarkGray)
+                if (summary!!.items.isNotEmpty()) {
+                    LazyColumn(
+                        modifier = Modifier.heightIn(max = 280.dp),
+                        verticalArrangement = Arrangement.spacedBy(8.dp)
+                    ) {
+                        items(summary!!.items) { item ->
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Column(modifier = Modifier.weight(1f)) {
+                                    Text(
+                                        text = item.name,
+                                        style = MaterialTheme.typography.bodyMedium.copy(
+                                            fontFamily = PoppinsFontFamily,
+                                            fontWeight = FontWeight.SemiBold
+                                        ),
+                                        color = Color.Black
+                                    )
+                                    Text(
+                                        text = "${item.pointsRequired} puntos c/u",
+                                        style = MaterialTheme.typography.bodySmall.copy(fontFamily = PoppinsFontFamily),
+                                        color = Color.DarkGray
+                                    )
+                                }
+                                Text(
+                                    text = "x${item.quantity}",
+                                    style = MaterialTheme.typography.titleSmall.copy(
+                                        fontFamily = PoppinsFontFamily,
+                                        fontWeight = FontWeight.Bold
+                                    ),
+                                    color = RenovaColors.Primary
+                                )
                             }
-                            Text(text = "x${item.quantity}", style = MaterialTheme.typography.titleSmall.copy(fontFamily = PoppinsFontFamily, fontWeight = FontWeight.Bold), color = RenovaColors.Primary)
                         }
                     }
+                } else {
+                    Text(
+                        text = "No hay items para mostrar",
+                        style = MaterialTheme.typography.bodyMedium.copy(fontFamily = PoppinsFontFamily),
+                        color = Color.Gray,
+                        modifier = Modifier.padding(16.dp)
+                    )
                 }
 
-                // Botón imprimir
-                Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                // Botones de acción
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
                     OutlinedButton(
                         onClick = onPrint,
                         modifier = Modifier.weight(1f),

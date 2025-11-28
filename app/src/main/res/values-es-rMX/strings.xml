@@ -733,6 +733,8 @@
     <string name="view_full_detail">Ver el detalle completo</string>
     <string name="expired_reward_in_ticket">Expired reward in ticket</string>
 
+    <string name="unknown_client">Cliente desconocido</string>
+
     <!-- HistorySaleDetailBottomSheet strings -->
     <string name="hist_sale_detail_business_label">Comercio:</string>
     <string name="hist_sale_detail_client_label">Cliente:</string>

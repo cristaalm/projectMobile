@@ -92,10 +92,25 @@ fun BusinessHomeScreen(
     var showPrinterSelection by remember { mutableStateOf(false) }
 
     // Helper para construir SaleSummary desde ActivityItem agrupado
+
+    // Versión con logs de debugging para identificar el problema exacto
+
     fun toSaleSummary(activity: com.renova.mobile.network.ActivityItem): SaleSummary {
+        android.util.Log.d("SaleDetail", "=== Construyendo SaleSummary ===")
+        android.util.Log.d("SaleDetail", "Activity ID: ${activity.id}")
+        android.util.Log.d("SaleDetail", "Activity type: ${activity.type_history}")
+        android.util.Log.d("SaleDetail", "User: ${activity.user}")
+        android.util.Log.d("SaleDetail", "Reward: ${activity.reward}")
+        android.util.Log.d("SaleDetail", "Alliance: ${activity.alliance}")
+        android.util.Log.d("SaleDetail", "Points: ${activity.points}")
+
         val allianceName = activity.alliance?.name ?: "N/A"
+        android.util.Log.d("SaleDetail", "Alliance name: $allianceName")
+
         val items = mutableListOf<SaleItem>()
         val desc = activity.reward?.description
+        android.util.Log.d("SaleDetail", "Reward description: $desc")
+
         if (!desc.isNullOrBlank()) {
             desc.split(",").forEach { part ->
                 val trimmed = part.trim()
@@ -103,24 +118,71 @@ fun BusinessHomeScreen(
                 if (match != null) {
                     val q = match.groupValues[1].toIntOrNull() ?: (activity.quantity ?: 1)
                     val name = match.groupValues[2]
-                    items.add(SaleItem(name = name, quantity = q, pointsRequired = 0))
+                    val pointsPerItem = activity.reward?.pointsRequired ?: 0
+
+                    items.add(SaleItem(
+                        name = name,
+                        quantity = q,
+                        pointsRequired = pointsPerItem
+                    ))
+                    android.util.Log.d("SaleDetail", "Added item from description: $name x$q")
                 }
             }
+
             if (items.isEmpty()) {
                 val name = activity.reward?.name ?: context.getString(R.string.reward)
-                items.add(SaleItem(name = name, quantity = activity.quantity ?: 1, pointsRequired = 0))
+                val pointsPerItem = activity.reward?.pointsRequired ?: 0
+
+                items.add(SaleItem(
+                    name = name,
+                    quantity = activity.quantity ?: 1,
+                    pointsRequired = pointsPerItem
+                ))
+                android.util.Log.d("SaleDetail", "Added item from reward name: $name")
             }
         } else {
-            val name = activity.reward?.name ?: activity.material_type?.name ?: context.getString(R.string.item)
-            items.add(SaleItem(name = name, quantity = activity.quantity ?: 1, pointsRequired = 0))
+            val name = activity.reward?.name
+                ?: activity.material_type?.name
+                ?: context.getString(R.string.item)
+
+            val pointsPerItem = if (activity.reward != null) {
+                activity.reward.pointsRequired
+            } else {
+                val qty = activity.quantity ?: 1
+                if (qty > 0) activity.points / qty else activity.points
+            }
+
+            items.add(SaleItem(
+                name = name,
+                quantity = activity.quantity ?: 1,
+                pointsRequired = pointsPerItem
+            ))
+            android.util.Log.d("SaleDetail", "Added generic item: $name")
         }
-        return SaleSummary(
+
+        val consumerName = when {
+            activity.user != null -> {
+                val fullName = "${activity.user.name ?: ""} ${activity.user.last_name ?: ""}".trim()
+                android.util.Log.d("SaleDetail", "Full name from user: '$fullName'")
+                if (fullName.isNotBlank()) fullName else context.getString(R.string.unknown_client)
+            }
+            else -> {
+                android.util.Log.d("SaleDetail", "User is null, using unknown client")
+                context.getString(R.string.unknown_client)
+            }
+        }
+
+        val summary = SaleSummary(
             id = activity.id.toString(),
             allianceName = allianceName,
-            consumerName = null,
+            consumerName = consumerName,
             totalPoints = activity.points,
             items = items
         )
+
+        android.util.Log.d("SaleDetail", "Final summary: id=${summary.id}, alliance=${summary.allianceName}, consumer=${summary.consumerName}, points=${summary.totalPoints}, items=${summary.items.size}")
+
+        return summary
     }
 
     Column(modifier = Modifier.fillMaxSize()) {
@@ -625,9 +687,12 @@ fun BusinessHomeScreen(
     // Detalle completo de última venta
     if (showDetail && lastSaleSummary != null) {
         SaleDetailModal(
-            summary = lastSaleSummary!!,
+            viewModel = vm, // ✅ Ahora pasamos el ViewModel directamente
             onClose = { showDetail = false },
-            onPrint = { showDetail = false }
+            onPrint = {
+                showPrinterSelection = true
+                showDetail = false
+            }
         )
     }
 
